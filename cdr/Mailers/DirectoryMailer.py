@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.6 2003-05-09 03:45:24 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.7 2003-07-01 22:06:06 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2003/05/09 03:45:24  ameyer
+# Added PersonTitle.
+#
 # Revision 1.5  2002/11/06 03:14:51  ameyer
 # Fully working version.
 # Removed some unnecessary assertions and fixed some syntax errors that
@@ -190,11 +193,11 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
             # Identify filters for each mailer
             if doc.getDocType() == 'Organization':
-                # Organization filters denormalize data
+                # Organization denormalization
                 filters = ['name:Denormalization Filter (1/1): Organization']
             else:
-                # Person denormalization filters
-                filters = ['name:Denormalization Filter (1/1): Person']
+                # Person denormalization and reorganization filters
+                filters = ['set:Mailer Person Set']
 
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
