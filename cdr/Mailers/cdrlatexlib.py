@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.59 2003-08-21 18:08:50 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.60 2003-09-04 21:37:26 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.59  2003/08/21 18:08:50  ameyer
+# Fixed mistaken deletion of a \item command in the enumerated list of
+# other organization addresses.
+#
 # Revision 1.58  2003/08/19 13:55:32  ameyer
 # Made significant new modifications to TrialGroups handling - simplifying
 # the logic for Physicians in accord with what was done for Organization -
@@ -1253,6 +1257,15 @@ def openList(pp):
     else:
         compact = 1
         output += "  \\setlength{\\itemsep}{-2pt}\n"
+
+    # If the previous element node was a Para element, skip some space.
+    prevNode = node.previousSibling
+    while prevNode:
+        if prevNode.nodeType == prevNode.ELEMENT_NODE:
+            if prevNode.nodeName == "Para":
+                output += "  \\vspace{10pt}\n"
+            break
+        prevNode = prevNode.previousSibling
 
     # Pick up the list titles if there are any.
     for child in node.childNodes:
