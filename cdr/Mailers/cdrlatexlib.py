@@ -1,6 +1,6 @@
 """CdrXmlLatexSummaryInst: Processing instructions for generating a summary"""
 
-import sys, re, xml.dom.minidom, UnicodeToLatex
+import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables
 
 #-------------------------------------------------------------------
 # getAttribute
@@ -28,6 +28,16 @@ def getAttribute (domNode, attrName):
     # Attribute not found
     return None
 
+#----------------------------------------------------------------------
+# getText
+#   Extracts and concatenates the text nodes from an element.
+#----------------------------------------------------------------------
+def getText(nodelist):
+    result = ""
+    for node in nodelist:
+        if node.nodeType == node.TEXT_NODE:
+            result = result + node.data
+    return result
 
 #-------------------------------------------------------------------
 # XProc
@@ -64,14 +74,39 @@ def getAttribute (domNode, attrName):
 #   occs      - Max num occs to process, 0 = unlimited
 #                Only used if there is an element tag
 #   order     - How we order an xml element during output, one of:
-#                XProc.ORDER_TOP:
-#                  If this is the Nth listed element with XProc.ORDER_TOP,
-#                    output the first N-1 elements, then this one.
-#                XProc.ORDER_PARENT:
-#                  If this is the Nth listed element within it's parent
-#                    so order it in the output.
 #                XProc.ORDER_DOCUMENT:
-#                  Process this within it's parent, but in the order found.
+#                  This is the default order for processing document nodes.
+#                  If no other order is specified the nodes are processed 
+#                  in the order they appear in the input document.  For
+#                  this ordering mode, the order in which the processing
+#                  rules are specified is not significant.
+#                XProc.ORDER_TOP:
+#                  A processing rule can be specified to use ORDER_TOP to
+#                  cause the matching nodes to be processed before any other
+#                  nodes or after all other nodes.  Place all ORDER_TOP
+#                  rules which should be processed first at the beginning
+#                  of the list of rules.  These rules will be processed in
+#                  their order of appearance in the list.  Place all ORDER_TOP
+#                  rules which should be processed last at the end of the
+#                  list of rules.  These, too, will be processed in their
+#                  order of appearance in the list.
+#                XProc.ORDER_PARENT:
+#                  This mode of ordering behaves similarly to ORDER_TOP,
+#                  but only with respect to the sibling elements which
+#                  are children of the same parent element.  In other words,
+#                  the engine collects all of the nodes which are chilren
+#                  of a given parent, and finds the rule which matches
+#                  each of those nodes.  The nodes in this set whose rules are
+#                  designated as ORDER_PARENT, and whose rules are specified
+#                  before any ORDER_DOCUMENT rules in this set will be
+#                  processed first (in the order in which these rules appear
+#                  in the rule list), followed by the nodes whose matching
+#                  rules are designated as ORDER_DOCUMENT (in the order
+#                  of node appearance in the input document), followed by
+#                  those nodes matching the remaining ORDER_PARENT rules 
+#                  (that is, ORDER_PARENT rules which were specified
+#                  following an ORDER_DOCUMENT rule within the set of rules
+#                  which match this set of siblings).
 #               Example showing how XProc.ORDER_DOCUMENT works:
 #                Instructions:
 #                  Element='A', order=XProc.ORDER_TOP
@@ -93,6 +128,10 @@ def getAttribute (domNode, attrName):
 #                Only used if there is an element tag
 #   postProcs - List of routines+parms tuples to call at end
 #   suffix    - Latex constant string to output after processing
+#   filters   - Optional sequence of filters to be applied to the
+#               collected output for the children of a node; each 
+#               filter must be a function which takes a string 
+#               and returns a string.
 #
 #-------------------------------------------------------------------
 class XProc:
@@ -102,17 +141,18 @@ class XProc:
     ORDER_PARENT   = 2  # Process in order given in instructions, within parent
     ORDER_DOCUMENT = 3  # Process in order found in the document
 
-    def __init__(self,\
-		 element=None,      # No element involved unless specified\
-                 attr=None,         # Attribute specification for element\
-                 occs=0,            # Default= all occurrences\
-                 order=ORDER_TOP, # Assume element ordered same as list\
-                 prefix=None,       # No prefix before output of text\
-                 preProcs=None,     # No procedures to run\
-                 textOut=1,         # Output the text\
-                 descend=1,         # Examine child elements\
-                 postProcs=None,    # No procedures to run after output\
-                 suffix=None):      # No suffix
+    def __init__(self,
+		         element = None,         # No element involved unless specified
+                 attr = None,            # Attribute specification for element
+                 occs = 0,               # Default= all occurrences
+                 order = ORDER_DOCUMENT, # Assume element ordered same as list
+                 prefix = None,          # No prefix before output of text
+                 preProcs = None,        # No procedures to run
+                 textOut = 1,            # Output the text
+                 descend = 1,            # Examine child elements
+                 postProcs = None,       # No procedures to run after output
+                 suffix = None,          # No suffix
+                 filters = None):        # No filters
         self.element   = element
         self.attr      = attr
         self.occs      = occs
@@ -123,6 +163,7 @@ class XProc:
         self.descend   = descend
         self.postProcs = postProcs
         self.suffix    = suffix
+        self.filters   = filters
 
         # If an attribute specification was given, parse it here
         if attr != None:
@@ -625,7 +666,223 @@ def yesno (pp):
 
         return 0
 
+#----------------------------------------------------------------------
+# Remember list style.
+#----------------------------------------------------------------------
+class List:
+    def __init__(self, compact):
+        self.compact = compact
 
+listStack = []
+def openList(pp):
+    node = pp.getCurNode()
+    compact = node.getAttribute("Compact")
+    output = "  \\setlength{\\parskip}{0pt}\n"
+    if compact == "No": 
+        compact = 0
+        output += "  \\setlength{\\itemsep}{10pt}\n  \\vspace{6pt}\n"
+    else: 
+        compact = 1
+        output += "  \\setlength{\\itemsep}{2pt}\n"
+    listStack.append(List(compact))
+    pp.setOutput(output)
+
+#----------------------------------------------------------------------
+# Forget list style.
+#----------------------------------------------------------------------
+def closeList(pp):
+    listStack.pop()
+    if not listStack:
+        pp.setOutput("  \\setlength{\\parskip}{1.2mm}\n")
+
+#----------------------------------------------------------------------
+# Filter which adds line preservation to output.
+#----------------------------------------------------------------------
+def preserveLines(str):
+    return str.replace('\n', '\\\\\n')
+
+#----------------------------------------------------------------------
+# Filter which removes paragraph breaks.
+#----------------------------------------------------------------------
+def stripLines(str):
+    return str.replace('\r', '').replace('\n', ' ')
+
+#----------------------------------------------------------------------
+# Filter which strips leading and trailing whitespace.
+#----------------------------------------------------------------------
+def stripEnds(str): return str.strip()
+
+#----------------------------------------------------------------------
+# Object representing an organization's protocol status.
+#----------------------------------------------------------------------
+class OrgProtStatus:
+    def __init__(self, statuses):
+        self.value = None
+        self.date  = None
+        child      = statuses.firstChild
+        while child:
+            if child.nodeName == "CurrentOrgStatus":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "StatusName":
+                        self.value = getText(grandchild.childNodes)
+                    elif grandchild.nodeName == "StatusDate":
+                        self.date = getText(grandchild.childNodes)
+                return
+            child = child.nextSibling
+                
+#----------------------------------------------------------------------
+# Object representing a person's name.
+#----------------------------------------------------------------------
+class PersonalName:
+    def __init__(self, node):
+        self.surname = None
+        self.givenName = None
+        for child in node.childNodes:
+            if child.nodeName == "SurName":
+                self.surname = getText(child.childNodes)
+            elif child.nodeName == "GivenName":
+                self.givenName = getText(child.childNodes)
+
+#----------------------------------------------------------------------
+# Object representing an address.
+#----------------------------------------------------------------------
+class Address:
+    def __init__(self):
+        self.street = []
+        self.city   = None
+        self.state  = None
+        self.zip    = None
+
+#----------------------------------------------------------------------
+# Extract the state name from a PoliticalSubUnit_State element.
+#----------------------------------------------------------------------
+def getState(node):
+    shortName = None
+    fullName  = None
+    for child in node.childNodes:
+        if child.nodeName == "PoliticalSubUnitShortName":
+            shortName = getText(child.childNodes)
+        elif child.nodeName == "PoliticalSubUnitFullName":
+            fullName = getText(child.childNodes)
+    return shortName or fullName
+
+#----------------------------------------------------------------------
+# Object representing a Protocol Lead Organization person.
+#----------------------------------------------------------------------
+class LeadOrgPerson:
+    def __init__(self, node):
+        self.name    = None
+        self.phone   = None
+        self.role    = None
+        self.address = Address()
+        self.id      = node.getAttribute("id")
+        for child in node.childNodes:
+            if child.nodeName == "Person":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "PersonNameInformation":
+                        self.name = PersonalName(grandchild)
+                    elif grandchild.nodeName == "Phone":
+                        self.phone = getText(grandchild.childNodes)
+                    elif grandchild.nodeName == "Street":
+                        self.address.street.append(
+                                getText(grandchild.childNodes))
+                    elif grandchild.nodeName == "City":
+                        self.address.city = getText(grandchild.childNodes)
+                    elif grandchild.nodeName == "PoliticalSubUnit_State":
+                        self.address.state = getState(grandchild)
+                    elif grandchild.nodeName == "PostalCode_ZIP":
+                        self.zip = getText(grandchild.childNodes)
+            elif child.nodeName == "PersonRole":
+                self.role = getText(child.childNodes)
+
+#----------------------------------------------------------------------
+# Object representing a Protocol Lead Organization.
+#----------------------------------------------------------------------
+class ProtLeadOrg:
+    def __init__(self, orgNode):
+        sendMailerTo       = ""
+        self.personnel     = {}
+        self.sendMailerTo  = None
+        self.officialName  = None
+        self.orgRoles      = {}
+        self.protChair     = None
+        self.currentStatus = None
+        for child in orgNode.childNodes:
+            if child.nodeName == "MailAbstractTo":
+                sendMailerTo = getText(child.childNodes)
+            elif child.nodeName == "LeadOrgProtocolStatuses":
+                self.currentStatus = OrgProtStatus(child)
+            elif child.nodeName == "OfficialName":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "Name":
+                        self.officialName = getText(grandchild.childNodes)
+            elif child.nodeName == "LeadOrgPersonnel":
+                person = LeadOrgPerson(child)
+                self.personnel[person.id] = person
+                if person.role.upper() == "PROTOCOL CHAIR":
+                    self.protChair = person
+        if sendMailerTo and self.personnel.has_key(sendMailerTo):
+            self.sendMailerTo = self.personnel[sendMailerTo]
+                
+#----------------------------------------------------------------------
+# Extract everything we need from the ProtocolLeadOrg element into macros.
+#----------------------------------------------------------------------
+def protLeadOrg(pp):
+
+    # Extract the information we need into a convenient object.
+    leadOrg = ProtLeadOrg(pp.getCurNode())
+
+    # Do nothing if this isn't the org we're sending the mailer to .
+    if not leadOrg.sendMailerTo:
+        return
+            
+    # Set the values for the macros.
+    if leadOrg.currentStatus and leadOrg.currentStatus.date:
+        statDate = leadOrg.currentStatus.date
+    else:
+        statDate = "Unknown"
+    orgName = leadOrg.officialName or "Name Unknown"
+    if not leadOrg.protChair:
+        address   = "Not specified"
+        protChair = "Not specified"
+        phone     = ""
+    else:
+        if not leadOrg.protChair.name:
+            protChair = "Name Unknown"
+        else:
+            protChair = "%s, %s" % (
+                leadOrg.protChair.name.surname or "No Surname Found",
+                leadOrg.protChair.name.givenName or "No Given Name Found")
+        phone = leadOrg.protChair.phone or "Not specified"
+        if not leadOrg.protChair.address:
+            address = "Not specified"
+        else:
+            addrObj = leadOrg.protChair.address
+            address = ""
+            for street in addrObj.street:
+                address += "  %s \\\\\n" % street
+            stateZip = "%s %s" % (addrObj.state or "", addrObj.zip or "")
+            stateZip = stateZip.strip()
+            city = addrObj.city.strip() or ""
+            if city and stateZip:
+                comma = ", "
+            else:
+                comma = ""
+            lastLine = "%s%s%s" % (city, comma, stateZip)
+            if lastLine:
+                address += "  %s \\\\\n" % lastLine
+            if not address:
+                address = "Not specified"
+
+    # Assemble the macros.
+    pp.setOutput(r"""
+  \newcommand{\ProtocolActiveDate}{%s}
+  \renewcommand{\ProtocolLeadOrg}{%s}
+  \newcommand{\ProtocolChair}{%s}
+  \renewcommand{\ChairPhone}{%s}
+  \newcommand{\ChairAddress}{
+%s}
+""" % (statDate, orgName, protChair, phone, address))
 
 ####################################################################
 # Constants
@@ -645,7 +902,15 @@ LATEXHEADER=r"""
   %% -- START -- Document Declarations and Definitions
   \documentclass[12pt]{article}
   \usepackage{textcomp}
+  \usepackage{multirow}
+  \usepackage{supertabular}
   \newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+  %% OR MAYBE:
+  %% \documentclass[11pt]{article}
+  %% \usepackage{vmargin}
+  %% \setpapersize{USletter}
+  %% \setmarginsrb{.9in}{.9in}{.9in}{0pt}{0mm}{0pt}{0mm}
+  %% \renewcommand{\familydefault}{cmss}
 
   %% Eliminate warnings on overfull hbox by adjusting the stretch parameters
   \tolerance=1000
@@ -1379,9 +1644,9 @@ ENDSUMMARYPREAMBLE=r"""
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
+  \renewcommand{\footskip}{70pt}
 
   %% -- END -- Document Declarations and Definitions
-
 
   \begin{document}
 
@@ -1402,8 +1667,6 @@ ENDSUMMARYPREAMBLE=r"""
     }
   \end{center}
   \tableofcontents
-
-%%%  \begin{cbunit}
 
 %
 % -----
@@ -1493,66 +1756,6 @@ ENDPROTOCOLPREAMBLE=r"""
 % -----
 """
 
-
-ADDRESS = (
-    XProc(element="GivenName",
-          occs=0,
-          prefix="  \\newcommand{\Person}{",
-          suffix="}\n"),
-    XProc(element="ProfessionalSuffix/StandardProfessionalSuffix",
-          occs=0,
-          prefix="  \\newcommand{\PerSuffix}{",
-          suffix="}\n"),
-    XProc(element="Address",
-          textOut=0),
-    XProc(element="Street",
-          occs=0,
-          textOut=0,
-          order=3,
-          preProcs=( (street, ()), )),
-    XProc(element="City",
-          occs=0,
-          order=3,
-          prefix="  \\renewcommand{\City}{",
-          suffix="}\n"),
-    XProc(element="SpecificPostalAddress/PoliticalSubUnitShortName",
-          occs=0,
-          order=3,
-          prefix="  \\renewcommand{\PoliticalUnitState}{",
-          suffix="}\n"),
-    XProc(element="CountryFullName",
-          occs=0,
-          order=3,
-          prefix="  \\renewcommand{\Country}{",
-          suffix="}\n"),
-    XProc(element="PostalCode_ZIP",
-          occs=0,
-          order=3,
-          prefix="  \\renewcommand{\PostalCode_ZIP}{",
-          suffix="}\n"),
-    XProc(element="Phone",
-          occs=0,
-          order=1,
-          prefix="  \\renewcommand{\Phone}{",
-          suffix="}\n"),
-    XProc(element="Fax",
-          occs=0,
-          order=1,
-          prefix="  \\renewcommand{\Fax}{",
-          suffix="}\n"),
-    XProc(element="Email",
-          occs=0,
-          order=1,
-          prefix="  \\renewcommand{\Email}{",
-          suffix="}\n"),
-    XProc(element="URI",
-          occs=0,
-          order=1,
-          prefix="  \\renewcommand{\Web}{",
-          suffix="}\n")
-    )
-
-
 PROTOCOLDEF=r"""
   %% PROTOCOLDEF %%
   %% ----------- %%
@@ -1640,7 +1843,7 @@ PROTOCOLDISEASES=r"""
   \subsubsection{Diseases}
   \Disease
   \subsubsection{Condition}
-  \Condition
+%  \Condition
 %
 % -----
 """
@@ -1843,73 +2046,137 @@ PROTOCOLBOILER=r"""
 #------------------------------------------------------------------
 
 
-DocumentSummaryBody = (\
-#    XProc(element="/Summary/SummarySection",\
-#	  textOut=0,\
-#	  occs=0,\
-#          order=2,\
-#          suffix=   "\nYY  \\end{cbunit}\n\n"),\
-    XProc(element="SummarySection",\
-          occs=0,   \
-          textOut=1,\
-          suffix=   "\n  \\end{cbunit}\n\n"),\
-    XProc(element="/Summary/SummarySection/Title",\
-    	  occs=0, \
-          order=2,\
-          prefix="  \\section{",\
-	  suffix=   "}\n\n  \\begin{cbunit}\n"),\
-    XProc(element="Para",\
-    	  occs=0, \
-          order=3,\
-          prefix="\n  \\setcounter{qC}{0}\n",\
-          suffix="\n\n"),\
-    XProc(element="/Summary/SummarySection/SummarySection",\
-          textOut=0,\
-          occs=0,\
-          order=2),\
-    XProc(element="/Summary/SummarySection/SummarySection/Title",\
-	      occs=0,\
-          order=2,\
-          prefix="  \\subsection{",\
-	  suffix=   "}\n"),\
-    XProc(element="/Summary/SummarySection/SummarySection/Para",\
-	  occs=0,\
-          order=3,\
-          prefix="  \\setcounter{qC}{0}\n",\
-	  suffix=   "\n\n"),\
-    XProc(element="ItemizedList",
-          occs=0, \
-          order=3,\
-          textOut=0,\
-          prefix="\n  \\begin{itemize}\n",\
-	  suffix="\n  \\end{itemize}\n"),\
-    XProc(element="OrderedList",
-          occs=0, \
-          order=3,\
-          textOut=0,\
-          prefix="\n  \\begin{enumerate}\n",\
-	      suffix="\n  \\end{enumerate}\n"),\
-    XProc(element="ListItem",
-          occs=0, \
-	  order=3,\
-	  prefix="  \\item "),
-    XProc(element="CitationLink",\
-    	  occs=0,\
-          order=3,\
-          textOut=0,\
-          preProcs=((cite,()),)),\
-    XProc(element="ReferenceList",\
-	  order=2,\
-          textOut=0,\
-          prefix="\n  \\begin{thebibliography}{999}\n",\
-          suffix="\n  \\end{thebibliography}\n"),\
-    XProc(element="Reference",\
-    	  occs=0,\
-	      order=2,\
-	      textOut=1,\
-          preProcs=( (bibitem, ()), ))\
+DocumentSummaryBody = (
+    XProc(element   = "/Summary/SummarySection",
+          order     = XProc.ORDER_PARENT,
+          prefix    = "\n  \\begin{cbunit}\n",
+          suffix    = "\n  \\end{cbunit}\n\n"),
+    XProc(element   = "/Summary/SummarySection/Title",
+          order     = XProc.ORDER_PARENT,
+          prefix    = "  \\section{",
+	      suffix    = "}\n\n",
+          filters   = [stripEnds]),
+    XProc(element   = "/Summary/SummarySection/SummarySection/Title",
+          order     = XProc.ORDER_PARENT,
+          prefix    = "  \\subsection{",
+	      suffix    = "}\n",
+          filters   = [stripEnds]),
+    XProc(element   = "/Summary/SummarySection/SummarySection/"
+                      "SummarySection/Title",
+          order     = XProc.ORDER_PARENT,
+          prefix    = "  \\subsubsection{",
+	      suffix    = "}\n",
+          filters   = [stripEnds]),
+    XProc(element   = "Title",
+          prefix    = "\n\n  \\vspace{10pt}\n  \\textbf{",
+          suffix    = "} \\\\\n\n",
+          filters   = [stripEnds]),
+    XProc(element   = "Para",
+          prefix    = "\n  \\setcounter{qC}{0}\n",
+          suffix    = "\n\n"),
+    XProc(element   = "SummarySection",
+          textOut   = 0),
+    XProc(element   = "Table",
+          textOut   = 0,
+          preProcs  = ((cdrlatextables.openTable, ()), ),
+          postProcs = ((cdrlatextables.closeTable, ()), )),
+    XProc(element   = "TGroup",
+          textOut   = 0,
+          preProcs  = ((cdrlatextables.openGroup, ()), ),
+          postProcs = ((cdrlatextables.closeGroup, ()), )),
+    XProc(element   = "THead",
+          textOut   = 0,
+          order     = XProc.ORDER_PARENT,
+          preProcs  = ((cdrlatextables.openHeader, ()), ),
+          postProcs = ((cdrlatextables.closeSection, ()), )),
+    XProc(element   = "TBody",
+          textOut   = 0,
+          order     = XProc.ORDER_PARENT,
+          preProcs  = ((cdrlatextables.openBody, ()), ),
+          postProcs = ((cdrlatextables.closeSection, ()), )),
+    XProc(element   = "TFoot",
+          textOut   = 0,
+          order     = XProc.ORDER_PARENT,
+          preProcs  = ((cdrlatextables.openFooter, ()), ),
+          postProcs = ((cdrlatextables.closeSection, ()), )),
+    XProc(element   = "Row",
+          textOut   = 0,
+          preProcs  = ((cdrlatextables.openRow, ()), ),
+          postProcs = ((cdrlatextables.closeRow, ()), )),
+    XProc(element   = "entry",
+          preProcs  = ((cdrlatextables.openCell, ()), ),
+          postProcs = ((cdrlatextables.closeCell, ()), )),
+    XProc(element   = "ItemizedList",
+          textOut   = 0,
+          preProcs  = ((openList, ()), ),
+          postProcs = ((closeList, ()), ),
+          prefix    = "\n  \\begin{itemize}\n",
+	      suffix    = "\n  \\end{itemize}\n"),
+    XProc(element   = "OrderedList",
+          textOut   = 0,
+          preProcs  = ((openList, ()), ),
+          postProcs = ((closeList, ()), ),
+          prefix    = "\n  \\begin{enumerate}\n",
+	      suffix    = "\n  \\end{enumerate}\n"),
+    XProc(element   = "ListItem",
+	      prefix    = "  \\item ",
+          suffix    = "\n",
+          filters   = [stripEnds]),
+    XProc(element   = "CitationLink",
+          textOut   = 0,
+          preProcs  = ((cite,()),)),
+    XProc(element   = "ReferenceList",
+          order     = XProc.ORDER_PARENT,
+          textOut   = 0,
+          prefix    = "\n  \\begin{thebibliography}{999}\n",
+          suffix    = "\n  \\end{thebibliography}\n"),
+    XProc(element   = "Reference",
+          order     = XProc.ORDER_PARENT,
+          preProcs  = ( (bibitem, ()), )),
+    XProc(element   = "Note",
+          prefix    = "{\it Note: ",
+     #    filters   = [stripLines],
+          suffix    = "}"),
+    XProc(element   = "SummaryRef",
+          prefix    = "\\underline{",
+          suffix    = "}"),
+    XProc(element   = "ExternalRef",
+          prefix    = "\\underline{",
+          suffix    = "}"),
+    XProc(element   = "ProtocolLink",
+          prefix    = "\\underline{",
+          suffix    = "}"),
+    XProc(element   = "GlossaryTermRef",
+          prefix    = "\\underline{",
+          suffix    = "}"),
+    XProc(element   = "Emphasis",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "GeneName",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "DrugName"),
+    XProc(element   = "ForeignWord",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "InterventionName"),
+    XProc(element   = "ScientificName",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "Strong",
+          prefix    = "\\textbf{",
+          suffix    = "}"),
+    XProc(element   = "Superscript",
+          prefix    = "$^{",
+          suffix    = "}$"),
+    XProc(element   = "Subscript",
+          prefix    = "$_{",
+          suffix    = "}$"),
+    XProc(element   = "TT",
+          prefix    = "\\texttt{",
+          suffix    = "}",
+          filters   = [preserveLines])
     )
-
 
 
 #------------------------------------------------------------------
@@ -1929,71 +2196,82 @@ DocumentSummaryBody = (\
 #
 #   Putting together the header
 #------------------------------------------------------------------
-ProtAbstProtID =(\
-    XProc(prefix=PROTOCOLDEF),
+def dbg(pp):
+    node = pp.getCurNode()
+    sys.stderr.write("dbg(): name is %s\n" % node.nodeName)
+
+ProtAbstProtID = (
+    XProc(prefix=PROTOCOLDEF, order=XProc.ORDER_TOP),
+
+    # Use this instead of the commented-out stuff below.  RMK 2002-09-15
+    XProc(element  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg",
+          order    = XProc.ORDER_TOP,
+          preProcs = ((protLeadOrg, ()),)),
+
     XProc(element="/InScopeProtocol/ProtocolIDs/PrimaryID/IDString",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"  \newcommand{\ProtocolID}{",
           suffix="}\n"),
 
     # Concatenating Other protocol IDs
-    XProc(prefix="  \\newcommand{\OtherID}{\n  "),
+    XProc(prefix="  \\newcommand{\OtherID}{\n  ", order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolIDs/OtherID/IDString",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="   \\\\",
           suffix="\n  "),
-    XProc(prefix="}\n"),
+    XProc(prefix="}\n", order=XProc.ORDER_TOP),
 
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgProtocolStatuses/CurrentOrgStatus/StatusDate",
-          order=2,
-          prefix="\n  \\newcommand{\ProtocolActiveDate}{",
-          suffix="}\n  "),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/OfficialName/Name",
-          order=2,
-          prefix="\\renewcommand{\ProtocolLeadOrg}{",
-          suffix="}\n"),
+# RMK 2002-09-15: Won't work when there are multiple lead orgs.
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgProtocolStatuses/CurrentOrgStatus/StatusDate",
+#         order=XProc.ORDER_PARENT,
+#         prefix="\n  \\newcommand{\ProtocolActiveDate}{",
+#         suffix="}\n  "),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/OfficialName/Name",
+#         order=XProc.ORDER_PARENT,
+#         prefix="\\renewcommand{\ProtocolLeadOrg}{",
+#         suffix="}\n"),
+#
+#   # Concatenating LastName, Firstname of Protocol chair
+#   XProc(prefix="  \\newcommand{\\ProtocolChair}{", order=XProc.ORDER_TOP),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/SurName",
+#         order=XProc.ORDER_PARENT,
+#         suffix=", "),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/GivenName",
+#         order=XProc.ORDER_PARENT,
+#         suffix=""),
+#   XProc(prefix="}\n", order=XProc.ORDER_TOP),
 
-    # Concatenating LastName, Firstname of Protocol chair
-    XProc(prefix="  \\newcommand{\\ProtocolChair}{"),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/SurName",
-          order=2,
-          suffix=", "),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/GivenName",
-          order=2,
-          suffix=""),
-    XProc(prefix="}\n"),
-
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Phone",
-          order=2,
-          prefix="  \\renewcommand{\ChairPhone}{",
-          suffix="}\n"),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Phone",
+#         order=XProc.ORDER_PARENT,
+#         prefix="  \\renewcommand{\ChairPhone}{",
+#         suffix="}\n"),
 
     # Concatenating Protocol chair address
-    XProc(prefix="  \\newcommand{\\ChairAddress}{"),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Street",
-          order=2,
-          suffix="\\\\ \n  "),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/City",
-          order=2,
-          suffix=", "),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PoliticalSubUnit_State/PoliticalSubUnitShortName",
-          order=2,
-          suffix="  "),
-    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PostalCode_ZIP",
-          order=2,
-          suffix="\n"),
-    XProc(prefix="}\n"),
+#   XProc(prefix="  \\newcommand{\\ChairAddress}{", order=XProc.ORDER_TOP),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Street",
+#         order=XProc.ORDER_PARENT,
+#         suffix="\\\\ \n  "),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/City",
+#         order=XProc.ORDER_PARENT,
+#         suffix=", "),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PoliticalSubUnit_State/PoliticalSubUnitShortName",
+#         order=XProc.ORDER_PARENT,
+#         suffix="  "),
+#   XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PostalCode_ZIP",
+#         order=XProc.ORDER_PARENT,
+#         suffix="\n"),
+#   XProc(prefix="}\n", order=XProc.ORDER_TOP),
 
     XProc(element="CurrentProtocolStatus",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\ProtocolStatus}{",
           suffix="}\n"),
     XProc(element="LowAge",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\LowAge}{",
           suffix="}\n"),
     XProc(element="HighAge",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\HighAge}{",
           suffix="}\n"),
     )
@@ -2001,128 +2279,130 @@ ProtAbstProtID =(\
 ProtAbstInfo =(
     XProc(element="ProtocolTitle",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (protocolTitle, ()), ),),
 #   XProc(element="HighAge",
 #         textOut=1,
-#         order=2,
+#         order=XProc.ORDER_PARENT,
 #         prefix="\\renewcommand{\HighAge}{",
 #         suffix="}\n  "),
 #   XProc(element="LowAge",
 #         textOut=1,
-#         order=2,
+#         order=XProc.ORDER_PARENT,
 #         prefix="\\renewcommand{\LowAge}{",
 #         suffix="}\n  "),
     XProc(element="AgeText",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\newcommand{\AgeText}{",
           suffix="}\n  "),
     XProc(element="Diseases",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="\\renewcommand{\Diseases}{",
           suffix="}\n  "),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EligibilityText/ItemizedList/ListItem",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="    \\item",),
     XProc(element="Outline",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\renewcommand{\Outline}{",
           suffix="}\n  "),
     XProc(element="LowAge",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\renewcommand{\BaselineTreatmentProcedures}{",\
           suffix="}\n  "),\
     XProc(element="LowAge",\
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\renewcommand{\MeasureofResponse}{",
           suffix="}\n  "),
     XProc(element="ProjectedAccrual",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\renewcommand{\ProjectedAccrual}{",
           suffix="}\n  "),
     XProc(element="Caveat",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=r"\renewcommand{\DiseaseCaveat}{",
           suffix="}\n  "),
 # -- Setting String End
-    XProc(prefix=PROTOCOLTITLE),
-    XProc(prefix=PROTOCOLINFO),
-    XProc(prefix=PROTOCOLDISEASES),
+    XProc(prefix=PROTOCOLTITLE, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLINFO, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLDISEASES, order=XProc.ORDER_TOP),
 
-    XProc(prefix="\n  \\begin{list}{$\\circ$}{\\setlength{\\itemsep}{-5pt}}\n"),
-    XProc(prefix="\\renewcommand{\\ProjectedAccrual}{"),
+    XProc(prefix="\n  \\begin{list}{$\\circ$}{\\setlength{\\itemsep}{-5pt}}\n",
+          order=XProc.ORDER_TOP),
+    XProc(prefix="\\renewcommand{\\ProjectedAccrual}{", order=XProc.ORDER_TOP),
     XProc(element="Condition",
           textOut=1,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="    \\item ",
           suffix="\n"),
-    XProc(prefix="  \\end{list}\n"),
-    XProc(prefix="}"),
+    XProc(prefix="  \\end{list}\n", order=XProc.ORDER_TOP),
+    XProc(prefix="}", order=XProc.ORDER_TOP),
 
-    XProc(prefix=PROTOCOLOBJECTIVES),
-    XProc(prefix="  \\renewcommand{\\theenumi}{\\Roman{enumi}}\n  \\begin{enumerate}\n"),
+    XProc(prefix=PROTOCOLOBJECTIVES, order=XProc.ORDER_TOP),
+    XProc(prefix="  \\renewcommand{\\theenumi}{\\Roman{enumi}}\n  \\begin{enumerate}\n", 
+          order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Objectives/OrderedList/ListItem",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="    \\item "),
-    XProc(prefix="  \\end{enumerate}\n"),
-    XProc(prefix="\n  \\renewcommand{\\DiseaseCharacteristics}{"),
+    XProc(prefix="  \\end{enumerate}\n", order=XProc.ORDER_TOP),
+    XProc(prefix="\n  \\renewcommand{\\DiseaseCharacteristics}{",
+            order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/DiseaseCharacteristics/Para",
 	      occs=0,
 	      textOut=1,
 	      suffix="\n",
-          order=1),
+          order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/DiseaseCharacteristics/ItemizedList/ListItem",
 	      occs=0,
 	      textOut=1,
 	      prefix="\n  \\item ",
-          order=1),
-    XProc(suffix="}\n"),
-    XProc(prefix="  \\renewcommand{\PatientCharacteristics}{"),
-    XProc(prefix="  \\begin{enumerate}"),
-    XProc(prefix="  \\end{enumerate}\n"),
+          order=XProc.ORDER_TOP),
+    XProc(suffix="}\n", order=XProc.ORDER_TOP),
+    XProc(prefix="  \\renewcommand{\PatientCharacteristics}{",
+            order=XProc.ORDER_TOP),
+    XProc(prefix="  \\begin{enumerate}", order=XProc.ORDER_TOP),
+    XProc(prefix="  \\end{enumerate}\n", order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PatientCharacteristics/Para",
 	      occs=0,
 	      textOut=1,
 	      suffix="\n\n",
-          order=1),
-    XProc(suffix="}\n  "),
-    XProc(prefix="  \\renewcommand{\PriorConcurrentTherapy}{"),
+          order=XProc.ORDER_TOP),
+    XProc(suffix="}\n  ", order=XProc.ORDER_TOP),
+    XProc(prefix="  \\renewcommand{\PriorConcurrentTherapy}{",
+            order=XProc.ORDER_TOP),
     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PriorConcurrentTherapyCharacteristics/Para",
 	      occs=0,
 	      textOut=1,
 	      suffix="\n\n",
-          order=1),
-    XProc(suffix="}\n  "),
-    XProc(prefix=PROTOCOLPATIENTELIGIBILITY),
-    XProc(prefix=PROTOCOLOUTLINE),
-#   XProc(prefix=PROTOCOLSTRATIFICATION),
-    XProc(prefix=PROTOCOLTREATMENT),
-    XProc(prefix=PROTOCOLRESPONSE),
-    XProc(prefix=PROTOCOLACCRUAL),
-    XProc(prefix=PROTOCOLSCHEDULE),
-#   XProc(prefix=PROTOCOLFORM),
-    XProc(prefix=PROTOCOLCAVEAT),
-    XProc(prefix=PROTOCOLBOILER),
+          order=XProc.ORDER_TOP),
+    XProc(suffix="}\n  ", order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLPATIENTELIGIBILITY, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLOUTLINE, order=XProc.ORDER_TOP),
+#   XProc(prefix=PROTOCOLSTRATIFICATION, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLTREATMENT, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLRESPONSE, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLACCRUAL, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLSCHEDULE, order=XProc.ORDER_TOP),
+#   XProc(prefix=PROTOCOLFORM, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLCAVEAT, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
     XProc(element="ItemizedList",
           occs=0,
-          order=3,
           textOut=0,
           prefix="\n  \\begin{itemize}\n",
 	      suffix="\n  \\end{itemize}\n"),
     XProc(element="Para",
     	  occs=0,
-          order=3,
           prefix="\n  \\setcounter{qC}{0}\n",
           suffix="\n\n"),
     XProc(element="OrderedList",
           occs=0,
-          order=3,
           textOut=0,
           prefix="\n  \\begin{enumerate}x\n",
 	      suffix="\n  \\end{enumerate}\n")
@@ -2139,11 +2419,11 @@ ProtAbstInfo =(
 #          order=XProc.ORDER_PARENT,\
 #          prefix="\newcommand{\ProtocolID}{",\
 #          suffix="}"),\
-#    XProc(prefix=FANCYHDR),\
-#    XProc(prefix=   ),\
-#    XProc(element="Person",)
+#    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),\
+#    XProc(prefix=   , order=XProc.ORDER_TOP),\
+#    XProc(element="Person",, order=XProc.ORDER_TOP)
 #    # More goes here in the list\
-#    XProc(suffix=DOCFTR),\
+#    XProc(suffix=DOCFTR, order=XProc.ORDER_TOP),\
 # )
 
 
@@ -2154,93 +2434,89 @@ ProtAbstInfo =(
 # --------- START: First section Contact Information ---------
 DocumentOrgBody = (\
 XProc(element="OfficialName/Name",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\OrgName}{",
           suffix="}\n"),
     XProc(element="Name",
           prefix="  \\newcommand{\Person}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="Address",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="Street",
           textOut=0,
-          order=3,
           preProcs=( (street, ()), )),
     XProc(element="City",
-          order=3,
           prefix="  \\renewcommand{\City}{",
           suffix="}\n"),
     XProc(element="PoliticalUnit_State",
-          order=3,
           prefix="  \\renewcommand{\PoliticalUnitState}{",
           suffix="}\n"),
     XProc(element="Country",
-          order=3,
           prefix="  \\renewcommand{\Country}{",
           suffix="}\n"),
     XProc(element="PostalCode_ZIP",
-          order=3,
           prefix="  \\renewcommand{\PostalCodeZIP}{",
           suffix="}\n"),
     XProc(element="Phone",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Phone}{",
           suffix="}\n"),
     XProc(element="Fax",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Fax}{",
           suffix="}\n"),
     XProc(element="Email",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Email}{",
           suffix="}\n"),
     XProc(element="URI",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
     XProc(prefix=ORG_PRINT_CONTACT),
 # --------- END: First section Contact Information ---------
     XProc(element="/OrgMailer/OtherLocation",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=ORG_RESET_OTHER,
           suffix=ORG_PRINT_OTHER),
     XProc(element="/OrgMailer/OtherLocation/Address",
           textOut=0,
-          order=2),
+          order=XProc.ORDER_PARENT),
     XProc(element="/OrgMailer/OtherLocation/Address/Street",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (street, ()), )),
     XProc(element="/OrgMailer/OtherLocation/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Phone}{",
           suffix="}\n"),
     XProc(element="/OrgMailer/OtherLocation/Fax",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Fax}{",
           suffix="}\n"),
     XProc(element="/OrgMailer/OtherLocation/Email",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Email}{",
           suffix="}\n"),
     XProc(element="/OrgMailer/OtherLocation/URI",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
 # --------- Start: Affiliations Section ---------
-    XProc(prefix=ORG_AFFILIATIONS),
-    XProc(prefix="\n  \\begin{itemize}\n"),
+    XProc(prefix=ORG_AFFILIATIONS, order=XProc.ORDER_TOP),
+    XProc(prefix="\n  \\begin{itemize}\n", order=XProc.ORDER_TOP),
     XProc(element="ProfessionalOrg",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="\n    \\item "),
-    XProc(prefix="\n  \\end{itemize}\n"),
-    XProc(prefix="\n  \\subsubsection*{Cooperative Groups}"),
-    XProc(prefix="\n  \\begin{itemize}\n"),
+    XProc(prefix="\n  \\end{itemize}\n", order=XProc.ORDER_TOP),
+    XProc(prefix="\n  \\subsubsection*{Cooperative Groups}",
+            order=XProc.ORDER_TOP),
+    XProc(prefix="\n  \\begin{itemize}\n", order=XProc.ORDER_TOP),
     XProc(element="MemberOf",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="\n    \\item "),
-    XProc(prefix="\n  \\end{itemize}\n")
+    XProc(prefix="\n  \\end{itemize}\n", order=XProc.ORDER_TOP)
     )
 
 
@@ -2252,126 +2528,126 @@ DocumentPersonBody = (
 # --------- START: First section Contact Information ---------
     XProc(element="CIPSContact",
           occs=1,
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/Person/PersonLocations/OtherPracticeLocation/Organization/Name",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\OrgName}{",
           suffix="}\n"),
     XProc(element="GivenName",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\newcommand{\Person}{",
           suffix=" "),
     XProc(element="SurName",
-          order=1,
+          order=XProc.ORDER_TOP,
           suffix="}\n"),
     XProc(element="GenerationSuffix",
           prefix="  \\newcommand{\GenSuffix}{",
-          suffix=" }\n"),
+          suffix=" }\n", order=XProc.ORDER_TOP),
     XProc(element="StandardProfessionalSuffix",
           prefix="  \\newcommand{\PerSuffix}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="Address",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="Street",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (street, ()), )),
     XProc(element="City",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\City}{",
           suffix="}\n"),
     XProc(element="PoliticalSubUnitShortName",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\PoliticalUnitState}{",
           suffix="}\n"),
     XProc(element="CountryFullName",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Country}{",
           suffix="}\n"),
     XProc(element="PostalCode_ZIP",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\PostalCodeZIP}{",
           suffix="}\n"),
     XProc(element="SpecificPhone",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Phone}{",
           suffix="}\n"),
     XProc(element="SpecificFax",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Fax}{",
           suffix="}\n"),
     XProc(element="SpecificEmail",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Email}{",
           suffix="}\n"),
     XProc(element="SpecificWeb",
-          order=1,
+          order=XProc.ORDER_TOP,
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
 # --------- END: First section Contact Information ---------
-    XProc(prefix=PERSON_PRINT_CONTACT),
+    XProc(prefix=PERSON_PRINT_CONTACT, order=XProc.ORDER_TOP),
     XProc(element="/PersonMailer/OtherLocation",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix=PERSON_RESET_OTHER,
           suffix=PERSON_PRINT_OTHER),
     XProc(element="/PersonMailer/OtherLocation/Address",
           textOut=0,
-          order=2),
+          order=XProc.ORDER_PARENT),
     XProc(element="/PersonMailer/OtherLocation/Address/Street",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (street, ()), )),
     XProc(element="Org",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Org}{",
           suffix="}\n"),
     XProc(element="/PersonMailer/OtherLocation/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Phone}{",
           suffix="}\n"),
     XProc(element="/PersonMailer/OtherLocation/Fax",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Fax}{",
           suffix="}\n"),
     XProc(element="/PersonMailer/OtherLocation/Email",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Email}{",
           suffix="}\n"),
     XProc(element="/PersonMailer/OtherLocation/URI",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
-    XProc(prefix=PERSON_MISC_INFO),
-    XProc(prefix=PERSON_SPECIALTY_TAB),
+    XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_SPECIALTY_TAB, order=XProc.ORDER_TOP),
     XProc(element="SpecialtyCategory",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="BoardCertifiedSpecialtyName",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("BoardCertifiedSpecialtyName","BoardCertifiedSpecialtyName",)),)),
-    XProc(prefix=END_TABLE),
-    XProc(prefix=PERSON_TRAINING_TAB),
+    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_TRAINING_TAB, order=XProc.ORDER_TOP),
     XProc(element="TrainingCategory",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/PersonMailer/TrainingCategory/Name",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("Name","YesNo",)),)),
-    XProc(prefix=END_TABLE),
-    XProc(prefix=PERSON_SOCIETY_TAB),
+    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_SOCIETY_TAB, order=XProc.ORDER_TOP),
     XProc(element="ProfSociety",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="MemberOfMedicalSociety",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("MemberOfMedicalSociety","YesNo",)),)),
-    XProc(prefix=END_TABLE),
-    XProc(prefix=PERSON_CLINGRP_TAB),
+    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_CLINGRP_TAB, order=XProc.ORDER_TOP),
     XProc(element="TrialGroup",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/Person/ProfessionalInformation/PhysicianDetails/PhysicianMembershipInformation/MemberOfCooperativeGroup/CooperativeGroup/OfficialName/Name",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("Name","YesNo",)),)),
-    XProc(prefix=END_TABLE),
-    XProc(prefix=PERSON_CCOP_TAB),
+    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_CCOP_TAB, order=XProc.ORDER_TOP),
     )
 
 
@@ -2469,194 +2745,188 @@ STATUSCHAIRINFO=r"""
 
 DocumentStatusCheckBody = (
 # --------- START: First section Contact Information ---------
-    XProc(prefix=STATUSPROTOCOLDEF),
+    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
     XProc(element="PUP",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Name",
           textOut=1,
           prefix="  \\newcommand{\PUP}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="Title",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\PUPTitle}{",
 	      suffix="}\n"),
     XProc(element="Org",
           prefix="  \\newcommand{\PUPOrg}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Phone",
-          order=3,
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
     XProc(element="/SPSCheck/PUP/Street",
           textOut=0,
-          order=3,
           preProcs=( (street, ()), )),
     XProc(element="/SPSCheck/PUP/Phone",
-          order=3,
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
-    XProc(prefix=STATUSPUPADDRESS),
+    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
     XProc(prefix=STATUSDEF,
-          suffix="  \\begin{enumerate}\n"),
+          suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
 # --------- END: First section Contact Information ---------
 # --------- START: Second section Protocol Information ---------
     XProc(element="Protocol",
           textOut=0,
-          suffix=END_TABLE),
+          suffix=END_TABLE, order=XProc.ORDER_TOP),
     XProc(element="ProtocolTitle",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\ProtocolTitle}{",
           suffix="  }\n "),
     XProc(element="CurrentStatus",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\CurrentStatus}{",
           suffix="  }\n"),
     XProc(element="ID",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\ProtocolID}{",
           suffix="  }\n  "),
     XProc(element="LeadOrg",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadOrg}{",
           suffix="  }\n"),
     # Need to start the table header as a suffix of the Personnel field
     # in order to create the table for each protocol record.
     XProc(element="Personnel",
-          order=2,
+          order=XProc.ORDER_PARENT,
           textOut=0,
           suffix=STATUSPROTINFO + STATUSCHAIRINFO + STATUS_TAB_INTRO + STATUS_TAB),
     XProc(element="/SPSCheck/Protocol/Personnel/Name",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadPerson}{",
           suffix="  }\n"),
     XProc(element="/SPSCheck/Protocol/Personnel/Role",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadRole}{",
           suffix="  }\n"),
     XProc(element="/SPSCheck/Protocol/Personnel/Street",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (street, ()), )),
     XProc(element="/SPSCheck/Protocol/Personnel/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadPhone}{",
           suffix="  }\n"),
 # --------- END: Second section Protocol Information ---------
 # --------- START: Third section Protocol Information ---------
     # XProc(prefix=STATUS_SITES_TAB),
     XProc(element="ParticipatingSite",
-          order=2,
+          order=XProc.ORDER_PARENT,
           textOut=0),
     XProc(element="Site",
-          order=2,
+          order=XProc.ORDER_PARENT,
           suffix="& "),
     XProc(element="PI",
-          order=2,
+          order=XProc.ORDER_PARENT,
           suffix="& "),
     XProc(element="/SPSCheck/Protocol/ParticipatingSite/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("Phone","Recruiting",)),)),
     # XProc(prefix=END_TABLE),
-    XProc(prefix="  \\end{enumerate}"),
+    XProc(prefix="  \\end{enumerate}", order=XProc.ORDER_TOP),
     )
 
 
 DocumentStatusCheckCCOPBody = (
 # --------- START: First section Contact Information ---------
-    XProc(prefix=STATUSPROTOCOLDEF),
+    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
     XProc(element="PUP",
-          textOut=0),
+          textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Name",
           textOut=1,
           prefix="  \\newcommand{\PUP}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="Title",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\PUPTitle}{",
 	      suffix="}\n"),
     XProc(element="Org",
           prefix="  \\newcommand{\PUPOrg}{",
-          suffix="}\n"),
+          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Phone",
-          order=3,
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
     XProc(element="/SPSCheck/PUP/Street",
           textOut=0,
-          order=3,
           preProcs=( (street, ()), )),
     XProc(element="/SPSCheck/PUP/Phone",
-          order=3,
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
-    XProc(prefix=STATUSPUPADDRESS),
+    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
     XProc(prefix=STATUSDEFCCOP,
-          suffix="  \\begin{enumerate}\n"),
+          suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
 # --------- END: First section Contact Information ---------
 # --------- START: Second section Protocol Information ---------
     XProc(element="Protocol",
           textOut=0,
-          suffix=END_TABLE),
+          suffix=END_TABLE, order=XProc.ORDER_TOP),
     XProc(element="ProtocolTitle",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\ProtocolTitle}{",
           suffix="  }\n "),
     XProc(element="CurrentStatus",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\CurrentStatus}{",
           suffix="  }\n"),
     XProc(element="ID",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\ProtocolID}{",
           suffix="  }\n  "),
     XProc(element="LeadOrg",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadOrg}{",
           suffix="  }\n"),
     # Need to start the table header as a suffix of the Personnel field
     # in order to create the table for each protocol record.
     XProc(element="Personnel",
-          order=2,
+          order=XProc.ORDER_PARENT,
           textOut=0,
           suffix=STATUSPROTINFO + STATUSCHAIRINFO + STATUS_TAB_CCOPINTRO + STATUS_CCOPMAIN_TAB),
     XProc(element="/SPSCheck/Protocol/Personnel/Name",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadPerson}{",
           suffix="  }\n"),
     XProc(element="/SPSCheck/Protocol/Personnel/Role",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadRole}{",
           suffix="  }\n"),
     XProc(element="/SPSCheck/Protocol/Personnel/Street",
           textOut=0,
-          order=2,
+          order=XProc.ORDER_PARENT,
           preProcs=( (street, ()), )),
     XProc(element="/SPSCheck/Protocol/Personnel/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           prefix="  \\renewcommand{\\LeadPhone}{",
           suffix="  }\n"),
 # --------- END: Second section Protocol Information ---------
 # --------- START: Third section Protocol Information ---------
     # XProc(prefix=STATUS_SITES_TAB),
     XProc(element="ParticipatingSite",
-          order=2,
+          order=XProc.ORDER_PARENT,
           textOut=0),
     XProc(element="Site",
-          order=2,
+          order=XProc.ORDER_PARENT,
           suffix="& "),
     XProc(element="PI",
-          order=2,
+          order=XProc.ORDER_PARENT,
           suffix="& "),
     XProc(element="/SPSCheck/Protocol/ParticipatingSite/Phone",
-          order=2,
+          order=XProc.ORDER_PARENT,
           postProcs=((yesno,("Phone","Recruiting",)),)),
     # XProc(prefix=END_TABLE),
-    XProc(prefix="  \\end{enumerate}"),
+    XProc(prefix="  \\end{enumerate}", order=XProc.ORDER_TOP),
     )
 
 
 DocumentTestBody =(
-    XProc(prefix=FONT),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
     )
 
 # ###########################################################
@@ -2664,92 +2934,98 @@ DocumentTestBody =(
 # ###########################################################
 
 DocumentProtocolHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=ENTRYBFLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=CITATION),
-    XProc(element="ProtocolIDs/PrimaryID/IDString",
-          prefix=r"  \newcommand{\ProtocolID}{",
-	  suffix="}"),
-    XProc(prefix=PROTOCOL_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=ENDPROTOCOLPREAMBLE)
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=CITATION, order=XProc.ORDER_TOP),
+   #============================================================
+   #   RMK 2002-09-14:
+   #     1. Alan's code doesn't support relative path notation.
+   #     2. If it did, we'd have duplicate command definitions for
+   #        \ProtocolID
+   #XProc(element="ProtocolIDs/PrimaryID/IDString",
+   #      prefix=r"  \newcommand{\ProtocolID}{",
+   #  suffix="}", order=XProc.ORDER_TOP),
+   #============================================================
+    XProc(prefix=PROTOCOL_HDRTEXT, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDPROTOCOLPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 DocumentSummaryHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=TOCHEADER),
-    XProc(prefix=QUOTES),
-    XProc(prefix=CITATION),
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=TOCHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=CITATION, order=XProc.ORDER_TOP),
     XProc(element="SummaryTitle",
           prefix=r"  \newcommand{\SummaryTitle}{",
-	  suffix="}"),
-    XProc(prefix=SUMMARY_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=ENDSUMMARYPREAMBLE)
+	  suffix="}", order=XProc.ORDER_TOP),
+    XProc(prefix=SUMMARY_HDRTEXT, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDSUMMARYPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 DocumentOrgHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=STYLES),
-    XProc(prefix=ENTRYLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=ORG_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=TEXT_BOX),
-    XProc(prefix=PHONE_RULER),
-    XProc(prefix=ORG_DEFS),
-    XProc(prefix=ORG_TITLE),
-    XProc(prefix=ENDPREAMBLE),
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=STYLES, order=XProc.ORDER_TOP),
+    XProc(prefix=ENTRYLIST, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=ORG_HDRTEXT, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
+    XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
+    XProc(prefix=ORG_DEFS, order=XProc.ORDER_TOP),
+    XProc(prefix=ORG_TITLE, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP),
     )
 
 DocumentPersonHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=STYLES),
-    XProc(prefix=ENTRYLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=PERSON_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=TEXT_BOX),
-    XProc(prefix=PHONE_RULER),
-    XProc(prefix=PERSON_DEFS),
-    XProc(prefix=PERSON_TITLE),
-    XProc(prefix=ENDPREAMBLE)
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=STYLES, order=XProc.ORDER_TOP),
+    XProc(prefix=ENTRYLIST, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_HDRTEXT, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
+    XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_DEFS, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_TITLE, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 DocumentStatusCheckHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=STYLES),
-    XProc(prefix=ENTRYBFLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=STATPART_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=TEXT_BOX),
-    XProc(prefix=PHONE_RULER),
-    XProc(prefix=STATPART_TITLE),
-    XProc(prefix=ENDPREAMBLE)
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=STYLES, order=XProc.ORDER_TOP),
+    XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=STATPART_HDRTEXT, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
+    XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
+    XProc(prefix=STATPART_TITLE, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 
 DocumentTestHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=STYLES),
-    XProc(prefix=ENTRYBFLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=ENDPREAMBLE)
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
+    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP),
+    XProc(prefix=STYLES, order=XProc.ORDER_TOP),
+    XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
+    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 # ###########################################################
@@ -2783,33 +3059,33 @@ DOCFTR=r"""
 # Putting together static footer sections for each mailer
 # -------------------------------------------------------
 DocumentProtocolFooter =(
-    XProc(prefix=DOCFTR),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentSummaryFooter =(
-    XProc(prefix=DOCFTR),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentOrgFooter =(
-    XProc(prefix=APPROVAL),
-    XProc(prefix=DOCFTR),
+    XProc(prefix=APPROVAL, order=XProc.ORDER_TOP),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentPersonFooter =(
-    XProc(prefix=APPROVAL),
-    XProc(prefix=DOCFTR),
+    XProc(prefix=APPROVAL, order=XProc.ORDER_TOP),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentStatusCheckFooter =(
-    XProc(prefix=DOCFTR),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 ProtAbstUpdateInstructions =(
-    XProc(prefix=DOCFTR),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentTestFooter =(
-    XProc(prefix=DOCFTR),
+    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 
