@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.14 2002-11-08 21:45:27 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.15 2003-01-15 03:34:52 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.14  2002/11/08 21:45:27  bkline
+# Added Latin 1 encoding of title.
+#
 # Revision 1.13  2002/11/08 17:27:06  bkline
 # Switch to using professional title for cover letter at Lakshmi's
 # request (issue #510).
@@ -52,7 +55,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrmailer, re, sys
+import cdr, cdrdb, cdrmailer, re, sys, UnicodeToLatex
 
 #----------------------------------------------------------------------
 # Derived class for protocol abstract mailings.
@@ -169,7 +172,9 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         if type(result) in (type(""), type(u"")):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
-        return result[0] or "[No Protocol Professional Title found]"
+        if result[0]:
+            return UnicodeToLatex.convert(result[0])
+        return "[No Protocol Professional Title found]"
 
     #------------------------------------------------------------------
     # Generate an index of the mailers order by country/postal code.
