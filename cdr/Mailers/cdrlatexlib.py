@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.25 2002-12-30 19:55:47 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.26 2003-01-15 03:12:44 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.25  2002/12/30 19:55:47  bkline
+# Suppressed DRAFT marking.
+#
 # Revision 1.24  2002/12/27 02:11:19  ameyer
 # Added ability to output an 'x' in the directory include circle.
 #
@@ -473,7 +476,7 @@ class LeadOrgPerson:
     def __init__(self, node):
         self.name    = None
         self.phone   = None
-        self.role    = None
+        self.roles   = []
         self.address = Address()
         self.id      = node.getAttribute("id")
         self.orgs    = []
@@ -507,7 +510,10 @@ class LeadOrgPerson:
                                 shortName = getText(cName)
                         self.address.country = shortName or fullName
             elif child.nodeName == "PersonRole":
-                self.role = getText(child)
+                role = getText(child)
+                self.roles.append(getText(child))
+    def hasRole(self, role):
+        return role in self.roles
 
 class ProtLeadOrg:
     "Object representing a Protocol Lead Organization."
@@ -521,7 +527,7 @@ class ProtLeadOrg:
         self.currentStatus = None
         for child in orgNode.childNodes:
             if child.nodeName == "MailAbstractTo":
-                sendMailerTo = getText(child)
+                sendMailerTo = getText(child, transformToLatex = 0)
             elif child.nodeName == "LeadOrgProtocolStatuses":
                 self.currentStatus = OrgProtStatus(child)
             elif child.nodeName == "OfficialName":
@@ -531,8 +537,9 @@ class ProtLeadOrg:
             elif child.nodeName == "LeadOrgPersonnel":
                 person = LeadOrgPerson(child)
                 self.personnel[person.id] = person
-                if person.role.upper() != "UPDATE PERSON":
-                    self.protChair = person
+                for role in person.roles:
+                    if role.upper() != "UPDATE PERSON":
+                        self.protChair = person
         if sendMailerTo and self.personnel.has_key(sendMailerTo):
             self.sendMailerTo = self.personnel[sendMailerTo]
 
@@ -766,7 +773,7 @@ class ParticipatingSite:
             return 1
         return cmp(self.name, other.name)
 
-def getText(node):
+def getText(node, transformToLatex = 1):
     """
     Extracts and concatenates the text nodes from an element, and
     filters the characters to make them ready for insertion into a
@@ -776,7 +783,10 @@ def getText(node):
     for child in node.childNodes:
         if child.nodeType == node.TEXT_NODE:
             result = result + child.data
-    return UnicodeToLatex.convert(result)
+    if transformToLatex:
+        return UnicodeToLatex.convert(result)
+    else:
+        return result
 
 def getTextByPath(path, node):
     """
@@ -1388,13 +1398,13 @@ def protLeadOrg(pp):
         phone     = ""
     else:
         addressOrgs = ""
+        roles = ", ".join(leadOrg.protChair.roles)
         for addressOrg in leadOrg.protChair.orgs:
             addressOrgs += "  %s \\\\\n" % addressOrg
         if not leadOrg.protChair.name:
-            protChair = "[Name Unknown], %s" % leadOrg.protChair.role
+            protChair = "[Name Unknown], %s" % roles
         else:
-            protChair = "%s, %s" % (leadOrg.protChair.name.format(1),
-                                    leadOrg.protChair.role)
+            protChair = "%s, %s" % (leadOrg.protChair.name.format(1), roles)
         phone = leadOrg.protChair.phone or "Not specified"
         if not leadOrg.protChair.address:
             address = "Not specified"
