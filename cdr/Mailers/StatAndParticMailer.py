@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.14 2005-02-16 22:44:53 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.15 2005-03-02 15:46:06 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.14  2005/02/16 22:44:53  bkline
+# Added PubSubset attribute to EmailerManifest document.
+#
 # Revision 1.13  2004/10/08 12:56:36  bkline
 # Added temporary code to block some brussels mailers.
 #
@@ -362,27 +365,6 @@ LEFT OUTER JOIN query_term t
             self.commit()
             self.log("%d rows inserted into #lead_orgs table" %
                      self.getCursor().rowcount)
-
-            # TEMPORARY --------------------------------------------------
-            # (see request #1350)
-            self.getCursor().execute("CREATE TABLE #brussels (id INTEGER)")
-            self.commit()
-            self.getCursor().execute("""\
-    INSERT INTO #brussels (id)
-SELECT DISTINCT doc_id
-           FROM query_term
-          WHERE path = '/InScopeProtocol/ProtocolSources/ProtocolSource'
-                     + '/SourceName'
-            AND value = 'NCI Liaison Office-Brussels'""")
-            self.commit()
-            self.getCursor().execute("""\
-    DELETE #lead_orgs
-      FROM #lead_orgs o
-      JOIN #brussels b
-        ON o.prot_id = b.id
-     WHERE o.update_mode IS NULL OR o.update_mode <> 'Web-based'""")
-            self.commit()
-            # END TEMPORARY ----------------------------------------------
 
             # Fill in missing update mode values, using the PUPs' preferences.
             self.getCursor().execute("""\
