@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.43 2003-02-14 14:31:24 bkline Exp $
+# $Id: cdrmailer.py,v 1.44 2003-02-14 17:42:58 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.43  2003/02/14 14:31:24  bkline
+# Added .toc as one of the filename suffixes for support files.
+#
 # Revision 1.42  2003/02/11 21:29:26  bkline
 # Added code to pick up CitySuffix; added mailerCleanup().
 #
@@ -837,16 +840,34 @@ class MailerJob:
         if batchPrint:
             PrintJob(0, PrintJob.DUMMY).writePrologFiles()
             outputFile = open("PrintJob.cmd", "w")
-            outputFile.write("@if %1. ==. goto usage\n")
+            outputFile.write("@echo off\n")
+            outputFile.write("if %1. == . goto usage\n")
+            outputFile.write("if %1. == howmany. goto showcount\n")
+            outputFile.write("if %2. == . goto L1\n")
+            for i in range(len(self.__queue)):
+                outputFile.write("if %%2. == %d. goto L%d\n" % (i + 1, i + 1))
+            outputFile.write("goto usage\n")
         else:
             outputFile = self.__printer
+        i = 1
         for job in self.__queue:
-            job.Print(outputFile, self.log, batchPrint)
+            job.Print(outputFile, self.log, batchPrint, i)
+            i += 1
         if batchPrint:
             outputFile.write("goto done\n")
             outputFile.write(":usage\n")
-            outputFile.write("@echo usage: PrintJob path-to-printer\n")
-            outputFile.write("@echo  e.g.: PrintJob \\\\CIPSFS1\\HP8100\n")
+            outputFile.write("echo usage: PrintJob path-to-printer "
+                             "[first [last]]\n")
+            outputFile.write("echo    or: PrintJob howmany\n")
+            outputFile.write("echo     (to show how many files the script "
+                             "has without printing anything)\n")
+            outputFile.write("echo  e.g.: PrintJob \\\\CIPSFS1\\HP8100\n")
+            outputFile.write("echo    or: PrintJob \\\\CIPSFS1\\HP8100 "
+                             "201 400\n")
+            outputFile.write("echo     (to print the second 200 files)\n")
+            outputFile.write(":showcount\n")
+            outputFile.write("echo this script contains %d files\n" %
+                             len(self.__queue))
             outputFile.write(":done\n")
             outputFile.close()
             self.__packageFiles()
@@ -1043,7 +1064,7 @@ class PrintJob:
     # Have to use Print instead of print to avoid conflict with the
     # keyword.
     #------------------------------------------------------------------
-    def Print(self, outFile, logFunc, batch = 1):
+    def Print(self, outFile, logFunc, batch = 1, n = 0):
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
@@ -1052,6 +1073,8 @@ class PrintJob:
             if self.__staple                  : prolog = self.__STAPLE_NAME
             elif self.__filetype != self.PLAIN: prolog = self.__NONSTAPLE_NAME
             else                              : prolog = self.__PLAIN_NAME
+            outFile.write(":L%d\n" % n)
+            outFile.write("if %%3. == %d. goto :done\n" % (n - 1))
             outFile.write("copy %s+%s %%1\n" % (prolog, self.__filename))
         else:
             prn = open(outFile, "w")
