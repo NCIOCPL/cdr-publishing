@@ -856,9 +856,8 @@ class LatexDoc:
 #               Writes debugging info if object is present.
 #
 # Returns:
-#   Tuple of:
-#       Object of type LatexDoc containing all desired information.
-#       Number of passes through LaTeX required for this document.
+#   Object of type LatexDoc containing all desired information.
+#      Use get... methods to query it.
 #
 # Throws:
 #   makeLatexException
