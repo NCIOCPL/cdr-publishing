@@ -1,14 +1,17 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.2 2002-02-06 16:22:39 pzhang Exp $
+# $Id: PublishingService.py,v 1.3 2002-02-19 23:13:33 ameyer Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/02/06 16:22:39  pzhang
+# Added Log. Don't want to change SCRIPT here; change cdr.py.
+#
 #
 
 import cdrdb, os, time, cdr, sys, string
 
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
-SCRIPT = cdr.SCRIPTS + "/publish.py"
+SCRIPT = cdr.BASEDIR + "/publishing/publish.py"
 query  = """\
 SELECT id
   FROM pub_proc
@@ -34,7 +37,7 @@ while 1:
         cursor = None
         for row in rows:
             #print "publishing job %d" % row[0]
-            os.spawnv(os.P_NOWAIT, cdr.PYTHON, ("CdrPublish", SCRIPT, 
+            os.spawnv(os.P_NOWAIT, cdr.PYTHON, ("CdrPublish", SCRIPT,
                                                 str(row[0])))
     except cdrdb.Error, info:
         # XXX Change this to log errors (add logging to cdr.py)
