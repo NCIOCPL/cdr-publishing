@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.9 2003-02-13 20:17:36 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.10 2003-05-13 19:57:21 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2003/02/13 20:17:36  bkline
+# Added filter to strip out "Changes to summary" SummarySection elements.
+#
 # Revision 1.8  2003/01/28 15:20:52  bkline
 # Added date and mailer ID to summary mailer cover letters.
 #
@@ -118,17 +121,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     # Produce LaTeX source for all summaries to be mailed out.
     #----------------------------------------------------------------------
     def __getDocuments(self):
-        filters = ["name:Denormalization Filter (1/5): Summary",
-                   "name:Denormalization Filter (2/5): Summary",
-                   "name:Denormalization Filter (3/5): Summary",
-                   "name:Denormalization Filter (4/5): Summary",
-                   "name:Denormalization Filter (5/5): Summary",
-                   "name:Denormalization Filter:(6/6)Summary",
-                   "name:Strip Summary Changes Sections"
-                  #"name:Summary-Add Citation Wrapper Data Element",
-                  #"name:Summary-Sort Citations by refidx"
-                   ]
-
+        filters = ["set:Mailer Summary Set"]
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
