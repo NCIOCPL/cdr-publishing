@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.42 2003-05-19 18:41:57 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.43 2003-05-27 18:22:02 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.42  2003/05/19 18:41:57  bkline
+# Modified handling of citations in table cells to allow line breaking
+# after a comma in a series of citation numbers (request #735)
+#
 # Revision 1.41  2003/05/13 20:01:24  bkline
 # Implemented changes to Physician mailers requested in issue #730.
 #
@@ -999,12 +1003,18 @@ def protocolTitle (pp):
     attr = node.getAttribute("Type")
     macro = None
     if attr == "Professional":
-        macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQ Title:}"
+        macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQ Title:} "
     elif attr == "Original":
         macro = "\\newcommand\\OriginalProtocolTitle{{\\bfseries "\
-                "Original Title:}"
-    if macro:
-        pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
+                "Original Title:} "
+    elif attr == "Patient":
+        macro = ("\\newcommand\\PatientProtocolTitle{{\\bfseries "
+                 "Patient Title:} ")
+    else:
+        macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title: "
+    pp.setOutput(macro)
+    #if macro:
+    #    pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
 
 def street (pp):
     """
@@ -3141,10 +3151,12 @@ ProtAbstProtID = (
     )
 
 ProtAbstInfo = (
-    XProc(element="ProtocolTitle",
-          textOut=0,
-          order=XProc.ORDER_TOP,
-          preProcs=( (protocolTitle, ()), ),),
+    XProc(element   = "ProtocolTitle",
+          textOut   = 1,
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[protocolTitle]],
+          suffix    = " \\\\}\n"),
+
     XProc(prefix=PROTOCOLTITLE, order=XProc.ORDER_TOP),
     XProc(prefix=PROTOCOLINFO, order=XProc.ORDER_TOP),
     XProc(preProcs  = [[protRetrievalTerms]],
