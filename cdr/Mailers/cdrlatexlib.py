@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.15 2002-10-23 22:05:54 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.16 2002-10-31 20:00:23 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.15  2002/10/23 22:05:54  bkline
+# Added rule for StatusCheck.
+#
 # Revision 1.14  2002/10/14 12:47:44  bkline
 # Removed unwanted comma from CIPS address.
 #
@@ -2779,6 +2782,7 @@ CommonMarkupRules = (
           preProcs  = ((cdrlatextables.openRow, ()), ),
           postProcs = ((cdrlatextables.closeRow, ()), )),
     XProc(element   = "entry",
+          filters   = [stripLines],
           preProcs  = ((cdrlatextables.openCell, ()), ),
           postProcs = ((cdrlatextables.closeCell, ()), )),
     XProc(element   = "Note",
