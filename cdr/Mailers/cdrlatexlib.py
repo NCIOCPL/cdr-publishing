@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.49 2003-07-02 22:00:56 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.50 2003-07-03 18:11:21 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.49  2003/07/02 22:00:56  bkline
+# Implemented request #797 (shrink margins for Summary mailers).
+#
 # Revision 1.48  2003/07/02 02:02:07  ameyer
 # Various fixes based on further testing of the new code.
 # Removed more of the old, now redundant, location and formatting code.
@@ -1576,10 +1579,15 @@ def personLocs(pp):
         elif node.nodeName == "Home":
             loc = HomeLocation(node)
         if loc:
+            # Check if this is the CIPS contact address
             if loc.cipsContact:
                 cipsContact = loc
             else:
-                otherLocs.append(loc)
+                # Check if address is active
+                status = node.getAttribute ("Status")
+                if not status or status[0:8] != "Inactive":
+                    otherLocs.append(loc)
+                # Else not using this address.  Don't add it to list.
 
     # Output the address block for the mailer.
     adminOnly = "(For administrative use only)"
@@ -2145,14 +2153,10 @@ def statPersonnel(pp):
         if node.nodeName == "Name":
             name = PersonName(node).format(1)
         elif node.nodeName == "Location":
-            for child in node.childNodes:
-                if child.nodeName == "PostalAddress":
-                    address = Address(child)
-                elif child.nodeName == "Phone":
-                    phone = getText(child)
+            loc = Location (node)
         elif node.nodeName == "Role":
             role = getText(node)
-    address = address.format(1)
+    address = loc.format(1)
     while address and address[-1] in " \n\r\\": address = address[:-1]
     pp.setOutput(r"""
   \newcommand{\LeadPerson}{%s}
