@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.8 2003-01-28 15:20:52 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.9 2003-02-13 20:17:36 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2003/01/28 15:20:52  bkline
+# Added date and mailer ID to summary mailer cover letters.
+#
 # Revision 1.7  2002/11/08 21:46:08  bkline
 # Ready for user testing.
 #
@@ -121,6 +124,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                    "name:Denormalization Filter (4/5): Summary",
                    "name:Denormalization Filter (5/5): Summary",
                    "name:Denormalization Filter:(6/6)Summary",
+                   "name:Strip Summary Changes Sections"
                   #"name:Summary-Add Citation Wrapper Data Element",
                   #"name:Summary-Sort Citations by refidx"
                    ]
