@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.4 2002-02-20 15:10:14 pzhang Exp $
+# $Id: PublishingService.py,v 1.5 2002-02-20 22:25:10 Pzhang Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2002/02/20 15:10:14  pzhang
+# Modified SCRIPT to point to /cdr/lib/python/publish.py. Avoided duplicate
+# files in /cdr/publishing/publish.py this way.
+#
 # Revision 1.3  2002/02/19 23:13:33  ameyer
 # Removed SCRIPT and replaced it with BASEDIR in keeping with new decisions
 # about where things are.
@@ -15,7 +19,7 @@
 import cdrdb, os, time, cdr, sys, string
 
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
-SCRIPT = cdr.BASEDIR + "/lib/python/publish.py"
+SCRIPT = cdr.BASEDIR + "/publishing/publish.py"
 query  = """\
 SELECT id
   FROM pub_proc
