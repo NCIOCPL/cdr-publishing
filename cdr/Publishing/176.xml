@@ -95,7 +95,7 @@
     <OptionName>Destination</OptionName>
     <OptionValue>d:/cdr/mailers/output/</OptionValue>
    </SubsetOption>
-   /SubsetOptions>
+  </SubsetOptions>
  </SystemSubset>
  <SystemSubset>
   <SubsetName>Remail Protocol Abstract Verification Mailers</SubsetName>
@@ -141,6 +141,12 @@
   <SubsetDescription>Sent out to physicians represented by Person
    documents, for which no mailers have yet been sent before.
   </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>docType</ParmName>
+    <ParmValue>Will be set at runtime</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
   <SubsetActionName>PHYSICIAN MAILERS</SubsetActionName>
   <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
   <SubsetOptions>
