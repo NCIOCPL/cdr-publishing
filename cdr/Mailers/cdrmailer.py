@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.12 2002-05-15 01:40:29 ameyer Exp $
+# $Id: cdrmailer.py,v 1.13 2002-09-12 23:29:51 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2002/05/15 01:40:29  ameyer
+# Fixed bugs in new code.
+#
 # Revision 1.11  2002/04/25 15:54:09  ameyer
 # Added formatAddress - Bob's formatter used in several mailers.
 # Added getDocList - to return the list of doc ids plus version numbers.
@@ -203,7 +206,9 @@ class MailerJob:
         try:
             self.log("******** starting mailer job ********")
             self.__loadSettings()
+            self.log("~~Finished __loadSettings")
             self.__createQueue()
+            self.log("~~Finished __createQueue")
             self.fillQueue()
             self.__printQueue()
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
@@ -579,7 +584,7 @@ class MailerJob:
                 self.__docIds.append(row[0])
 
                 # Create a document object and add it to list of objects
-                self._documents[row(0)] = \
+                self.__documents[row[0]] = \
                     Document (row[0], row[2], row[3], row[1])
 
             if not docDescriptorList:

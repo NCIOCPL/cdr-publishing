@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtocolUpdateAbstractVerification.py,v 1.1 2002-01-28 09:36:24 bkline Exp $
+# $Id: ProtocolUpdateAbstractVerification.py,v 1.2 2002-09-12 23:29:51 ameyer Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2002/01/28 09:36:24  bkline
+# Adding remaining CDR scripts.
+#
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrmailer, re, sys
@@ -169,7 +172,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         mailerId = self.addMailerTrackingDoc(doc, recip, self.MAILER_TYPE)
 
         # Create a cover letter.
-        address   = self.__formatAddress(recip.getAddress())
+        address   = self.formatAddress(recip.getAddress())
         addressee = "Dear %s:" % recip.getAddress().getAddressee()
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
         latex     = template.replace('@@ADDRESS@@', address)
@@ -178,7 +181,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
-        
+
         # Customize the LaTeX for this copy of the protocol.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
@@ -187,47 +190,6 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         basename  = 'Mailer-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
-
-    #------------------------------------------------------------------
-    # Create a formatted address block.
-    #------------------------------------------------------------------
-    def __formatAddress(self, addr):
-        block = ""
-        addressee = addr.getAddressee()
-        if addressee: block += addressee + " \\\\\n"
-        for i in range(addr.getNumStreetLines()):
-            streetLine = addr.getStreetLine(i)
-            if streetLine:
-                block += streetLine + " \\\\\n"
-        city    = addr.getCity()
-        state   = addr.getState()
-        zip     = addr.getPostalCode()
-        pos     = addr.getCodePosition()
-        country = addr.getCountry()
-        line    = ""
-        if zip and pos == "before City":
-            line = zip
-            if city: line += " "
-        if city: line += city
-        if zip and pos == "after City":
-            if line: line += " "
-            line += zip
-        if state:
-            if line: line += ", "
-            line += state
-        if zip and (not pos or pos == "after PoliticalUnit_State"):
-            if line: line += " "
-            line += zip
-        if line: block += "%s \\\\\n" % line
-        if country:
-            block += country
-        if zip and pos == "after Country":
-            if country:
-                block += " "
-            block += zip
-        if country or zip:
-            block += " \\\\\n"
-        return block
 
 if __name__ == "__main__":
     sys.exit(ProtocolAbstractMailer(int(sys.argv[1])).run())

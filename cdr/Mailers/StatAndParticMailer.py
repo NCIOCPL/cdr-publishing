@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.2 2002-01-23 17:14:58 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.3 2002-09-12 23:29:51 ameyer Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/01/23 17:14:58  bkline
+# Modifications to accomodate changed requirements.
+#
 # Revision 1.1  2001/12/04 13:38:05  bkline
 # Initial version
 #
@@ -82,7 +85,7 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
                                 LEFT(person_link.node_loc, 12)
                            JOIN query_term lead_org
                              ON lead_org.doc_id = person_link.doc_id
-                            AND LEFT(lead_org.node_loc, 8) = 
+                            AND LEFT(lead_org.node_loc, 8) =
                                 LEFT(person_link.node_loc, 8)
                            JOIN document org
                              ON org.id = lead_org.int_val
@@ -216,7 +219,7 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
 
         # Create a cover letter.
         org       = self.__orgMap[recip, doc]
-        address   = self.__formatAddress(recip.getAddress(), org)
+        address   = self.formatAddress(recip.getAddress(), org)
         recipName = recip.getAddress().getAddressee()
         salutation= "Dear %s:" % recipName
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
@@ -226,14 +229,14 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
-        
+
         # Create the LaTeX for the document.
         self.log("generating LaTeX for CDR%010d" % doc.getId())
         self.log("lead Organization CDR%010d" % org.getId())
         filters   = ['name:InScopeProtocol Status and Participant Mailer']
         parms     = [('leadOrgId', 'CDR%010d' % org.getId())]
         doc.latex = self.makeLatex(doc, filters, "SP", parms)
-    
+
         # Customize the LaTeX for this copy of the protocol.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
@@ -242,50 +245,6 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         basename  = 'Mailer-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
-
-    #------------------------------------------------------------------
-    # Create a formatted address block.
-    #------------------------------------------------------------------
-    def __formatAddress(self, addr, org):
-        block = ""
-        orgName   = org.getName()
-        addressee = addr.getAddressee()
-        if orgName: block += orgName + " \\\\\n"
-        if orgName and addressee: block += "c/o "
-        if addressee: block += addressee + " \\\\\n"
-        for i in range(addr.getNumStreetLines()):
-            streetLine = addr.getStreetLine(i)
-            if streetLine:
-                block += streetLine + " \\\\\n"
-        city    = addr.getCity()
-        state   = addr.getState()
-        zip     = addr.getPostalCode()
-        pos     = addr.getCodePosition()
-        country = addr.getCountry()
-        line    = ""
-        if zip and pos == "before City":
-            line = zip
-            if city: line += " "
-        if city: line += city
-        if zip and pos == "after City":
-            if line: line += " "
-            line += zip
-        if state:
-            if line: line += ", "
-            line += state
-        if zip and (not pos or pos == "after PoliticalUnit_State"):
-            if line: line += " "
-            line += zip
-        if line: block += "%s \\\\\n" % line
-        if country:
-            block += country
-        if zip and pos == "after Country":
-            if country:
-                block += " "
-            block += zip
-        if country or zip:
-            block += " \\\\\n"
-        return block
 
 if __name__ == "__main__":
     sys.exit(InitialStatusAndParticipantMailer(int(sys.argv[1])).run())
