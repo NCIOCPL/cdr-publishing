@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.4 2002-10-10 13:44:25 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.5 2002-10-10 17:45:16 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2002/10/10 13:44:25  bkline
+# Ready for testing.
+#
 # Revision 1.3  2002/10/08 01:43:27  bkline
 # Added missing clause to SQL query.  Brought cover letter processing
 # closer in line with requirements.  Dropped some unnecessary tweaking of
@@ -85,7 +88,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                                             + '/ProtocolAdminInfo'
                                             + '/ProtocolLeadOrg'
                                             + '/MailAbstractTo'""",
-                                            (self.getId(),))
+                                            (self.getId(),), 120)
             rows = self.getCursor().fetchall()
             for row in rows:
                 recipient = self.getRecipients().get(row[0])
@@ -161,9 +164,10 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
             f.write("    Country: %s\n" % country)
             f.write("Postal Code: %s\n" % zip)
             f.write("   Protocol: %010d\n" % doc.getId())
-            f.write("      Title: %s\n\n\f" % title)
+            f.write("      Title: %s\n\n" % title)
+        f.write("\f")
         f.close()
-        job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.COVERPAGE)
+        job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.PLAIN)
         self.addToQueue(job)
 
     #------------------------------------------------------------------
@@ -173,7 +177,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         coverLetterParm     = self.getParm("CoverLetter")
         if not coverLetterParm:
             raise "CoverLetter parameter missing"
-        coverLetterName     = coverLetterParm[0]
+        coverLetterName     = 'd:/cdr/mailers/include/' + coverLetterParm[0]
         coverLetterTemplate = open(coverLetterName).read()
         for elem in self.__index:
             recip, doc = elem[2:]
