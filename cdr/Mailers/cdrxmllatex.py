@@ -521,6 +521,11 @@ class Ctl:
             if xp.checkAttr (domNode) == 0:
                 return
 
+            # If it is desirable to not process any empty elements
+            #   uncomment these two lines (XXXX - untested)
+            # if (not xp.hasChildNodes())
+            #     return
+
             # Append the node to our list of nodes
             # This is the key step that causes this domNode to be
             #   processed at output time
