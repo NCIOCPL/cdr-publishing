@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.34 2003-02-11 21:28:47 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.35 2003-02-19 16:49:48 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.34  2003/02/11 21:28:47  bkline
+# Added code to pick up CitySuffix.
+#
 # Revision 1.33  2003/02/10 17:23:07  bkline
 # Changed fax number for protocol summary mailer.
 #
@@ -2547,17 +2550,17 @@ STATUS_TAB=r"""
    %% STATUS_TAB %%
    %% --------------- %%
 \begin{longtable}{|>{\raggedright }p{160pt}|>{\raggedright }p{115pt}|p{75pt}|p{27pt}|p{27pt}|}  \hline
-    \bfseries           & \bfseries Principal &
+    \bfseries           &  &
     \bfseries           & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries           & \bfseries Investigator/ &
+    \bfseries           &  &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries Site      & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
 \endfirsthead
     \multicolumn{5}{l}{(continued from previous page)} \\ \hline
-                        & \bfseries Principal &
+                        & &
                         & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries           & \bfseries Investigator/ &
+    \bfseries           & &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries Site      & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
@@ -2657,7 +2660,8 @@ ALTENDPREAMBLE=r"""
   \setlength{\parskip}{1.2mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
-
+  \setlength{\footskip}{60pt}
+  
   \renewcommand{\thesection}{\hspace{-1.0em}}
   %\newcommand{\deadline}{""" + getDeadline() + r"""}
 
