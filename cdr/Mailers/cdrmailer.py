@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.45 2003-05-09 03:46:27 ameyer Exp $
+# $Id: cdrmailer.py,v 1.46 2003-06-24 12:23:01 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.45  2003/05/09 03:46:27  ameyer
+# Added support for PersonTitle used in physician directory mailers.
+#
 # Revision 1.44  2003/02/14 17:42:58  bkline
 # Implemented support for printing subsets of a mailer print job (see
 # CDR Issue #594).
@@ -148,7 +151,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
-import UnicodeToLatex, tarfile, glob
+import UnicodeToLatex, tarfile, glob, shutil
 
 debugCtr = 1
 
@@ -278,6 +281,7 @@ class MailerJob:
     __LOGFILE       = _LOGFILE
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
     __INCLUDE_PATH  = "d:/cdr/Mailers/include"
+    __TEMPLATE_FILE = __INCLUDE_PATH + "/template.tex"
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
     __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode "\
                       "-include-directory d:/cdr/mailers/style"
@@ -604,6 +608,8 @@ class MailerJob:
                                          mailType, self.log)
         except:
             (eType, eValue) = sys.exc_info()[:2]
+            cdr.logwrite ("Contents of result[0] when following exception raised:\n%s"\
+                 % result[0])
             eMsg = eValue or eType
             raise StandardError ( \
                 "failure generating LaTeX for %s: %s" % (docId, eMsg))
@@ -846,6 +852,13 @@ class MailerJob:
                 self.log ("Unable to change to working directory", tback=1)
                 raise "failure setting working directory to %s" % \
                       self.__outputDir
+        try:
+            src = self.__TEMPLATE_FILE
+            dst = "./template.tex"
+            shutil.copy2(src, dst)
+        except Exception, info:
+            self.log("Failure copying %s to %s" % (src, dst), tback = 1)
+            raise "Failure copying %s to %s: %s" % (src, dst, str(info))
 
     #------------------------------------------------------------------
     # Print the jobs in the queue.
