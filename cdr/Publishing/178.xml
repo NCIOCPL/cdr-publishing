@@ -46,6 +46,145 @@
 
    <!--
    ========================================================================
+   Open protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Active', 'Approved-Not Yet Active')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters>
+    <Subdirectory>ProtocolActive</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Closed protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters>
+    <Subdirectory>ProtocolClosed</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Summary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Summary</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
@@ -266,6 +405,100 @@
     <Subdirectory>Person</Subdirectory>
    </SubsetSpecification>
 
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>100</OptionValue>
+   </SubsetOption>   
+  </SubsetOptions>
+ </SystemSubset>
+
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
+  <SubsetDescription>Push filtered/validated Full-Load licensee documents to 
+     Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Full-Load</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Full Load</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ 
+ <SystemSubset>
+  <SubsetName>Export</SubsetName>
+  <SubsetDescription>Produce monthly/weekly licensee documents and push them 
+    to Cancer.gov.</SubsetDescription>
+  <SubsetParameters>    
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>20</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>NumDocsPerDocType</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>  
+  </SubsetParameters>
+  <SubsetSpecifications>
+
    <!--
    ========================================================================
    Open protocol documents.
@@ -390,6 +623,9 @@
       <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
       <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
@@ -405,101 +641,7 @@
     <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
 
-  </SubsetSpecifications>
-
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>AbortOnError</OptionName>
-    <OptionValue>100</OptionValue>
-   </SubsetOption>   
-  </SubsetOptions>
- </SystemSubset>
-
-
- <SystemSubset>
-  <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
-  <SubsetDescription>Push filtered/validated Full-Load licensee documents to 
-     Cancer.gov.
-  </SubsetDescription>
-  <SubsetParameters> 
-   <SubsetParameter>
-    <ParmName>SubSetName</ParmName>
-    <ParmValue>Full-Load</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Full Load</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-  </SubsetParameters>
-  <SubsetSpecifications>
-   <SubsetSpecification>
-    <SubsetSelection>   
-     <SubsetSQL>
-         SELECT document.id 
-           FROM document
-          WHERE document.id = 0 
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>
-  </SubsetSpecifications>
-  <SubsetOptions>
-    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>   
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
- 
- <SystemSubset>
-  <SubsetName>Export</SubsetName>
-  <SubsetDescription>Produce monthly/weekly licensee documents and push them 
-    to Cancer.gov.</SubsetDescription>
-  <SubsetParameters>    
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Export</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ReportOnly</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ValidateDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>    
-   <SubsetParameter>
-    <ParmName>AbortOnError</ParmName>
-    <ParmValue>20</ParmValue>
-   </SubsetParameter> 
-   <SubsetParameter>
-    <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>50000</ParmValue>
-   </SubsetParameter>  
-  </SubsetParameters>
-  <SubsetSpecifications>
-
-  <!--
+   <!--
    ========================================================================
    Country documents.
    ======================================================================== -->
@@ -719,148 +861,6 @@
      </SubsetFilter>
     </SubsetFilters>
     <Subdirectory>Person</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Open protocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? d.id,
-             MAX(v.num)
-        FROM doc_version v
-        JOIN document d
-          ON d.id = v.id
-        JOIN query_term q
-          ON q.doc_id = d.id
-       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
-                    + '/CurrentProtocolStatus'
-         AND q.value IN ('Active', 'Approved-Not Yet Active')
-         AND v.val_status = 'V'
-         AND v.publishable = 'Y'
-         AND d.active_status = 'A'
-    GROUP BY d.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
-    </SubsetFilters>
-    <Subdirectory>ProtocolActive</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Closed protocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? d.id,
-             MAX(v.num)
-        FROM doc_version v
-        JOIN document d
-          ON d.id = v.id
-        JOIN query_term q
-          ON q.doc_id = d.id
-       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
-                    + '/CurrentProtocolStatus'
-         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
-         AND v.val_status = 'V'
-         AND v.publishable = 'Y'
-         AND d.active_status = 'A'
-    GROUP BY d.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
-    </SubsetFilters>
-    <Subdirectory>ProtocolClosed</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Summary documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? d.id,
-             MAX(v.num)
-        FROM doc_version v
-        JOIN document d
-          ON d.id = v.id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-       WHERE t.name = 'Summary'
-         AND v.val_status = 'V'
-         AND v.publishable = 'Y'
-         AND d.active_status = 'A'
-    GROUP BY d.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-    <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
