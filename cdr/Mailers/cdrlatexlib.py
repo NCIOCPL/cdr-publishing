@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.64 2003-12-10 19:55:53 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.65 2004-03-03 22:06:47 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.64  2003/12/10 19:55:53  bkline
+# Fixed code to generate the PDQ/Cancer.gov Clinical Trial Listing
+# in the Person mailers (the denormalization output had replaced
+# the DocId element with an "id" attribute on the top-level element).
+#
 # Revision 1.63  2003/10/14 21:53:21  ameyer
 # Added ORDER_TOP_FRONT/BACK, ORDER_PARENT_FRONT/BACK.  Plain old ORDER_TOP
 # and ORDER_PARENT will continue to work as before, but are deprecated.
@@ -1500,26 +1505,47 @@ def protLeadOrg(pp):
     else:
         statDate = "Unknown"
     orgName = leadOrg.officialName or "Name Unknown"
-    if not leadOrg.protChair:
-        address   = "Not specified"
-        protChair = "Not specified"
-        phone     = ""
+
+##  Old logic inherited from Volker; replaced at Sheri's and Lakshmi's
+##  request (see request #1103).
+##     if not leadOrg.protChair:
+##         address   = "Not specified"
+##         protChair = "Not specified"
+##         phone     = ""
+##     else:
+##         roles = ", ".join(leadOrg.protChair.roles)
+##         if leadOrg.protChair.name:
+##             protChair = "%s, %s" % (leadOrg.protChair.name.format(1), roles)
+##         elif leadOrg.protChair.contact and leadOrg.protChair.contact.name:
+##             protChair = "%s, %s" % (leadOrg.protChair.contact.name, roles)
+##         else:
+##             protChair = "[Name Unknown], %s" % roles
+##         if leadOrg.protChair.contact:
+##             phone = leadOrg.protChair.contact.phone or "Not specified"
+##             address = leadOrg.protChair.contact.format(1)
+##         else:
+##             phone   = "Not specified"
+##             address = "Not specified"
+##         if not address:
+##             address = "Not specified"
+
+    # Per Sheri and Lakshmi: treat the "send-mailer-to" person as prot. chair.
+    pcObj = leadOrg.sendMailerTo
+    roles = ", ".join(pcObj.roles)
+    if pcObj.name:
+        protChair = "%s, %s" % (pcObj.name.format(1), roles)
+    elif pcObj.contact and pcObj.contact.name:
+        protChair = "%s, %s" % (pcObj.contact.name, roles)
     else:
-        roles = ", ".join(leadOrg.protChair.roles)
-        if leadOrg.protChair.name:
-            protChair = "%s, %s" % (leadOrg.protChair.name.format(1), roles)
-        elif leadOrg.protChair.contact and leadOrg.protChair.contact.name:
-            protChair = "%s, %s" % (leadOrg.protChair.contact.name, roles)
-        else:
-            protChair = "[Name Unknown], %s" % roles
-        if leadOrg.protChair.contact:
-            phone = leadOrg.protChair.contact.phone or "Not specified"
-            address = leadOrg.protChair.contact.format(1)
-        else:
-            phone   = "Not specified"
-            address = "Not specified"
-        if not address:
-            address = "Not specified"
+        protChair = "[Name Unknown], %s" % roles
+    if pcObj.contact:
+        phone   = pcObj.contact.phone or "Not specified"
+        address = pcObj.contact.format(1)
+    else:
+        phone   = "Not specified"
+        address = "Not specified"
+    if not address:
+        address = "Not specified"
 
     # Assemble the macros.
     pp.setOutput(r"""
