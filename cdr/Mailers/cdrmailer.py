@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.56 2004-11-24 05:50:09 bkline Exp $
+# $Id: cdrmailer.py,v 1.57 2005-03-02 15:42:26 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.56  2004/11/24 05:50:09  bkline
+# Plugged in code to build fresh set of emailer lookup values.
+#
 # Revision 1.55  2004/11/03 17:03:46  bkline
 # Added code to strip trailing and leading whitespace from address
 # strings (to avoid confusing LaTeX processor; see issue #1381).
@@ -184,7 +187,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
-import UnicodeToLatex, tarfile, glob, shutil
+import UnicodeToLatex, tarfile, glob, shutil, RtfWriter
 
 debugCtr = 1
 
@@ -344,6 +347,7 @@ class MailerJob:
         self.__parms            = {}
         self.__printer          = MailerJob.__DEF_PRINTER
         self.__batchPrinting    = batchPrinting
+        self.__letterLink       = ""
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -863,6 +867,11 @@ Please do not reply to this message.
                 self.log ("Unable to change to rtf mailer directory", tback=1)
                 raise "failure setting working directory to %s" % \
                       self.__rtfMailerDir
+        self.__letterLink = """
+You can retrieve the letters at:
+
+    http://%s.nci.nih.gov/cgi-bin/cdr/GetBoardMemberLetters.py?job=%d
+""" % (socket.gethostname(), self.__id)
 
     #------------------------------------------------------------------
     # Retrieve the string for an email address from an XML address
@@ -1224,9 +1233,9 @@ Please do not reply to this message.
 Job %d has completed.  You can view a status report for this job at:
 
     http://%s.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
-
+%s
 Please do not reply to this message.
-""" % (self.__id, socket.gethostname(), self.__id)
+""" % (self.__id, socket.gethostname(), self.__id, self.__letterLink)
                 cdr.sendMail(sender, [self.__email], subject, message)
         except:
             self.log("failure sending email to %s: %s" % (self.__email,
@@ -1471,20 +1480,24 @@ class PersonalName:
     def getGenSuffix       (self): return self.__genSuffix
     def getProSuffixes     (self): return list(self.__proSuffixes)
     
-    def format(self):
+    def format(self, useSuffixes = True, usePrefix = True):
         """
         Return value:
             String containing formatted name, e.g.:
                 'Dr. John Q. Kildare, Jr.'
         """
-        name = ("%s %s" % (self.__prefix, self.__givenName)).strip()
+        if usePrefix:
+            name = ("%s %s" % (self.__prefix, self.__givenName)).strip()
+        else:
+            name = self.__givenName.strip()
         name = ("%s %s" % (name, self.__middleInitial)).strip()
         name = ("%s %s" % (name, self.__surname)).strip()
         if self.__genSuffix:
             name = "%s, %s" % (name, self.__genSuffix)
-        rest = ", ".join(self.__proSuffixes).strip()
-        if rest:
-            name = "%s, %s" % (name, rest)
+        if useSuffixes:
+            rest = ", ".join(self.__proSuffixes).strip()
+            if rest:
+                name = "%s, %s" % (name, rest)
         return name
 
 #----------------------------------------------------------------------
@@ -1504,13 +1517,19 @@ class Address:
     """
     Public methods:
 
-        format(upperCase, dropUS)
+        format(upperCase, dropUS, wrapAt, useRtf, contactFields)
             Returns address in a format ready for inclusion in a
             LaTeX document.  If upperCase is true (default is false),
             then the address uses uppercase versions of the data
             for the formatted block.  If dropUS is true (default
             is false), the last line is omitted if it contains
-            only the abbreviation for the United States.
+            only the abbreviation for the United States.  The
+            optional wrapAt parameter can be used to control the
+            maximum width of the result.  If the optional useRtf
+            parameter is set to True, the address will be formatted
+            as RTF rather than LaTeX markup.  Finally, if the
+            optional contactFields parameter is True the result
+            will be an RTF block of labeled contact information.
 
         getNumAddressLines(dropUS)
             Returns the number of lines in the formatted address.
@@ -1561,6 +1580,17 @@ class Address:
                 "after PoliticalUnit_State"
                 "before City"
                 None
+
+        getPhone()
+            Returns the phone number, if any; otherwise None.
+            
+        getFax()
+            Returns the fax number, if any; otherwise None.
+            
+        getEmail()
+            Returns the email address, if any; otherwise None.
+            
+
     """
 
     #------------------------------------------------------------------
@@ -1585,7 +1615,13 @@ class Address:
         self.__postalCode    = None
         self.__codePos       = None
         self.__addressLines  = None
+        self.__orgLines      = None
+        self.__nameLine      = None
+        self.__titleLine     = None
         self.__personTitle   = None
+        self.__phone         = None
+        self.__fax           = None
+        self.__email         = None
         self.__incPersonTitle= withPersonTitle
 
         if type(xmlFragment) in (type(""), type(u"")):
@@ -1610,6 +1646,12 @@ class Address:
                     orgParentNode = node
                 elif node.nodeName == 'PersonTitle':
                     self.__personTitle = cdr.getTextContent(node).strip()
+                elif node.nodeName == 'Phone':
+                    self.__phone = cdr.getTextContent(node).strip()
+                elif node.nodeName == 'Fax':
+                    self.__fax = cdr.getTextContent(node).strip()
+                elif node.nodeName == 'Email':
+                    self.__email = cdr.getTextContent(node).strip()
 
         # If we got them, get org parent names to __orgs in right order
         if orgParentNode:
@@ -1631,6 +1673,9 @@ class Address:
     def getAddressee      (self): return self.__addressee
     def getPersonalName   (self): return self.__personalName
     def getPersonTitle    (self): return self.__personTitle
+    def getPhone          (self): return self.__phone
+    def getFax            (self): return self.__fax
+    def getEmail          (self): return self.__email
 
     # Caller may need to manipulate the name line of the address
     def setAddressee (self, nameStr): self.__addressee = nameStr
@@ -1648,8 +1693,9 @@ class Address:
     #------------------------------------------------------------------
     # Create a LaTeX-ready string representing this address.
     #------------------------------------------------------------------
-    def format(self, upperCase = 0, dropUS = 0, wrapAt = sys.maxint):
-        lines = self.__getAddressLines()
+    def format(self, upperCase = 0, dropUS = 0, wrapAt = sys.maxint,
+               useRtf = False, contactFields = False):
+        lines = self.__getAddressLines(includeNameAndTitle = not contactFields)
         if upperCase:
             upperLines = []
             for line in lines:
@@ -1658,8 +1704,33 @@ class Address:
         if dropUS and len(lines) and self.__lineIsUS(lines[-1]):
             lines = lines[:-1]
         lines = self.__wrapLines(lines, wrapAt)
-        return self.__formatAddressFromLines(lines)
+        if contactFields:
+            return self.__formatContactFields(lines)
+        return self.__formatAddressFromLines(lines, useRtf)
 
+    #------------------------------------------------------------------
+    # Create RTF for contact fields on fax-back form.
+    #------------------------------------------------------------------
+    def __formatContactFields(self, lines):
+        title = RtfWriter.fix(self.__personTitle or "")
+        phone = RtfWriter.fix(self.__phone or "")
+        fax   = RtfWriter.fix(self.__fax or "")
+        email = RtfWriter.fix(self.__email or "")
+        rtfLines = [
+            "\\tab Name:\\tab %s\\line" % RtfWriter.fix(self.__addressee),
+            "\\tab Title:\\tab %s\\line" % title
+        ]
+        prefix = "\\tab Address:\\tab "
+        for line in lines:
+            rtfLines.append("%s%s\\line" % (prefix, RtfWriter.fix(line)))
+            prefix = "\\tab\\tab "
+        rtfLines += [
+            "\\tab Phone:\\tab %s\\line" % phone,
+            "\\tab Fax:\\tab %s\\line" % fax,
+            "\\tab E-mail:\\tab %s\\line" % email
+        ]
+        return "\n".join(rtfLines)
+            
     #------------------------------------------------------------------
     # Create XML string from address information.
     #------------------------------------------------------------------
@@ -1759,10 +1830,13 @@ class Address:
     #------------------------------------------------------------------
     # Format an address block from its address lines.
     #------------------------------------------------------------------
-    def __formatAddressFromLines(self, lines):
+    def __formatAddressFromLines(self, lines, useRtf = False):
         block = ""
         for line in lines:
-            block += "%s \\\\\n" % UnicodeToLatex.convert(line)
+            if useRtf:
+                block += "%s\\line\n" % RtfWriter.fix(line)
+            else:
+                block += "%s \\\\\n" % UnicodeToLatex.convert(line)
         return FormattedAddress(block, len(lines))
 
     #------------------------------------------------------------------
@@ -1773,30 +1847,13 @@ class Address:
     # the one which creates address label sheets (which use uppercase
     # versions of the address line strings).
     #------------------------------------------------------------------
-    def __getAddressLines(self):
+    def __getAddressLines(self, includeNameAndTitle = True):
+
+        #--------------------------------------------------------------
+        # Cache address lines if not already done.
+        #--------------------------------------------------------------
         if self.__addressLines is None:
             lines = []
-            orgLines = []
-            if self.getNumOrgs():
-                for i in range(self.getNumOrgs()):
-                    org = self.getOrg(i)
-                    if org:
-                        orgLines.append(self.getOrg(i))
-            addressee = self.getAddressee()
-            if addressee:
-                lines.append(addressee)
-            if self.__incPersonTitle == TITLE_AFTER_NAME:
-                if self.__personTitle:
-                    lines.append(self.__personTitle)
-            if orgLines:
-                lines += orgLines
-            if self.__incPersonTitle == TITLE_AFTER_ORG:
-                if self.__personTitle:
-                    lines.append(self.__personTitle)
-            for i in range(self.getNumStreetLines()):
-                streetLine = self.getStreetLine(i)
-                if streetLine:
-                    lines.append(streetLine)
             city    = self.getCity()
             suffix  = self.getCitySuffix()
             state   = self.getState()
@@ -1806,7 +1863,10 @@ class Address:
             line    = ""
             city    = ("%s %s" % (city or "",
                                   suffix or "")).strip()
-            print "city=%s; suffix=%s" % (str(city), str(suffix))
+            for i in range(self.getNumStreetLines()):
+                streetLine = self.getStreetLine(i)
+                if streetLine:
+                    lines.append(streetLine)
             if zip and pos == "before City":
                 line = zip
                 if city: line += " "
@@ -1830,7 +1890,41 @@ class Address:
             elif zip and pos == "after Country":
                 lines.append(zip)
             self.__addressLines = lines
-        return self.__addressLines
+
+        #--------------------------------------------------------------
+        # Cache organization lines.
+        #--------------------------------------------------------------
+        if not self.__orgLines:
+            lines = []
+            if self.getNumOrgs():
+                for i in range(self.getNumOrgs()):
+                    org = self.getOrg(i)
+                    if org:
+                        lines.append(self.getOrg(i))
+            self.__orgLines = lines
+
+        #--------------------------------------------------------------
+        # Cache the name and title lines.
+        #--------------------------------------------------------------
+        if not self.__nameLine:
+            addressee = self.getAddressee()
+            self.__nameLine = addressee and [addressee] or []
+        if not self.__titleLine:
+            title = self.__personTitle
+            self.__titleLine = title and [title] or []
+
+        #--------------------------------------------------------------
+        # Assemble the cached lines.
+        #--------------------------------------------------------------
+        lines = []
+        if includeNameAndTitle:
+            lines += self.__nameLine
+            if self.__incPersonTitle == TITLE_AFTER_NAME:
+                lines += self.__titleLine
+        lines += self.__orgLines
+        if includeNameAndTitle and self.__incPersonTitle == TITLE_AFTER_ORG:
+            lines += self.__titleLine
+        return lines + self.__addressLines
 
     #------------------------------------------------------------------
     # Check to see if a line is just U.S. (or the equivalent).
