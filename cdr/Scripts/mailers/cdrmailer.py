@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.3 2001-10-07 12:49:44 bkline Exp $
+# $Id: cdrmailer.py,v 1.4 2001-10-07 15:16:12 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2001/10/07 12:49:44  bkline
+# Reduced use of publicly accessible members.  Enhanced docs.
+#
 # Revision 1.2  2001/10/06 23:43:12  bkline
 # Changed parameters to makeLatex() method.  Added docs for fillQueue().
 #
@@ -85,6 +88,10 @@ class MailerJob:
             Returns a possibly empty tuple of values stored in
             the pub_proc_parm table for this job.  Filled
             by the base class.
+
+        getDeadline()
+            Returns a string in the form YYYY-MM-DD for the deadline
+            by which the mailer must be responded to.
     """
 
     #------------------------------------------------------------------
@@ -119,6 +126,7 @@ class MailerJob:
     #------------------------------------------------------------------
     def getId        (self): return self.__id
     def getCursor    (self): return self.__cursor
+    def getDeadline  (self): return self.__deadline
     def getDocIds    (self): return self.__docIds
     def getRecipients(self): return self.__recipients
     def getDocuments (self): return self.__documents
