@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.1 2002-09-17 18:17:48 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.2 2002-09-17 18:19:57 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
@@ -79,38 +79,42 @@ class DirectoryMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __getRecipients(self):
 
-        # We'll add recipients to this dictionary
+        # We'll add recipients to this (initially empty) dictionary
         recipients = self.getRecipients()
 
         # Look at each document object
-        for id in self.getDocuments().keys():
+        for docId in self.getDocuments().keys():
 
             # Document object for the id
-            doc = self.getDocuments()[id]
+            doc = self.getDocuments()[docId]
 
-            # Recipient is the named in the document
-            # No remail tracker assumed
-            recipId = id
+            # For directories, the document of the recipient is usually
+            #   same as the document itself (but not always).
+            # Assume they're the same for now.
+            # Assume no remail tracker for now.
+            recipId = docId
             trackId = None
 
             # For remailers, get id of recipient and tracking doc
             #   from the remailer selection
-            # For directory docs, the recipient id should always be
-            #   the same as the doc id, and there should always be
-            #   only one recipient, but we'll do it this way
-            #   for consistency with other remailers
+            # Should normally be only one recipient, but we allow
+            #   more than one per document - consistent with other
+            #   mailers.
+            # Remailers must only have one.
             if self.remailer:
                 # Get list of pairs of (recipient, tracker)
-                tempList = self.rms.getRelatedIds (id)
+                tempList = self.rms.getRelatedIds (docId)
                 trackId  = tempList[0][1]
 
                 # Some debug checks
-                assert len(tempList) == 1,\
-"""Should be exactly one directory remailer recipient.
-  Found %d recipients for document id=%d""" % (len(tempList), id)
-                assert tempList[0][0] == id,\
-"""Directory remailer should have recipient=doc id, but
-recipient=%d, document=%d""" % (tempList[0][0], id)
+                assert len(tempList) == 1, \
+                    "Should be exactly one directory remailer recipient. " \
+                    "Found %d recipients for document id=%d" % \
+                     (len(tempList), docId)
+                # XXXX THIS ASSERTION MAY BE FALSE - CHECK - XXXX
+                assert tempList[0][0] == docId, \
+                    "Directory remailer should have recipient=doc id, but " \
+                    "recipient=%d, document=%d" % (tempList[0][0], docId)
 
             # Filters are different for physicians and organizations
             # XXXX - These filters are certainly wrong
@@ -141,6 +145,8 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
                 # Response should be list of filtered doc + messages
                 # If it's a single string, it's an error message
                 if type(resp)==type("") or type(resp)==type(u""):
+                    # XXXX DO WE HAVE A MORE FAIL-SOFT WAY TO HANDLE
+                    #      THIS PROBLEM?
                     raise "Unable to find address for %d: %s" % (recipId, resp)
 
                 # XXXX - May require post-processing here, depending on
@@ -163,7 +169,7 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
 
             # Append the current document to the list of those that
             #   this recipient will receive
-            recip.getDocs().append (id)
+            recip.getDocs().append (docId)
 
     #------------------------------------------------------------------
     # Generate each document to a file
@@ -192,7 +198,9 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
                 #   @@PROTOCOL_AFFIL_COUNT@@ and
                 #   @@SPECIFIC_PROTOCOL_ADDRESSES@@
                 if doc.__protocolCount > 0:
-                    filters.add ("Physician Protocol Mailer Variables")
+                    # XXXX THIS DOESN'T EXIST YET
+                    # filters.add ("name:Physician Protocol Mailer Variables")
+                    pass
 
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
@@ -207,14 +215,19 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
         f = open(filename, "w")
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
-        for country, zip, recip, doc in self.__index:
-            f.write("  Recipient: %010d\n" % recip.getId())
-            f.write("       Name: %s\n" % recip.getName())
-            f.write("    Country: %s\n" % country)
-            f.write("Postal Code: %s\n" % zip)
-            f.write("   Protocol: %010d\n" % doc.getId())
-            f.write("      Title: %s\n\n" % doc.getTitle())
+        recipients = self.getRecipients()
+        for key in recipients.keys():
+            # Show recipient identification
+            recip = recipients[key]
+            f.write ("Recipient: %s (CDR%010d)\n" % (recip.getName(),
+                                                    recip.getId()))
+            # Show each doc to be sent to recipient
+            for doc in recip.getDocs():
+                f.write ("  CDR%010d: %s\n" % (doc.getId(), doc.getTitle()))
+            f.write ("\n")
         f.close()
+
+        # Put the coverpage in the print queue for this job
         job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.COVERPAGE)
         self.addToQueue(job)
 
@@ -224,10 +237,10 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
     def __makeMailers(self):
         coverLetterParm     = self.getParm("CoverLetter")
         if not coverLetterParm:
-            raise "CoverLetter parameter missing"
+            raise StandardError ("CoverLetter parameter missing")
         coverLetterName     = "../%s" % coverLetterParm[0]
         coverLetterTemplate = open(coverLetterName).read()
-        for elem in self.__index:
+        for elem in self.getIndex():
             recip, doc = elem[2:]
             self.__makeMailer(recip, doc, coverLetterTemplate)
 
@@ -316,7 +329,7 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
     #------------------------------------------------------------------
     # Replace @@ variables with information from the protocols
     #------------------------------------------------------------------
-    def __replaceProtocolPlaceHolders (doc):
+    def __replaceProtocolPlaceHolders (self, doc):
         pass # XXXX
 
     #------------------------------------------------------------------
@@ -325,10 +338,10 @@ recipient=%d, document=%d""" % (tempList[0][0], id)
     def __makeMailer(self, recip, doc, template):
 
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recip, self.MAILER_TYPE)
+        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
 
         # Create a cover letter.
-        address   = self.__formatAddress(recip.getAddress())
+        address   = self.formatAddress(recip.getAddress())
         addressee = "Dear %s:" % recip.getAddress().getAddressee()
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
         latex     = template.replace('@@ADDRESS@@', address)
