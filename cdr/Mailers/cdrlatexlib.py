@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.27 2003-01-15 04:52:34 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.28 2003-01-16 23:35:42 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.27  2003/01/15 04:52:34  ameyer
+# Added 'x' in circles for public email Yes or No for each email address.
+#
 # Revision 1.26  2003/01/15 03:12:44  bkline
 # Added code to handle multiple roles for LeadOrgPerson elements; changed
 # code to get the MailAbstractTo value to avoid calling UnicodeToLatex().
@@ -1986,8 +1989,11 @@ def personDirectoryInclude(pp):
     """
     Changes the meaning of a macro to put out circles for a user to check for
     inclusion in a person directory or not.
-    Redefines \directoryIncludeYesOrNoCircles
+    Redefines \directoryIncludeYesOrNoCircles and retiredYesOrNoCircles.
     Must be called with the current element = to the Include element.
+
+    The directoryInclude... macro affects multiple questions.  See
+    PERSON_MISC_INFO.
     """
     # Current node should be Include element
     node = pp.getCurNode()
@@ -1999,12 +2005,12 @@ def personDirectoryInclude(pp):
     # Redefine command if we know whether to include or not
     if includeInDirectory == "Include":
         pp.setOutput (\
-            r"\renewcommand{\directoryIncludeYesOrNoCircles}" + \
-            r"{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}")
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\YESno}" + \
+            r"\renewcommand{\retiredYesOrNoCircles}{\yesNO}")
     elif includeInDirectory == "Do not include":
         pp.setOutput (\
-            r"\renewcommand{\directoryIncludeYesOrNoCircles}" + \
-            r"{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}")
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\yesNO}" + \
+            r"\renewcommand{\retiredYesOrNoCircles}{\YESno}")
 
     # If value is anything else ("Pending"), do nothing
 
@@ -2029,12 +2035,10 @@ def personEmailPublic(noString):
     # Redefine command based on whether email is defined as not public
     if not noString or noString != "No":
         # Undefined, empty, or something other than 'No'
-        return r"\renewcommand{\emailPublicYesOrNoCircles}" + \
-               r"{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}"
+        return r"\renewcommand{\emailPublicYesOrNoCircles}{\YESno}"
     else:
         # Email attribute said Public="No"
-        return r"\renewcommand{\emailPublicYesOrNoCircles}" + \
-               r"{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}"
+        return r"\renewcommand{\emailPublicYesOrNoCircles}{\yesNO}"
 
 def statPup(pp):
     "Build the address block for the protocol update person."
@@ -2274,6 +2278,7 @@ PERSON_HDRTEXT=r"""
   \newcommand{\CenterHdr}{{\bfseries \PersonNameWithSuffixes}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\directoryIncludeYesOrNoCircles}{\yesno}
+  \newcommand{\retiredYesOrNoCircles}{\yesno}
   \newcommand{\emailPublicYesOrNoCircles}{\yesno}
 %%
 %% -----
@@ -2435,6 +2440,8 @@ PHONE_RULER=r"""
   \newcommand{\yes}[1]{%
       \ifthenelse{\equal{#1}{Y}}{$\bigotimes$}{$\bigcirc$}}
   \newcommand{\yesno}{$\bigcirc$ Yes \qquad $\bigcirc$ No}
+  \newcommand{\YESno}{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}
+  \newcommand{\yesNO}{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}
 
   % Define the check marks for the 3 column tables
   % enter \Check{Y} or \Check{N} to set the mark
@@ -2455,11 +2462,11 @@ PERSON_MISC_INFO=r"""
 
    \subsection*{Practice Information}
     Are you a physician (MD, DO, or foreign equivalent)?   \hfill
-        \yesno \\
+        \directoryIncludeYesOrNoCircles \\
     Do you currently treat cancer patients?                \hfill
-        \yesno  \\
+        \directoryIncludeYesOrNoCircles \\
     Are you retired from practice?                         \hfill
-        \yesno  \\
+        \retiredYesOrNoCircles  \\
     If you are not retired from practice, do you want
     to be listed in the                                    \hfill \\
     PDQ/Cancer.gov Directory of Physicians?                \hfill
