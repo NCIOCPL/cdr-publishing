@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.3 2002-10-09 02:00:01 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.4 2002-10-11 03:36:48 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2002/10/09 02:00:01  ameyer
+# Myriad changes.  First version to actually produce output.  Not fully tested
+# at all.
+#
 # Revision 1.2  2002/09/17 18:19:57  ameyer
 # Last version from mmdb2.  Still not working yet.
 #
@@ -25,9 +29,6 @@ class DirectoryMailer(cdrmailer.MailerJob):
     def __init__(self, jobId, suppressPrinting = 0):
         # Super class constructor
         cdrmailer.MailerJob.__init__(self, jobId, suppressPrinting)
-
-        # Add a protocol count.  See __addProtocolInfo() and __makeMailer()
-        self.__protocolCount = 0
 
     #------------------------------------------------------------------
     # Override method in base class to fill the print queue
@@ -146,7 +147,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
                 # If it's a single string, it's an error message
                 if type(address)==type("") or type(address)==type(u""):
                     raise StandardError (
-                        "Unable to find address for %d: %s" % (recipId, resp))
+                        "Unable to find address for %d: %s" % (recipId,
+                                                               address))
 
                 # Construct a recipient with this address
                 recip = cdrmailer.Recipient (recipId, address.getAddressee(),
@@ -183,30 +185,22 @@ class DirectoryMailer(cdrmailer.MailerJob):
                 # Person denormalization filters
                 filters = ['name:Denormalization Filter (1/1): Person']
 
-                # Find out if physician is listed in any protocols
-                self.__addProtocolInfo (doc)
-
-                # If there are any, add a filter to put in
-                #   @@PROTOCOL_AFFIL_COUNT@@ and
-                #   @@SPECIFIC_PROTOCOL_ADDRESSES@@
-                if doc.__protocolCount > 0:
-                    # XXXX THIS DOESN'T EXIST YET
-                    # filters.add ("name:Physician Protocol Mailer Variables")
-                    pass
-
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
             doc.latex = self.makeLatex(doc, filters, '')
 
     #------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
-    # This lists all the mailers included in the job.
+    # This lists all the documents included in the job.
     #------------------------------------------------------------------
     def __makeCoverSheet(self):
         filename = "MainCoverPage.txt"
         f = open(filename, "w")
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
+
+        # Doc ids are listed in the order that they come back
+        #   from the pub_proc_doc table, i.e., document id order
         recipients = self.getRecipients()
         for key in recipients.keys():
             # Show recipient identification
@@ -224,106 +218,23 @@ class DirectoryMailer(cdrmailer.MailerJob):
         self.addToQueue(job)
 
     #------------------------------------------------------------------
-    # Walk through the index, generating protocol mailers.
+    # Walk through the index, generating mailers.
     #------------------------------------------------------------------
     def __makeMailers(self):
-        coverLetterParm     = self.getParm("CoverLetter")
-        if not coverLetterParm:
-            raise StandardError ("CoverLetter parameter missing")
-        coverLetterName     = "%s/%s" % (self.getMailerIncludePath(),
+        coverLetterParm = self.getParm("CoverLetter")
+
+        # Cover letters aren't required for all directory types
+        if coverLetterParm:
+            coverLetterName = "%s/%s" % (self.getMailerIncludePath(),
                                          coverLetterParm[0])
-        coverLetterTemplate = open(coverLetterName).read()
+            coverLetterTemplate = open(coverLetterName).read()
+        else:
+            coverLetterTemplate = None
+
+        # Make mailers in index order
         for elem in self.getIndex():
             recip, doc = elem[2:]
             self.__makeMailer(recip, doc, coverLetterTemplate)
-
-    #------------------------------------------------------------------
-    # Add protocol specific information for physician mailers
-    # Must only be called on physicians
-    #------------------------------------------------------------------
-    def __addProtocolInfo(self, personDoc):
-
-        """
-        Look in the query term table for a physician's ID to see
-        if he is listed as a lead organization or other site organization
-        person.  If so, gather the information about him that must
-        be printed in the mailer.
-
-        Pass:
-            Document object for person.
-
-        Return:
-            None.
-                Information is added to the document object as:
-                List containing for each lead organization particpation,
-                  a sublist of:
-                    Protocol document ID
-                    Protocol title
-                    Specific address if present (usually None)
-                List containing for each site organization particpation,
-                  a sublist of:
-                    Protocol document ID
-                    Protocol title
-                    Specific phone number if present (usually None)
-        """
-
-        # Person not yet known to be listed in any protocols
-        personDoc.__protocolParticipateCount = 0
-        personDoc.__leadOrgRows = []
-        personDoc.__orgSiteRows = []
-
-        # Search query_term index to find protocols on which this
-        #   person appears, together with any for which he has a
-        #   protocol specific address
-        try:
-            # Find out where user is a LeadOrg person
-            self.getCursor().execute ("""
-                SELECT DISTINCT qt.doc_id
-                  FROM query_term qt
-                  JOIN document doc
-                    ON qt.doc_id = doc.id
-                 WHERE qt.path='/InScopeProtocol/ProtocolAdminInfo' +
-                               '/ProtocolLeadOrg/LeadOrgPersonnel' +
-                               '/Person/@cdr:ref'
-                   AND qt.int_val = ?""", (personDoc.getId(),))
-
-            # Fetch and add them to the Document object
-            personDoc.__leadOrgRows = self.getCursor().fetchall()
-
-            # Find out where user is simply an OrgSiteContact person
-            self.getCursor().execute ("""
-                SELECT DISTINCT qt.doc_id
-                  FROM query_term qt
-                  JOIN document doc
-                    ON qt.doc_id = doc.id
-                 WHERE qt.path='/InScopeProtocol/ProtocolAdminInfo' +
-                               '/ProtocolLeadOrg/ProtocolSites' +
-                               '/OrgSiteContact/Person/@cdr:ref'
-                   AND qt.int_val = ?""", (personDoc.getId(),))
-
-            # Fetch and add them to the Document object
-            personDoc.__orgSiteRows = self.getCursor().fetchall()
-
-            # Save the count
-            personDoc.__protocolCount = \
-                len (personDoc.__leadOrgRows) + \
-                len (personDoc.__orgSiteRows)
-
-            # XXXX - LEFT OFF HERE - XXXX
-            # HAVE TO EITHER BRUTE FORCE SEARCH THE LINKED PROTOCOLS
-            # OR DO ONE OF SEVERAL CLEVER, BUT MORE PROGRAMMING INTENSIVE
-            # THINGS TO ACTUALLY GET THE SpecificContact and SpecificPhone
-            # ELEMENTS.
-
-        except cdrdb.Error, info:
-            raise "database error finding person's protocols: %s" % \
-                   str(info[1][0])
-
-    #------------------------------------------------------------------
-    # Replace @@ variables with information from the protocols
-    #------------------------------------------------------------------
-    def __replaceProtocolPlaceHolders (self, doc):
-        pass # XXXX
 
     #------------------------------------------------------------------
     # Generate everything needed to add one mailer package to the queue
@@ -333,31 +244,31 @@ class DirectoryMailer(cdrmailer.MailerJob):
         # Add document to the repository for tracking replies to the mailer.
         mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
 
-        # Create a cover letter.
-        address   = self.formatAddress(recip.getAddress())
-        addressee = "Dear %s:" % recip.getAddress().getAddressee()
-        docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
-        latex     = template.replace('@@ADDRESS@@', address)
-        #latex     = latex.replace('@@SALUTATION@@', addressee)
-        #latex     = latex.replace('@@DOCID@@', docId)
-        basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
-        jobType   = cdrmailer.PrintJob.COVERPAGE
-        self.addToQueue(self.makePS(latex, 1, basename, jobType))
+        # Create a cover letter, if needed
+        if template:
+            address   = self.formatAddress(recip.getAddress())
+            latex     = template.replace('@@ADDRESS@@', address)
 
-        # Customize the LaTeX for this copy of the protocol.
+            # Current thinking is to not include these elements - XXXX ASK BOB
+            # addressee = "Dear %s:" % recip.getAddress().getAddressee()
+            #latex     = latex.replace('@@SALUTATION@@', addressee)
+            #docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
+            #latex     = latex.replace('@@DOCID@@', docId)
+
+            basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
+            jobType   = cdrmailer.PrintJob.COVERPAGE
+            self.addToQueue(self.makePS(latex, 1, basename, jobType))
+
+        # Customize the LaTeX for this copy of the mailer.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
         latex     = latex.replace('@@DOCID@@', str(doc.getId()))
         latex     = latex.replace('@@MAILERID@@', str(mailerId))
-
-        # Physicians may have protocol info to add
-        if doc.__protocolCount > 0:
-            self.__replaceProtocolPlaceHolders (doc)
 
         basename  = 'Mailer-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
 
 if __name__ == "__main__":
-    suppressPrinting = 0    # For DEBUG, change to 1
+    suppressPrinting = 1    # For DEBUG, change to 1
     sys.exit(DirectoryMailer(int(sys.argv[1]), suppressPrinting).run())
