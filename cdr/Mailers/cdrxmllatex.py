@@ -14,7 +14,11 @@ from cdrlatexlib import XProc, ProcParms, XmlLatexException, findControls
 ####################################################################
 # Globals
 ####################################################################
-G_debug     = 0         # True=output debugging info
+
+# Debugging mode flag, true = output a map of ProcNodes before the
+#   actual latex output.
+# Turn this on by setting environment variable: XMLLATEXDBG
+G_debug = 0         # True=output debugging info
 
 
 ####################################################################
@@ -25,8 +29,8 @@ G_debug     = 0         # True=output debugging info
 #   to surrounding XProc objects.
 
 # Flags controlling continued execution of a chain of procedures
-EXEC_OK        = 0  # Everything fine, keep working
-EXEC_DONE      = 1  # Stop executing chain, we're done
+EXEC_OK   = 0       # Everything fine, keep working
+EXEC_DONE = 1       # Stop executing chain, we're done
 
 ####################################################################
 # Classes
@@ -353,7 +357,7 @@ class Ctl:
         if G_debug > 0:
             print '---Output processing map---\n'
             for n in self.procNodeList:
-                print n.toString()
+                print n.toString().encode('ascii', 'ignore')
             print '---End of Output processing map---\n'
 
 
@@ -484,9 +488,18 @@ class Ctl:
             # Create an output order string for it
             # This will be used as a sort key to build the output tree
             #  in proper order
-            if xp.order == XProc.ORDER_TOP:
-                # Make this a top level element, replacing passed parent order
-                nodeOrder = (instNum + addToInstNum, self.domNodeNum)
+            if xp.order == XProc.ORDER_TOP or \
+               xp.order == XProc.ORDER_TOP_FRONT or \
+               xp.order == XProc.ORDER_TOP_BACK:
+
+                # Set the sort order based on FRONT/BACK/none specification
+                # Make a top level element, replacing passed parent order
+                if xp.order == XProc.ORDER_TOP_FRONT:
+                    nodeOrder = (instNum, self.domNodeNum)
+                elif xp.order == XProc.ORDER_TOP:
+                    nodeOrder = (instNum + addToInstNum, self.domNodeNum)
+                else: # xp.order == XProc.ORDER_TOP_BACK
+                    nodeOrder = (instNum + DOC_ORDER, self.domNodeNum)
 
                 # Override assumption about how we check for occurrence paths
                 # Because this is ORDER_TOP processing, any element with
@@ -507,11 +520,16 @@ class Ctl:
                 occCount = self.elementOccs.get (topOccPath, 0)
                 self.elementOccs[topOccPath] = occCount + 1
 
+            # Order it within the parent
             elif xp.order == XProc.ORDER_PARENT:
-                # Order it within the parent
                 nodeOrder = parentOrder + \
                                 (instNum + addToInstNum, self.domNodeNum)
+            elif xp.order == XProc.ORDER_PARENT_FRONT:
+                nodeOrder = parentOrder + (instNum, self.domNodeNum)
+            elif xp.order == XProc.ORDER_PARENT_BACK:
+                nodeOrder = parentOrder + (instNum+DOC_ORDER, self.domNodeNum)
 
+            # Order is determined by where the node occurs in the tree
             elif xp.order == XProc.ORDER_DOCUMENT:
                 # This node is processed:
                 #   Within its parent
