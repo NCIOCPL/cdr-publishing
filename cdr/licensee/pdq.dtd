@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.14 2002-04-08 15:17:13 arkd Exp $
+ $Id: pdq.dtd,v 1.15 2002-05-16 01:21:38 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -670,7 +670,9 @@
 <!ELEMENT ProtPerson (PersonNameInformation?, PersonRole, Contact)>
 <!ATTLIST ProtPerson ref CDATA #IMPLIED>
 
-<!ELEMENT ProtocolSites (SiteName, SiteContact)>
+<!ELEMENT ProtocolSites (ProtocolSite+)>
+
+<!ELEMENT ProtocolSite (SiteName, SiteContact)>
 
 <!ELEMENT SiteName (#PCDATA)>
 <!ATTLIST SiteName ref CDATA #REQUIRED>
@@ -835,8 +837,6 @@
 <!ELEMENT TermDefinition (%TextSectionElements;)*>
 
 <!ELEMENT SpanishTermName (#PCDATA)>
-
-<!ELEMENT SpanishTermPronunciation (#PCDATA)>
 
 <!ELEMENT SpanishTermDefinition (%TextSectionElements;)*>
 
