@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.41 2003-01-28 16:15:33 bkline Exp $
+# $Id: cdrmailer.py,v 1.42 2003-02-11 21:29:26 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.41  2003/01/28 16:15:33  bkline
+# Replaced gzip and zip with tar/bzip2.
+#
 # Revision 1.40  2002/11/09 16:55:32  bkline
 # Added code to package files after the job has completed.
 #
@@ -311,6 +314,8 @@ class MailerJob:
             self.log("******** starting mailer job ********")
             self.__loadSettings()
             self.log("~~Finished __loadSettings")
+            self.__mailerCleanup()
+            self.log("~~Finished __mailerCleanup")
             self.__createQueue()
             self.log("~~Finished __createQueue")
             self.fillQueue()
@@ -654,6 +659,20 @@ class MailerJob:
                                                               basename,
                                                               eMsg)
 
+    #------------------------------------------------------------------
+    # Clear out orphaned mailer tracking documents (from failed jobs).
+    #------------------------------------------------------------------
+    def __mailerCleanup(self):
+        try:
+            results = cdr.mailerCleanup(self.__session)
+            if results[0]:
+                self.log("%d tracking document(s) marked as deleted" %
+                         len(results[0]))
+            for err in results[1]:
+                self.log(u"__mailerCleanup: %s" % err)
+        except:
+            self.log("mailerCleanup failure", 1)
+        
     #------------------------------------------------------------------
     # Prepare initial settings for job.
     #------------------------------------------------------------------
@@ -1352,6 +1371,7 @@ class Address:
                     self.__city = cdr.getTextContent(child)
                 elif child.nodeName == "CitySuffix":
                     self.__citySuffix = cdr.getTextContent(child)
+                    print "citySuffix: %s" % self.__citySuffix
                 elif child.nodeName in ("State", "PoliticalSubUnit_State"):
                     self.__state = cdr.getTextContent(child)
                 elif child.nodeName == "Country":
@@ -1470,11 +1490,15 @@ class Address:
                 if streetLine:
                     lines.append(streetLine)
             city    = self.getCity()
+            suffix  = self.getCitySuffix()
             state   = self.getState()
             zip     = self.getPostalCode()
             pos     = self.getCodePosition()
             country = self.getCountry()
             line    = ""
+            city    = ("%s %s" % (city or "",
+                                  suffix or "")).strip()
+            print "city=%s; suffix=%s" % (str(city), str(suffix))
             if zip and pos == "before City":
                 line = zip
                 if city: line += " "
