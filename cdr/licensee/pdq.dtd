@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.19 2002-06-19 22:11:30 arkd Exp $
+ $Id: pdq.dtd,v 1.20 2002-07-01 21:33:00 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -12,43 +12,47 @@
 
 <!-- Common Elements -->
 
-<!ENTITY % ParaLevelElements "Para | LiteralLayout | Table | ItemizedList
-                             | OrderedList | QandASet | Contact">
+<!ENTITY % ParaLevelElements   " Contact          | ItemizedList     | LiteralLayout
+                               | OrderedList      | QandASet         | Para
+                               | Table ">
 
-<!ENTITY % ParaElements "#PCDATA | Emphasis | Strong | Subscript
-                        | Superscript | TT | GeneName | ScientificName
-                        | ForeignWord | LOERef | LOELink | Reference
-                        | SummaryRef | SummaryLink | ProtocolRef | ProtocolLink
-                        | DrugName | InterventionName | GlossaryTermRef
-                        | GlossaryTermLink | ExternalRef | Quote | Note
-                        | Multimedia"> 
+<!ENTITY % ParaElements        " #PCDATA          | DrugName         | Emphasis
+                               | ExternalRef      | ForeignWord      | GeneName
+                               | GlossaryTermLink | GlossaryTermRef  | InterventionName
+                               | LOELink          | LOERef           | Multimedia
+                               | Note             | ProtocolRef      | ProtocolLink
+                               | Quote            | Reference        | ScientificName
+                               | Strong           | Subscript        | SummaryLink
+                               | SummaryRef       | Superscript      | TT "> 
 
-<!ENTITY % TextElements "#PCDATA | Emphasis | Strong | Subscript
-                         | Superscript | TT | GeneName | ScientificName
-                         | ForeignWord | LOERef | LOELink
-                         | Reference | SummaryRef | SummaryLink 
-                         | ProtocolRef | ProtocolLink | DrugName | InterventionName
-                         | GlossaryTermRef | GlossaryTermLink
-                         | ExternalRef | Quote | Note | Para
-                         | LiteralLayout | Table | ItemizedList | OrderedList | QandASet
-                         | Contact | Multimedia">
+<!ENTITY % TextElements        " #PCDATA          | Contact          | DrugName
+                               | Emphasis         | ExternalRef      | ForeignWord
+                               | GeneName         | GlossaryTermLink | GlossaryTermRef
+                               | InterventionName | ItemizedList     | LiteralLayout
+                               | LOELink          | LOERef           | Multimedia
+                               | Note             | OrderedList      | Para
+                               | ProtocolRef      | ProtocolLink     | QandASet
+                               | Quote            | Reference        | ScientificName
+                               | Strong           | Subscript        | SummaryLink
+                               | SummaryRef       | Superscript      | Table
+                               | TT ">
 
-<!ENTITY % TextSectionElements
-                         "#PCDATA | Emphasis | Strong | Subscript
-                         | Superscript | TT | GeneName | ScientificName
-                         | ForeignWord | LOERef | LOELink
-                         | Reference | SummaryRef | SummaryLink 
-                         | ProtocolRef | ProtocolLink
-                         | DrugName | InterventionName
-                         | GlossaryTermRef | GlossaryTermLink
-                         | ExternalRef | Quote | Note | Para
-                         | LiteralLayout | Table
-                         | ItemizedList | OrderedList | QandASet
-                         | Contact | Multimedia | Section">
+<!ENTITY % TextSectionElements " #PCDATA          | Contact          | DrugName
+                               | Emphasis         | ExternalRef      | ForeignWord
+                               | GeneName         | GlossaryTermLink | GlossaryTermRef
+                               | InterventionName | ItemizedList     | LiteralLayout
+                               | LOELink          | LOERef           | Multimedia
+                               | Note             | OrderedList      | Para
+                               | ProtocolRef      | ProtocolLink     | QandASet
+                               | Quote            | Reference        | ScientificName
+                               | Section          | Strong           | Subscript
+                               | SummaryLink      | SummaryRef       | Superscript
+                               | Table | TT ">
 
-<!ENTITY % TitleData "#PCDATA |  Emphasis | Strong | Subscript | Superscript
-                              | TT | GeneName | ScientificName | ForeignWord">
-                                           
+<!ENTITY % TitleData           " #PCDATA          |  Emphasis        | ForeignWord
+                               | GeneName         | ScientificName   | Strong
+                               | Subscript        | Superscript      | TT ">
+
 <!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
 
 <!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent+)>
@@ -315,7 +319,10 @@
 
 <!-- A Citation contains formatted text to be printed for the citation -->
 <!-- A Citation includes both literature and protocol references. -->
-<!-- Refidx attribute comment (TBD). -->
+<!-- The refidx attribute of the Reference element within each top level
+     SummarySection is linking to the idx attribute of the Citation element of
+     the ReferenceSection.  These IDs are unique within a (top level)
+     SummarySection. -->
 
 <!ELEMENT Citation (%ParaElements;)*>
 <!ATTLIST Citation idx CDATA #REQUIRED
@@ -379,7 +386,7 @@
                    ProfessionalDisclaimer?
                   )>
 <!ATTLIST Summary id CDATA #REQUIRED>
-<!ATTLIST Summary LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST Summary LegacyPDQID CDATA #IMPLIED>
 
 <!ELEMENT SummaryMetaData (SummaryType,
                            SummaryAudience,
@@ -462,7 +469,7 @@
                    )>
 <!-- ReimbursementApproval might change name after NCI discussion. -->
 <!ATTLIST Protocol id CDATA #REQUIRED>
-<!ATTLIST Protocol LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST Protocol LegacyPDQID CDATA #IMPLIED>
 
 <!ELEMENT ProtocolIDs (PrimaryID,OtherID*)>
 
@@ -564,7 +571,7 @@
 <!ELEMENT StudyCategoryName (#PCDATA)>
 
 <!ELEMENT Intervention (InterventionType,
-                        InterventionTypeParent+,
+                        InterventionTypeParent*,
                         InterventionNameLink*
                        )>
 
@@ -670,6 +677,8 @@
 
 <!ELEMENT SiteName (#PCDATA)>
 <!ATTLIST SiteName ref CDATA #REQUIRED>
+<!ATTLIST SiteName sitetype CDATA #REQUIRED>
+<!-- Sitetype indicates document type for the ref attribute. -->
 
 <!-- End Protocols -->
 
@@ -684,8 +693,8 @@
                   DateLastModified
                  )>
 <!ATTLIST Person id CDATA #REQUIRED>
-<!ATTLIST Person LegacyPDQID CDATA #OPTIONAL>
-<!ATTLIST Person Status ref CDATA #IMPLIED>
+<!ATTLIST Person LegacyPDQID CDATA #IMPLIED>
+<!ATTLIST Person Status CDATA #IMPLIED>
 
 <!ELEMENT ProfessionalInformation (PDQBoardMembership*,PhysicianDetails?)>
 <!ELEMENT PDQBoardMembership (#PCDATA)>
@@ -756,7 +765,7 @@
 			DateLastModified?
                        )>
 <!ATTLIST Organization id CDATA #REQUIRED>
-<!ATTLIST Organization LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST Organization LegacyPDQID CDATA #IMPLIED>
 <!ATTLIST Organization Status CDATA #IMPLIED>
 
 <!ELEMENT OrganizationNameInformation (OfficialName,
@@ -827,7 +836,7 @@
 			DateLastModified?
                        )>
 <!ATTLIST GlossaryTerm id CDATA #REQUIRED>
-<!ATTLIST GlossaryTerm LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST GlossaryTerm LegacyPDQID CDATA #IMPLIED>
 
 <!ELEMENT TermName (#PCDATA)>
 
@@ -895,9 +904,11 @@
 
 <!-- End Terminology -->
 
-<!-- Genetics Directory, start element GENETICSDIRECTORY -->
+<!-- Genetics Directory, start element GENETICSPROFESSIONAL -->
 
-<!ELEMENT GENETICSDIRECTORY (GENETICSPROFESSIONAL+)>
+<!-- The Genetics directory documents are independent from the other documents.  
+     No link exists from the genetics directory records to any of the other XML
+     document types or vice versa.-->
 
 <!ELEMENT GENETICSPROFESSIONAL (ID,
 				NAME,
@@ -970,7 +981,7 @@
 
 <!ELEMENT BDCT (#PCDATA)>
 
-<!-- End Genetics Directory -->
+<!-- End Genetics Directory-->
 
 <!-- Country, start element Country -->
 
@@ -983,7 +994,7 @@
 		   PostalCodePosition
 		  )>
 <!ATTLIST Country id CDATA #REQUIRED>
-<!ATTLIST Country LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST Country LegacyPDQID CDATA #IMPLIED>
 
 <!ELEMENT CountryFullName (#PCDATA)>
 
@@ -1005,7 +1016,7 @@
 			    CountryName
 			   )>
 <!ATTLIST PoliticalSubUnit id CDATA #REQUIRED>
-<!ATTLIST PoliticalSubUnit LegacyPDQID CDATA #OPTIONAL>
+<!ATTLIST PoliticalSubUnit LegacyPDQID CDATA #IMPLIED>
 
 <!ELEMENT PoliticalSubUnitFullName (#PCDATA)>
 
