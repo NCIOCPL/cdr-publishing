@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.28 2002-10-23 11:44:08 bkline Exp $
+# $Id: cdrmailer.py,v 1.29 2002-10-23 22:06:12 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.28  2002/10/23 11:44:08  bkline
+# Fixed printer opening code.
+#
 # Revision 1.27  2002/10/23 03:33:14  ameyer
 # Added code to get proper Organization address.
 # Replaced some code with calls to new cdr.getQueryTermValueForId().
@@ -479,6 +482,7 @@ class MailerJob:
     # Generate an index of the mailers in order of country + postal code.
     #------------------------------------------------------------------
     def makeIndex(self):
+        self.__index   = []
         recipients     = self.getRecipients()
         for recipKey in recipients.keys():
             recip      = recipients[recipKey]
@@ -956,12 +960,18 @@ class Org:
         getName()
             Returns the value of the title column of the document table
             in the CDR database for a recipient of this mailer.
+
+        getOrgType()
+            Returns a string for those mailers where this is relevant.
+            Otherwise None.
     """
-    def __init__(self, id, name):
+    def __init__(self, id, name, orgType = None):
         self.__id      = id
         self.__name    = name
+        self.__type    = orgType
     def getId     (self): return self.__id
     def getName   (self): return self.__name
+    def getOrgType(self): return self.__type
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer recipient.
