@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.30 2003-01-28 14:23:33 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.31 2003-02-06 19:36:19 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.30  2003/01/28 14:23:33  bkline
+# Added code to handle protocols with no PI for status and participant
+# check.
+#
 # Revision 1.29  2003/01/23 19:28:49  ameyer
 # Changed handling of Publish Email address circles again.
 #
@@ -1725,8 +1729,10 @@ def personSpecialties(pp):
 
     # Start the table for the specialties.
     output = r"""
+  \pagebreak
   \subsection*{Specialty Information}
-  \nopagebreak[4]
+  \hspace{1mm}
+  \vspace{-\baselineskip}
   %\subsubsection*{Board Certified Specialties}
   \setlength{\doublerulesep}{0.5pt}
   \begin{longtable}[l]{||p{250pt}||p{35pt}|p{35pt}||p{35pt}|p{35pt}||}
@@ -1778,6 +1784,9 @@ def personSpecialties(pp):
     output += r"""
   \end{longtable}
 
+  \hspace{1mm}
+  \vspace{-\baselineskip}
+
   %\subsubsection*{Other Specialties}
   \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||}
   \caption*{\bfseries Other Specialties} \\
@@ -1809,7 +1818,9 @@ def personSpecialties(pp):
   \end{longtable}
 
   \subsection*{Membership Information}
-  \nopagebreak[4]
+  \hspace{1mm}
+  \vspace{-\baselineskip}
+  \nopagebreak
   \begin{longtable}[l]{|p{350pt}||p{35pt}|p{35pt}||}
   \caption*{\bfseries Professional Societies} \\
     \hline
@@ -1841,6 +1852,8 @@ def personSpecialties(pp):
     output += r"""
   \end{longtable}
 
+  \hspace{1mm}
+  \vspace{-\baselineskip}
   %\subsubsection*{NCI Clinical Trials Groups}
   \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||}
   \caption*{\bfseries NCI Clinical Trials Groups} \\
