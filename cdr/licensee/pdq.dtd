@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.29 2002-07-30 18:43:58 arkd Exp $
+ $Id: pdq.dtd,v 1.30 2002-08-07 16:56:20 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -485,7 +485,7 @@
 
 <!ELEMENT IDType (#PCDATA)>
 
-<!ELEMENT FundingInfo (NIHGrantContract* | OtherGrantContractInfo*)>
+<!ELEMENT FundingInfo (NIHGrantContract*, OtherGrantContractInfo*)>
 
 <!ELEMENT NIHGrantContract (NIHGrantContractType?, GrantContractNo)>
 
@@ -763,7 +763,7 @@
                         IncludeInDirectory*,
                         OrganizationLocations,
                         OrganizationAffiliations?,
-                        OrganizationType+,
+                        OrganizationType*,
                         PreferredProtocolOrganization?,
 			DateFirstPublished?,
 			DateLastModified?
