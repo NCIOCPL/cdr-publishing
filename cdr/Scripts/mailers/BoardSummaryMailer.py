@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.4 2001-10-07 12:49:12 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.5 2001-10-07 15:16:25 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2001/10/07 12:49:12  bkline
+# Reduced use of publicly accessible members.
+#
 # Revision 1.3  2001/10/06 23:42:08  bkline
 # Changed parameters to makeLatex() method.
 #
@@ -155,7 +158,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         # Create a cover letter.
         latex    = template.replace('@@REVIEWER@@', recipient.getName())
         latex    = latex.replace('@@SUMMARY@@', doc.getTitle())
-        latex    = latex.replace('@@DEADLINE@@', doc.getTitle())
+        latex    = latex.replace('@@DEADLINE@@', this.getDeadline())
         basename = 'CoverLetter-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
