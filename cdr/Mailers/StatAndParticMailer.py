@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.1 2001-12-04 13:38:05 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.2 2002-01-23 17:14:58 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2001/12/04 13:38:05  bkline
+# Initial version
+#
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrmailer, re, sys
@@ -25,7 +28,7 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def fillQueue(self):
         self.__getRecipients()
-        self.__getDocuments()
+        #self.__getDocuments()
         self.__makeIndex()
         self.__makeCoverSheet()
         self.__makeMailers()
@@ -44,6 +47,12 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         track of which Org objects we have already constructed (with the
         orgs dictionary) and we have a map of each address+document combo
         (self.__orgMap) which remembers which organization is used.
+
+        As if this complication weren't enough, we also have to filter
+        each package separately, because the content for a given protocol
+        varies based on the lead org whose PUP is getting the mailer!
+        This means that we can't take advantage of our usual optimization
+        of filtering each document only once.
         """
         docType  = "InScopeProtocol"
         orgPath  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
@@ -53,8 +62,7 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         rolePath = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
                    "/LeadOrgPersonnel/PersonRole"
         modePath = "/Organization/OrganizationDetails"\
-                   "/OrganizationAdministrativeInformation"\
-                   "/PreferredContactMode"
+                   "/PreferredProtocolContactMode"
         try:
             self.getCursor().execute("""\
                 SELECT DISTINCT person.id,
@@ -76,24 +84,26 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
                              ON lead_org.doc_id = person_link.doc_id
                             AND LEFT(lead_org.node_loc, 8) = 
                                 LEFT(person_link.node_loc, 8)
-                           JOIN query_term contact_mode
-                             ON contact_mode.doc_id = lead_org.int_val
                            JOIN document org
-                             ON org.id = contact_mode.doc_id
+                             ON org.id = lead_org.int_val
                            JOIN document protocol
                              ON protocol.id = lead_org.doc_id
                            JOIN doc_version
                              ON doc_version.id = protocol.id
                            JOIN pub_proc_doc
                              ON pub_proc_doc.doc_version = doc_version.num
+                            AND pub_proc_doc.doc_id      = doc_version.id
                           WHERE pub_proc_doc.pub_proc = ?
-                            AND lead_org.path      = '%s'
-                            AND contact_mode.path  = '%s'
-                            AND person_link.path   = '%s'
-                            AND person_role.path   = '%s'
-                            AND contact_mode.value = 'Hardcopy'
-                            AND person_role.value  = 'Update Person'""" %
-                                (orgPath, modePath, pupPath, rolePath),
+                            AND lead_org.path         = '%s'
+                            AND person_link.path      = '%s'
+                            AND person_role.path      = '%s'
+                            AND person_role.value     = 'Update person'
+                            AND NOT EXISTS (SELECT *
+                                              FROM query_term contact_mode
+                                             WHERE contact_mode.path = '%s'
+                                               AND contact_mode.doc_id =
+                                                   lead_org.int_val)""" %
+                                (orgPath, pupPath, rolePath, modePath),
                                 (self.getId(),))
             rows = self.getCursor().fetchall()
             self.__orgMap = {}
@@ -101,7 +111,7 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
             for row in rows:
                 (recipId, recipName, orgId, orgName, docId, docTitle,
                  docVersion, addrLink) = row
-                print recipId, orgId, docId, docVersion, addrLink
+                #print recipId, orgId, docId, docVersion, addrLink
                 recipient = self.getRecipients().get(addrLink)
                 document  = self.getDocuments().get(docId)
                 org       = orgs.get(orgId)
@@ -134,17 +144,18 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         rsp = cdr.filterDoc(self.getSession(), filters, docId, parm = parms)
         if type(rsp) == type("") or type(rsp) == type(u""):
             raise "Unable to find address for %s: %s" % (str(fragLink), rsp)
+        #print "address=%s" % rsp[0]
         return cdrmailer.Address(rsp[0])
 
     #------------------------------------------------------------------
     # Produce LaTeX source for all summaries to be mailed out.
     #------------------------------------------------------------------
     def __getDocuments(self):
-        filters = ['name:Stub InScopeProtocol Filter For Mailers']
+        filters = ['name:InScopeProtocol Status and Participant Mailer']
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
-            doc.latex = self.makeLatex(doc, filters, "initial")
+            doc.latex = self.makeLatex(doc, filters, "SP")
 
     #------------------------------------------------------------------
     # Generate an index of the mailers in order of postal codes.
@@ -159,6 +170,8 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
             postalCode = address.getPostalCode()
             for doc in recip.getDocs():
                 self.__index.append((country, postalCode, recip, doc))
+                #print "__makeIndex(): country=%s; postalCode=%s" % (country,
+                #       postalCode)
         self.__index.sort()
 
     #------------------------------------------------------------------
@@ -204,19 +217,27 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         # Create a cover letter.
         org       = self.__orgMap[recip, doc]
         address   = self.__formatAddress(recip.getAddress(), org)
-        addressee = "Dear %s:" % recip.getAddress().getAddressee()
+        recipName = recip.getAddress().getAddressee()
+        salutation= "Dear %s:" % recipName
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
         latex     = template.replace('@@ADDRESS@@', address)
-        latex     = latex.replace('@@SALUTATION@@', addressee)
+        latex     = latex.replace('@@SALUTATION@@', salutation)
         latex     = latex.replace('@@DOCID@@', docId)
         basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
         
+        # Create the LaTeX for the document.
+        self.log("generating LaTeX for CDR%010d" % doc.getId())
+        self.log("lead Organization CDR%010d" % org.getId())
+        filters   = ['name:InScopeProtocol Status and Participant Mailer']
+        parms     = [('leadOrgId', 'CDR%010d' % org.getId())]
+        doc.latex = self.makeLatex(doc, filters, "SP", parms)
+    
         # Customize the LaTeX for this copy of the protocol.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
-        latex     = latex.replace('@@Recipient@@', recip.getName())
+        latex     = latex.replace('@@Recipient@@', recipName)
         latex     = latex.replace('@@MailerDocId@@', str(mailerId))
         basename  = 'Mailer-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.MAINDOC
