@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.33 2003-02-10 17:23:07 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.34 2003-02-11 21:28:47 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.33  2003/02/10 17:23:07  bkline
+# Changed fax number for protocol summary mailer.
+#
 # Revision 1.32  2003/02/06 23:00:44  ameyer
 # Trimmed whitespace from text retrieved via getText function.
 # Resolved some pychecker warnings.
@@ -483,7 +486,7 @@ class Address:
             output += "  %s \\\\\n" % street
         statePlusZip = "%s %s" % (self.state or "", self.zip or "")
         statePlusZip = statePlusZip.strip()
-        city = self.city.strip() or ""
+        city = ("%s %s" % (self.city, self.citySuffix)).strip() or ""
         comma = city and statePlusZip and ", " or ""
         lastLine = "%s%s%s" % (city, comma, statePlusZip)
         if lastLine:
