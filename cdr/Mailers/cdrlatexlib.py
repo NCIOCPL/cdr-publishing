@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.43 2003-05-27 18:22:02 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.44 2003-06-02 14:29:08 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.43  2003/05/27 18:22:02  bkline
+# Fixed a problem with the protocol title handling (didn't do the right
+# thing with markup).
+#
 # Revision 1.42  2003/05/19 18:41:57  bkline
 # Modified handling of citations in table cells to allow line breaking
 # after a comma in a series of citation numbers (request #735)
@@ -2724,7 +2728,7 @@ ENDPREAMBLE=r"""
 
 
   \begin{document}
-  \include{/cdr/mailers/include/template}
+  \include{./template}
 
   \begin{center}\bfseries \large
     \mailertitle
@@ -2749,7 +2753,7 @@ ALTENDPREAMBLE=r"""
 
 
   \begin{document}
-  \include{/cdr/mailers/include/template}
+  \include{./template}
 
 %
 % -----
@@ -2778,7 +2782,7 @@ ENDPROTOCOLPREAMBLE=r"""
 
 
   \begin{document}
-  \include{/cdr/mailers/include/template}
+  \include{./template}
 
 %
 % -----
@@ -3006,6 +3010,9 @@ CommonMarkupRules = (
           prefix    = "{\it Note: ",
           suffix    = "}"),
     XProc(element   = "SummaryRef",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "SummaryFragmentRef",
           prefix    = "\\emph{",
           suffix    = "}"),
     XProc(element   = "ExternalRef",
