@@ -1,6 +1,6 @@
 <CdrDoc Type='PublishingSystem' Id='CDR0000257983'>
 <CdrDocCtl>
-<DocValStatus readonly="yes">U</DocValStatus>
+<DocValStatus readonly="yes">V</DocValStatus>
 <DocActiveStatus readonly="yes">A</DocActiveStatus>
 <DocTitle readonly="yes">QcFilterSets</DocTitle>
 </CdrDocCtl>
@@ -26,7 +26,7 @@
    </SubsetParameter>   
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>100</ParmValue>
+    <ParmValue>50000</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -437,91 +437,7 @@
    </SubsetParameter>   
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>100</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>AbortOnError</ParmName>
-    <ParmValue>50</ParmValue>
-   </SubsetParameter>   
-  </SubsetParameters>
-  <SubsetSpecifications>
-
-    <!--
-   ========================================================================
-   Summary documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocs? d.id,
-             MAX(v.num)
-        FROM doc_version v
-        JOIN document d
-          ON d.id = v.id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-       WHERE t.name = 'Summary'
-         AND v.val_status = 'V'
-         AND v.publishable = 'Y'
-         AND d.active_status = 'A'
-    GROUP BY d.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-  </SubsetSpecifications>
-
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/filters/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>AbortOnError</OptionName>
-    <OptionValue>50</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
-  <SubsetName>Summary QC Report Filters</SubsetName>
-  <SubsetDescription>Filter set for summary QC report.</SubsetDescription>
-  <SubsetParameters>   
-   <SubsetParameter>
-    <ParmName>ReportOnly</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter> 
-   <SubsetParameter>
-    <ParmName>ValidateDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>   
-   <SubsetParameter>
-    <ParmName>NumDocs</ParmName>
-    <ParmValue>100</ParmValue>
+    <ParmValue>1000</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -571,9 +487,196 @@
       <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/filters/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Summary QC Report Filters</SubsetName>
+  <SubsetDescription>Filter set for summary QC report.</SubsetDescription>
+  <SubsetParameters>   
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Summary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
       <SubsetFilterName>Health Professional Summary Report</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/filters/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Organization Vendor Filters</SubsetName>
+  <SubsetDescription>Filter set for organization vendor documents.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocs? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Organization/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>  
    </SubsetSpecification>
 
   </SubsetSpecifications>
