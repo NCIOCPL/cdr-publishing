@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.6 2001-10-09 12:07:19 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.7 2002-11-08 21:46:08 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2001/10/09 12:07:19  bkline
+# Removed superfluous constructor override.  Removed title truncation
+# from top cover page.  Fixed typo (this -> self).
+#
 # Revision 1.5  2001/10/07 15:16:25  bkline
 # Added call to getDeadline().
 #
@@ -22,17 +26,12 @@
 #
 #----------------------------------------------------------------------
 
-import cdrdb, cdrmailer, re, sys
+import cdrdb, cdrmailer, re, sys, UnicodeToLatex
 
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
 #----------------------------------------------------------------------
 class BoardSummaryMailerJob(cdrmailer.MailerJob):
-
-    #----------------------------------------------------------------------
-    # Specific constant values for subclass.
-    #----------------------------------------------------------------------
-    MAILER_TYPE = "PDQ Editorial Board"
 
     #----------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
@@ -52,61 +51,81 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         if not boardParm:
             raise "parameter for Board not specified"
         digits = re.sub("[^\d]", "", boardParm[0])
-        self.boardId = int(digits)
-        self.log("processing board CDR%010d" % self.boardId)
+        self.__boardId = int(digits)
+        self.log("processing board CDR%010d" % self.__boardId)
 
     #----------------------------------------------------------------------
     # Gather the list of board members.
     #----------------------------------------------------------------------
     def __getBoardMembers(self):
+        memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
+        boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
         try:
             self.getCursor().execute("""\
-                SELECT DISTINCT p.id, p.title, s.id, s.title
-                           FROM document p
-                           JOIN query_term m
-                             ON m.int_val = p.id
-                           JOIN document s
-                             ON s.id = m.doc_id
-                           JOIN query_term b
-                             ON b.doc_id = s.id
-                          WHERE b.int_val = ?
-                            AND b.path = '/Summary/SummaryMetaData/PDQBoard'
-                                       + '/Board/@cdr:ref'
-                            AND m.path = '/Summary/SummaryMetaData/PDQBoard'
-                                       + '/BoardMember/@cdr:ref'
-                            AND LEFT(b.node_loc, 8) = LEFT(m.node_loc, 8)
-                       ORDER BY p.title, p.id, s.title, s.id""", 
-                       (self.boardId,))
+                SELECT DISTINCT person.id,
+                                person.title,
+                                summary.id,
+                                summary.title,
+                                pub_proc_doc.doc_version
+                           FROM document person
+                           JOIN query_term member
+                             ON member.int_val = person.id
+                           JOIN document summary
+                             ON summary.id = member.doc_id
+                           JOIN query_term board
+                             ON board.doc_id = summary.id
+                           JOIN pub_proc_doc
+                             ON pub_proc_doc.doc_id = summary.id
+                          WHERE board.int_val = ?
+                            AND pub_proc_doc.pub_proc = ?
+                            AND board.path = '%s'
+                            AND member.path = '%s'
+                            AND LEFT(board.node_loc, 8) =
+                                LEFT(member.node_loc, 8)
+                       ORDER BY person.title,
+                                person.id,
+                                summary.title,
+                                summary.id""" % (memberPath, boardPath), 
+                                                (self.__boardId,
+                                                 self.getId()))
             rows = self.getCursor().fetchall()
-            for row in rows:
-                if row[2] in self.getDocIds():
-                    recipient = self.getRecipients().get(row[0])
-                    doc       = self.getDocuments().get(row[2])
+            for personId, personTitle, summaryId, summaryTitle, docVer in rows:
+                if summaryId in self.getDocIds():
+                    recipient = self.getRecipients().get(personId)
+                    doc       = self.getDocuments().get(summaryId)
                     if not recipient:
-                        self.log("found board member %s" % row[1])
-                        addr      = self.getCipsContactAddress(row[0])
-                        recipient = cdrmailer.Recipient(row[0], row[1], addr)
-                        self.getRecipients()[row[0]] = recipient
+                        self.log("found board member %s" % personTitle)
+                        addr      = self.getCipsContactAddress(personId)
+                        recipient = cdrmailer.Recipient(personId, personTitle,
+                                                        addr)
+                        self.getRecipients()[personId] = recipient
                     if not doc:
-                        doc = cdrmailer.Document(row[2], row[3], "Summary")
-                        self.getDocuments()[row[2]] = doc
+                        doc = cdrmailer.Document(summaryId, summaryTitle,
+                                                 "Summary", docVer)
+                        self.getDocuments()[summaryId] = doc
                     recipient.getDocs().append(doc)
         except cdrdb.Error, info:
-            raise "database error finding board members: %s" % info[1][0]
+            raise "database error finding board members: %s" % (
+                info[1][0].encode('ascii'))
 
     #----------------------------------------------------------------------
     # Produce LaTeX source for all summaries to be mailed out.
     #----------------------------------------------------------------------
     def __getDocuments(self):
-        filters = ['name:Summary Filter1',
-                   'name:Summary Filter2',
-                   'name:Summary Filter3',
-                   'name:Summary Filter4',
-                   'name:Summary Filter5']
+        filters = ["name:Denormalization Filter (1/5): Summary",
+                   "name:Denormalization Filter (2/5): Summary",
+                   "name:Denormalization Filter (3/5): Summary",
+                   "name:Denormalization Filter (4/5): Summary",
+                   "name:Denormalization Filter (5/5): Summary",
+                   "name:Denormalization Filter:(6/6)Summary",
+                  #"name:Summary-Add Citation Wrapper Data Element",
+                  #"name:Summary-Sort Citations by refidx"
+                   ]
+
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
-            doc.latex = self.makeLatex(doc, filters, "initial")
+            doc.latex = self.makeLatex(doc, filters)
 
     #----------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
@@ -121,26 +140,57 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
             f.write("Board Member: %s (CDR%010d)\n" % (recipient.getName(), 
                                                        recipient.getId()))
             for doc in recipient.getDocs():
-                f.write("\tSummary CDR%010d: %s\n" % (doc.getId(),
-                                                      doc.getTitle()))
+                title = doc.getTitle().encode('latin-1', 'replace')
+                if len(title) > 50: title = title[:50] + " ..."
+                f.write("\tSummary CDR%010d: %s\n" % (doc.getId(), title))
         f.close()
-        job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.COVERPAGE)
+        job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.PLAIN)
         self.addToQueue(job)
 
     #------------------------------------------------------------------
     # Walk through the board member list, generating packets for each.
     #------------------------------------------------------------------
     def __makePackets(self):
-        coverLetterName     = "../PDQSummaryReviewerCoverLetter.tex"
-        coverLetterTemplate = open(coverLetterName).read()
+        coverLetterParm     = self.getParm("CoverLetter")
+        basePath            = self.getMailerIncludePath() + "/"
+        coverLetterName     = basePath + coverLetterParm[0]
+        coverLetterFile     = open(coverLetterName)
+        coverLetterTemplate = coverLetterFile.read()
+        sepSheetName        = basePath + "ListOfSummaries.tex"
+        sepSheetFile        = open(sepSheetName)
+        sepSheetTemplate    = sepSheetFile.read()
+        coverLetterFile.close()
+        sepSheetFile.close()
+        
         for key in self.getRecipients().keys():
-            self.__makePacket(self.getRecipients()[key], coverLetterTemplate)
+            self.__makePacket(self.getRecipients()[key], coverLetterTemplate,
+                                                         sepSheetTemplate)
 
     #------------------------------------------------------------------
     # Create a mailer packet for a single mailer recipient.
     #------------------------------------------------------------------
-    def __makePacket(self, recipient, coverLetterTemplate):
+    def __makePacket(self, recipient, coverLetterTemplate, sepSheetTemplate):
         self.log("building packet for %s" % recipient.getName())
+
+        # Create a mailing label.
+        latex     = self.createAddressLabelPage(recipient.getAddress())
+        basename  = 'MailingLabel-%d' % recipient.getId()
+        jobType   = cdrmailer.PrintJob.COVERPAGE
+        self.addToQueue(self.makePS(latex, 1, basename, jobType))
+
+        # Create a separator sheet.
+        docList   = ""
+        basename  = 'SeparatorSheet-%d' % recipient.getId()
+        jobType   = cdrmailer.PrintJob.COVERPAGE
+        name      = recipient.getAddress().getAddressee()
+        latex     = sepSheetTemplate.replace('@@REVIEWER@@', name)
+        for doc in recipient.getDocs():
+            docList += "\\item %d: %s\n" % (doc.getId(),
+                    UnicodeToLatex.convert(doc.getTitle().split(';')[0]))
+        latex     = latex.replace('@@SUMMARYLIST@@', docList)
+        self.addToQueue(self.makePS(latex, 1, basename, jobType))
+
+        # Add the document mailers.
         for doc in recipient.getDocs():
             self.__addDocToPacket(recipient, doc, coverLetterTemplate)
 
@@ -150,12 +200,13 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     def __addDocToPacket(self, recipient, doc, template):
 
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recipient, self.MAILER_TYPE)
+        mailerId = self.addMailerTrackingDoc(doc, recipient, self.getSubset())
 
         # Create a cover letter.
-        latex    = template.replace('@@REVIEWER@@', recipient.getName())
-        latex    = latex.replace('@@SUMMARY@@', doc.getTitle())
-        latex    = latex.replace('@@DEADLINE@@', self.getDeadline())
+        docTitle = UnicodeToLatex.convert(doc.getTitle().split(';')[0])
+        name     = recipient.getAddress().getAddressee()
+        latex    = template.replace('@@REVIEWER@@', name)
+        latex    = latex.replace('@@SUMMARYTITLE@@', docTitle)
         basename = 'CoverLetter-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
@@ -163,8 +214,8 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         # Customize the LaTeX for this copy of the summary.
         nPasses  = doc.latex.getLatexPassCount()
         latex    = doc.latex.getLatex()
-        latex    = latex.replace('@@BoardMember@@', recipient.getName())
-        latex    = latex.replace('@@MailerDocId@@', str(mailerId))
+        latex    = latex.replace('@@BoardMember@@', name)
+        #latex   = latex.replace('@@MailerDocId@@', str(mailerId))
         basename = 'Mailer-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
