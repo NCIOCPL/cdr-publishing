@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.36 2003-03-14 14:25:59 bkline Exp $
+   $Id: pdq.dtd,v 1.37 2003-03-14 14:44:02 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.36  2003/03/14 14:25:59  bkline
+   Added FormerName child to OrganizationNameInformation element.
+
    Revision 1.35  2003/03/10 22:25:47  bkline
    Added Compact attribute for OrderedList element.
 
@@ -898,8 +901,9 @@
                 TermTypeName?,
                 SemanticType*,
                 TermRelationship?,
-		DateFirstPublished?,
-		DateLastModified?
+                MenuInformation?,
+                DateFirstPublished?,
+                DateLastModified?
                )>
 <!ATTLIST Term id CDATA #REQUIRED>
 <!ATTLIST Term LegacyPDQID CDATA #IMPLIED>
@@ -942,6 +946,18 @@
 <!ATTLIST RelatedTermName ref CDATA #IMPLIED>
 
 <!ELEMENT RelationshipType (#PCDATA)>
+
+<!ELEMENT MenuInformation (MenuTerm+)>
+
+<!ELEMENT MenuTerm (MenuType, MenuParent*, DisplayName?)>
+<!ATTLIST MenuTerm SortOrder CDATA #IMPLIED>
+
+<!ELEMENT MenuType (#PCDATA)>
+
+<!ELEMENT MenuParent (#PCDATA)>
+<!ATTLIST MenuParent ref CDATA #IMPLIED>
+
+<!ELEMENT DisplayName (#PCDATA)>
 
 <!-- End Terminology -->
 
