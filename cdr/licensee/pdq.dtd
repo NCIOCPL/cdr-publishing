@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.42 2003-07-09 21:04:40 pzhang Exp $
+   $Id: pdq.dtd,v 1.43 2003-07-15 20:11:05 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,11 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.42  2003/07/09 21:04:40  pzhang
+   Expanded TermDefinition in GlossaryTerm to include new elements for
+   Audience and Dictionary, with the definition text moved to a separate
+   DefinitionText child element.
+
    Revision 1.41  2003/04/09 18:56:15  bkline
    Altered GlossaryTerm definition:
     * made TermDefinition and SpanishTermDefinition multiply occurring;
@@ -928,8 +933,6 @@
 <!ELEMENT Definition (DefinitionText,
                       DefinitionType
                      )>
-
-<!ELEMENT DefinitionText (%TextSectionElements;)*>
 
 <!ELEMENT DefinitionType (#PCDATA)>
 
