@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.6 2001-10-11 19:48:22 bkline Exp $
+# $Id: cdrmailer.py,v 1.7 2001-10-22 23:57:42 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2001/10/11 19:48:22  bkline
+# Added Address class; moved common sendMail() code out to cdr module.
+#
 # Revision 1.5  2001/10/09 12:06:25  bkline
 # Changed __STAPLE_PROLOG to self.__STAPLE_PROLOG.
 #
@@ -71,6 +74,10 @@ class MailerJob:
         getId()
             Returns the ID for the publishing job.
 
+        getSubset()
+            Returns the string identifying the specific type
+            of publishing job.
+
         getCursor()
             Returns object for executing database queries.
 
@@ -85,7 +92,15 @@ class MailerJob:
             Returns the dictionary containing the Recipient
             objects associated with this job.  Populated by
             the derived classes during the process of filling
-            the print queue.
+            the print queue.  For jobs which use a single
+            address for all packages sent to a given person,
+            the Person document ID is used as the dictionary
+            key.  For jobs in which different addresses can
+            be used for the same person, the keys used for 
+            the dictionary are the fragment links which 
+            identify a person and a specific address, so 
+            the same person can appear more than once if 
+            multiple addresses are used.
 
         getDocuments()
             Returns the dictionary containing the Document objects 
@@ -134,6 +149,7 @@ class MailerJob:
     #------------------------------------------------------------------
     def getId        (self): return self.__id
     def getCursor    (self): return self.__cursor
+    def getSubset    (self): return self.__subset
     def getSession   (self): return self.__session
     def getDeadline  (self): return self.__deadline
     def getDocIds    (self): return self.__docIds
@@ -256,6 +272,12 @@ class MailerJob:
         self.__nMailers += 1
         digits = re.sub("[^\d]", "", rsp)
         return int(digits)
+
+    #------------------------------------------------------------------
+    # Convert Unicode string to Latin-1 character set.
+    #------------------------------------------------------------------
+    def encodeLatin1(self, unicodeString):
+        return unicodeString.encode('latin-1')
 
     #------------------------------------------------------------------
     # Retrieve the CIPS contact address for a mailer recipient.
@@ -416,13 +438,13 @@ class MailerJob:
     def __getPubProcRow(self):
         try:
             self.__cursor.execute("""\
-                SELECT output_dir, email
+                SELECT output_dir, email, pub_subset
                   FROM pub_proc
                  WHERE id = ?""", (self.__id,))
             row = self.__cursor.fetchone()
             if not row:
                 raise "unable to find job %d" % self.__id
-            (self.__outputDir, self.__email) = row
+            (self.__outputDir, self.__email, self.__subset) = row
         except cdrdb.Error, info:
             raise "database error retrieving pub_proc row: %s" % info[1][0]
 
@@ -521,19 +543,16 @@ class MailerJob:
     def __sendMail(self):
         try:
             if self.__email:
+                self.log("Sending mail to %s" % self.__email)
                 sender  = MailerJob.__CDR_EMAIL
                 subject = "CDR Mailer Job Status"
                 message = """\
-From: %s
-To: %s
-Subject: %s
-
 Job %d has completed.  You can view a status report for this job at:
 
     http://mmdb2.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
 
 Please do not reply to this message.
-""" % (sender, self.__email, subject, self.__id, self.__id)
+""" % (self.__id, self.__id)
                 cdr.sendMail(sender, [self.__email], subject, message)
         except:
             self.log("failure sending email to %s: %s" % (self.__email, 
@@ -604,6 +623,27 @@ class PrintJob:
             prn.close()
 
 #----------------------------------------------------------------------
+# Object to hold information about a mailer organization.
+#----------------------------------------------------------------------
+class Org:
+    """
+    Public members:
+
+        getId()
+            Returns the integer for the primary key of the CDR document
+            for a recipient of this mailer.
+
+        getName()
+            Returns the value of the title column of the document table
+            in the CDR database for a recipient of this mailer.
+    """
+    def __init__(self, id, name):
+        self.__id      = id
+        self.__name    = name
+    def getId     (self): return self.__id
+    def getName   (self): return self.__name
+
+#----------------------------------------------------------------------
 # Object to hold information about a mailer recipient.
 #----------------------------------------------------------------------
 class Recipient:
@@ -619,13 +659,12 @@ class Recipient:
             in the CDR database for a recipient of this mailer.
 
         getAddress()
-            Returns the string containing the XML for the ContactDetail
-            used for addressing the mailer to this recipient.
+            Returns the Address object used used for addressing the 
+            mailer to this recipient.
 
         getDocs()
             Returns the list of Document objects representing documents
             sent to this recipient.
-
     """
     def __init__(self, id, name, address = None):
         self.__id      = id
@@ -670,6 +709,9 @@ class Document:
 class Address:
     """
     Public methods:
+
+        getAddressee()
+            Returns concatenation of prefix, forename, and surname.
 
         getNumStreetLines()
             Returns the number of strings in the street address.
@@ -717,6 +759,7 @@ class Address:
                              or the string containing the XML for the
                              address.
         """
+        self.__addressee     = None
         self.__street        = []
         self.__city          = None
         self.__citySuffix    = None
@@ -732,6 +775,8 @@ class Address:
             if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
                 if node.nodeName == 'PostalAddress':
                     self.__parsePostalAddress(node)
+                elif node.nodeName == 'Name':
+                    self.__addressee = self.__buildName(node)
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -744,6 +789,7 @@ class Address:
     def getCountry        (self): return self.__country
     def getPostalCode     (self): return self.__postalCode
     def getCodePosition   (self): return self.__codePos
+    def getAddressee      (self): return self.__addressee
 
     #------------------------------------------------------------------
     # Create XML string from address information.
@@ -787,3 +833,25 @@ class Address:
                     self.__postalCode = cdr.getTextContent(child)
                 elif child.nodeName == "CodePosition":
                     self.__codePos = cdr.getTextContent(child)
+
+    #------------------------------------------------------------------
+    # Construct name string from components.
+    #------------------------------------------------------------------
+    def __buildName(self, node):
+        givenName = None
+        surname   = None
+        prefix    = None
+        for child in node.childNodes:
+            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
+                if child.nodeName == "GivenName":
+                    surname = cdr.getTextContent(child)
+                elif child.nodeName == "SurName":
+                    givenName = cdr.getTextContent(child)
+                elif child.nodeName == "Prefix":
+                    prefix = cdr.getTextContent(child)
+        name = ""
+        if prefix: name += prefix + " "
+        if givenName: name += givenName + " "
+        if surname: name += surname
+        name = name.strip()
+        return name
