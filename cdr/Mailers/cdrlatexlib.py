@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.70 2004-11-12 15:44:30 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.71 2004-11-12 15:45:56 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.70  2004/11/12 15:44:30  bkline
+# Added code to strip trailing space for other protocol IDs.
+#
 # Revision 1.69  2004/11/12 15:28:37  bkline
 # Adjusted room at the bottom of the page for summary mailers.
 #
@@ -3297,6 +3300,7 @@ ProtAbstProtID = (
 
     XProc(element="/Protocol/ProtocolIDs/PrimaryID/IDString",
           order=XProc.ORDER_TOP_FRONT,
+          filters=[stripEnds],
           prefix=r"  \newcommand{\ProtocolID}{",
           suffix="}\n"),
 
