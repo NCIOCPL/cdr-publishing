@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.17 2003-01-22 15:04:25 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.18 2003-06-24 12:24:11 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.17  2003/01/22 15:04:25  bkline
+# Fixed the fix for Unicode titles in cover letters (converted title
+# from utf-8 encoding before applying UnicodeToLatex.convert()).
+#
 # Revision 1.16  2003/01/22 14:32:55  bkline
 # Added calls to UnicodeToLatex.convert() for cover letter.
 #
@@ -174,12 +178,18 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         id      = doc.getId() #"CDR%010d" % doc.getId()
         ver     = doc.getVersion()
         filters = ['name:Get Protocol Professional Title']
-        result  = cdr.filterDoc('guest', filters, id, docVer = ver)
+        result  = cdr.filterDoc('guest', filters, id, docVer = ver,
+                                parm = [('useLatexMarkup', 'Y')])
         if type(result) in (type(""), type(u"")):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
         if result[0]:
-            return UnicodeToLatex.convert(unicode(result[0], "utf-8"))
+            title = UnicodeToLatex.convert(unicode(result[0], "utf-8"))
+            return (title.replace("@@EMPH@@",    r"\\emph{")
+                         .replace("@@BOLD@@",    r"\\textbf{")
+                         .replace("@@SUPER@@",   r"$^{")
+                         .replace("@@SUB@@",     r"$_{")
+                         .replace("@@CLOSEBR@@", r"}"))
         return "[No Protocol Professional Title found]"
 
     #------------------------------------------------------------------
