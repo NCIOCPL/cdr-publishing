@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.51 2003-07-12 01:16:58 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.52 2003-07-15 12:46:31 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.51  2003/07/12 01:16:58  ameyer
+# Numerous changes for new denormalization filters, and for consolidation
+# of name/address XML parsing.
+#
 # Revision 1.50  2003/07/03 18:11:21  ameyer
 # Checking Status attribute on address before printing it.
 # Modified statPersonnel() to use Location class.
@@ -520,6 +524,28 @@ class Address:
                     self.zipPos = getText(child)
                 elif child.nodeName == "PostalCode_ZIP":
                     self.zip = getText(child)
+                    
+    def format(self, includeCountry = 0):
+        """
+        Basic address formatter.  May be embellished by calling routine.
+        Pass:
+            includeCountry - True = include country name in address.
+        """
+        output = ""
+        for street in self.street:
+            output += " %s \\\\\n" % street
+        state = self.stateAbbrev or self.state
+        statePlusZip = "%s %s" % (state or "", self.zip or "")
+        statePlusZip = statePlusZip and ", " or ""
+        city = ("%s %s" % (self.city,
+                           self.citySuffix)).strip() or ""
+        comma = city and statePlusZip and ", " or ""
+        lastLine = "%s%s%s" % (city, comma, statePlusZip)
+        if lastLine:
+            output += "  %s \\\\\n" % lastLine
+        if self.country and includeCountry:
+            output += "  %s \\\\\n" % self.country
+        return output
 
 class Location:
     """
@@ -594,20 +620,7 @@ class Location:
             output += "  %s \\\\\n" % self.personTitle
         for orgName in self.orgNames:
             output += "  %s \\\\\n" % orgName
-        for street in self.address.street:
-            output += "  %s \\\\\n" % street
-        state = self.address.stateAbbrev or self.address.state
-        statePlusZip = "%s %s" % (state or "", self.address.zip or "")
-        statePlusZip = statePlusZip.strip()
-        city = ("%s %s" % (self.address.city,
-                           self.address.citySuffix)).strip() or ""
-        comma = city and statePlusZip and ", " or ""
-        lastLine = "%s%s%s" % (city, comma, statePlusZip)
-        if lastLine:
-            output += "  %s \\\\\n" % lastLine
-        if self.address.country and includeCountry:
-            output += "  %s \\\\\n" % self.address.country
-        return output
+        return output + self.address.format(includeCountry)
 
 class Contact(Location):
     """
@@ -2129,28 +2142,47 @@ def statPup(pp):
     pp.setOutput(output)
     """
 
-def statPersonnel(pp):
-    "Generate macros for the other lead org's personnel."
-    name = ""
-    role = ""
+def getChairInfo(personnelNode):
+    "Called for each non-PUP lead org person by statPersonnel() below."
+    name    = ""
+    role    = ""
     address = ""
-    phone = ""
-    for node in pp.getCurNode().childNodes:
+    phone   = ""
+    for node in personnelNode.childNodes:
         if node.nodeName == "Name":
             name = PersonName(node).format(1)
         elif node.nodeName == "Location":
-            loc = Location (node)
+            for child in node.childNodes:
+                if child.nodeName == "PostalAddress":
+                    address = Address(child)
+                elif child.nodeName == "Phone":
+                    phone = getText(child)
         elif node.nodeName == "Role":
             role = getText(node)
-    address = loc.format(1)
+    if address:
+        address = address.format(1)
     while address and address[-1] in " \n\r\\": address = address[:-1]
-    pp.setOutput(r"""
-  \newcommand{\LeadPerson}{%s}
-  \newcommand{\LeadRole}{%s}
-  \newcommand{\LeadPhone}{%s}
-  \newcommand{\LeadAddress}{%%
-%s}
-""" % (name, role, phone, address))
+    return """\
+     \\item[Protocol Personnel]       %s,  %s
+     \\item[Address]                  %s
+     \\item[Phone]                    %s
+""" % (name, role, address, phone)
+    
+def statPersonnel(pp):
+    "Generate macros for the lead org's other personnel."
+
+    output = STATUSPROTINFO + r"""
+  \begin{entry}
+     \item[Lead Organization]        \LeadOrg \secondaryLeadOrg
+"""
+    for child in pp.getTopNode().childNodes:
+        if child.nodeName == "Protocol":
+            for grandchild in child.childNodes:
+                if grandchild.nodeName == "Personnel":
+                    output += getChairInfo(grandchild)
+    pp.setOutput(output + """\
+  \\end{entry}
+""" + STATUS_TAB_INTRO + STATUS_TAB)
 
 def statProtSites(pp):
     """
@@ -3364,12 +3396,8 @@ DocumentStatusCheckBody = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = [[statPup]]),
-    XProc(element   = "/SPSCheck/Protocol/Personnel",
-          order     = XProc.ORDER_TOP,
-          preProcs  = [[statPersonnel]],
-          textOut   = 0,
-          suffix    = STATUSPROTINFO + STATUSCHAIRINFO +
-                      STATUS_TAB_INTRO + STATUS_TAB),
+    XProc(order     = XProc.ORDER_TOP,
+          preProcs  = [[statPersonnel]]),
     XProc(element   = "/SPSCheck/Protocol/ProtocolSites",
           textOut   = 0,
           preProcs  = [[statProtSites]],
