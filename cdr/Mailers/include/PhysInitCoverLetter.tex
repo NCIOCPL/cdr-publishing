@@ -1,0 +1,104 @@
+%----------------------------------------------------------------------
+% Top-level declarations for the cover letter for a set of status and
+% participant site check mailers.
+%----------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{letter}
+
+%----------------------------------------------------------------------
+% Package and macro used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{textcomp}
+\newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+
+\usepackage{graphicx}
+
+%----------------------------------------------------------------------
+% Package used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{calc}
+
+%----------------------------------------------------------------------
+% Eliminate warnings on overfull hbox by adjusting the stretch parameters
+%----------------------------------------------------------------------
+\tolerance=1000
+\emergencystretch=20pt
+
+%----------------------------------------------------------------------
+% Package and code to set double-quotes correctly.
+%----------------------------------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+    \addtocounter{qC}{1}%
+    \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+%----------------------------------------------------------------------
+% Set up the margins.
+%----------------------------------------------------------------------
+%\setlength{\headwidth}{6.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{8.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0mm}
+\setlength{\headheight}{-.5in}
+
+%----------------------------------------------------------------------
+% Start the document and import the standard mailer templates.
+%----------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------
+% Don't put a page number on this page.
+%----------------------------------------------------------------------
+\thispagestyle{empty}
+
+%----------------------------------------------------------------------
+% Lay out the letterhead.
+%----------------------------------------------------------------------
+\hspace{-.8in}
+\begin{tabular}{p{2.7in}p{1.5in}p{1.5in}p{1.5in}}
+ \begin{minipage}[t]{2.6in}{
+  \scriptsize
+  U.S. Department of Health and Human Services \vspace{-2mm} \\
+  Public Health Services                       \vspace{-2mm} \\
+  National Institutes of Health}
+ \end{minipage} &
+ \raisebox{-.7in}{
+  \includegraphics[width=1.2in]{/cdr/mailers/include/nciLogo.eps}} &
+ \begin{minipage}[t]{1.4in}{\footnotesize
+  Cancer Information \vspace{-2mm} \\
+  Products and Systems}
+ \end{minipage} &
+ \begin{minipage}[t]{1.4in}{\scriptsize
+  Cancer.gov/PDQ          \vspace{-2mm} \\
+  6116 Executive Blvd.    \vspace{-2mm} \\
+  Suite 3002B MSC-8321    \vspace{-2mm} \\
+  Bethesda, MD 20892-8321 \vspace{-2mm} \\
+  Phone: 301-496-7406     \vspace{-2mm} \\
+  Fax: 301-402-6728}
+ \end{minipage}
+\end{tabular}
+  
+\vspace{36pt}
+
+\today
+
+@@ADDRESS@@
+
+\vspace{12pt}
+
+Subject: DUMMY PERSON ANNUAL COVER LETTER
+
+Please take this opportunity to PUT THE REAL COVER LETTER HERE!!!
+
+BLAH, BLAH, BLAH!
+
+\vspace{12pt}
+
+PDQ Protocol Coordinator \\
+Cancer Information Products and Systems
+
+\vfill
+\end{document}
