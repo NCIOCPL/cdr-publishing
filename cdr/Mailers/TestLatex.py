@@ -24,8 +24,11 @@ else:
 # Read in XML
 xmlText = inf.read()
 
+def lg(msg):
+    open("TestLatex.log", "a").write(msg + "\n")
+
 # Try it
-latexDoc = cdrxmllatex.makeLatex (xmlText, fmt, subfmt)
+latexDoc = cdrxmllatex.makeLatex (xmlText, fmt, subfmt) #, logFunc=lg)
 
 # Output
 print latexDoc.getLatex()
