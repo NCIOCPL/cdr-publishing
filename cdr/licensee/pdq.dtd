@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.18 2002-06-19 17:53:27 arkd Exp $
+ $Id: pdq.dtd,v 1.19 2002-06-19 22:11:30 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -309,15 +309,16 @@
 <!ATTLIST SummaryLink ref CDATA #IMPLIED>
 
 <!ELEMENT Reference (#PCDATA)>
-<!ATTLIST Reference ref IDREF #REQUIRED>
+<!ATTLIST Reference refidx CDATA #REQUIRED>
 
 <!ELEMENT ReferenceSection (Citation+)>
 
 <!-- A Citation contains formatted text to be printed for the citation -->
 <!-- A Citation includes both literature and protocol references. -->
+<!-- Refidx attribute comment (TBD). -->
 
 <!ELEMENT Citation (%ParaElements;)*>
-<!ATTLIST Citation id ID #REQUIRED
+<!ATTLIST Citation idx CDATA #REQUIRED
                    PMID CDATA ""
                    MedlineID CDATA ""
                    CancerlitID CDATA ""
