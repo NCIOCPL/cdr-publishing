@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.7 2002-09-17 22:10:23 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.8 2002-09-25 18:30:42 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2002/09/17 22:10:23  bkline
+# Cleaned up, added comments.
+#
 #----------------------------------------------------------------------
 import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 
@@ -1647,6 +1650,70 @@ def personSpecialties(pp):
     # Pump it out.
     pp.setOutput(output)
     
+#----------------------------------------------------------------------
+# Build the address block for the protocol update person.
+#----------------------------------------------------------------------
+def statPup(pp):
+    name    = ""
+    title   = ""
+    address = ""
+    org     = ""
+    phone   = ""
+    for node in pp.getCurNode().childNodes:
+        if node.nodeName == "Name":
+            name = getText(node)
+        elif node.nodeName == "Location":
+            for child in node.childNodes:
+                if child.nodeName == "PersonTitle":
+                    title = ", " + getText(child)
+                elif child.nodeName == "Org":
+                    org = getText(child)
+                elif child.nodeName == "PostalAddress":
+                    address = Address(child)
+                elif child.nodeName == "Phone":
+                    phone = getText(child)
+    output = r"""
+  \newcommand{\PUP}{%s}
+  %s%s \\
+""" % (name, name, title)
+    if org:
+        output += "  %s \\\\\n" % org
+    if address:
+        output += address.format(1)
+    if phone:
+        output += "  Ph.: %s \\\\\n" % phone
+    pp.setOutput(output)
+    
+def statPersonnel(pp):
+    name = ""
+    role = ""
+    address = ""
+    phone = ""
+    for node in pp.getCurNode().childNodes:
+        if node.nodeName == "Name":
+            name = getText(node)
+        elif node.nodeName == "Location":
+            for child in node.childNodes:
+                if child.nodeName == "PostalAddress":
+                    address = Address(child)
+                elif child.nodeName == "Phone":
+                    phone = getText(child)
+        elif node.nodeName == "Role":
+            role = getText(node)
+    address = address.format(1)
+    while address and address[-1] in " \n\r\\": address = address[:-1]
+    pp.setOutput(r"""
+  \newcommand{\LeadPerson}{%s}
+  \newcommand{\LeadRole}{%s}
+  \newcommand{\LeadPhone}{%s}
+  \newcommand{\LeadAddress}{%%
+%s}
+""" % (name, role, phone, address))
+
+def statSiteStatus(pp):
+    status = getText(pp.getCurNode())
+    flag = (status == 'Active') and 'Y' or 'N'
+    pp.setOutput("  \\Check{%s} \\\\ \\hline \n" % flag)
 
 ####################################################################
 # Constants
@@ -2702,36 +2769,6 @@ DocumentPersonBody = (
 #
 #   Instructions for formatting all status and participant mailers
 #------------------------------------------------------------------
-STATUSPROTOCOLDEF=r"""
-   %% STATUSPROTOCOLDEF %%
-   %% ----------------- %%
-   \newcommand{\ProtocolID}{dummy}
-   \newcommand{\NCIID}{dummy}
-   \newcommand{\ProtocolKey}{dummy}
-   \newcommand{\ProtocolTitle}{dummy}
-   \newcommand{\CurrentStatus}{dummy}
-   \newcommand{\LeadOrg}{dummy}
-   \newcommand{\LeadPerson}{}
-   \newcommand{\LeadRole}{}
-   \newcommand{\Street}{}
-   \newcommand{\LeadPhone}{}
-%
-% ---------
-"""
-
-
-STATUSPUPADDRESS=r"""
-   %% PUPADDRESS %%
-   %% ---------- %%
-   \PUP\ , \PUPTitle \\
-   \PUPOrg  \\
-   \Street
-   Ph:  \PUPPhone
-
-%
-% -------
-"""
-
 
 STATUSDEF=r"""
    %% STATUSDEF %%
@@ -2761,7 +2798,7 @@ STATUSPROTINFO=r"""
    %% STATUSPROTINFO %%
    %% -------------- %%
   \newpage
-  \item
+  %\item
   \textit{\ProtocolTitle}
   \renewcommand{\ewidth}{120pt}
   \begin{entry}
@@ -2781,7 +2818,7 @@ STATUSCHAIRINFO=r"""
   \begin{entry}
      \item[Lead Organization]        \LeadOrg
      \item[Protocol Personnel]       \LeadPerson,  \LeadRole
-     \item[Address]                  \Street
+     \item[Address]                  \LeadAddress
      \item[Phone]                    \LeadPhone
   \end{entry}
 %
@@ -2791,79 +2828,73 @@ STATUSCHAIRINFO=r"""
 
 DocumentStatusCheckBody = (
 # --------- START: First section Contact Information ---------
-    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
-    XProc(element="PUP",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="/SPSCheck/PUP/Name",
-          textOut=1,
-          prefix="  \\newcommand{\PUP}{",
-          suffix="}\n", order=XProc.ORDER_TOP),
-    XProc(element="Title",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\newcommand{\PUPTitle}{",
-          suffix="}\n"),
-    XProc(element="Org",
-          prefix="  \\newcommand{\PUPOrg}{",
-          suffix="}\n", order=XProc.ORDER_TOP),
-    XProc(element="/SPSCheck/PUP/Phone",
-          prefix="  \\newcommand{\PUPPhone}{",
-          suffix="}\n"),
-    XProc(element="/SPSCheck/PUP/Street",
-          textOut=0,
-          preProcs=( (street, ()), )),
-    XProc(element="/SPSCheck/PUP/Phone",
-          prefix="  \\newcommand{\PUPPhone}{",
-          suffix="}\n"),
-    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
-    XProc(prefix=STATUSDEF,
-          suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
+#    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
+    XProc(element   = "/SPSCheck/Protocol/ProtocolTitle",
+          order     = XProc.ORDER_TOP,
+          prefix    = "  \\newcommand{\\ProtocolTitle}{",
+          suffix    = "}\n"),
+    XProc(element   = "/SPSCheck/Protocol/CurrentStatus",
+          order     = XProc.ORDER_TOP,
+          prefix    = "  \\newcommand{\\CurrentStatus}{",
+          suffix    = "}\n"),
+    XProc(element   = "/SPSCheck/Protocol/ID",
+          order     = XProc.ORDER_TOP,
+          prefix    = "  \\newcommand{\\ProtocolID}{",
+          suffix    = "}\n"),
+    XProc(element   = "/SPSCheck/Protocol/LeadOrg",
+          order     = XProc.ORDER_TOP,
+          prefix    = "  \\newcommand{\\LeadOrg}{",
+          suffix    = "}\n"),
+    XProc(element   = "/SPSCheck/PUP",
+          textOut   = 0, 
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[statPup]]),
+    XProc(prefix    = STATUSDEF,
+          order     = XProc.ORDER_TOP),
+#    XProc(element="/SPSCheck/PUP/Street",
+#          textOut=0,
+#          preProcs=( (street, ()), )),
+#    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
+#    XProc(prefix=STATUSDEF,
+#          suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
 # --------- END: First section Contact Information ---------
 # --------- START: Second section Protocol Information ---------
-    XProc(element="Protocol",
-          textOut=0,
-          suffix=END_TABLE, order=XProc.ORDER_TOP),
-    XProc(element="ProtocolTitle",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\ProtocolTitle}{",
-          suffix="  }\n "),
-    XProc(element="CurrentStatus",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\CurrentStatus}{",
-          suffix="  }\n"),
-    XProc(element="ID",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\ProtocolID}{",
-          suffix="  }\n  "),
-    XProc(element="LeadOrg",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\LeadOrg}{",
-          suffix="  }\n"),
+    XProc(element   = "/SPSCheck/Protocol/Personnel",
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[statPersonnel]],
+          textOut   = 0,
+          suffix    = STATUSPROTINFO + STATUSCHAIRINFO + 
+                      STATUS_TAB_INTRO + STATUS_TAB),
+    XProc(element   = "/SPSCheck/Protocol/ProtocolSites",
+          textOut   = 0,
+          suffix    = END_TABLE, 
+          order     = XProc.ORDER_TOP),
     # Need to start the table header as a suffix of the Personnel field
     # in order to create the table for each protocol record.
-    XProc(element="Personnel",
-          order=XProc.ORDER_PARENT,
-          textOut=0,
-          suffix=STATUSPROTINFO + STATUSCHAIRINFO + 
-                 STATUS_TAB_INTRO + STATUS_TAB),
-    XProc(element="/SPSCheck/Protocol/Personnel/Name",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\LeadPerson}{",
-          suffix="  }\n"),
-    XProc(element="/SPSCheck/Protocol/Personnel/Role",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\LeadRole}{",
-          suffix="  }\n"),
-    XProc(element="/SPSCheck/Protocol/Personnel/Street",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          preProcs=( (street, ()), )),
-    XProc(element="/SPSCheck/Protocol/Personnel/Phone",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\\LeadPhone}{",
-          suffix="  }\n"),
+#    XProc(element="Personnel",
+#          order=XProc.ORDER_PARENT,
+#          textOut=0,
+#          suffix=STATUSPROTINFO + STATUSCHAIRINFO + 
+#                 STATUS_TAB_INTRO + STATUS_TAB),
+#    XProc(element="/SPSCheck/Protocol/Personnel/Name",
+#          order=XProc.ORDER_PARENT,
+#          prefix="  \\renewcommand{\\LeadPerson}{",
+#          suffix="  }\n"),
+#    XProc(element="/SPSCheck/Protocol/Personnel/Role",
+#          order=XProc.ORDER_PARENT,
+#          prefix="  \\renewcommand{\\LeadRole}{",
+#          suffix="  }\n"),
+#    XProc(element="/SPSCheck/Protocol/Personnel/Street",
+#          textOut=0,
+#          order=XProc.ORDER_PARENT,
+#          preProcs=( (street, ()), )),
+#    XProc(element="/SPSCheck/Protocol/Personnel/Phone",
+#          order=XProc.ORDER_PARENT,
+#          prefix="  \\renewcommand{\\LeadPhone}{",
+#          suffix="  }\n"),
 # --------- END: Second section Protocol Information ---------
 # --------- START: Third section Protocol Information ---------
-    # XProc(prefix=STATUS_SITES_TAB),
+#    XProc(prefix=STATUS_SITES_TAB),
     XProc(element="ParticipatingSite",
           order=XProc.ORDER_PARENT,
           textOut=0),
@@ -2873,17 +2904,21 @@ DocumentStatusCheckBody = (
     XProc(element="PI",
           order=XProc.ORDER_PARENT,
           suffix="& "),
-    XProc(element="/SPSCheck/Protocol/ParticipatingSite/Phone",
-          order=XProc.ORDER_PARENT,
-          postProcs=((yesno,("Phone","Recruiting",)),)),
+    XProc(element="/SPSCheck/Protocol/ProtocolSites/ParticipatingSite/Phone",
+          order=XProc.ORDER_PARENT),
+    XProc(element = "SiteStatus",
+          preProcs = [[statSiteStatus]],
+          textOut = 0,
+          order = XProc.ORDER_PARENT)
+#          postProcs=((yesno,("Phone","Recruiting",)),)),
     # XProc(prefix=END_TABLE),
-    XProc(prefix="  \\end{enumerate}", order=XProc.ORDER_TOP),
+#    XProc(prefix="  \\end{enumerate}", order=XProc.ORDER_TOP),
     )
 
 
 DocumentStatusCheckCCOPBody = (
 # --------- START: First section Contact Information ---------
-    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
+#    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
     XProc(element="PUP",
           textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Name",
@@ -2894,9 +2929,6 @@ DocumentStatusCheckCCOPBody = (
           order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\PUPTitle}{",
           suffix="}\n"),
-    XProc(element="Org",
-          prefix="  \\newcommand{\PUPOrg}{",
-          suffix="}\n", order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Phone",
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
@@ -2906,7 +2938,7 @@ DocumentStatusCheckCCOPBody = (
     XProc(element="/SPSCheck/PUP/Phone",
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
-    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
+#    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
     XProc(prefix=STATUSDEFCCOP,
           suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
 # --------- END: First section Contact Information ---------
@@ -2956,9 +2988,9 @@ DocumentStatusCheckCCOPBody = (
 # --------- END: Second section Protocol Information ---------
 # --------- START: Third section Protocol Information ---------
     # XProc(prefix=STATUS_SITES_TAB),
-    XProc(element="ParticipatingSite",
-          order=XProc.ORDER_PARENT,
-          textOut=0),
+#    XProc(element="ParticipatingSite",
+#          order=XProc.ORDER_PARENT,
+#          textOut=0),
     XProc(element="Site",
           order=XProc.ORDER_PARENT,
           suffix="& "),
