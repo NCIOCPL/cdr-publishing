@@ -19,11 +19,11 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -453,11 +453,11 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -886,11 +886,11 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -1254,7 +1254,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -1329,11 +1329,11 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -1459,11 +1459,11 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>No</ParmValue>
+    <ParmValue>Yes</ParmValue>
    </SubsetParameter> 
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
