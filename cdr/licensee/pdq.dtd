@@ -1,6 +1,6 @@
 <!-- CDR DTD
 
- $Id: pdq.dtd,v 1.7 2002-02-28 19:32:50 bkline Exp $
+ $Id: pdq.dtd,v 1.8 2002-03-20 16:51:54 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -444,7 +444,7 @@
 
 <!ELEMENT SectionType (#PCDATA)>
 
-<!ELEMENT SummaryTitle (%TitleData)* >
+<!ELEMENT SummaryTitle (%TitleData;)* >
 
 <!-- End Summaries -->
 
@@ -791,7 +791,7 @@
 <!ELEMENT OrganizationLocations (OrganizationLocation+)>
 <!ATTLIST OrganizationLocations id CDATA #IMPLIED>
 
-<!ELEMENT OrganizationLocation (%Location)>
+<!ELEMENT OrganizationLocation (%Location;)>
 <!ATTLIST OrganizationLocation IncludeParentName (Yes) #IMPLIED
                                OrderParentNameFirst (Yes) #IMPLIED>
 
@@ -807,7 +807,7 @@
 <!ELEMENT MemberOfProfessionalOrganization (#PCDATA)>
 
 <!ATTLIST MemberOfCooperativeGroup ref CDATA #IMPLIED>
-<!ATTLIST MemberOfCooperativeGroup MemberType (Main,Affiliate) #REQUIRED>
+<!ATTLIST MemberOfCooperativeGroup MemberType (Main|Affiliate) #REQUIRED>
 
 <!ELEMENT CooperativeGroup (#PCDATA)>
 <!ATTLIST CooperativeGroup ref CDATA #IMPLIED>
