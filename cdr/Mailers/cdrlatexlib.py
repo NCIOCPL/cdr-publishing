@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.8 2002-09-25 18:30:42 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.9 2002-09-26 22:05:29 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2002/09/25 18:30:42  bkline
+# First working status and participant site check mailers.
+#
 # Revision 1.7  2002/09/17 22:10:23  bkline
 # Cleaned up, added comments.
 #
@@ -345,8 +348,13 @@ class PersonName:
                         if suffix:
                             self.profSuffixes.append(suffix)
         
-    def format(self):
-        return ("%s %s" % (self.givenName, self.surname)).strip()
+    def format(self, full = 0):
+        name = ("%s %s" % (self.givenName, self.surname)).strip()
+        if not full: return name
+        suffixes = self.getSuffixes()
+        if suffixes: return "%s, %s" % (name, suffixes)
+        else: return name
+
     def getSuffixes(self):
         return " ".join([self.genSuffix or ''] + self.profSuffixes).strip()
 
@@ -551,11 +559,10 @@ class PersonLists:
                     ON o.doc_id = d.id
                   JOIN query_term t
                     ON t.doc_id = d.id
-                 WHERE o.path = '/Organization/OrganizationNameInformation'
-                              + '/OfficialName/Name'
-                   AND t.path = '/Organization/OrganizationType'
-                   AND t.value IN ('Non-US clinical trials group',
-                                   'Non-US clinical trials group')
+                 WHERE o.path   = '/Organization/OrganizationNameInformation'
+                                + '/OfficialName/Name'
+                   AND t.path   = '/Organization/OrganizationType'
+                   AND t.value  = 'NCI-supported clinical trials group'
               ORDER BY o.value""")
         return cursor.fetchall()
     def __getOncologyPrograms(self, conn):
@@ -630,6 +637,7 @@ class OtherPracticeLocation(PersonLocation):
     def __init__(self, node):
         PersonLocation.__init__(self)
         self.id = node.getAttribute("id")
+        orderParentNameFirst = 0
         for child in node.childNodes:
             if child.nodeName == "SpecificPostalAddress":
                 self.address = Address(child)
@@ -649,6 +657,11 @@ class OtherPracticeLocation(PersonLocation):
                     if grandchild.nodeName == "OrganizationName":
                         name = getText(grandchild)
                         if name: self.orgNames.append(name)
+            elif child.nodeName == "OrganizationLocation":
+                if child.getAttribute("OrderParentNameFirst") == "Yes":
+                    orderParentNameFirst = 1
+        if orderParentNameFirst and len(self.orgNames) > 1:
+            self.orgNames.reverse()
 
 #----------------------------------------------------------------------
 # getText
@@ -1089,7 +1102,14 @@ def orgLocs(pp):
 
     # Gather in all the locations for the organization.
     otherLocs = []
+    blankLine = r"\makebox[200pt]{\hrulefill}"
     cipsContact = None
+    cipsContactName = ""
+    topNode = pp.getTopNode()
+    cipsContactPersons = topNode.getElementsByTagName("CIPSContactPerson")
+    if cipsContactPersons:
+        cipsContactPerson = PersonName(cipsContactPersons[0])
+        cipsContactName   = "  %s \\\\\n" % cipsContactPerson.format(1)
     for child in pp.getCurNode().childNodes:
         if child.nodeName == "OrganizationLocation":
             loc = OrgLoc(child)
@@ -1099,37 +1119,38 @@ def orgLocs(pp):
                 otherLocs.append(loc)
                 
     # Start the output for the body of the mailer.
-    output = "\n  \\OrgName \\\\\n\n  \\OrgIntro\n\n"
+    # centerHead = "  \\afterpage{\\fancyhead[C]{{\\bfseries \\OrgName}}}"
+    output = "\n  \\OrgIntro\n\n" #% centerHead
 
     # Add the CIPS contact information.
+    adminOnly = "(For administrative use only)"
     if cipsContact and cipsContact.address:
         formattedAddress = cipsContact.address.format()
         if formattedAddress:
             output = r"""
-  \OrgName \\
-%s
-
   \OrgIntro
 
-  \subsection*{CIPS Contact Information}
+
+  \subsection*{Primary Contact Information}
         
-  \OrgName \\
+%s  \OrgName \\
 %s
 
    \newcommand{\ewidth}{180pt}
    \begin{entry}
-      \item[Main Organization Phone]            %s      \\
-      \item[Main Organization Fax\footnotemark] %s      \\
-      \item[Main Organization E-Mail]           %s      \\
-      \item[Publish E-Mail in PDQ Directory]    \yesno  \\
-      \item[Website]                            %s
+      \item[Main Organization Phone]                     %s      \\
+      \item[Main Organization Fax]                       %s      \\
+                                                         %s      \\
+      \item[Main Organization E-Mail]                    %s      \\
+      \item[Publish E-Mail to PDQ/Cancer.gov Directory]  \yesno  \\
+      \item[Website]                                     %s
    \end{entry}
-   \footnotetext{For administrative use only}
-""" % (formattedAddress, cipsContact.address.format(1),
-       cipsContact.phone or "Not specified",
-       cipsContact.fax   or "Not specified",
-       cipsContact.email or "Not specified",
-       cipsContact.web   or "Not specified")
+""" % (cipsContactName,
+       cipsContact.address.format(1),
+       cipsContact.phone or blankLine,
+       cipsContact.fax   or blankLine, adminOnly,
+       cipsContact.email or blankLine,
+       cipsContact.web   or blankLine)
 
     # Add the other locations for the organization.
     if otherLocs:
@@ -1147,18 +1168,19 @@ def orgLocs(pp):
 %s
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
-    \item[Phone]                           %s       \\
-    \item[Fax]                             %s       \\
-    \item[E-Mail]                          %s       \\
-    \item[Publish E-Mail in PDQ Directory] \yesno   \\
-    \item[Website]                         %s
+    \item[Phone]                                      %s       \\
+    \item[Fax]                                        %s       \\
+                                                      %s       \\
+    \item[E-Mail]                                     %s       \\
+    \item[Publish E-Mail to PDQ/Cancer.gov Directory] \yesno   \\
+    \item[Website]                                    %s
   \end{entry}
   \vspace{15pt}
 """ % (formattedAddress,
-       loc.phone or "Not specified",
-       loc.fax   or "Not specified",
-       loc.email or "Not specified",
-       loc.web   or "Not specified")
+       loc.phone or blankLine,
+       loc.fax   or blankLine, adminOnly,
+       loc.email or blankLine,
+       loc.web   or blankLine)
         output += """
   \end{enumerate}
 """
@@ -1194,28 +1216,34 @@ def orgAffil(pp):
         elif child.nodeName == "MemberOfCooperativeGroups":
             coops = getCoopMemberships(child)
 
+    # Do nothing if there are no affiliations.
+    if not profOrgs and not coops:
+        return
+    else:
+        output = "  \\subsection*{Affiliations}\n"
+
     # Format the professional organization affiliations.
     output = r"""
   \subsection*{Affiliations}
-  \subsubsection*{Professional Organizations}
 """
     if profOrgs:
-        output += "  \\begin{itemize}\n"
+        output += r"""
+  \subsubsection*{Professional Organizations}
+  \begin{itemize}
+"""
         for org in profOrgs:
             output += "  \\item %s\n" % org
         output += "  \\end{itemize}\n"
-    else:
-        output += "  None\n"
     
     # Format the cooperative group affiliations.
-    output += "  \\subsubsection*{Cooperative Groups}\n"
     if coops:
-        output += "  \\begin{itemize}\n"
+        output += r"""
+  \subsubsection*{Cooperative Groups}
+  \begin{itemize}
+"""
         for org in coops:
             output += "  \\item %s\n" % org
         output += "  \\end{itemize}\n"
-    else:
-        output += "  None\n"
     pp.setOutput(output)
         
 #----------------------------------------------------------------------
@@ -1305,7 +1333,6 @@ def checkNotAbstracted(pp):
     topNode = pp.getTopNode()
     target, section = pp.args
     nodes = topNode.getElementsByTagName(target)
-    #if nodes:
     if nodes and nodes[0].hasChildNodes():
         return
     pp.setOutput(r"""
@@ -1343,8 +1370,8 @@ def personLocs(pp):
     
     # Gather all the location information together.
     cipsContact = None
-    otherLocs = []
-    blankLine = r"\makebox[200pt]{\hrulefill}"
+    otherLocs   = []
+    blankLine   = r"\makebox[200pt]{\hrulefill}"
     for node in pp.getCurNode().childNodes:
         if node.nodeName == "OtherPracticeLocation":
             loc = OtherPracticeLocation(node)
@@ -1356,42 +1383,74 @@ def personLocs(pp):
         else: otherLocs.append(loc)
         
     # Output the address block for the mailer.
+    adminOnly = "(For administrative use only)"
     address = cipsContact and cipsContact.formatAddress() or ""
-    cipsContactInfo = "  None provided."
+    cipsContactInfo = "  \\PersonNameWithSuffixes \\\\\n"
+    if not cipsContact and not otherLocs:
+        pp.setOutput(r"""\
+  \PersonNameWithSuffixes
+
+  %%\afterpage{\fancyhead[C]{{\bfseries \PersonNameWithSuffixes}}}
+
+  \newcommand{\ewidth}{180pt}
+  \begin{entry}
+    \item[Address]                                       %s      \\
+                                                         %s      \\
+                                                         %s      \\
+                                                         %s      \\
+                                                         %s      \\
+    \item[Phone]                                         %s      \\
+    \item[Fax]                                           %s      \\
+                                                         %s      \\
+    \item[E-Mail]                                        %s      \\
+    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Website]                                       %s      \\
+  \end{entry}
+""" % (blankLine,
+       blankLine,
+       blankLine,
+       blankLine,
+       blankLine,
+       blankLine,
+       blankLine, adminOnly,
+       blankLine,
+       blankLine))
+        return
+
     if cipsContact:
-        cipsContactInfo = address
+        cipsContactInfo += address
         if cipsContact.address.country:
             cipsContactInfo += "  %s \\\\\n" % cipsContact.address.country
         cipsContactInfo += r"""
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
-    \item[Phone]                              %s      \\
-    \item[Fax\footnotemark]                   %s      \\
-    \item[E-Mail]                             %s      \\
-    \item[Publish E-Mail in PDQ Directory]    \yesno  \\
-    \item[Website]                            %s      \\
+    \item[Phone]                                         %s      \\
+    \item[Fax]                                           %s      \\
+                                                         %s      \\
+    \item[E-Mail]                                        %s      \\
+    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Website]                                       %s      \\
   \end{entry}
-  \footnotetext{For administrative use only}
 """ % (cipsContact.phone or blankLine,
-       cipsContact.fax   or blankLine,
+       cipsContact.fax   or blankLine, adminOnly,
        cipsContact.email or blankLine,
        cipsContact.web   or blankLine)
 
     # Output the CIPS contact location's information.
     output = r"""
   \newcommand{\ewidth}{180pt}
-  \PersonNameWithSuffixes \\
-%s
 
   \PersonIntro
 
-  \subsection*{CIPS Contact Information}
+  %%\afterpage{\fancyhead[C]{{\bfseries \PersonNameWithSuffixes}}}
+
+  \subsection*{Primary Contact Information}
 
 %s
 
   \subsection*{Other Practice Locations}
 
-""" % (address, cipsContactInfo)
+""" % cipsContactInfo
 
     # Add any other locations.
     if otherLocs:
@@ -1403,16 +1462,17 @@ def personLocs(pp):
 
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
-    \item[Phone]                              %s      \\
-    \item[Fax]                                %s      \\
-    \item[E-Mail]                             %s      \\
-    \item[Publish E-Mail in PDQ Directory]    \yesno  \\
-    \item[Website]                            %s      \\
+    \item[Phone]                                         %s      \\
+    \item[Fax]                                           %s      \\
+                                                         %s      \\
+    \item[E-Mail]                                        %s      \\
+    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Website]                                       %s      \\
   \end{entry}
   \vspace{15pt}
 """ % (loc.formatAddress(1),
        loc.phone or blankLine,
-       loc.fax   or blankLine,
+       loc.fax   or blankLine, adminOnly,
        loc.email or blankLine,
        loc.web   or blankLine)
 
@@ -1477,11 +1537,11 @@ def personSpecialties(pp):
     # Start the table for the specialties.
     output = r"""
   \subsection*{Specialty Information}
-  
-  \subsubsection*{Board Certified Specialties}
-
+  \nopagebreak[4]
+  %\subsubsection*{Board Certified Specialties}
   \setlength{\doublerulesep}{0.5pt}
   \begin{longtable}[l]{||p{250pt}||p{35pt}|p{35pt}||p{35pt}|p{35pt}||}
+  \caption*{\bfseries Board Certified Specialties} \\
     \hline
   & \multicolumn{2}{c||}{\bfseries{ }}
   & \multicolumn{2}{c||}{\bfseries{Board}} \\
@@ -1529,9 +1589,9 @@ def personSpecialties(pp):
     output += r"""
   \end{longtable}
 
-  \subsubsection*{Other Specialties}
-
+  %\subsubsection*{Other Specialties}
   \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||} 
+  \caption*{\bfseries Other Specialties} \\
     \hline
   \bfseries{Specialty Training}
   & \multicolumn{1}{c|}{\bfseries{Yes}} 
@@ -1560,8 +1620,9 @@ def personSpecialties(pp):
   \end{longtable}
 
   \subsection*{Membership Information}
-  \subsubsection*{Professional Societies}
-  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+  \nopagebreak[4]
+  \begin{longtable}[l]{|p{350pt}||p{35pt}|p{35pt}||}
+  \caption*{\bfseries Professional Societies} \\
     \hline
   & \multicolumn{2}{c||}{\bfseries{Member of:}}  \\
     \bfseries{Society Name}
@@ -1591,8 +1652,9 @@ def personSpecialties(pp):
     output += r"""
   \end{longtable}
 
-  \subsubsection*{Clinical Trials Groups}
+  %\subsubsection*{NCI Clinical Trials Groups}
   \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+  \caption*{\bfseries NCI Clinical Trials Groups} \\
     \hline
     \bfseries{Group Name}
   & \multicolumn{1}{c|}{\bfseries{Yes}}
@@ -1614,35 +1676,6 @@ def personSpecialties(pp):
     for group in personLists.trialGroups:
         flag = trialGroups.has_key(group[0]) and "Y" or "N"
         output += "  %s \\Check{%s} \\\\ \\hline\n" % (group[1], flag)
-
-    # Start the table for affiliation with oncology programs.
-    output += r"""
-  \end{longtable}
-
-  \subsubsection*{Clinical Cancer Oncology Programs}
-  \CCOPIntro
-  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
-    \hline
-    \bfseries{Program Name}
-  & \multicolumn{1}{c|}{\bfseries{Yes}}
-  & \multicolumn{1}{c||}{\bfseries{No}} \\
-    \hline 
-    \hline
-  \endfirsthead
-    \multicolumn{3}{l}{(continued from previous page)} \\ 
-    \hline
-    \bfseries{Program Name}
-  & \multicolumn{1}{c|}{\bfseries{Yes}}
-  & \multicolumn{1}{c||}{\bfseries{No}} \\
-    \hline 
-    \hline
-  \endhead
-"""
-
-    # Populate the table.
-    for program in personLists.oncologyPrograms:
-        flag = oncologyPrograms.has_key(program[0]) and "Y" or "N"
-        output += "  %s \\Check{%s} \\\\ \\hline\n" % (program[1], flag)
     output += r"""
   \end{longtable}
 """
@@ -1731,10 +1764,12 @@ LATEXHEADER=r"""
   %% Do not edit this file unless for temporary use.
   %%
   %% -- START -- Document Declarations and Definitions
-  \documentclass[12pt]{article}
+  \documentclass[letterpaper,12pt]{article}
   \usepackage{textcomp}
   \usepackage{multirow}
   \usepackage{supertabular}
+  \usepackage{graphicx}
+  %\usepackage{afterpage}
   \newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
   %% OR MAYBE:
   %% \documentclass[11pt]{article}
@@ -1832,27 +1867,36 @@ STATPART_HDRTEXT=r"""
 # Used by:  Organization
 # ------------------------------------------
 ORG_HDRTEXT=r"""
-  %% ORG_HDRTEXT %%
-  %% ----------- %%
+  %%%% ORG_HDRTEXT %%%%
+  %%%% ----------- %%%%
   \newcommand{\CenterHdr}{{\bfseries \OrgName}}
+  %%\newcommand{\CenterHdr}{%%
+  %%    \raisebox{.5in}[.5in]{%%
+  %%        \includegraphics[width=100pt]{%%
+  %%            /cdr/mailers/include/ncilogo.eps}} \\ {\bfseries \OrgName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
-  \newcommand{\LeftHdr}{PDQ Organization Update \\ \today \\}
-%
-% -----
-"""
+  \newcommand{\LeftHdr}{PDQ/Cancer.gov Organization Update \\ %s \\}
+%%
+%% -----
+""" % time.strftime("%B %Y")
 
 # Defining the document header for each page
 # Used by:  Person
 # ------------------------------------------
 PERSON_HDRTEXT=r"""
-  %% PERSON_HDRTEXT %%
-  %% -------------- %%
-  \newcommand{\LeftHdr}{PDQ Physician Update \\ \today \\}
-  \newcommand{\CenterHdr}{{\bfseries \PersonName}}
-  \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Physician ID: @@DOCID@@ \\}
-%
-% -----
-"""
+  %%%% PERSON_HDRTEXT %%%%
+  %%%% -------------- %%%%
+  \newcommand{\LeftHdr}{PDQ/Cancer.gov Physician Update \\ %s \\}
+  \newcommand{\CenterHdr}{{\bfseries \PersonNameWithSuffixes}}
+  %%\newcommand{\CenterHdr}{%%
+  %%    \raisebox{.5in}[.5in]{%%
+  %%        \includegraphics[width=100pt]{%%
+  %%            /cdr/mailers/include/ncilogo.eps}} \\ {%%
+  %%                \bfseries \PersonNameWithSuffixes}}
+  \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
+%%
+%% -----
+""" % time.strftime("%B %Y")
 
 FANCYHDR=r"""
   %% FANCYHDR %%
@@ -1860,6 +1904,17 @@ FANCYHDR=r"""
   % Package Fancyhdr for Header/Footer/Reviewer Information
   % -------------------------------------------------------
   \usepackage{fancyhdr}
+  \fancypagestyle{myheadings}{%
+      \setlength{\headheight}{120pt}
+      %\setlength{\textheight}{6.0in}
+      \fancyhead[L]{\LeftHdr}
+      \fancyhead[R]{\RightHdr}
+      \fancyfoot[C]{\thepage}
+      \fancyhead[C]{%
+          \includegraphics[width=75pt]{/cdr/mailers/include/nciLogo.eps} \\
+          \vspace{40pt}
+          {\bfseries \CenterHdr }}}
+      
   \pagestyle{fancy}
 
   % Placing information in header
@@ -1880,7 +1935,7 @@ TEXT_BOX=r"""
   %% -------- %%
   \setlength{\headwidth}{6.5in}
   \setlength{\textwidth}{6.5in}
-  \setlength{\textheight}{8.5in}
+  \setlength{\textheight}{8.0in}
   \setlength{\oddsidemargin}{0in}
 %
 % -----
@@ -1958,7 +2013,7 @@ ENTRYBFLIST=r"""
      {\begin{list}{}%
          {\renewcommand{\makelabel}{\entrylabel}%
           \setlength{\labelwidth}{\ewidth}%
-          \setlength{\itemsep}{-2pt}%
+          \setlength{\itemsep}{-10pt}%
           \setlength{\leftmargin}{\labelwidth+\labelsep}%
          }%
   }%
@@ -1981,7 +2036,7 @@ ENTRYLIST=r"""
      {\begin{list}{}%
          {\renewcommand{\makelabel}{\entrylabel}%
           \setlength{\labelwidth}{\ewidth}%
-          \setlength{\itemsep}{-2pt}%
+          \setlength{\itemsep}{-10pt}%
           \setlength{\leftmargin}{\labelwidth+\labelsep}%
          }%
   }%
@@ -2015,7 +2070,7 @@ PERSON_MISC_INFO=r"""
    %% ---------------- %%
 
    \subsection*{Preferred Contact Mode}
-   $\bigcirc$ Electronic \qquad $\bigcirc$ Hardcopy
+   $\bigcirc$ E-mail at primary contact \qquad $\bigcirc$ Mail
 
    \subsection*{Practice Information}
     Are you a physician (MD, DO, or foreign equivalent)?    \hfill
@@ -2180,31 +2235,6 @@ STATPART_TITLE=r"""
 % -----
 """
 
-
-ORG_TITLE=r"""
-  %% ORG_TITLE %%
-  %% --------- %%
-  \newcommand{\mailertitle}{%
-    National Cancer Institute's PDQ Database \\
-    Organization Information Update
-  }
-%
-% -----
-"""
-
-
-PERSON_TITLE=r"""
-  %% PERSON_TITLE %%
-  %% ------------ %%
-  \newcommand{\mailertitle}{%
-    National Cancer Institute's PDQ Database \\
-    Physician Information Update
-  }
-%
-% -----
-"""
-
-
 ENDPREAMBLE=r"""
   %% ENDPREAMBLE %%
   %% ----------- %%
@@ -2225,6 +2255,26 @@ ENDPREAMBLE=r"""
     \mailertitle
   \end{center}
 %  \centerline{Font: \myfont}
+%
+% -----
+"""
+
+ALTENDPREAMBLE=r"""
+  %% ALTENDPREAMBLE %%
+  %% -------------- %%
+  \setlength{\parskip}{1.2mm}
+  \setlength{\parindent}{0mm}
+  \setlength{\headheight}{48pt}
+
+  \renewcommand{\thesection}{\hspace{-1.0em}}
+  %\newcommand{\deadline}{""" + getDeadline() + r"""}
+
+  %% -- END -- Document Declarations and Definitions
+
+
+  \begin{document}
+  \include{/cdr/mailers/include/template}
+
 %
 % -----
 """
@@ -3059,9 +3109,13 @@ DocumentOrgHeader =(
     XProc(prefix=ORG_HDRTEXT, order=XProc.ORDER_TOP),
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
     XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
+    XProc(prefix="  \\setlength{\\textheight}{7.0in}\n", order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
-    XProc(prefix=ORG_TITLE, order=XProc.ORDER_TOP),
-    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP),
+    XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP),
+    XProc(prefix=r"""\
+  \thispagestyle{myheadings}
+  \setlength{\textheight}{8.0in}
+""", order=XProc.ORDER_TOP)
     )
 
 DocumentPersonHeader =(
@@ -3074,9 +3128,13 @@ DocumentPersonHeader =(
     XProc(prefix=PERSON_HDRTEXT, order=XProc.ORDER_TOP),
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
     XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
+    XProc(prefix="  \\setlength{\\textheight}{7.0in}\n", order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_TITLE, order=XProc.ORDER_TOP),
-    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
+    XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP),
+    XProc(prefix=r"""\
+  \thispagestyle{myheadings}
+  \setlength{\textheight}{8.0in}
+""", order=XProc.ORDER_TOP)
     )
 
 DocumentStatusCheckHeader =(
@@ -3113,9 +3171,20 @@ DocumentTestHeader =(
 # Creating section with return address and allow to sign and
 # date the mailer.
 # -----------------------------------------------------------
-APPROVAL=r"""
-  %% APPROVAL %%
+ORG_APPROVAL=r"""
+  %% ORG_APPROVAL %%
   %% -------- %%
+    \newcommand{\approveWhat}{your organization's listing}
+    \subsection*{Approval}
+    \approval
+%
+% -----
+"""
+
+PERSON_APPROVAL=r"""
+  %% PERSON_APPROVAL %%
+  %% -------- %%
+    \newcommand{\approveWhat}{your listing}
     \subsection*{Approval}
     \approval
 %
@@ -3148,12 +3217,12 @@ DocumentSummaryFooter =(
     )
 
 DocumentOrgFooter =(
-    XProc(prefix=APPROVAL, order=XProc.ORDER_TOP),
+    XProc(prefix=ORG_APPROVAL, order=XProc.ORDER_TOP),
     XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
 DocumentPersonFooter =(
-    XProc(prefix=APPROVAL, order=XProc.ORDER_TOP),
+    XProc(prefix=PERSON_APPROVAL, order=XProc.ORDER_TOP),
     XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
     )
 
