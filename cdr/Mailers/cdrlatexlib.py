@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.69 2004-11-12 15:28:37 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.70 2004-11-12 15:44:30 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.69  2004/11/12 15:28:37  bkline
+# Adjusted room at the bottom of the page for summary mailers.
+#
 # Revision 1.68  2004/11/03 17:11:48  bkline
 # Added \par instruction to ensure break between paragraphs; increased
 # paragraph spacing from 1.2mm to 3.0mm; fixed problem with list spacing
@@ -3302,6 +3305,7 @@ ProtAbstProtID = (
     XProc(element="/Protocol/ProtocolIDs/OtherID/IDString",
           order=XProc.ORDER_TOP_FRONT,
           prefix="   \\\\",
+          filters=[stripEnds],
           suffix="\n  "),
     XProc(prefix="}\n", order=XProc.ORDER_TOP_FRONT),
 
