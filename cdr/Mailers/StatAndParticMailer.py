@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.13 2004-10-08 12:56:36 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.14 2005-02-16 22:44:53 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2004/10/08 12:56:36  bkline
+# Added temporary code to block some brussels mailers.
+#
 # Revision 1.12  2004/06/15 14:25:44  bkline
 # Added tracker attribute to EmailerDocument element in EmailerManifest.
 #
@@ -178,8 +181,9 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
 <?xml version='1.0' encoding='UTF-8'?>
 <EmailerManifest JobTime='%s'
                  JobType='ProtocolStatusAndParticipant'
+                 PubSubset='%s'
                  JobId='%d'>
-""" % (self.getJobTime(), self.getId()))
+""" % (self.getJobTime(), self.getSubset(), self.getId()))
         counter = 0
 
         # Generate the emailers for each recipient
