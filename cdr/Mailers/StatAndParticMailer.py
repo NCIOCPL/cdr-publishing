@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.12 2004-06-15 14:25:44 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.13 2004-10-08 12:56:36 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2004/06/15 14:25:44  bkline
+# Added tracker attribute to EmailerDocument element in EmailerManifest.
+#
 # Revision 1.11  2004/05/18 17:58:48  bkline
 # Modified emailer manifest element names to match schema.
 #
@@ -44,6 +47,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrmailer, re, sys, UnicodeToLatex, time, xml.dom.minidom
+import xml.sax.saxutils
 
 #----------------------------------------------------------------------
 # Object for a protocol update person.
@@ -84,6 +88,18 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
     # Overrides method in base class for filling the print queue.
     #------------------------------------------------------------------
     def fillQueue(self):
+
+        # Allow the user to restrict the job to one pup or lead org.
+        self.__pupFilter = None
+        self.__orgFilter = None
+        pupId = self.getParm('PUP')
+        orgId = self.getParm('LeadOrg')
+        if pupId and pupId[0]:
+            id = cdr.exNormalize(pupId[0])
+            self.__pupFilter = id[1]
+        if orgId and orgId[0]:
+            id = cdr.exNormalize(orgId[0])
+            self.__orgFilter = id[1]
 
         # Note which flavor(s) of mailers the user asked for.
         self.__paper = self.__electronic = False
@@ -128,6 +144,10 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
             rows            = self.getCursor().fetchall()
             self.log("%d rows retrieved for electronic mailers" % len(rows))
             for (docId, docVer, orgId, pupId, pupLink) in rows:
+                if self.__pupFilter and pupId != self.__pupFilter:
+                    continue
+                if self.__orgFilter and orgId != self.__orgFilter:
+                    continue
                 key = (pupLink, docId, orgId)
                 if key not in emailers:
                     recipient = pups.get(pupLink)
@@ -156,8 +176,10 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
         manifest = open("manifest.xml", "w")
         manifest.write("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<EmailerManifest JobTime='%s' JobType='ProtocolStatusAndParticipant'>
-""" % self.getJobTime())
+<EmailerManifest JobTime='%s'
+                 JobType='ProtocolStatusAndParticipant'
+                 JobId='%d'>
+""" % (self.getJobTime(), self.getId()))
         counter = 0
 
         # Generate the emailers for each recipient
@@ -174,10 +196,12 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
             filters = ['name:Person Address Fragment With Name (Emailer)']
             rsp = cdr.filterDoc('guest', filters, docId, parm = parms)
             if type(rsp) in (type(''), type(u'')):
+                continue
                 raise "Unable to find address for %s: %s" % (str(fragId), rsp)
             name = "%s-%s.xml" % (docId, fragId)
             email = self.extractEmailAddress(rsp[0])
             if not email:
+                continue
                 raise "No email address found for %s" % str(fragId)
             manifest.write("""\
  <EmailerRecipient>
@@ -186,7 +210,7 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
   <EmailerFilename>%s</EmailerFilename>
   <EmailerAddress>%s</EmailerAddress>
   <EmailerDocuments>
-""" % (id, pw, name, email))
+""" % (id, pw, name, xml.sax.saxutils.escape(email)))
             file = open(name, "wb")
             file.write(rsp[0])
             file.close()
@@ -229,7 +253,7 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
        trackerId,
        name,
        protocolParms.protId,
-       protocolParms.title,
+       xml.sax.saxutils.escape(protocolParms.title),
        protocolParms.status)).encode('utf-8'))
                 counter += 1
             manifest.write("""\
@@ -335,6 +359,27 @@ LEFT OUTER JOIN query_term t
             self.log("%d rows inserted into #lead_orgs table" %
                      self.getCursor().rowcount)
 
+            # TEMPORARY --------------------------------------------------
+            # (see request #1350)
+            self.getCursor().execute("CREATE TABLE #brussels (id INTEGER)")
+            self.commit()
+            self.getCursor().execute("""\
+    INSERT INTO #brussels (id)
+SELECT DISTINCT doc_id
+           FROM query_term
+          WHERE path = '/InScopeProtocol/ProtocolSources/ProtocolSource'
+                     + '/SourceName'
+            AND value = 'NCI Liaison Office-Brussels'""")
+            self.commit()
+            self.getCursor().execute("""\
+    DELETE #lead_orgs
+      FROM #lead_orgs o
+      JOIN #brussels b
+        ON o.prot_id = b.id
+     WHERE o.update_mode IS NULL OR o.update_mode <> 'Web-based'""")
+            self.commit()
+            # END TEMPORARY ----------------------------------------------
+
             # Fill in missing update mode values, using the PUPs' preferences.
             self.getCursor().execute("""\
     CREATE TABLE #pup_update_mode
@@ -411,6 +456,10 @@ SELECT DISTINCT u.doc_id, MAX(u.value) -- Avoid multiple values
             rows            = self.getCursor().fetchall()
             self.log("%d rows retrieved for paper mailers" % len(rows))
             for (docId, docVer, orgId, pupId, pupLink) in rows:
+                if self.__pupFilter and pupId != self.__pupFilter:
+                    continue
+                if self.__orgFilter and orgId != self.__orgFilter:
+                    continue
                 key       = (pupLink, docId, orgId)
                 recipient = self.getRecipients().get(pupLink)
                 document  = self.getDocuments().get(docId)
