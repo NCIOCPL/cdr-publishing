@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrpub.py,v 1.1 2001-10-01 20:37:03 bkline Exp $
+# $Id: cdrpub.py,v 1.2 2001-10-12 20:32:39 bkline Exp $
 #
 # Public services for CDR publishing.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2001/10/01 20:37:03  bkline
+# Initial revision
+#
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, os, time, xml.dom.minidom
@@ -59,11 +62,11 @@ def initNewJob(ctrlDocId, subsetName, session, docIds = [], parms = [],
             if not row:
                 return "Version %d of document CDR%010d not found" (docId[1],
                                                                     docId[0])
-            if row[0] != "A":
-                return "Status of document CDR%010d is %s" % (docId[0], row[0])
-            if row[1] != "Y":
-                return "Version %d of document CDR%010d not publishable" % (
-                    docId[1], docId[0])
+            #if row[0] != "A":
+            #   return "Status of document CDR%010d is %s" % (docId[0], row[0])
+            #if row[1] != "Y":
+            #   return "Version %d of document CDR%010d not publishable" % (
+            #       docId[1], docId[0])
     except cdrdb.Error, info:
         return 'Database failure checking doc statuses: %s' % info[1][0]
     except Exception, eInfo:
@@ -140,13 +143,6 @@ def initNewJob(ctrlDocId, subsetName, session, docIds = [], parms = [],
         return 'Unable to find output base directory for %s jobs' % subsetName
     outputDir = "%s.%s.%d" % (baseDir, uname, time.time())
 
-    # Create the directory.
-    try:
-        os.makedirs(outputDir)
-    except Exception, eInfo:
-        return 'Failure creating output directory %s: %s' % (outputDir,
-                                                             str(eInfo))
-                
     # Create the job row.
     try:
         cursor.execute("""\
@@ -167,11 +163,23 @@ def initNewJob(ctrlDocId, subsetName, session, docIds = [], parms = [],
         if not row:
             return "Internal error retrieving job id"
         jobId = int(row[0])
+        outputDir = "%sJob%d" % (baseDir, jobId)
+        cursor.execute("""\
+            UPDATE pub_proc
+               SET output_dir = ?
+             WHERE id = ?""", (outputDir, jobId))
     except cdrdb.Error, info:
         return 'Database failure creating new job: %s' % info[1][0]
     except Exception, eInfo:
         return "Failure creating new job: %s" % str(eInfo)
 
+    # Create the directory.
+    try:
+        os.makedirs(outputDir)
+    except Exception, eInfo:
+        return 'Failure creating output directory %s: %s' % (outputDir,
+                                                             str(eInfo))
+                
     # Add the document IDs if provided.
     if docIds:
         try:
