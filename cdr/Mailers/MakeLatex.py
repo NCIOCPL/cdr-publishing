@@ -1,10 +1,12 @@
 #----------------------------------------------------------------------
 #
-# $Id: MakeLatex.py,v 1.1 2001-07-09 14:53:30 bkline Exp $
+# $Id: MakeLatex.py,v 1.2 2001-07-09 18:30:12 bkline Exp $
 #
 # Create Summary mailer.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2001/07/09 14:53:30  bkline
+# Initial revision
 #
 #----------------------------------------------------------------------
 import sys, xml.dom.minidom, re
@@ -12,14 +14,15 @@ import sys, xml.dom.minidom, re
 #----------------------------------------------------------------------
 # Global variables.
 #----------------------------------------------------------------------
-funnyChars = re.compile("([\"%<>])")
-sectNames  = ['section','subsection','subsubsection',
-              'paragraph','subparagraph']
+funnyChars = re.compile(u"([\"%<>_])")
+sectNames  = [u'section',u'subsection',u'subsubsection',
+              u'paragraph',u'subparagraph']
 def addBackslash(match): 
     char = match.group(0)
-    if char == '%': return "$\\%$"
-    if char == '"': return "\\tQ "
-    return "$" + char + "$"
+    if char == u'%': return u"$\\%$"
+    if char == u'"': return u"\\tQ "
+    if char == u'_': return u"\\_"
+    return u"$" + char + u"$"
 
 def cleanupText(s):
     return re.sub(funnyChars, addBackslash, s)
@@ -28,7 +31,7 @@ def cleanupText(s):
 # Extract the text content of a DOM element.
 #----------------------------------------------------------------------
 def getTextContent(node):
-    text = ''
+    text = u''
     for n in node.childNodes:
         if n.nodeType == xml.dom.minidom.Node.TEXT_NODE:
             text = text + n.nodeValue
@@ -36,32 +39,32 @@ def getTextContent(node):
 
 def handleFootnote(footnote):
     text = getTextContent(footnote)
-    sys.stdout.write("\\footnote{%s}" % text)
+    sys.stdout.write("\\footnote{%s}" % text.encode('latin-1'))
 
 def handleListItems(list):
     for node in list.childNodes:
         if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
             if node.nodeName == "ListItem":
-                print r"\item ",
+                #print r"\item ",
+                print " ",
                 handleMarkedUpText(node)
 
 def handleOrderedList(list):
-    print r"\begin{enumerate}"
+    #print r"\begin{enumerate}"
     handleListItems(list)
-    print r"\end{enumerate}"
+    #print r"\end{enumerate}"
     print ""
 
 def handleItemizedList(list):
-    print r"\begin{itemize}"
+    #print r"\begin{itemize}"
     handleListItems(list)
-    print r"\end{itemize}"
+    #print r"\end{itemize}"
     print ""
 
 def handleMarkedUpText(node):
-    print "\\setcounter{qC}{0}"
     for node in node.childNodes:
         if node.nodeType == xml.dom.minidom.Node.TEXT_NODE:
-            text = cleanupText(node.nodeValue)
+            text = cleanupText(node.nodeValue).encode('latin-1')
             if text: sys.stdout.write(text)
         elif node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
             if node.nodeName == "Footnote":
@@ -76,14 +79,15 @@ def handleMarkedUpText(node):
                 handleItemizedList(node)
                 
 def handlePara(para):
+    print "\\setcounter{qC}{0}"
     handleMarkedUpText(para)
     print ""
 
 def handleSection(section, level):
-    title = getTextContent(section.getElementsByTagName("Title")[0])
+    title = getTextContent(section.getElementsByTagName(u"Title")[0])
     print """\
 \\%s{%s}
-""" % (sectNames[level], cleanupText(title))
+""" % (sectNames[level], cleanupText(title).encode('latin-1'))
     for node in section.childNodes:
         if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
             if node.nodeName == "Para":
@@ -111,7 +115,7 @@ print """\
 {\\Large %s }
 \\end{center}
 \\raggedright
-""" % cleanupText(title)
+""" % cleanupText(title).encode('latin-1')
 for node in docElem.childNodes:
     if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
         if node.nodeName == "SummarySection":
