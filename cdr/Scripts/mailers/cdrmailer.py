@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.7 2001-10-22 23:57:42 bkline Exp $
+# $Id: cdrmailer.py,v 1.8 2002-01-23 17:13:14 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2001/10/22 23:57:42  bkline
+# Added member field for subset name; moved core mailer code out to
+# cdr module; added __buildName method.
+#
 # Revision 1.6  2001/10/11 19:48:22  bkline
 # Added Address class; moved common sendMail() code out to cdr module.
 #
@@ -25,7 +29,9 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom
+import cdr, cdrdb, stubcdrxmllatex, os, re, sys, time, xml.dom.minidom
+
+debugCtr = 1
 
 #----------------------------------------------------------------------
 # Object for managing mailer processing.
@@ -124,9 +130,10 @@ class MailerJob:
     __CDR_EMAIL     = "cdr@mmdb2.nci.nih.gov"
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
     __LOGFILE       = "d:/cdr/log/mailer.log"
-    __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode"
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
+    __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode "\
+                      "-include-directory d:/cdr/mailers/style"
 
     #------------------------------------------------------------------
     # Constructor for base class.
@@ -304,7 +311,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
     #------------------------------------------------------------------
-    def makeLatex(self, doc, filters, mailType):
+    def makeLatex(self, doc, filters, mailType, parms = []):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -317,6 +324,7 @@ class MailerJob:
                                 "initial"
                                 "update"
                                 "reminder"
+            parms       - possibly empty set of parameters for filtering.
         Return value:
             Returns an object with the following methods:
                 getLatex()          - reference to string with
@@ -331,12 +339,16 @@ class MailerJob:
 
         # XXX Specify version when Mike's ready.
         docId = cdr.normalize(doc.getId())
-        result = cdr.filterDoc(self.__session, filters, docId)
+        result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
         if type(result) == type(""):
-            raise "failure filtering Summary document %s: %s" % (docId, result)
+            raise "failure filtering document %s: %s" % (docId, result)
         try:
+            global debugCtr
+            fname = "%d.xml" % debugCtr
+            debugCtr += 1
+            open(fname, "w").write(result[0])
             docDom = xml.dom.minidom.parseString(result[0])
-            return cdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
+            return stubcdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue and eValue or eType
