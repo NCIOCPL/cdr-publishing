@@ -346,6 +346,8 @@
 <!ELEMENT ProfessionalSuffix (#PCDATA)>
 <!ELEMENT NameFormat (#PCDATA)>
 
+<!ELEMENT ProfessionalDisclaimer (%TextSectionElements;)*>
+<!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
 
 <!-- End Common Elements -->
 
@@ -363,7 +365,8 @@
                    SummarySection+,
                    TranslationOf?,
                    DateLastModified?,
-                   DateFirstPublished?
+                   DateFirstPublished?,
+                   ProfessionalDisclaimer?
                   )
 >
 <!ATTLIST Summary id CDATA #REQUIRED>
@@ -529,8 +532,6 @@
 <!ELEMENT Purpose (%TextSectionElements;)*>
 <!ELEMENT EligibilityText (%TextSectionElements;)*>
 <!ELEMENT TreatmentIntervention (%TextSectionElements;)*>
-<!ELEMENT ProfessionalDisclaimer (%TextSectionElements;)*>
-<!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
 
 <!ELEMENT ProtocolDetail (StudyType,
                           StudyCategory+,
