@@ -1,9 +1,17 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.53 2003-07-15 15:53:35 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.54 2003-07-15 20:55:14 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.53  2003/07/15 15:53:35  ameyer
+# Modified new and renew command definitions for ewidth to insure that it
+# is only made "new" once.
+# Modified organization address handling to use OrganizationLocation
+# instead of OrganizationNameInformation to get full hierarchy of
+# organization and parent names.
+# Made minor Latex line break tweaks to get this to format right.
+#
 # Revision 1.52  2003/07/15 12:46:31  bkline
 # Adjusted status & participant mailer to handle multiple non-PUP
 # lead org persons (issue #815).
@@ -540,7 +548,7 @@ class Address:
             output += " %s \\\\\n" % street
         state = self.stateAbbrev or self.state
         statePlusZip = "%s %s" % (state or "", self.zip or "")
-        statePlusZip = statePlusZip and ", " or ""
+        statePlusZip = statePlusZip.strip()
         city = ("%s %s" % (self.city,
                            self.citySuffix)).strip() or ""
         comma = city and statePlusZip and ", " or ""
@@ -655,14 +663,12 @@ class LeadOrgPerson:
         self.roles   = []
         self.contact = Contact()
         for child in node.childNodes:
-            if child.nodeName == "ProtPerson":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "PersonNameInformation":
-                        self.name = PersonName(grandchild)
-                    elif grandchild.nodeName == "PersonRole":
-                        self.roles.append(getText(grandchild))
-                    elif grandchild.nodeName == "Contact":
-                        self.contact = Contact(grandchild)
+            if child.nodeName == "PersonNameInformation":
+                self.name = PersonName(child)
+            elif child.nodeName == "PersonRole":
+                self.roles.append(getText(child))
+            elif child.nodeName == "Contact":
+                self.contact = Contact(child)
     def hasRole(self, role):
         return role in self.roles
 
@@ -683,13 +689,15 @@ class ProtLeadOrg:
             elif child.nodeName == "LeadOrgRole":
                 self.orgRoles.append(getText(child))
             elif child.nodeName == "LeadOrgPersonnel":
-                person = LeadOrgPerson(child)
-                self.personnel.append(person)
-                for role in person.roles:
-                    if role.upper() != "UPDATE PERSON":
-                        self.protChair = person
-                if child.getAttribute("MailAbstractTo") == 'Y':
-                    self.sendMailerTo = person
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "ProtPerson":
+                        person = LeadOrgPerson(grandchild)
+                        self.personnel.append(person)
+                        for role in person.roles:
+                            if role.upper() != "UPDATE PERSON":
+                                self.protChair = person
+                        if grandchild.getAttribute("MailAbstractTo") == 'Y':
+                            self.sendMailerTo = person
 
 class OrgLoc(Location):
     """
