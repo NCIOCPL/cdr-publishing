@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.10 2002-09-30 14:25:25 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.11 2002-10-02 20:51:03 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2002/09/30 14:25:25  bkline
+# Second draft for protocol summary and status mailers.
+#
 # Revision 1.9  2002/09/26 22:05:29  bkline
 # Second draft for person and org mailers.
 #
@@ -296,19 +299,12 @@ class ProcParms:
     def setOutput(self, output):
         self.output = output
 
-
-#-------------------------------------------------------------------
-# XmlLatexException
-#
-#   Used for all exceptions thrown back to cdrxmllatex callers.
-#-------------------------------------------------------------------
 class XmlLatexException(Exception):
+    "Used for all exceptions thrown back to cdrxmllatex callers."
     pass
 
-#----------------------------------------------------------------------
-# Object representing an organization's protocol status.
-#----------------------------------------------------------------------
 class OrgProtStatus:
+    "Object representing an organization's protocol status."
     def __init__(self, statuses):
         self.value = None
         self.date  = None
@@ -323,10 +319,8 @@ class OrgProtStatus:
                 return
             child = child.nextSibling
                 
-#----------------------------------------------------------------------
-# Object representing a person's name.
-#----------------------------------------------------------------------
 class PersonName:
+    "Object representing a person's name, including professional suffixes."
     def __init__(self, node):
         self.givenName    = ""
         self.surname      = ""
@@ -364,10 +358,8 @@ class PersonName:
             name = "%s, %s" % (name, profSuffixes)
         return name
 
-#----------------------------------------------------------------------
-# Object representing an address.
-#----------------------------------------------------------------------
 class Address:
+    "Object holding an address (not including company names)."
 
     def __init__(self, node = None):
         self.street     = []
@@ -419,18 +411,13 @@ class Address:
             output += "  %s \\\\\n" % self.country
         return output
 
-#----------------------------------------------------------------------
-# Remember list style.
-#----------------------------------------------------------------------
 class List:
+    "Remembers list style."
     def __init__(self, compact):
         self.compact = compact
 
-
-#----------------------------------------------------------------------
-# Object representing a Protocol Lead Organization person.
-#----------------------------------------------------------------------
 class LeadOrgPerson:
+    "Object representing a Protocol Lead Organization person."
     def __init__(self, node):
         self.name    = None
         self.phone   = None
@@ -470,10 +457,8 @@ class LeadOrgPerson:
             elif child.nodeName == "PersonRole":
                 self.role = getText(child)
 
-#----------------------------------------------------------------------
-# Object representing a Protocol Lead Organization.
-#----------------------------------------------------------------------
 class ProtLeadOrg:
+    "Object representing a Protocol Lead Organization."
     def __init__(self, orgNode):
         sendMailerTo       = ""
         self.personnel     = {}
@@ -498,11 +483,9 @@ class ProtLeadOrg:
                     self.protChair = person
         if sendMailerTo and self.personnel.has_key(sendMailerTo):
             self.sendMailerTo = self.personnel[sendMailerTo]
-                
-#----------------------------------------------------------------------
-# Object representing an organization location.
-#----------------------------------------------------------------------
+
 class OrgLoc:
+    "Object representing an organization location."
     def __init__(self, node):
         self.id          = None
         self.cipsContact = ""
@@ -535,10 +518,8 @@ class OrgLoc:
                             if ggc.nodeName == "OrganizationName":
                                 self.orgNames.append(getText(ggc))
 
-#----------------------------------------------------------------------
-# Gather lists of boards, specialties, etc., needed for Person mailers.
-#----------------------------------------------------------------------
 class PersonLists:
+    "Gathers lists of boards, specialties, etc., needed for Person mailers."
     def __init__(self):
         import cdr, cdrdb
         personType = cdr.getDoctype('guest', 'Person')
@@ -605,18 +586,18 @@ class PersonLists:
               ORDER BY o.value""")
         return cursor.fetchall()
         
-#----------------------------------------------------------------------
-# Base class for a person's private practice and other practice locations.
-# Note that the denormalized Person document has already matched up the
-# CIPSContact element with the location it points to, so the presence
-# of that element inside a location element (Home, PrivatePractice,
-# or OtherPracticeLocation) indicates the CIPS contact location, without
-# the necessity to inspect the actual value of the CIPSContact element.
-# There is one twist, though.  For a PrivatePractice, the CIPSContact
-# element is down one level, underneath the child PrivatePracticeLocation
-# element for some reason.
-#----------------------------------------------------------------------
 class PersonLocation:
+    """
+    Base class for a person's private practice and other practice locations.
+    Note that the denormalized Person document has already matched up the
+    CIPSContact element with the location it points to, so the presence
+    of that element inside a location element (Home, PrivatePractice,
+    or OtherPracticeLocation) indicates the CIPS contact location, without
+    the necessity to inspect the actual value of the CIPSContact element.
+    There is one twist, though.  For a PrivatePractice, the CIPSContact
+    element is down one level, underneath the child PrivatePracticeLocation
+    element for some reason.
+    """
     def __init__(self):
         self.id             = None
         self.cipsContact    = ""
@@ -635,10 +616,8 @@ class PersonLocation:
             orgNames += "  %s \\\\\n" % orgName
         return orgNames + result
 
-#----------------------------------------------------------------------
-# Derived class for a physician's private practice location.
-#----------------------------------------------------------------------
 class PrivatePracticeLocation(PersonLocation):
+    "Derived class for a physician's private practice location."
     def __init__(self, node):
         PersonLocation.__init__(self)
         for child in node.childNodes:
@@ -659,10 +638,8 @@ class PrivatePracticeLocation(PersonLocation):
                 self.email = getText(child)
                 self.emailPublic = child.getAttribute("Public")
 
-#----------------------------------------------------------------------
-# Derived class for an other practice location for a person.
-#----------------------------------------------------------------------
 class OtherPracticeLocation(PersonLocation):
+    "Derived class for an other practice location for a person."
     def __init__(self, node):
         PersonLocation.__init__(self)
         self.id = node.getAttribute("id")
@@ -692,10 +669,8 @@ class OtherPracticeLocation(PersonLocation):
         if orderParentNameFirst and len(self.orgNames) > 1:
             self.orgNames.reverse()
 
-#----------------------------------------------------------------------
-# Derived class for a home location for a person.
-#----------------------------------------------------------------------
 class HomeLocation(PersonLocation):
+    "Derived class for a home location for a person."
     def __init__(self, node):
         PersonLocation.__init__(self)
         self.id = node.getAttribute("id")
@@ -738,24 +713,25 @@ class ParticipatingSite:
         elif other.status == "Active":
             return 1
         return cmp(self.name, other.name)
-    
-#----------------------------------------------------------------------
-# getText
-#   Extracts and concatenates the text nodes from an element.
-#----------------------------------------------------------------------
+
 def getText(node):
+    """
+    Extracts and concatenates the text nodes from an element, and
+    filters the characters to make them ready for insertion into a
+    LaTeX source document.
+    """
     result = ""
     for child in node.childNodes:
         if child.nodeType == node.TEXT_NODE:
             result = result + child.data
     return UnicodeToLatex.convert(result)
 
-#----------------------------------------------------------------------
-# Find a node by its relative XPath and extract its text value.  Very
-# crude tool; does not handle attributes, and assumes that there is
-# exactly one occurrence of each element in the path name.
-#----------------------------------------------------------------------
 def getTextByPath(path, node):
+    """
+    Finds a node by its relative XPath and extract its text value.  Very
+    crude tool; does not handle attributes, and assumes that there is
+    exactly one occurrence of each element in the path name.
+    """
     if not node:
         return None
     for elemName in path.split("/"):
@@ -768,13 +744,9 @@ def getTextByPath(path, node):
             return None
         node = newNode
     return getText(node)
-                
-    
-#------------------------------------------------------------------
-# findControls
-#   Retrieve the instructions for a given doc format and format type.
-#------------------------------------------------------------------
+
 def findControls (docFmt, fmtType):
+    "Retrieve the instructions for a given doc format and format type."
     try:
         ctl = ControlTable[(docFmt, fmtType)]
     except (KeyError):
@@ -783,32 +755,29 @@ def findControls (docFmt, fmtType):
         sys.exit()
     return ctl
 
-#------------------------------------------------------------------
-# citations
-#   Retrieve the citations and create a list if multiple are present
-#------------------------------------------------------------------
 def cite (pp):
+    "Retrieves the instructions for a given doc format and format type."
 
-     # Build output string here
-     citeString = ''
+    # Build output string here
+    citeString = ''
 
-     # Get the current citation node
-     citeNode = pp.getCurNode()
+    # Get the current citation node
+    citeNode = pp.getCurNode()
 
-     # If it's a sibling to another one, we've already processed it
-     # Don't neeed to do any more
-     prevNode = citeNode.previousSibling
-     if prevNode.nodeName == 'CitationLink':
+    # If it's a sibling to another one, we've already processed it
+    # Don't neeed to do any more
+    prevNode = citeNode.previousSibling
+    if prevNode.nodeName == 'CitationLink':
         return 0
 
-     # Beginning of list of one or more citation numbers
-     citeString = r"\cite{"
+    # Beginning of list of one or more citation numbers
+    citeString = r"\cite{"
 
-     # Capture the text of all contiguous citation references,
-     #   separating them with commas
-     count = 0
-     while citeNode != None and \
-           citeNode.nodeName == 'CitationLink':
+    # Capture the text of all contiguous citation references,
+    #   separating them with commas
+    count = 0
+    while citeNode != None and \
+        citeNode.nodeName == 'CitationLink':
 
         # Comma separator before all but the first one
         if count > 0:
@@ -826,57 +795,50 @@ def cite (pp):
         count += 1
         citeNode = citeNode.nextSibling
 
-     # Terminate the Latex for the list of citation
-     citeString += r"} "
+    # Terminate the Latex for the list of citation
+    citeString += r"} "
 
-     # Return info to caller, who will output it to the Latex
-     pp.setOutput (citeString)
+    # Return info to caller, who will output it to the Latex
+    pp.setOutput (citeString)
 
-     return 0
+    return 0
 
-
-#------------------------------------------------------------------
-# bibitem
-#   Create the link between the citations listed within the text
-#   and the references as listed in the Reference block of each
-#   chapter of a summary.
-#------------------------------------------------------------------
 def bibitem (pp):
+    """
+    Creates the link between the citations listed within the text
+    and the references as listed in the Reference block of each
+    chapter of a summary.
+    """
 
-     # Build output string here
-     refString = ''
+    # Build output string here
+    refString = ''
 
-     # Get the current citation node
-     refNode = pp.getCurNode()
+    # Get the current citation node
+    refNode = pp.getCurNode()
 
-     # Beginning of the bibitem element
-     refString = r"  \bibitem{"
+    # Beginning of the bibitem element
+    refString = r"  \bibitem{"
 
-     # Reference index number is in the refidx attribute
-     # Extract the attribute value from the Citation
-     # tag
-     # ------------------------------------------------------
-     attrValue = refNode.getAttribute ('refidx')
-     if (attrValue != None):
-       refString += attrValue
-       ## refString += refNode.nextSibling
-
-
-     # Terminate the Latex for the list of citation
-     refString += r"}"
-
-     # Return info to caller, who will output it to the Latex
-     pp.setOutput (refString)
-
-     return 0
+    # Reference index number is in the refidx attribute
+    # Extract the attribute value from the Citation
+    # tag
+    # ------------------------------------------------------
+    attrValue = refNode.getAttribute ('refidx')
+    if (attrValue != None):
+        refString += attrValue
+        ## refString += refNode.nextSibling
 
 
-#------------------------------------------------------------------
-# protocolTitle
-#   From the three possible protocol titles only select the
-#   Professional Title
-#------------------------------------------------------------------
+    # Terminate the Latex for the list of citation
+    refString += r"}"
+
+    # Return info to caller, who will output it to the Latex
+    pp.setOutput (refString)
+
+    return 0
+
 def protocolTitle (pp):
+    "Get the PDQ and original protocol titles for the summary mailer."
     node = pp.getCurNode()
     attr = node.getAttribute("Type")
     macro = None
@@ -888,106 +850,103 @@ def protocolTitle (pp):
     if macro:
         pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
 
-#------------------------------------------------------------------
-# address
-#   Retrieve multiple address lines and separate each element with
-#   a newline to be displayed properly in LaTeX
-#------------------------------------------------------------------
-def address (pp):
+#def address (pp):
+#   """
+#   Retrieves multiple address lines and separate each element with
+#   a newline to be displayed properly in LaTeX.
+#   """
 
-     # Build output string here
-     addressString = ''
+#    # Build output string here
+#    addressString = ''
 
-     # Get the current address node
-     addressNode = pp.getCurNode()
+#    # Get the current address node
+#    addressNode = pp.getCurNode()
 
-     # Beginning of list of one or more address lines
-     addressString = "  \\newcommand{\\PUPAddr}{%\n    "
+#    # Beginning of list of one or more address lines
+#    addressString = "  \\newcommand{\\PUPAddr}{%\n    "
 
-     # If the current AddrLine element is a sibling to another one,
-     # we've already processed it as part of the first address line.
-     # Don't need to do any more and can exit here.
-     # -------------------------------------------------------------
-     prevNode = addressNode.previousSibling
-     while prevNode != None:
-        if prevNode.nodeName == 'AddrLine':
-           return 0
-        prevNode = prevNode.previousSibling
+#    # If the current AddrLine element is a sibling to another one,
+#    # we've already processed it as part of the first address line.
+#    # Don't need to do any more and can exit here.
+#    # -------------------------------------------------------------
+#    prevNode = addressNode.previousSibling
+#    while prevNode != None:
+#       if prevNode.nodeName == 'AddrLine':
+#          return 0
+#       prevNode = prevNode.previousSibling
 
-     # Capture the text of all contiguous address lines separating,
-     # them with a LaTeX newline and line break
-     # ------------------------------------------------------------
-     addressNode = pp.getCurNode()
-     count = 0
-     while addressNode != None and \
-           addressNode.nodeName == 'AddrLine':
+#    # Capture the text of all contiguous address lines separating,
+#    # them with a LaTeX newline and line break
+#    # ------------------------------------------------------------
+#    addressNode = pp.getCurNode()
+#    count = 0
+#    while addressNode != None and \
+#          addressNode.nodeName == 'AddrLine':
 
-        # Comma separator before all but the first one
-        if count > 0:
-            addressString += " \\newline\n    "
+#       # Comma separator before all but the first one
+#       if count > 0:
+#           addressString += " \\newline\n    "
 
-        # The address line text is a child of the AddrLine node
-        # Loop through all children of the node to extract the
-        # text
-        # Note:  If the text nodes are parents to other children
-        #        this part will need to be expanded to include those
-        # ----------------------------------------------------------
-        txtNode = addressNode.firstChild
-        while txtNode != None:
-           addressString += UnicodeToLatex.convert(txtNode.nodeValue);
-           txtNode = txtNode.nextSibling
-
-
-        # Increment count and check the next sibling
-        # Note:  The next sibling is a text node --> need to check
-        #        the node after the next to catch an Element node again
-        # -------------------------------------------------------------
-        for i in (1, 2):
-           count += 1
-           addressNode = addressNode.nextSibling
-
-     # Terminate the Latex for the list of address line
-     addressString += "\n  }\n"
-
-     # Return info to caller, who will output it to the Latex
-     pp.setOutput (addressString)
-
-     return 0
+#       # The address line text is a child of the AddrLine node
+#       # Loop through all children of the node to extract the
+#       # text
+#       # Note:  If the text nodes are parents to other children
+#       #        this part will need to be expanded to include those
+#       # ----------------------------------------------------------
+#       txtNode = addressNode.firstChild
+#       while txtNode != None:
+#          addressString += UnicodeToLatex.convert(txtNode.nodeValue);
+#          txtNode = txtNode.nextSibling
 
 
-#------------------------------------------------------------------
-# street
-#   Retrieve multiple street lines and separate each element with
-#   a newline to be displayed properly in LaTeX
-#------------------------------------------------------------------
+#       # Increment count and check the next sibling
+#       # Note:  The next sibling is a text node --> need to check
+#       #        the node after the next to catch an Element node again
+#       # -------------------------------------------------------------
+#       for i in (1, 2):
+#          count += 1
+#          addressNode = addressNode.nextSibling
+
+#    # Terminate the Latex for the list of address line
+#    addressString += "\n  }\n"
+
+#    # Return info to caller, who will output it to the Latex
+#    pp.setOutput (addressString)
+
+#    return 0
+
 def street (pp):
+    """
+    Retrieves multiple street lines and separate each element with
+    a newline to be displayed properly in LaTeX.
+    """
 
-     # Build output string here
-     streetString = ''
+    # Build output string here
+    streetString = ''
 
-     # Get the current street node
-     streetNode = pp.getCurNode()
+    # Get the current street node
+    streetNode = pp.getCurNode()
 
-     # Beginning of list of one or more street lines
-     streetString = "  \\renewcommand{\\Street}{%\n    "
+    # Beginning of list of one or more street lines
+    streetString = "  \\renewcommand{\\Street}{%\n    "
 
-     # If the current Street element is a sibling to another Street
-     # element we've already processed it as part of the first
-     # street line.
-     # Don't need to do any more and can exit here.
-     # -------------------------------------------------------------
-     prevNode = streetNode.previousSibling
-     while prevNode != None:
+    # If the current Street element is a sibling to another Street
+    # element we've already processed it as part of the first
+    # street line.
+    # Don't need to do any more and can exit here.
+    # -------------------------------------------------------------
+    prevNode = streetNode.previousSibling
+    while prevNode != None:
         if prevNode.nodeName == 'Street':
-           return 0
+            return 0
         prevNode = prevNode.previousSibling
 
-     # Capture the text of all contiguous street lines separating,
-     # them with a LaTeX newline and line break
-     # ------------------------------------------------------------
-     streetNode = pp.getCurNode()
-     while streetNode != None and \
-           streetNode.nodeName == 'Street':
+    # Capture the text of all contiguous street lines separating,
+    # them with a LaTeX newline and line break
+    # ------------------------------------------------------------
+    streetNode = pp.getCurNode()
+    while streetNode != None and \
+          streetNode.nodeName == 'Street':
 
         # The street line text is a child of the Street node
         # Loop through all children of the node to extract the
@@ -998,62 +957,60 @@ def street (pp):
         count = 0
         while streetNode != None:
 
-           txtNode = streetNode.firstChild
-           while txtNode != None:
-              if count > 0:
-                 streetString += " \\newline \n"
-              if streetNode.nodeName == 'Street':
-                 streetString += UnicodeToLatex.convert(txtNode.nodeValue);
-              txtNode = txtNode.nextSibling
-              count += 1
+            txtNode = streetNode.firstChild
+            while txtNode != None:
+                if count > 0:
+                    streetString += " \\newline \n"
+                if streetNode.nodeName == 'Street':
+                    streetString += UnicodeToLatex.convert(txtNode.nodeValue);
+                txtNode = txtNode.nextSibling
+                count += 1
 
-           streetNode = streetNode.nextSibling
-
-
-     # Terminate the Latex for the list of street line
-     streetString += "\n  }\n"
-
-     # Return info to caller, who will output it to the Latex
-     pp.setOutput (streetString)
-
-     return 0
+            streetNode = streetNode.nextSibling
 
 
-#------------------------------------------------------------------
-#  yesno
-#    Used to create records within a LaTeX table of the format
-#       Description     Yes     No
-#    ===============================
-#     My Description     X
-#     Next Description           X
-#
-#    After the description field is printed this procedure finds
-#    the sibling element with the Yes/No flag information and prints
-#    a predefined LaTeX command called
-#         \Check{X}
-#         with X = Y  -->  Output:     X   space
-#              else   -->  Output:    space  X
-#
-#    If the Description field is a SpecialtyCategory an additional
-#    check is set for the board certification.
-#------------------------------------------------------------------
+    # Terminate the Latex for the list of street line
+    streetString += "\n  }\n"
+
+    # Return info to caller, who will output it to the Latex
+    pp.setOutput (streetString)
+
+    return 0
+
+
 def yesno (pp):
+    """
+    Used to create records within a LaTeX table of the format
+       Description     Yes     No
+    ===============================
+     My Description     X
+     Next Description           X
 
-     rootField = pp.args[0]
-     checkField = pp.args[1]
-     # Build output string here
-     checkString = ''
+    After the description field is printed this procedure finds
+    the sibling element with the Yes/No flag information and prints
+    a predefined LaTeX command called
+         \Check{X}
+         with X = Y  -->  Output:     X   space
+              else   -->  Output:    space  X
 
-     # Get the current citation node
-     checkNode = pp.getCurNode()
-     boardNode = pp.getCurNode()
+    If the Description field is a SpecialtyCategory an additional
+    check is set for the board certification.
+    """
+    rootField = pp.args[0]
+    checkField = pp.args[1]
+    # Build output string here
+    checkString = ''
 
-     # Capture the text of all contiguous street lines separating,
-     # them with a LaTeX newline and line break
-     # ------------------------------------------------------------
-     checkNode = pp.getCurNode()
-     count = 0
-     while checkNode != None and \
+    # Get the current citation node
+    checkNode = pp.getCurNode()
+    boardNode = pp.getCurNode()
+
+    # Capture the text of all contiguous street lines separating,
+    # them with a LaTeX newline and line break
+    # ------------------------------------------------------------
+    checkNode = pp.getCurNode()
+    count = 0
+    while checkNode != None and \
            checkNode.nodeName == rootField:
 
         # The YesNo text is a child of the YesNo node
@@ -1096,10 +1053,8 @@ def yesno (pp):
 
         return 0
 
-#----------------------------------------------------------------------
-# Processes the start of a list element.
-#----------------------------------------------------------------------
 def openList(pp):
+    "Processes the start of a list element."
 
     global listStack
 
@@ -1158,36 +1113,27 @@ def openList(pp):
     # Start the list.
     pp.setOutput(output + listStyle + "  \\begin{%s}\n" % command)
 
-#----------------------------------------------------------------------
-# Forget list style.
-#----------------------------------------------------------------------
 def closeList(pp):
+    "Forgets the list style we've finished processing."
     global listStack
     listStack.pop()
     if not listStack:
         pp.setOutput("  \\setlength{\\parskip}{1.2mm}\n")
 
-#----------------------------------------------------------------------
-# Filter which adds line preservation to output.
-#----------------------------------------------------------------------
 def preserveLines(str):
+    "Filter which adds line preservation to output."
     return str.replace('\n', '\\\\\n')
 
-#----------------------------------------------------------------------
-# Filter which removes paragraph breaks.
-#----------------------------------------------------------------------
 def stripLines(str):
+    "Filter which removes paragraph breaks."
     return str.replace('\r', '').replace('\n', ' ')
 
-#----------------------------------------------------------------------
-# Filter which strips leading and trailing whitespace.
-#----------------------------------------------------------------------
-def stripEnds(str): return str.strip()
+def stripEnds(str):
+    "Filter which strips leading and trailing whitespace."
+    return str.strip()
 
-#----------------------------------------------------------------------
-# Handle organization locations.
-#----------------------------------------------------------------------
 def orgLocs(pp):
+    "Handle organization locations."
 
     # Gather in all the locations for the organization.
     otherLocs = []
@@ -1220,7 +1166,7 @@ def orgLocs(pp):
   \OrgIntro
 
 
-  \subsection*{Primary Contact Information}
+  \subsection*{Primary Contact Location}
         
 %s  \OrgName \\
 %s
@@ -1231,7 +1177,7 @@ def orgLocs(pp):
       \item[Main Organization Fax]                       %s      \\
                                                          %s      \\
       \item[Main Organization E-Mail]                    %s      \\
-      \item[Publish E-Mail to PDQ/Cancer.gov Directory]  \yesno  \\
+      \item[Publish E-Mail to PDQ/Cancer.gov]            \yesno  \\
       \item[Website]                                     %s
    \end{entry}
 """ % (cipsContactName,
@@ -1261,7 +1207,7 @@ def orgLocs(pp):
     \item[Fax]                                        %s       \\
                                                       %s       \\
     \item[E-Mail]                                     %s       \\
-    \item[Publish E-Mail to PDQ/Cancer.gov Directory] \yesno   \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]           \yesno   \\
     \item[Website]                                    %s
   \end{entry}
   \vspace{15pt}
@@ -1277,10 +1223,8 @@ def orgLocs(pp):
     # Pump out the location information for the organization.
     pp.setOutput(output)
 
-#----------------------------------------------------------------------
-# Extract an organization's memberships in cooperative groups.
-#----------------------------------------------------------------------
 def getCoopMemberships(node):
+    "Extract an organization's memberships in cooperative groups."
     coops = []
     pathToCoopName = "CooperativeGroup/OfficialName/Name"
     for child in node.childNodes:
@@ -1298,11 +1242,9 @@ def getCoopMemberships(node):
             #                        coops.append(getText(
             #                            greatgreatgrandchild))
     return coops
-                        
-#----------------------------------------------------------------------
-# Handle the organization's affiliations.
-#----------------------------------------------------------------------
+
 def orgAffil(pp):
+    "Handle the organization's affiliations."
 
     # Gather up the affiliation information.
     profOrgs = []
@@ -1335,19 +1277,19 @@ def orgAffil(pp):
     # Format the cooperative group affiliations.
     if coops:
         output += r"""
-  \subsubsection*{Cooperative Groups}
+  \subsubsection*{Clinical Trial Groups}
   \begin{itemize}
 """
         for org in coops:
             output += "  \\item %s\n" % org
         output += "  \\end{itemize}\n"
     pp.setOutput(output)
-        
-#----------------------------------------------------------------------
-# Extract the state name from a PoliticalSubUnit_State element.
-# Use the short name if there is one; otherwise take the long one.
-#----------------------------------------------------------------------
+
 def getState(node):
+    """
+    Extract the state name from a PoliticalSubUnit_State element.
+    Use the short name if there is one; otherwise take the long one.
+    """
     shortName = None
     fullName  = None
     for child in node.childNodes:
@@ -1357,10 +1299,8 @@ def getState(node):
             fullName = getText(child)
     return shortName or fullName
 
-#----------------------------------------------------------------------
-# Extract everything we need from the ProtocolLeadOrg element into macros.
-#----------------------------------------------------------------------
 def protLeadOrg(pp):
+    "Extract everything we need from the ProtocolLeadOrg element into macros."
 
     # Extract the information we need into a convenient object.
     leadOrg = ProtLeadOrg(pp.getCurNode())
@@ -1410,20 +1350,16 @@ def leadOrgRole(pp):
     "Remember if this is a secondary lead organization"
     if getText(pp.getCurNode()) == "Secondary":
         pp.setOutput("  \\renewcommand{\\secondaryLeadOrg}{ (Secondary)}\n")
-        
-#----------------------------------------------------------------------
-# Create the prefix for a protocol (sub)section.
-#----------------------------------------------------------------------
+
 def sectPrefix(level, name):
+    "Create the prefix for a protocol (sub)section."
     return r"""
   \setcounter{qC}{0}
   \%s{%s}
 """ % (level, name)
 
-#----------------------------------------------------------------------
-# Create prefix for a protocol (sub)section if it's not empty.
-#----------------------------------------------------------------------
 def optProtSect(pp):
+    "Create prefix for a protocol (sub)section if it's not empty."
     if pp.getCurNode().hasChildNodes():
         pp.setOutput(r"""
   \setcounter{qC}{0}
@@ -1431,6 +1367,11 @@ def optProtSect(pp):
 """ % (pp.args[0], pp.args[1]))
 
 def protPhaseAndDesign(pp):
+    """
+    Extract the protocol phase and design information.  The protocol phase
+    section is required, even if no data is found.  The design section is
+    only shown if at least one ProtocolDesign element is found.
+    """
     phases = []
     designs = []
     for child in pp.getTopNode().childNodes:
@@ -1448,6 +1389,13 @@ def protPhaseAndDesign(pp):
     pp.setOutput(output + "}\n")
 
 def protRetrievalTerms(pp):
+    """
+    Gather terms for the Disease Retrieval Terms section of the protocol
+    abstract mailer.  The terms are pulled from the conditions listed in
+    the ProtocolDetail element, and the diagnoses listed in the Eligibility
+    element.  The terms are merged into a single list, de-duplicated, and
+    sorted into a single alphabet listing.
+    """
     terms = {}
     for child in pp.getTopNode().childNodes:
         if child.nodeName == "ProtocolDetail":
@@ -1470,10 +1418,8 @@ def protRetrievalTerms(pp):
   \setlength{\parskip}{1.2mm}
 """)
 
-#----------------------------------------------------------------------
-# Check for a missing optional protocol section.
-#----------------------------------------------------------------------
 def checkNotAbstracted(pp):
+    "Check for a missing optional protocol section."
     topNode = pp.getTopNode()
     target, section = pp.args
     nodes = topNode.getElementsByTagName(target)
@@ -1484,20 +1430,16 @@ def checkNotAbstracted(pp):
 
   Not abstracted.
 """ % section)
-    
-#----------------------------------------------------------------------
-# Create the string format for a deadline 60 days from now.
-#----------------------------------------------------------------------
+
 def getDeadline():
+    "Create the string format for a deadline 60 days from now."
     now = list(time.localtime())
     now[2] += 60
     then = time.mktime(now)
     return time.strftime("%b. %d, %Y", time.localtime(then))
-    
-#----------------------------------------------------------------------
-# Extract everything we need from the PersonNameInformation element.
-#----------------------------------------------------------------------
+
 def personName(pp):
+    "Extract everything we need from the PersonNameInformation element."
     name = PersonName(pp.getCurNode())
     formattedName = name.format(0)
     nameWithSuffixes = name.format(1)
@@ -1505,11 +1447,9 @@ def personName(pp):
   \newcommand{\PersonName}{%s}
   \newcommand{\PersonNameWithSuffixes}{%s}
 """ % (formattedName, nameWithSuffixes))
-    
-#----------------------------------------------------------------------
-# Extract all of the locations from a person document.
-#----------------------------------------------------------------------
+
 def personLocs(pp):
+    "Extract all of the locations from a person document."
     
     # Gather all the location information together.
     cipsContact = None
@@ -1533,13 +1473,7 @@ def personLocs(pp):
     adminOnly = "(For administrative use only)"
     address = cipsContact and cipsContact.formatAddress() or ""
     cipsContactInfo = "  \\PersonNameWithSuffixes \\\\\n"
-    if not cipsContact and not otherLocs:
-        pp.setOutput(r"""\
-  \PersonNameWithSuffixes
-
-  %%\afterpage{\fancyhead[C]{{\bfseries \PersonNameWithSuffixes}}}
-
-  \newcommand{\ewidth}{180pt}
+    blankTemplate = r"""\
   \begin{entry}
     \item[Address]                                       %s      \\
                                                          %s      \\
@@ -1550,7 +1484,7 @@ def personLocs(pp):
     \item[Fax]                                           %s      \\
                                                          %s      \\
     \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
     \item[Website]                                       %s      \\
   \end{entry}
 """ % (blankLine,
@@ -1561,7 +1495,12 @@ def personLocs(pp):
        blankLine,
        blankLine, adminOnly,
        blankLine,
-       blankLine))
+       blankLine)
+    if not cipsContact and not otherLocs:
+        pp.setOutput(r"""\
+  \newcommand{\ewidth}{180pt}
+  \PersonNameWithSuffixes
+""" + blankTemplate)
         return
 
     if cipsContact:
@@ -1575,7 +1514,7 @@ def personLocs(pp):
     \item[Fax]                                           %s      \\
                                                          %s      \\
     \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
     \item[Website]                                       %s      \\
   \end{entry}
 """ % (cipsContact.phone or blankLine,
@@ -1589,9 +1528,7 @@ def personLocs(pp):
 
   \PersonIntro
 
-  %%\afterpage{\fancyhead[C]{{\bfseries \PersonNameWithSuffixes}}}
-
-  \subsection*{Primary Contact Information}
+  \subsection*{Primary Contact Location}
 
 %s
 
@@ -1613,7 +1550,7 @@ def personLocs(pp):
     \item[Fax]                                           %s      \\
                                                          %s      \\
     \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail in PDQ/Cancer.gov Directory]    \yesno  \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
     \item[Website]                                       %s      \\
   \end{entry}
   \vspace{15pt}
@@ -1626,15 +1563,15 @@ def personLocs(pp):
         output += "  \\end{enumerate}\n"
        
     else:
-        output += "  None.\n"
+        output += r"""\
+  \renewcommand{\ewidth}{180pt}
+""" + blankTemplate
 
     # Pump out the results.
     pp.setOutput(output)
 
-#----------------------------------------------------------------------
-# Build tables showing a person's specialties and memberships.
-#----------------------------------------------------------------------
 def personSpecialties(pp):
+    "Build tables showing a person's specialties and memberships."
 
     # Lists of standard specialties and groups are cached.
     global personLists
@@ -1829,11 +1766,137 @@ def personSpecialties(pp):
 
     # Pump it out.
     pp.setOutput(output)
+
+def personProtocols(pp):
+    """
+    Find out how many protocols the person is associated with.
+    """
+    import cdrdb
+    loStatPath       = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/LeadOrgProtocolStatuses/CurrentOrgStatus/StatusName'
+    loPersonPath     = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/LeadOrgPersonnel/Person/@cdr:ref'
+    loPersonRolePath = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/LeadOrgPersonnel/PersonRole'
+    ppSiteIdPath     = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/ProtocolSites/PrivatePracticeSite' \
+                       '/PrivatePracticeSiteID/@cdr:ref'
+    ppStatusPath     = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/ProtocolSites/PrivatePracticeSite' \
+                       '/PrivatePracticeSiteStatus'
+    spPath           = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/ProtocolSites/OrgSite/OrgSiteContact' \
+                       '/SpecificPerson/Person/@cdr:ref'
+    orgSiteStatus    = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
+                       '/ProtocolSites/OrgSite/OrgSiteStatus'
+    docId = None
+    for child in pp.getTopNode().childNodes:
+        if child.nodeName == "DocId":
+            docId = int(re.sub(r"[^\d]+", "", getText(child)))
+            break
+    if not docId: return
+    conn   = cdrdb.connect('CdrGuest')
+    cursor = conn.cursor()
+    conn.setAutoCommit(1)
+    cursor.execute("""\
+SELECT DISTINCT lead_org_stat.doc_id prot_id,
+                lead_org_stat.value lead_org_status
+           INTO #lead_org_person
+           FROM query_term lead_org_stat
+           JOIN query_term person
+             ON person.doc_id = lead_org_stat.doc_id
+            AND LEFT(person.node_loc, 8) = LEFT(lead_org_stat.node_loc, 8)
+           JOIN query_term person_role
+             ON person.doc_id = person_role.doc_id
+            AND LEFT(person.node_loc, 12) = LEFT(person_role.node_loc, 12)
+          WHERE lead_org_stat.path = '%s'
+            AND person.path = '%s'
+            AND person_role.path = '%s'
+            AND person_role.value <> 'Update Person'
+            AND EXISTS (SELECT *
+                          FROM primary_pub_doc
+                         WHERE doc_id = lead_org_stat.doc_id)
+            AND person.int_val = %d""" % (loStatPath,
+                                         loPersonPath,
+                                         loPersonRolePath, 
+                                         docId))
+    cursor.execute("""\
+SELECT DISTINCT lead_org_stat.doc_id prot_id
+           INTO #private_practice_person
+           FROM query_term lead_org_stat
+           JOIN query_term person
+             ON person.doc_id = lead_org_stat.doc_id
+            AND LEFT(person.node_loc, 8) = LEFT(lead_org_stat.node_loc, 8)
+           JOIN query_term person_status
+             ON person_status.doc_id = person.doc_id
+            AND LEFT(person_status.node_loc, 16) = LEFT(person.node_loc, 16)
+          WHERE lead_org_stat.path = '%s'
+            AND person.path = '%s'
+            AND person_status.path = '%s'
+            AND lead_org_stat.value = 'Active'
+            AND person_status.value = 'Active'
+            AND EXISTS (SELECT *
+                          FROM primary_pub_doc
+                         WHERE doc_id = lead_org_stat.doc_id)
+            AND person.int_val = %d""" % (loStatPath,
+                                         ppSiteIdPath,
+                                         ppStatusPath, 
+                                         docId))
+    cursor.execute("""\
+SELECT DISTINCT lead_org_stat.doc_id prot_id
+           INTO #org_site_person
+           FROM query_term lead_org_stat
+           JOIN query_term person
+             ON person.doc_id = lead_org_stat.doc_id
+            AND LEFT(person.node_loc, 8) = LEFT(lead_org_stat.node_loc, 8)
+           JOIN query_term site_status
+             ON site_status.doc_id = person.doc_id
+            AND LEFT(site_status.node_loc, 16) = LEFT(person.node_loc, 16)
+          WHERE lead_org_stat.path = '%s'
+            AND person.path = '%s'
+            AND site_status.path = '%s'
+            AND lead_org_stat.value = 'Active'
+            AND site_status.value = 'Active'
+            AND EXISTS (SELECT *
+                          FROM primary_pub_doc
+                         WHERE doc_id = lead_org_stat.doc_id)
+            AND person.int_val = %d""" % (loStatPath,
+                                         spPath,
+                                         orgSiteStatus, 
+                                         docId))
+    cursor.execute("""\
+SELECT COUNT(*) FROM (
+         SELECT prot_id 
+           FROM #lead_org_person
+          WHERE lead_org_status IN ('Approved-not yet active', 'Active')
+          UNION
+         SELECT prot_id
+           FROM #private_practice_person
+          UNION
+         SELECT prot_id
+           FROM #org_site_person
+) AS all_three_temp_tables""")
+    row = cursor.fetchone()
+    activeTrials = row[0]
+    cursor.execute("""\
+         SELECT COUNT(*)
+           FROM #lead_org_person
+          WHERE lead_org_status IN ('Closed',
+                                    'Completed',
+                                    'Temporarily Closed')""")
+    row = cursor.fetchone()
+    closedTrials = row[0]
+    pp.setOutput(r"""\
+  \subsection*{PDQ/Cancer.gov Clinical Trial Listing}
+  \begin{tabbing}
+    Closed Protocols: \= \kill
+    Open Protocols: \> %d \\
+    Closed Protocols: \> %d
+  \end{tabbing}
+""" % (activeTrials, closedTrials))
     
-#----------------------------------------------------------------------
-# Build the address block for the protocol update person.
-#----------------------------------------------------------------------
 def statPup(pp):
+    "Build the address block for the protocol update person."
     name    = ""
     title   = ""
     address = ""
@@ -1870,6 +1933,7 @@ def statPup(pp):
     """
     
 def statPersonnel(pp):
+    "Generate macros for the other lead org's personnel."
     name = ""
     role = ""
     address = ""
@@ -1915,6 +1979,7 @@ def statProtSites(pp):
     pp.setOutput(output)
     
 def statSiteStatus(pp):
+    "Add the status for a protocol participating organization."
     status = getText(pp.getCurNode())
     flag = (status == 'Active') and 'Y' or 'N'
     pp.setOutput("  \\Check{%s} \\\\ \\hline \n" % flag)
@@ -2997,6 +3062,8 @@ DocumentPersonBody = (
           textOut   = 0,
           descend   = 0),
     XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
+    XProc(preProcs  = [[personProtocols]],
+          order     = XProc.ORDER_TOP),
     XProc(order=XProc.ORDER_TOP,
           preProcs=((personSpecialties, ()), )),
 
