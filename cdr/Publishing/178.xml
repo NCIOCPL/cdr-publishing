@@ -419,7 +419,7 @@
     <ParmValue>Full Load</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmName>CheckPushedDocs</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
@@ -863,7 +863,7 @@
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmName>CheckPushedDocs</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
@@ -1245,7 +1245,7 @@
     <ParmValue>Hotfix (Export)</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmName>CheckPushedDocs</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
@@ -1286,14 +1286,6 @@
     <ParmName>PubType</ParmName>
     <ParmValue>Hotfix (Remove)</ParmValue>
    </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ValidateDocs</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>   
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -1491,7 +1483,7 @@
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmName>CheckPushedDocs</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
@@ -1638,7 +1630,7 @@
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmName>CheckPushedDocs</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
