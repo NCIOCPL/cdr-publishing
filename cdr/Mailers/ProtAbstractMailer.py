@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.10 2002-10-24 17:17:16 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.11 2002-10-24 17:52:06 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2002/10/24 17:17:16  bkline
+# Added document version to constructor invocation.
+#
 # Revision 1.9  2002/10/23 22:04:11  bkline
 # Minor adjustments to mailer indexing code.  Switched to using base class
 # method for locating mailer include path.  Cosmetic adjustments to cover
@@ -181,7 +184,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __makeMailers(self):
         coverLetterParm     = self.getParm("CoverLetter")
-        basePath            = self.getMailerIncludePath()
+        basePath            = self.getMailerIncludePath() + "/"
         coverLetterName     = basePath + coverLetterParm[0]
         coverLetterFile     = open(coverLetterName)
         coverLetterTemplate = coverLetterFile.read()
@@ -196,7 +199,29 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     def __makeMailer(self, recip, doc, template):
 
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
+        remailerFor = None
+        docId       = doc.getId()
+        if self.getSubset() == 'Protocol-Annual abstract remail':
+            try:
+                self.getCursor().execute("""\
+                    SELECT MAX(prot_mailer.doc_id)
+                      FROM query_term prot_mailer
+                      JOIN query_term mailer_type
+                        ON prot_mailer.doc_id = mailer_type.doc_id
+                     WHERE prot_mailer.path = '/Mailer/Document/@cdr:ref'
+                       AND mailer_type.path = '/Mailer/Type'
+                       AND mailer_type.value = 'Protocol-Annual abstract'
+                       AND prot_mailer.int_val = %d""" % docId)
+                row = self.getCursor().fetchone()
+                if not row:
+                    raise "Lookup for original mailer failed for protocol %d"\
+                          % docId
+                remailerFor = row[0]
+            except cdrdb.Error, info:
+                raise "database error finding original mailer: %s" % \
+                      str(info[1][0])
+        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset(),
+                                             remailerFor)
 
         # Create a mailing label.
         latex     = self.createAddressLabelPage(recip.getAddress())
