@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.10 2002-04-03 18:35:44 arkd Exp $
+ $Id: pdq.dtd,v 1.11 2002-04-03 21:26:03 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -645,7 +645,7 @@
                            LeadOrgRole,
                            LeadOrgProtocolID+,
                            LeadOrgProtocolStatus,
-                           LeadOrgPersonnel+
+                           LeadOrgPersonnel
                           )>
 
 <!-- OrgName is the name as it should appear (including parent org name if
@@ -665,9 +665,9 @@
 
 <!ELEMENT StatusDate (#PCDATA)>
 
-<!ELEMENT LeadOrgPersonnel (ProtPerson, PersonRole)>
+<!ELEMENT LeadOrgPersonnel (ProtPerson+)>
 
-<!ELEMENT ProtPerson (PersonNameInformation, Contact)>
+<!ELEMENT ProtPerson (PersonNameInformation?, PersonRole, Contact)>
 <!ATTLIST ProtPerson ref CDATA #IMPLIED>
 
 <!ELEMENT ProtocolSites (SiteName, SiteContact)>
@@ -675,9 +675,7 @@
 <!ELEMENT SiteName (#PCDATA)>
 <!ATTLIST SiteName ref CDATA #REQUIRED>
 
-<!ELEMENT SiteContact (ProtPerson?,
-                       TitleRole
-                      )>
+<!ELEMENT SiteContact (ProtPerson+)>
 
 <!ELEMENT TitleRole (#PCDATA)>
 
