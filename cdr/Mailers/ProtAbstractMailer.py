@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.19 2003-06-27 14:03:33 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.20 2003-06-27 15:11:37 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.19  2003/06/27 14:03:33  bkline
+# Plugged in new filter set for protocol abstract mailers.
+#
 # Revision 1.18  2003/06/24 12:24:11  bkline
 # Added code to support inline markup in protocol title.
 #
@@ -189,11 +192,12 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                 "failure filtering document %s: %s" % (docId, result))
         if result[0]:
             title = UnicodeToLatex.convert(unicode(result[0], "utf-8"))
-            return (title.replace("@@EMPH@@",    r"\\emph{")
-                         .replace("@@BOLD@@",    r"\\textbf{")
-                         .replace("@@SUPER@@",   r"$^{")
-                         .replace("@@SUB@@",     r"$_{")
-                         .replace("@@CLOSEBR@@", r"}"))
+            return (title.replace("@@EMPH@@",      r"\emph{")
+                         .replace("@@BOLD@@",      r"\textbf{")
+                         .replace("@@SUPER@@",     r"$^{")
+                         .replace("@@SUB@@",       r"$_{")
+                         .replace("@@CLOSEBR@@",   r"}")
+                         .replace("@@CLOSEMATH@@", r"}$"))
         return "[No Protocol Professional Title found]"
 
     #------------------------------------------------------------------
