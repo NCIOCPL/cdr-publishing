@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.13 2002-10-10 13:44:43 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.14 2002-10-14 12:47:44 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2002/10/10 13:44:43  bkline
+# Mods to final page of prot abstract mailer.
+#
 # Revision 1.12  2002/10/07 21:33:51  bkline
 # Added aliases for protocol abstract mailer.
 #
@@ -2655,7 +2658,7 @@ PROTOCOLBOILER=r"""
      \item[Address]      PDQ Cancer.gov Protocol Coordinator \\
                          Attn: CIAT \\
                          Cancer Information Products and Systems, NCI, NIH \\
-                         6116, Executive Blvd., Suite 3002B MSC-8321 \\
+                         6116 Executive Blvd., Suite 3002B MSC-8321 \\
                          Bethesda MD 20892-8321
   \end{entry}
 
