@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.8 2002-01-23 17:13:14 bkline Exp $
+# $Id: cdrmailer.py,v 1.9 2002-02-06 00:23:30 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2002/01/23 17:13:14  bkline
+# Temporary stubs to work around gaps in cdrxmllatex in Alan's absence.
+#
 # Revision 1.7  2001/10/22 23:57:42  bkline
 # Added member field for subset name; moved core mailer code out to
 # cdr module; added __buildName method.
@@ -29,7 +32,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, stubcdrxmllatex, os, re, sys, time, xml.dom.minidom
+import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom
 
 debugCtr = 1
 
@@ -67,10 +70,10 @@ class MailerJob:
             identified as the CIPS contact address.
 
         makeLatex(doc, filters, mailType)
-            Obtains a document from the repository, applies the 
+            Obtains a document from the repository, applies the
             caller's filters to it, and uses the cdrxmllatex
             module to generate the appropriate LaTeX source for
-            the specified mailer type.  
+            the specified mailer type.
 
         makePS(latex, passCount, jobName, jobType)
             Takes the LaTeX source from an in-memory string and
@@ -91,7 +94,7 @@ class MailerJob:
             Returns key for current CDR session.
 
         getDocIds()
-            Returns the tuple of document IDs found in the 
+            Returns the tuple of document IDs found in the
             pub_proc_doc table.
 
         getRecipients()
@@ -102,18 +105,18 @@ class MailerJob:
             address for all packages sent to a given person,
             the Person document ID is used as the dictionary
             key.  For jobs in which different addresses can
-            be used for the same person, the keys used for 
-            the dictionary are the fragment links which 
-            identify a person and a specific address, so 
-            the same person can appear more than once if 
+            be used for the same person, the keys used for
+            the dictionary are the fragment links which
+            identify a person and a specific address, so
+            the same person can appear more than once if
             multiple addresses are used.
 
         getDocuments()
-            Returns the dictionary containing the Document objects 
-            for the documents which will be mailed out for this job.  
-            Populated by the derived classes during the process 
+            Returns the dictionary containing the Document objects
+            for the documents which will be mailed out for this job.
+            Populated by the derived classes during the process
             of filling the print queue.
-        
+
         getParm(name)
             Returns a possibly empty tuple of values stored in
             the pub_proc_parm table for this job.  Filled
@@ -150,7 +153,7 @@ class MailerJob:
         self.__documents   = {}
         self.__parms       = {}
         self.__printer     = MailerJob.__DEF_PRINTER
-        
+
     #------------------------------------------------------------------
     # Public access methods.
     #------------------------------------------------------------------
@@ -186,7 +189,7 @@ class MailerJob:
             return 0
         except:
             (eType, eValue) = sys.exc_info()[:2]
-            errMessage = eValue and eValue or eType 
+            errMessage = eValue and eValue or eType
             self.log("ERROR: %s" % errMessage)
             self.__cleanup("Failure", errMessage)
             return 1
@@ -216,18 +219,18 @@ class MailerJob:
         The primary responsibility of the classes derived from MailerJob
         is to provide a definition of this method.  This method must
         populate the object's print queue by invoking addToQueue() with
-        instances of the PrintJob class, defined below.  Each PrintJob 
-        object must represent a file which is ready to be written 
-        directly to the printer (for example, PostScript, or plain text, 
-        but not RTF files or Microsoft Word documents).  Furthermore, 
-        for each copy of each document added to the print queue, the 
-        implementation of fillQueue() must invoke the addMailerTrackingDoc() 
-        method to add a new document to the repository for tracking the 
-        responses to the mailer.  The mailerType argument passed to that 
+        instances of the PrintJob class, defined below.  Each PrintJob
+        object must represent a file which is ready to be written
+        directly to the printer (for example, PostScript, or plain text,
+        but not RTF files or Microsoft Word documents).  Furthermore,
+        for each copy of each document added to the print queue, the
+        implementation of fillQueue() must invoke the addMailerTrackingDoc()
+        method to add a new document to the repository for tracking the
+        responses to the mailer.  The mailerType argument passed to that
         method must be a string which matches one of the valid values for
         MailerType enumerated in the schema for Mailer documents.
 
-        The files created for the queue should be written to the 
+        The files created for the queue should be written to the
         current working directory (as should any intermediate working
         files), and the filenames provided to the constructor for the
         PrintJob objects should not include any path information.
@@ -243,12 +246,12 @@ class MailerJob:
             doc         - Object of type Document, defined below
             recipient   - Object of type Recipient, defined below
             mailerType  - String containing a values matching the
-                          list of valid values for MailerType 
+                          list of valid values for MailerType
                           enumerated in the schema for Mailer docs.
         Return value:
             Integer ID for the newly inserted Mailer document.
         """
-    
+
         recipId = "CDR%010d" % recipient.getId()
         docId   = "CDR%010d" % doc.getId()
         address = recipient.getAddress().getXml()
@@ -269,7 +272,7 @@ class MailerJob:
   </Mailer>]]>
  </CdrDocXml>
 </CdrDoc>
-""" % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(), 
+""" % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(),
        address, docId, doc.getTitle(), self.__now, self.__deadline)
         rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y", ver = "Y")
         match = self.__ERR_PATTERN.search(rsp)
@@ -304,7 +307,7 @@ class MailerJob:
         result  = cdr.filterDoc(self.__session, filters, docId)
         if type(result) == type(""):
             raise "failure extracting contact address for %s: %s" % (
-                docId, 
+                docId,
                 result)
         return Address(result[0])
 
@@ -330,7 +333,7 @@ class MailerJob:
                 getLatex()          - reference to string with
                                       LaTeX source
                 getLatexPassCount() - number of times to run
-                                      the LaTeX processor on the 
+                                      the LaTeX processor on the
                                       source
                 getStatus()         - 0 for success
                 getMessages()       - tuple of informational or
@@ -348,7 +351,7 @@ class MailerJob:
             debugCtr += 1
             open(fname, "w").write(result[0])
             docDom = xml.dom.minidom.parseString(result[0])
-            return stubcdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
+            return cdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue and eValue or eType
@@ -364,7 +367,7 @@ class MailerJob:
                           for the current document.
             passCount   - Number of times the LaTeX processor must
                           be invoked for the document in order to
-                          resolve such things as bibliographic 
+                          resolve such things as bibliographic
                           references.
             jobType     - Passed to the constructor for the new
                           PrintJob object.  Must be one of:
@@ -394,7 +397,7 @@ class MailerJob:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue and eValue or eType
             raise "failure converting %s.tex to %s.ps: %s" % (basename,
-                                                              basename, 
+                                                              basename,
                                                               eMsg)
 
     #------------------------------------------------------------------
@@ -415,7 +418,7 @@ class MailerJob:
         deadline        = time.localtime(time.mktime(deadline))
         self.__now      = time.strftime("%Y-%m-%dT%H:%M:%S", now)
         self.__deadline = time.strftime("%Y-%m-%d", deadline)
-    
+
     #------------------------------------------------------------------
     # Log into the CDR server.
     #------------------------------------------------------------------
@@ -472,7 +475,7 @@ class MailerJob:
             self.__docList = self.__cursor.fetchall()
             if not self.__docList:
                 raise "no documents found for job %d" % self.__id
-            for doc in self.__docList: 
+            for doc in self.__docList:
                 self.__docIds.append(doc[0])
             self.__docIds = tuple(self.__docIds)
         except cdrdb.Error, err:
@@ -526,7 +529,7 @@ class MailerJob:
             if self.__session: cdr.logout(self.__session)
         except:
             pass
-            
+
     #------------------------------------------------------------------
     # Update the pub_proc table's status.
     #------------------------------------------------------------------
@@ -567,7 +570,7 @@ Please do not reply to this message.
 """ % (self.__id, self.__id)
                 cdr.sendMail(sender, [self.__email], subject, message)
         except:
-            self.log("failure sending email to %s: %s" % (self.__email, 
+            self.log("failure sending email to %s: %s" % (self.__email,
                                                           cdr.exceptionInfo()))
 
 #----------------------------------------------------------------------
@@ -629,7 +632,7 @@ class PrintJob:
         if 0:
             prn = open(printer, "w")
             doc = open(self.__filename)
-            prn.write((self.__staple and self.__STAPLE_PROLOG or "") + 
+            prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
                        doc.read())
             doc.close()
             prn.close()
@@ -671,7 +674,7 @@ class Recipient:
             in the CDR database for a recipient of this mailer.
 
         getAddress()
-            Returns the Address object used used for addressing the 
+            Returns the Address object used used for addressing the
             mailer to this recipient.
 
         getDocs()
