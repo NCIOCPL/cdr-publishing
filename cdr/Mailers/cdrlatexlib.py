@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.21 2002-11-14 21:42:40 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.22 2002-12-03 17:04:28 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.21  2002/11/14 21:42:40  ameyer
+# Added number of latex passes to ControlTable.
+# Cleaned up some errors revealed by pychecker.
+#
 # Revision 1.20  2002/11/08 21:40:46  bkline
 # Inserted newline between bibliographic items to prevent TeX from
 # choking on monstrously long lines.
@@ -448,9 +452,10 @@ class Address:
         return output
 
 class List:
-    "Remembers list style."
-    def __init__(self, compact):
-        self.compact = compact
+    "Remembers list style and type."
+    def __init__(self, compact, listType):
+        self.compact  = compact
+        self.listType = listType
 
 class LeadOrgPerson:
     "Object representing a Protocol Lead Organization person."
@@ -1089,6 +1094,14 @@ def yesno (pp):
 
         return 0
 
+def findListDepth(listType):
+    global listStack
+    listDepth = 0
+    for list in listStack:
+        if list.listType == listType:
+            listDepth += 1
+    return listDepth
+
 def openList(pp):
     "Processes the start of a list element."
 
@@ -1101,11 +1114,12 @@ def openList(pp):
     listStyle = ""
     listLevel = None
     enumStyle = None
-    if len(listStack) == 0: listLevel = "i"
-    elif len(listStack) == 1: listLevel = "ii"
-    elif len(listStack) == 2: listLevel = "iii"
-    elif len(listStack) == 3: listLevel = "iv"
-    elif len(listStack) == 4: listLevel = "v"
+    listDepth = findListDepth(node.nodeName)
+    if listDepth == 0: listLevel = "i"
+    elif listDepth == 1: listLevel = "ii"
+    elif listDepth == 2: listLevel = "iii"
+    elif listDepth == 3: listLevel = "iv"
+    elif listDepth == 4: listLevel = "v"
     if node.nodeName == "ItemizedList":
         command = "itemize"
         if listLevel:
@@ -1116,7 +1130,6 @@ def openList(pp):
             listStyle = "  \\renewcommand{\\labelitem%s}{%s}\n" % (listLevel,
                                                                     enumStyle)
     else:
-        # XXX We're making everything Roman.  Why?  Were we asked to do this?
         command = "enumerate"
         if listLevel:
             if style == "Arabic": enumStyle = "arabic"
@@ -1126,9 +1139,9 @@ def openList(pp):
             elif style == "LRoman": enumStyle = "roman"
             if enumStyle:
                 listStyle = r"""
-  \renewcommand{\theenum%s}{\Roman{enum%s}}
+  \renewcommand{\theenum%s}{\%s{enum%s}}
   \renewcommand{\labelenum%s}{\theenum%s.}
-""" % (listLevel, listLevel, listLevel, listLevel)
+""" % (listLevel, enumStyle, listLevel, listLevel, listLevel)
 
     # If Compact is set to 'No' then we insert an additional blank line.
     compact = node.getAttribute("Compact")
@@ -1141,11 +1154,12 @@ def openList(pp):
         output += "  \\setlength{\\itemsep}{-2pt}\n"
 
     # Pick up the list titles if there are any.
-    for title in node.getElementsByTagName("ListTitle"):
-        output += "  {\\it \\bfseries %s}\n" % getText(title)
+    for child in node.childNodes:
+        if child.nodeName == "ListTitle":
+            output += "  \\par {\\it \\bfseries %s}\n" % getText(child)
 
     # Remember the list so we know how deeply nested we are.
-    listStack.append(List(compact))
+    listStack.append(List(compact, node.nodeName))
 
     # Start the list.
     pp.setOutput(output + listStyle + "  \\begin{%s}\n" % command)
@@ -1153,9 +1167,14 @@ def openList(pp):
 def closeList(pp):
     "Forgets the list style we've finished processing."
     global listStack
-    listStack.pop()
+    thisList = listStack.pop()
+    if thisList.listType == "ItemizedList":
+        output = "\n  \\end{itemize}\n"
+    else:
+        output = "\n  \\end{enumerate}\n"
     if not listStack:
-        pp.setOutput("  \\setlength{\\parskip}{1.2mm}\n")
+        output += "  \\setlength{\\parskip}{1.2mm}\n"
+    pp.setOutput(output)
 
 def preserveLines(str):
     "Filter which adds line preservation to output."
@@ -2235,7 +2254,7 @@ CITATION=r"""
   \renewcommand\refname{References:}
 
   % Define the format of the Reference labels
-  \makeatletter \renewcommand\@biblabel[1]{[#1]} \makeatother
+  \makeatletter \renewcommand\@biblabel[1]{#1.} \makeatother
 
   % Define the number of levels and numbering to be displayed in the TOC
   \setcounter{secnumdepth}{1}
@@ -2764,13 +2783,11 @@ CommonMarkupRules = (
     XProc(element   = "ItemizedList",
           textOut   = 0,
           preProcs  = ((openList, ()), ),
-          postProcs = ((closeList, ()), ),
-          suffix    = "\n  \\end{itemize}\n"),
+          postProcs = ((closeList, ()), )),
     XProc(element   = "OrderedList",
           textOut   = 0,
           preProcs  = ((openList, ()), ),
-          postProcs = ((closeList, ()), ),
-          suffix    = "\n  \\end{enumerate}\n"),
+          postProcs = ((closeList, ()), )),
     XProc(element   = "ListItem",
           prefix    = "  \\item ",
           suffix    = "\n",
