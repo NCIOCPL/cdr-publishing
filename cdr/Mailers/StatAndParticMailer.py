@@ -1,11 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.9 2003-08-21 19:43:06 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.10 2004-05-18 13:09:59 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2003/08/21 19:43:06  bkline
+# Added support for ProtocolOrg element in mailer tracking document for
+# S&P mailers.
+#
 # Revision 1.8  2003/05/05 21:08:08  bkline
 # Restricted mailers to lead orgs with (sort of) active statuses.
 #
@@ -33,7 +37,37 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrmailer, re, sys, UnicodeToLatex
+import cdr, cdrdb, cdrmailer, re, sys, UnicodeToLatex, time, xml.dom.minidom
+
+#----------------------------------------------------------------------
+# Object for a protocol update person.
+#----------------------------------------------------------------------
+class PUP:
+    def __init__(self, docId, addrLink):
+        self.docId    = docId
+        self.addrLink = addrLink
+        self.emailers = []
+
+#----------------------------------------------------------------------
+# Object for protocol's string ID, title, and status.
+#----------------------------------------------------------------------
+class ProtocolParms:
+    def __init__(self, protXml):
+        self.protId = ""
+        self.title  = ""
+        self.status = ""
+        topElem = xml.dom.minidom.parseString(protXml).documentElement
+        for node in topElem.childNodes:
+            if node.nodeName == "ProtocolStatusAndParticipants":
+                for child in node.childNodes:
+                    if child.nodeName == "ProtocolID":
+                        self.protId = cdr.getTextContent(child)
+                    elif child.nodeName == "ProtocolTitle":
+                        self.title = cdr.getTextContent(child)
+                    elif child.nodeName == "CurrentProtocolStatus":
+                        for grandchild in child.childNodes:
+                            if grandchild.nodeName == "ProtocolStatusName":
+                                self.status = cdr.getTextContent(grandchild)
 
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
@@ -44,10 +78,162 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
     # Overrides method in base class for filling the print queue.
     #------------------------------------------------------------------
     def fillQueue(self):
+
+        # Note which flavor(s) of mailers the user asked for.
+        self.__paper = self.__electronic = False
+        updateMode = self.getParm('UpdateModes')
+        if not updateMode:
+            raise "no update modes specified"
+        updateMode = updateMode[0].upper()
+        if '[MAIL]' in updateMode:
+            self.__paper = True
+        if '[WEB-BASED]' in updateMode:
+            self.__electronic = True
+
+        # Collect the mailer information into temporary tables.
         self.__getRecipients()
-        self.__makeIndex()
-        self.__makeCoverSheet()
-        self.__makeMailers()
+
+        # Create paper mailers if they were requested.
+        if self.__paper:
+            self.__makeIndex()
+            self.__makeCoverSheet()
+            self.__makeMailers()
+
+    #------------------------------------------------------------------
+    # Generate mailers for those who prefer the electronic method.
+    #------------------------------------------------------------------
+    def createEmailers(self):
+
+        # Make sure the user asked for electronic mailers.
+        if not self.__electronic:
+            return
+        
+        # Create the separate emailer directory and move to it.
+        self.initEmailers()
+
+        # Build the set of electronic mailers.
+        try:
+            self.getCursor().execute("""\
+         SELECT prot_id, prot_ver, org_id, pup_id, pup_link
+           FROM #lead_orgs
+          WHERE update_mode = 'Web-based'""")
+            emailers        = {}
+            pups            = {}
+            rows            = self.getCursor().fetchall()
+            self.log("%d rows retrieved for electronic mailers" % len(rows))
+            for (docId, docVer, orgId, pupId, pupLink) in rows:
+                key = (pupLink, docId, orgId)
+                if key not in emailers:
+                    recipient = pups.get(pupLink)
+                    document  = self.getDocuments().get(docId)
+                    if not recipient:
+                        self.log("found recipient at address %s" % pupLink)
+                        name          = self.__docTitles[pupId]
+                        recipient     = cdrmailer.Recipient(pupId, name)
+                        pups[pupLink] = recipient
+                    if not document:
+                        title    = self.__docTitles[docId]
+                        document = cdrmailer.Document(docId, title,
+                                                      "InScopeProtocol",
+                                                      docVer)
+                        self.getDocuments()[docId] = document
+                    emailers[key] = emailer = cdrmailer.Emailer(document,
+                                                                recipient,
+                                                                orgId)
+                    recipient.getEmailers().append(emailer)
+        except cdrdb.Error, info:
+            raise "database error building emailer list: %s" % str(info[1][0])
+        self.log("%d update persons loaded" % len(pups))
+        self.log("%d emailers to be created" % len(emailers))
+
+        # Create the manifest document for the set of electronic mailers.
+        manifest = open("manifest.xml", "w")
+        manifest.write("""\
+<?xml version='1.0' encoding='UTF-8'?>
+<Manifest jobTime='%s'>
+""" % self.getJobTime())
+        counter = 0
+
+        # Generate the emailers for each recipient
+        for addrLink in pups:
+            pup = pups[addrLink]
+            self.log("processing emailers for %s" % addrLink)
+            try:
+                docId, fragId = addrLink.split("#")
+            except:
+                raise "Invalid fragment link: %s" % addrLink
+            id = addrLink
+            pw = "%.3f" % time.time()
+            parms = (("fragId", fragId),)
+            filters = ['name:Person Address Fragment With Name (Emailer)']
+            rsp = cdr.filterDoc('guest', filters, docId, parm = parms)
+            if type(rsp) in (type(''), type(u'')):
+                raise "Unable to find address for %s: %s" % (str(fragId), rsp)
+            name = "%s-%s.xml" % (docId, fragId)
+            email = self.extractEmailAddress(rsp[0])
+            if not email:
+                raise "No email address found for %s" % str(fragId)
+            manifest.write("""\
+ <UpdatePerson>
+  <ID>%s</ID>
+  <Password>%s</Password>
+  <DocFile>%s</DocFile>
+  <EmailAddress>%s</EmailAddress>
+  <Documents>
+""" % (id, pw, name, email))
+            file = open(name, "wb")
+            file.write(rsp[0])
+            file.close()
+            filters = ['name:InScopeProtocol Status and Participant eMailer']
+            for emailer in pup.getEmailers():
+                leadOrgId = emailer.getLeadOrgId()
+                document  = emailer.getDocument()
+                parms = [('leadOrgId', 'CDR%010d' % leadOrgId)]
+                rsp = cdr.filterDoc('guest', filters,
+                                    document.getId(),
+                                    docVer = document.getVersion(),
+                                    parm = parms)
+                if type(rsp) in (type(''), type(u'')):
+                    raise ("Failure extracting information for lead org %d "
+                           "from protocol %d: %s" % (leadOrgId,
+                                                     document.getId(),
+                                                     rsp))
+                name = "%s-%s-%d-%d.xml" % (docId, fragId,
+                                            document.getId(),
+                                            leadOrgId)
+                self.log("generating emailer %s" % name)
+                file = open(name, "wb")
+                file.write(rsp[0])
+                file.close()
+                protocolParms = ProtocolParms(rsp[0])
+                manifest.write((u"""\
+   <Document id='CDR%010d'>
+    <DocFile>%s</DocFile>
+    <Attrs>
+     <Attr name='ProtID'>%s</Attr>
+     <Attr name='Title'>%s</Attr>
+     <Attr name='Status'>%s</Attr>
+    </Attrs>
+   </Document>
+""" % (document.getId(),
+       name,
+       protocolParms.protId,
+       protocolParms.title,
+       protocolParms.status)).encode('utf-8'))
+                self.addMailerTrackingDoc(document, pup,
+                                          self.getSubset(),
+                                          protOrgId = leadOrgId,
+                                          email = email)
+                counter += 1
+            manifest.write("""\
+  </Documents>
+ </UpdatePerson>
+""")
+        manifest.write("""\
+</Manifest>
+""")
+        manifest.close()
+        self.log("%d emailers successfully generated" % counter)
 
     #------------------------------------------------------------------
     # Find lead organization personnel who should receive these mailers.
@@ -76,100 +262,168 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
 
         But wait, it gets even worse!  Organizations can now have more
         than one OrganizationType element!
+
+        2004-05-13: Rewritten to handle emailers.  Note that we need
+        to execute the first part of this method even if paper mailers
+        are not requested, because this is where we create the temporary
+        database tables for all the job's mailers.
         """
-        docType  = "InScopeProtocol"
-        orgPath  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
-                   "/LeadOrganizationID/@cdr:ref"
-        pupPath  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
-                   "/LeadOrgPersonnel/Person/@cdr:ref"
-        rolePath = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
-                   "/LeadOrgPersonnel/PersonRole"
-        modePath = "/Organization/OrganizationDetails"\
-                   "/PreferredProtocolContactMode"
-        otPath   = "/Organization/OrganizationType"
         try:
+
+            # Create a temporary table of the lead organizations and PUPs.
             self.getCursor().execute("""\
-                SELECT DISTINCT person.id,
-                                person.title,
-                                org.id,
-                                org.title,
-                                protocol.id,
-                                protocol.title,
-                                doc_version.num,
-                                person_link.value,
-                                org_type.value
-                           FROM document person
-                           JOIN query_term person_link
-                             ON person_link.int_val = person.id
-                           JOIN query_term person_role
-                             ON person_role.doc_id = person_link.doc_id
-                            AND LEFT(person_role.node_loc, 12) =
-                                LEFT(person_link.node_loc, 12)
-                           JOIN query_term lead_org
-                             ON lead_org.doc_id = person_link.doc_id
-                            AND LEFT(lead_org.node_loc, 8) =
-                                LEFT(person_link.node_loc, 8)
-                           JOIN query_term lead_org_status
-                             ON lead_org_status.doc_id = lead_org.doc_id
-                            AND LEFT(lead_org.node_loc, 8) =
-                                LEFT(lead_org_status.node_loc, 8)
-                           JOIN document org
-                             ON org.id = lead_org.int_val
-                           JOIN document protocol
-                             ON protocol.id = lead_org.doc_id
-                           JOIN doc_version
-                             ON doc_version.id = protocol.id
-                           JOIN pub_proc_doc
-                             ON pub_proc_doc.doc_version = doc_version.num
-                            AND pub_proc_doc.doc_id      = doc_version.id
-                           JOIN query_term org_type
-                             ON org_type.doc_id = org.id
-                          WHERE pub_proc_doc.pub_proc = ?
-                            AND lead_org.path         = '%s'
-                            AND person_link.path      = '%s'
-                            AND person_role.path      = '%s'
-                            AND org_type.path         = '%s'
-                            AND person_role.value     = 'Update person'
-                            AND lead_org_status.value IN (
-                                                   'Active',
-                                                   'Approved-not yet active',
-                                                   'Temporarily closed')
-                            AND NOT EXISTS (SELECT *
-                                              FROM query_term contact_mode
-                                             WHERE contact_mode.path = '%s'
-                                               AND contact_mode.doc_id =
-                                                   lead_org.int_val)""" %
-                                (orgPath, pupPath, rolePath, otPath, modePath),
-                                (self.getId(),))
-            rows = self.getCursor().fetchall()
-            self.__combos   = {}
+   CREATE TABLE #lead_orgs
+       (prot_id INTEGER,
+       prot_ver INTEGER,
+         org_id INTEGER,
+         pup_id INTEGER,
+       pup_link VARCHAR(80),
+    update_mode VARCHAR(80) NULL)""")
+            self.commit()
+            self.log("#lead_orgs table created")
+            self.getCursor().execute("""\
+    INSERT INTO #lead_orgs (prot_id, prot_ver, org_id, pup_id, pup_link,
+                update_mode)
+         SELECT m.doc_id, m.doc_version, o.int_val, p.int_val, p.value,
+                u.value
+           FROM pub_proc_doc m
+           JOIN query_term o
+             ON o.doc_id = m.doc_id
+           JOIN query_term s
+             ON s.doc_id = o.doc_id
+            AND LEFT(s.node_loc, 8)  = LEFT(o.node_loc, 8)
+           JOIN query_term p
+             ON p.doc_id = o.doc_id
+            AND LEFT(p.node_loc, 8)  = LEFT(o.node_loc, 8)
+           JOIN query_term r
+             ON r.doc_id = p.doc_id
+            AND LEFT(r.node_loc, 12) = LEFT(p.node_loc, 12)
+LEFT OUTER JOIN query_term u
+             ON u.doc_id   = o.doc_id
+            AND LEFT(u.node_loc, 8)  = LEFT(o.node_loc, 8)
+            AND u.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/UpdateMode'
+LEFT OUTER JOIN query_term t
+             ON t.doc_id   = u.doc_id
+            AND LEFT(t.node_loc, 12) = LEFT(u.node_loc, 12)
+            AND t.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/UpdateMode/@MailerType'
+            AND t.value    = 'Protocol_SandP'
+          WHERE m.pub_proc = ?
+            AND o.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/LeadOrganizationID/@cdr:ref'
+            AND s.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/LeadOrgProtocolStatuses'
+                           + '/CurrentOrgStatus/StatusName'
+            AND s.value IN ('Active', 'Approved-not yet active',
+                            'Temporarily closed')
+            AND p.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/LeadOrgPersonnel'
+                           + '/Person/@cdr:ref'
+            AND r.path     = '/InScopeProtocol/ProtocolAdminInfo'
+                           + '/ProtocolLeadOrg/LeadOrgPersonnel'
+                           + '/PersonRole'
+            AND r.value    = 'Update person'""", self.getId(), timeout = 300)
+            self.commit()
+            self.log("%d rows inserted into #lead_orgs table" %
+                     self.getCursor().rowcount)
+
+            # Fill in missing update mode values, using the PUPs' preferences.
+            self.getCursor().execute("""\
+    CREATE TABLE #pup_update_mode
+         (pup_id INTEGER,
+     update_mode VARCHAR(80))""")
+            self.commit()
+            self.log("#pup_update_mode table created")
+            self.getCursor().execute("""\
+    INSERT INTO #pup_update_mode (pup_id, update_mode)
+SELECT DISTINCT u.doc_id, MAX(u.value) -- Avoid multiple values
+           FROM #lead_orgs o
+           JOIN query_term u
+             ON u.doc_id = o.pup_id
+           JOIN query_term t
+             ON t.doc_id = u.doc_id
+            AND LEFT(t.node_loc, 8) = LEFT(u.node_loc, 8)
+          WHERE o.update_mode IS NULL
+            AND u.path  = '/Person/PersonLocations/UpdateMode'
+            AND t.path  = '/Person/PersonLocations/UpdateMode/@MailerType'
+            AND t.value = 'Protocol_SandP'
+       GROUP BY u.doc_id""", timeout = 300)
+            self.commit()
+            self.log("%d rows inserted into #pup_update_mode table" %
+                     self.getCursor().rowcount)
+            self.getCursor().execute("""\
+         UPDATE #lead_orgs
+            SET update_mode = p.update_mode
+           FROM #lead_orgs o
+           JOIN #pup_update_mode p
+             ON p.pup_id = o.pup_id
+          WHERE o.update_mode IS NULL
+            AND p.update_mode IS NOT NULL""")
+            self.commit()
+            self.log("update_mode adjusted in %d rows" %
+                     self.getCursor().rowcount)
+
+            # Collect the document titles.
+            self.__docTitles = {}
+            self.getCursor().execute("""\
+                SELECT DISTINCT id, title
+                           FROM document
+                          WHERE id IN (SELECT prot_id FROM #lead_orgs)
+                             OR id IN (SELECT org_id FROM #lead_orgs)
+                             OR id IN (SELECT pup_id FROM #lead_orgs)""",
+                                     timeout = 300)
+            for (id, title) in self.getCursor().fetchall():
+                self.__docTitles[id] = title
+            self.log("%d document titles loaded" % len(self.__docTitles))
+
+            # Collect the org types (an org can have more than one).
             self.__orgTypes = {}
+            self.getCursor().execute("""\
+                SELECT DISTINCT t.doc_id, t.value
+                           FROM query_term t
+                           JOIN #lead_orgs o
+                             ON o.org_id = t.doc_id
+                          WHERE t.path = '/Organization/OrganizationType'""")
+            for (id, orgType) in self.getCursor().fetchall():
+                if id not in self.__orgTypes:
+                    self.__orgTypes[id] = [orgType]
+                else:
+                    self.__orgTypes[id].append(orgType)
+            self.log("org types for %d orgs loaded" % len(self.__orgTypes))
+                                       
+            # Fill up the queue for paper mailers (if the user asked for them).
+            if not self.__paper:
+                return
+            self.getCursor().execute("""\
+         SELECT prot_id, prot_ver, org_id, pup_id, pup_link
+           FROM #lead_orgs
+          WHERE update_mode = 'Mail'""")
+            self.__combos   = {}
             orgs            = {}
-            for row in rows:
-                (recipId, recipName, orgId, orgName, docId, docTitle,
-                 docVersion, addrLink, orgType) = row
-                key = (addrLink, docId, orgId)
-                #print "recipId=%d recipName=%s orgId=%d orgName=%s docId=%d docTitle=%s docVersion=%d addrLink=%s orgType=%s" % (
-                #    recipId, recipName, orgId, orgName, docId, docTitle, docVersion, addrLink, orgType)
-                recipient = self.getRecipients().get(addrLink)
+            rows            = self.getCursor().fetchall()
+            self.log("%d rows retrieved for paper mailers" % len(rows))
+            for (docId, docVer, orgId, pupId, pupLink) in rows:
+                key       = (pupLink, docId, orgId)
+                recipient = self.getRecipients().get(pupLink)
                 document  = self.getDocuments().get(docId)
                 org       = orgs.get(orgId)
                 if not recipient:
-                    self.log("found recipient at address %s" % addrLink)
-                    addr = self.__getRecipAddress(addrLink)
-                    recipient = cdrmailer.Recipient(recipId, recipName, addr)
-                    self.getRecipients()[addrLink] = recipient
+                    self.log("found recipient at address %s" % pupLink)
+                    addr      = self.__getRecipAddress(pupLink)
+                    name      = self.__docTitles[pupId]
+                    recipient = cdrmailer.Recipient(pupId, name, addr)
+                    self.getRecipients()[pupLink] = recipient
                 if not document:
-                    document = cdrmailer.Document(docId, docTitle, docType,
-                                                  docVersion)
+                    title    = self.__docTitles[docId]
+                    document = cdrmailer.Document(docId, title,
+                                                  "InScopeProtocol",
+                                                  docVer)
                     self.getDocuments()[docId] = document
                 if not org:
-                    org = cdrmailer.Org(orgId, orgName)
+                    name        = self.__docTitles[orgId]
+                    org         = cdrmailer.Org(orgId, name)
                     orgs[orgId] = org
-                    self.__orgTypes[orgId] = [orgType]
-                else:
-                    if not orgType in self.__orgTypes[orgId]:
-                        self.__orgTypes[orgId].append(orgType)
                 if not self.__combos.has_key(key):
                     self.__combos[key] = (recipient, document, org)
         except cdrdb.Error, info:
