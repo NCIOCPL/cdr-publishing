@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.19 2002-11-08 16:11:45 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.20 2002-11-08 21:40:46 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.19  2002/11/08 16:11:45  bkline
+# Added spacing changes requested by Lakshmi (issue #511).
+#
 # Revision 1.18  2002/11/07 21:21:20  bkline
 # Improved table support.
 #
@@ -845,7 +848,7 @@ def bibitem (pp):
     refNode = pp.getCurNode()
 
     # Beginning of the bibitem element
-    refString = r"  \bibitem{"
+    refString = "\n  \\bibitem{"
 
     # Reference index number is in the refidx attribute
     # Extract the attribute value from the Citation
