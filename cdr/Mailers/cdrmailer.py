@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.29 2002-10-23 22:06:12 bkline Exp $
+# $Id: cdrmailer.py,v 1.30 2002-10-24 02:37:48 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.29  2002/10/23 22:06:12  bkline
+# Added org type to Org class.
+#
 # Revision 1.28  2002/10/23 11:44:08  bkline
 # Fixed printer opening code.
 #
@@ -522,10 +525,10 @@ class MailerJob:
                                       warning messages
         """
 
-        # XXX Specify version when Mike's ready.
         parm = parms or []
         docId = cdr.normalize(doc.getId())
-        result = cdr.filterDoc(self.__session, filters, docId, parm = parm)
+        result = cdr.filterDoc(self.__session, filters, docId, parm = parm,
+                               docVer = doc.getVersion())
         if type(result) == type(""):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
@@ -960,19 +963,13 @@ class Org:
         getName()
             Returns the value of the title column of the document table
             in the CDR database for a recipient of this mailer.
-
-        getOrgType()
-            Returns a string for those mailers where this is relevant.
-            Otherwise None.
     """
-    def __init__(self, id, name, orgType = None):
+    def __init__(self, id, name):
         self.__id      = id
         self.__name    = name
-        self.__type    = orgType
     def getId     (self): return self.__id
     def getName   (self): return self.__name
-    def getOrgType(self): return self.__type
-
+    
 #----------------------------------------------------------------------
 # Object to hold information about a mailer recipient.
 #----------------------------------------------------------------------
