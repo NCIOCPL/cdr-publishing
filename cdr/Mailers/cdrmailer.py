@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.53 2004-05-18 18:00:18 bkline Exp $
+# $Id: cdrmailer.py,v 1.54 2004-11-02 19:50:35 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.53  2004/05/18 18:00:18  bkline
+# Modified tarfile code to match changed API.
+#
 # Revision 1.52  2004/05/18 13:04:30  bkline
 # Added support for electronic mailers.
 #
@@ -374,6 +377,7 @@ class MailerJob:
             self.fillQueue()
             self.__printQueue(self.__batchPrinting)
             self.createEmailers()
+            self.createRtfMailers()
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
             self.log("******** finished mailer job ********")
             return 0
@@ -434,6 +438,15 @@ class MailerJob:
     # Placeholder for method to create electronic mailers (if any).
     #------------------------------------------------------------------
     def createEmailers(self):
+        """
+        Do nothing if the derived class does not override this method.
+        """
+        pass
+
+    #------------------------------------------------------------------
+    # Placeholder for method to create rtf mailers (if any).
+    #------------------------------------------------------------------
+    def createRtfMailers(self):
         """
         Do nothing if the derived class does not override this method.
         """
@@ -798,6 +811,30 @@ class MailerJob:
                       self.__emailerDir
 
     #------------------------------------------------------------------
+    # Create the directory for RTF mailers.  Callback used by the
+    # derived class where appropriate.
+    #------------------------------------------------------------------
+    def initRtfMailers(self):
+
+        # Does the output directory already exist
+        try:
+            os.chdir(self.__rtfMailerDir)
+        except:
+            # Doesn't exist, try to create it
+            try:
+                os.makedirs(self.__rtfMailerDir)
+            except:
+                self.log ("Unable to create rtf mailer directory", tback=1)
+                raise "failure creating rtf mailer directory %s" % \
+                      self.__rtfMailerDir
+            try:
+                os.chdir(self.__rtfMailerDir)
+            except:
+                self.log ("Unable to change to rtf mailer directory", tback=1)
+                raise "failure setting working directory to %s" % \
+                      self.__rtfMailerDir
+
+    #------------------------------------------------------------------
     # Retrieve the string for an email address from an XML address
     # fragment document.
     #------------------------------------------------------------------
@@ -886,6 +923,7 @@ class MailerJob:
                 raise "unable to find job %d" % self.__id
             (self.__outputDir, self.__email, self.__subset) = row
             self.__emailerDir = self.__outputDir + "-e"
+            self.__rtfMailerDir = self.__outputDir + "-r"
         except cdrdb.Error, info:
             raise "database error retrieving pub_proc row: %s" % info[1][0]
 
@@ -1363,6 +1401,63 @@ class Document:
     def getVersion(self): return self.__version
 
 #----------------------------------------------------------------------
+# Object for a personal name.
+#----------------------------------------------------------------------
+class PersonalName:
+    def __init__(self, node):
+        """
+        Parameters:
+            node - PersonName subelement DOM node from an AddressElements node.
+        """
+        self.__givenName     = u""
+        self.__middleInitial = u""
+        self.__surname       = u""
+        self.__prefix        = u""
+        self.__genSuffix     = u""
+        self.__proSuffixes   = []
+        for child in node.childNodes:
+            if child.nodeName == "GivenName":
+                self.__givenName = cdr.getTextContent(child).strip()
+            elif child.nodeName == "MiddleInitial":
+                self.__middleInitial = cdr.getTextContent(child).strip()
+            elif child.nodeName == "SurName":
+                self.__surname = cdr.getTextContent(child).strip()
+            elif child.nodeName == "ProfessionalSuffix":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName in ("StandardProfessionalSuffix",
+                                               "CustomProfessionalSuffix"):
+                        suffix = cdr.getTextContent(grandchild).strip()
+                        if suffix:
+                            self.__proSuffixes.append(suffix)
+            elif child.nodeName == "Prefix":
+                self.__prefix = cdr.getTextContent(child).strip()
+            elif child.nodeName == "GenerationSuffix":
+                self.__genSuffix = cdr.getTextContent(child).strip()
+
+    def getGivenName       (self): return self.__givenName
+    def getMiddleInitial   (self): return self.__middleInitial
+    def getSurname         (self): return self.__surname
+    def getPrefix          (self): return self.__prefix
+    def getGenSuffix       (self): return self.__genSuffix
+    def getProSuffixes     (self): return list(self.__proSuffixes)
+    
+    def format(self):
+        """
+        Return value:
+            String containing formatted name, e.g.:
+                'Dr. John Q. Kildare, Jr.'
+        """
+        name = ("%s %s" % (self.__prefix, self.__givenName)).strip()
+        name = ("%s %s" % (name, self.__middleInitial)).strip()
+        name = ("%s %s" % (name, self.__surname)).strip()
+        if self.__genSuffix:
+            name = "%s, %s" % (name, self.__genSuffix)
+        rest = ", ".join(self.__proSuffixes).strip()
+        if rest:
+            name = "%s, %s" % (name, rest)
+        return name
+
+#----------------------------------------------------------------------
 # Object to hold a formatted address.
 #----------------------------------------------------------------------
 class FormattedAddress:
@@ -1395,6 +1490,9 @@ class Address:
 
         getAddressee()
             Returns concatenation of prefix, forename, and surname.
+
+        getPersonalName()
+            Returns PersonalName object behind the addressee string
 
         getPersonTitle()
             Returns PersonTitle element for this address, or None.
@@ -1447,6 +1545,7 @@ class Address:
                              The top node should be <AddressElements>
         """
         self.__addressee     = None
+        self.__personalName  = None
         self.__orgs          = []   # Main + parent orgs in right order
         self.__street        = []
         self.__city          = None
@@ -1459,7 +1558,7 @@ class Address:
         self.__personTitle   = None
         self.__incPersonTitle= withPersonTitle
 
-        if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
+        if type(xmlFragment) in (type(""), type(u"")):
             dom = xml.dom.minidom.parseString(xmlFragment)
         else:
             dom = xmlFragment
@@ -1473,7 +1572,8 @@ class Address:
                 if node.nodeName == 'PostalAddress':
                     self.__parsePostalAddress(node)
                 elif node.nodeName in ('Name', 'PersonName'):
-                    self.__addressee = self.__buildName(node)
+                    self.__personalName = PersonalName(node)
+                    self.__addressee = self.__personalName.format()
                 elif node.nodeName == 'OrgName':
                     self.__orgs.append (cdr.getTextContent(node))
                 elif node.nodeName == 'ParentNames':
@@ -1499,6 +1599,7 @@ class Address:
     def getPostalCode     (self): return self.__postalCode
     def getCodePosition   (self): return self.__codePos
     def getAddressee      (self): return self.__addressee
+    def getPersonalName   (self): return self.__personalName
     def getPersonTitle    (self): return self.__personTitle
 
     # Caller may need to manipulate the name line of the address
@@ -1625,55 +1726,6 @@ class Address:
                 self.__orgs.append(cdr.getTextContent(child))
         if parentsFirst:
             self.__orgs.reverse()
-
-    #------------------------------------------------------------------
-    # Construct name string from components.
-    #------------------------------------------------------------------
-    def __buildName(self, node):
-        """
-        Parameters:
-            node - PersonName subelement DOM node from an
-                   AddressElements node.
-        Return value:
-            String containing formatted name, e.g.:
-                "Dr. John Q. Kildare, Jr."
-        """
-        givenName = ""
-        surname   = ""
-        prefix    = ""
-        gSuffix   = ""
-        mi        = ""
-        pSuffixes = []
-        for child in node.childNodes:
-            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
-                if child.nodeName == "GivenName":
-                    givenName = cdr.getTextContent(child)
-                elif child.nodeName == "SurName":
-                    surname = cdr.getTextContent(child)
-                elif child.nodeName == "Prefix":
-                    prefix = cdr.getTextContent(child)
-                elif child.nodeName == "GenerationSuffix":
-                    gSuffix = cdr.getTextContent(child)
-                elif child.nodeName == "MiddleInitial":
-                    mi = cdr.getTextContent(child)
-                elif child.nodeName == "ProfessionalSuffix":
-                    for grandchild in child.childNodes:
-                        if grandchild.nodeName in (
-                                         "StandardProfessionalSuffix",
-                                         "CustomProfessionalSuffix"):
-                            suffix = cdr.getTextContent(grandchild)
-                            if suffix:
-                                pSuffixes.append(suffix)
-
-        name = ("%s %s" % (prefix, givenName)).strip()
-        name = ("%s %s" % (name, mi)).strip()
-        name = ("%s %s" % (name, surname)).strip()
-        if gSuffix:
-            name = "%s, %s" % (name, gSuffix)
-        rest = ", ".join(pSuffixes).strip()
-        if rest:
-            name = "%s, %s" % (name, rest)
-        return name
 
     #------------------------------------------------------------------
     # Format an address block from its address lines.
