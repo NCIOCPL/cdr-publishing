@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.1 2001-10-06 21:50:15 bkline Exp $
+# $Id: cdrmailer.py,v 1.2 2001-10-06 23:43:12 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2001/10/06 21:50:15  bkline
+# Initial revision
+#
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, smtplib, sys, time, xml.dom.minidom
@@ -181,6 +184,42 @@ class MailerJob:
     # Placeholder for method to populate the print queue for the job.
     #------------------------------------------------------------------
     def fillQueue(self):
+        """
+        The primary responsibility of the classes derived from MailerJob
+        is to provide a definition of this method.  This method must
+        populate the queue member of the object by appending instances
+        of the PrintJob class, defined below.  Each PrintJob object must
+        represent a file which is ready to be written directly to the
+        printer (for example, PostScript, or plain text, but not RTF
+        files or Microsoft Word documents).  Furthermore, for each
+        copy of each document added to the print queue, the implementation
+        of fillQueue() must invoke the addMailerTrackingDoc() method
+        to add a new document to the repository for tracking the responses
+        to the mailer.  The mailerType argument passed to that method
+        must be a string which matches one of the valid values for
+        MailerType enumerated in the schema for Mailer documents.
+
+        The files created for the queue should be written to the 
+        current working directory (as should any intermediate working
+        files), and the filenames provided to the constructor for the
+        PrintJob objects should not include any path information.
+
+        In addition to the addMailerTrackingDoc() method, the base
+        class also provides a number of common utility methods.
+
+        The getCipsContactAddress() method returns an XML string 
+        containing an Address element for the ContactDetail information 
+        in a Person document identified as the CIPS contact address.
+
+        The makeLatex() method obtains a document from the repository,
+        applies the caller's filters to it, and uses the cdrxmllatex
+        module to generate the appropriate LaTeX source for the 
+        specified mailer type.
+
+        The makePS() method takes the LaTeX source from an in-memory
+        string and writes it out as converted PostScript, returning
+        the a new PrintJob object corresponding to the file.
+        """
         raise "fillQueue() must be defined by derived class"
 
     #------------------------------------------------------------------
@@ -305,16 +344,16 @@ Please do not reply to this message.
     #----------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
     #----------------------------------------------------------------------
-    def makeLatex(self, docId, filters):
+    def makeLatex(self, doc, filters, mailTypeName):
 
         # XXX Specify version when Mike's ready.
-        docId = cdr.normalize(docId)
+        docId = cdr.normalize(doc.id)
         result = cdr.filterDoc(self.session, filters, docId)
         if type(result) == type(""):
             raise "failure filtering Summary document %s: %s" % (docId, result)
         try:
             docDom = xml.dom.minidom.parseString(result[0])
-            return cdrxmllatex.makeLatex(docDom, "Summary", "initial")
+            return cdrxmllatex.makeLatex(docDom, doc.docType, mailTypeName)
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue and eValue or eType
