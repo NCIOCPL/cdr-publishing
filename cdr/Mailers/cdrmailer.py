@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.34 2002-10-24 22:22:42 ameyer Exp $
+# $Id: cdrmailer.py,v 1.35 2002-10-25 14:21:53 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.34  2002/10/24 22:22:42  ameyer
+# Made getOrganizationAddress() public.
+# Fixed bug in call to filterDoc parameter.
+#
 # Revision 1.33  2002/10/24 21:34:15  bkline
 # Pulled throttle, which has been moved to web interface.
 #
@@ -1222,7 +1226,7 @@ class Address:
             xml += "<PostalCode>%s</PostalCode>" % self.__postalCode
         if lines:
             for line in self.__street:
-                xml += "<AddressLines>%s</AddressLines>" % line
+                xml += "<AddressLine>%s</AddressLine>" % line
         return xml + "</MailerAddress>"
 
     #------------------------------------------------------------------
