@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.20 2002-07-01 21:33:00 arkd Exp $
+ $Id: pdq.dtd,v 1.21 2002-07-12 15:35:32 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -689,8 +689,8 @@
 <!ELEMENT Person (PersonNameInformation,
                   ProfessionalInformation?, 
                   PersonLocations,
-                  DateFirstPublished,
-                  DateLastModified
+                  DateFirstPublished?,
+                  DateLastModified?
                  )>
 <!ATTLIST Person id CDATA #REQUIRED>
 <!ATTLIST Person LegacyPDQID CDATA #IMPLIED>
