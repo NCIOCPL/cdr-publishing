@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.37 2002-11-05 16:46:40 ameyer Exp $
+# $Id: cdrmailer.py,v 1.38 2002-11-08 17:25:49 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.37  2002/11/05 16:46:40  ameyer
+# Fixed bug in getAddressLines() by removing obsolete reference to org.
+#
 # Revision 1.36  2002/10/31 19:59:09  bkline
 # Fixed AddressLine bug.
 #
@@ -554,7 +557,7 @@ class MailerJob:
         docId = cdr.normalize(doc.getId())
         result = cdr.filterDoc(self.__session, filters, docId, parm = parm,
                                docVer = doc.getVersion())
-        if type(result) == type(""):
+        if type(result) in (type(""), type(u"")):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
         try:
