@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.6 2002-10-24 02:39:39 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.7 2003-02-07 22:36:23 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2002/10/24 02:39:39  bkline
+# Added code to handle worst-case combinations of protocol/recipient/org.
+#
 # Revision 1.5  2002/10/23 22:05:17  bkline
 # Updated ancient code to prepare for final testing.
 #
@@ -24,7 +27,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrmailer, re, sys
+import cdr, cdrdb, cdrmailer, re, sys, UnicodeToLatex
 
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
@@ -207,7 +210,7 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
             f.write("    Country: %s\n" % country)
             f.write("Postal Code: %s\n" % zip)
             f.write("   Protocol: %d\n" % doc.getId())
-            f.write("      Title: %s\n" % title[:60])
+            f.write("      Title: %s\n" % UnicodeToLatex.convert(title[:60]))
             f.write("     Org ID: %d\n" % org.getId())
             f.write("   Org Name: %s\n\n" % org.getName())
         f.write("\f")
