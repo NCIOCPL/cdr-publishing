@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.44 2003-02-14 17:42:58 bkline Exp $
+# $Id: cdrmailer.py,v 1.45 2003-05-09 03:46:27 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.44  2003/02/14 17:42:58  bkline
+# Implemented support for printing subsets of a mailer print job (see
+# CDR Issue #594).
+#
 # Revision 1.43  2003/02/14 14:31:24  bkline
 # Added .toc as one of the filename suffixes for support files.
 #
@@ -144,11 +148,18 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
-import UnicodeToLatex, tarfile, zipfile, glob
+import UnicodeToLatex, tarfile, glob
 
 debugCtr = 1
 
 _LOGFILE = "d:/cdr/log/mailer.log"
+
+#------------------------------------------------------------------
+# Constants for adding a person's title to his address
+#------------------------------------------------------------------
+TITLE_OMITTED    = 0    # Do not print person's PersonTitle
+TITLE_AFTER_NAME = 1    # Print it below his name, if name present
+TITLE_AFTER_ORG  = 2    # Print it below org name, if present
 
 #----------------------------------------------------------------------
 # Object for managing mailer processing.
@@ -429,7 +440,7 @@ class MailerJob:
 """ % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
        recipient.getName(), address, docId, doc.getTitle(),
        self.__now, self.__deadline)
-        rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'), 
+        rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
                            checkIn = "Y", ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
         if match:
@@ -449,11 +460,14 @@ class MailerJob:
     #------------------------------------------------------------------
     # Retrieve the CIPS contact Address for a mailer recipient.
     #------------------------------------------------------------------
-    def getCipsContactAddress(self, id):
+    def getCipsContactAddress(self, id, withPersonTitle=TITLE_OMITTED):
         """
+        Constructs and returns a new Address object for the document.
+
         Parameters:
-            id          - Integer ID for CDR Person document.
-            docType     - 'Person' (default) or 'Organization'
+            id              - Integer ID for CDR Person document.
+            docType         - 'Person' (default) or 'Organization'
+            withPersonTitle - For Address constructor.
         Return value:
             Returns an Address object for the CIPS contact.
         """
@@ -477,7 +491,7 @@ class MailerJob:
             raise StandardError ( \
                 "failure extracting contact address for %s: %s" % ( docId,
                 result))
-        return Address(result[0])
+        return Address(result[0], withPersonTitle)
 
     #------------------------------------------------------------------
     # Retrieve the CIPS contact Address object for an Organization
@@ -678,7 +692,7 @@ class MailerJob:
                 self.log(u"__mailerCleanup: %s" % err)
         except:
             self.log("mailerCleanup failure", 1)
-        
+
     #------------------------------------------------------------------
     # Prepare initial settings for job.
     #------------------------------------------------------------------
@@ -881,8 +895,8 @@ class MailerJob:
     # Note: all files with the extensions '.xml', '.tex', '.log',
     # '.aux', and '.dvi' are packaged in a separate compressed tar
     # archive for intermediate files.  Everything else goes into a
-    # second tar archive, used to print the actual mailer documents.  
-    # Make sure nothing needed by this second archive gets a filename 
+    # second tar archive, used to print the actual mailer documents.
+    # Make sure nothing needed by this second archive gets a filename
     # extension used for the intermediate file archive.
     #------------------------------------------------------------------
     def __packageFiles(self):
@@ -1209,6 +1223,9 @@ class Address:
         getAddressee()
             Returns concatenation of prefix, forename, and surname.
 
+        getPersonTitle()
+            Returns PersonTitle element for this address, or None.
+
         getNumStreetLines()
             Returns the number of strings in the street address.
 
@@ -1248,7 +1265,7 @@ class Address:
     #------------------------------------------------------------------
     # Constructor for CDR mailer Address object.
     #------------------------------------------------------------------
-    def __init__(self, xmlFragment):
+    def __init__(self, xmlFragment, withPersonTitle=TITLE_OMITTED):
         """
         Parameters:
             xmlFragment    - Either DOM object for parsed address XML,
@@ -1266,6 +1283,8 @@ class Address:
         self.__postalCode    = None
         self.__codePos       = None
         self.__addressLines  = None
+        self.__personTitle   = None
+        self.__incPersonTitle= withPersonTitle
 
         if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
             dom = xml.dom.minidom.parseString(xmlFragment)
@@ -1286,6 +1305,8 @@ class Address:
                     self.__orgs.append (cdr.getTextContent(node))
                 elif node.nodeName == 'ParentNames':
                     orgParentNode = node
+                elif node.nodeName == 'PersonTitle':
+                    self.__personTitle = cdr.getTextContent(node)
 
         # If we got them, get org parent names to __orgs in right order
         if orgParentNode:
@@ -1305,6 +1326,7 @@ class Address:
     def getPostalCode     (self): return self.__postalCode
     def getCodePosition   (self): return self.__codePos
     def getAddressee      (self): return self.__addressee
+    def getPersonTitle    (self): return self.__personTitle
 
     # Caller may need to manipulate the name line of the address
     def setAddressee (self, nameStr): self.__addressee = nameStr
@@ -1316,7 +1338,7 @@ class Address:
     def getNumAddressLines(self, dropUS = 0):
         lines = self.__getAddressLines()
         if not lines: return 0
-        if self.__lineIsUS(lines[-1]): return len(lines) - 1
+        if dropUS and self.__lineIsUS(lines[-1]): return len(lines) - 1
         return len(lines)
 
     #------------------------------------------------------------------
@@ -1509,8 +1531,14 @@ class Address:
             addressee = self.getAddressee()
             if addressee:
                 lines.append(addressee)
+            if self.__incPersonTitle == TITLE_AFTER_NAME:
+                if self.__personTitle:
+                    lines.append(self.__personTitle)
             if orgLines:
                 lines += orgLines
+            if self.__incPersonTitle == TITLE_AFTER_ORG:
+                if self.__personTitle:
+                    lines.append(self.__personTitle)
             for i in range(self.getNumStreetLines()):
                 streetLine = self.getStreetLine(i)
                 if streetLine:
