@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.62 2003-10-08 15:42:10 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.63 2003-10-14 21:53:21 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.62  2003/10/08 15:42:10  bkline
+# Added support for LOERef elements.
+#
 # Revision 1.61  2003/10/08 10:38:43  bkline
 # Modifications to adapt to changes in Summary filters.
 #
@@ -263,7 +266,19 @@ class XProc:
                     XProc.ORDER_TOP:
                       A processing rule can be specified to use ORDER_TOP to
                       cause the matching nodes to be processed before any
-                      other nodes or after all other nodes.  Place all
+                      other nodes or after all other nodes.
+
+                       ORDER_TOP_FRONT causes the matching nodes to always
+                          appear before anything else in the output.
+
+                       ORDER_TOP_BACK causes matching nodes to always appear
+                          after anything else in the output.
+
+                       ORDER_TOP, now deprecated, will act like
+                          ORDER_TOP_FRONT until the first node ruled by
+                          ORDER_DOCUMENT is encountered, after that it
+                          works like ORDER_TOP_BACK.
+
                       ORDER_TOP rules which should be processed first at the
                       beginning of the list of rules.  These rules will be
                       processed in their order of appearance in the list.
@@ -271,6 +286,7 @@ class XProc:
                       last at the end of the list of rules.  These, too,
                       will be processed in their order of appearance in the
                       list.
+
                     XProc.ORDER_PARENT:
                       This mode of ordering behaves similarly to ORDER_TOP,
                       but only with respect to the sibling elements which
@@ -289,6 +305,7 @@ class XProc:
                       rules which were specified following an ORDER_DOCUMENT
                       rule within the set of rules which match this set of
                       siblings).
+
                    Example showing how XProc.ORDER_DOCUMENT works:
                     Instructions:
                       Element='A', order=XProc.ORDER_TOP
@@ -316,9 +333,14 @@ class XProc:
                    and returns a string.
     """
 
-    ORDER_TOP      = 1  # Process in order given in instructions, at top level
-    ORDER_PARENT   = 2  # Process in order given in instructions, within parent
-    ORDER_DOCUMENT = 3  # Process in order found in the document
+    # Processing order enumerated constants - see above
+    ORDER_TOP          = 1  # Order in instructions, at top level, deprecated
+    ORDER_TOP_FRONT    = 2  # ORDER_TOP, but always before ORDER_DOCUMENT
+    ORDER_TOP_BACK     = 3  # ORDER_TOP, but always after ORDER_DOCUMENT
+    ORDER_PARENT       = 4  # Order within parent, see above, deprecated
+    ORDER_PARENT_FRONT = 5  # ORDER_PARENT, but always before ORDER_DOCUMENT
+    ORDER_PARENT_BACK  = 6  # ORDER_PARENT, but always after ORDER_DOCUMENT
+    ORDER_DOCUMENT     = 7  # Process in order found in the document
 
     def __init__(self,
                  element = None,         # No element involved unless specified
@@ -411,7 +433,7 @@ class XProc:
         str += '  element=' + showVal (self.element)
         str += '  attr=' + showVal (self.attr)
         str += '  occs=' + showVal (self.occs)
-        str += '  order' + showVal (self.order)
+        str += '  order=' + showVal (self.order)
         str += '  textOut=' + showVal (self.textOut)
         str += '  descend=' + showVal (self.descend) + '\n'
         str += '  --prefix=' + showVal (self.prefix) + '\n'
@@ -3110,23 +3132,23 @@ CommonMarkupRules = (
 
 DocumentSummaryBody = (
     XProc(element   = "/Summary/SummarySection",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_FRONT,
           textOut   = 0,
           prefix    = "\n  \\begin{cbunit}\n",
           suffix    = "\n  \\end{cbunit}\n\n"),
     XProc(element   = "/Summary/SummarySection/Title",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_FRONT,
           prefix    = "  \\section{",
           suffix    = "}\n\n",
           filters   = [stripEnds]),
     XProc(element   = "/Summary/SummarySection/SummarySection/Title",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_FRONT,
           prefix    = "  \\subsection{",
           suffix    = "}\n",
           filters   = [stripEnds]),
     XProc(element   = "/Summary/SummarySection/SummarySection/"
                       "SummarySection/Title",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_FRONT,
           prefix    = "  \\subsubsection{",
           suffix    = "}\n",
           filters   = [stripEnds]),
@@ -3140,12 +3162,12 @@ DocumentSummaryBody = (
           textOut   = 0,
           preProcs  = ((cite,()),)),
     XProc(element   = "ReferenceSection",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_BACK,
           textOut   = 0,
           prefix    = "\n  \\begin{thebibliography}{999}\n",
           suffix    = "\n  \\end{thebibliography}\n"),
     XProc(element   = "Citation",
-          order     = XProc.ORDER_PARENT,
+          order     = XProc.ORDER_PARENT_BACK,
           preProcs  = ( (bibitem, ()), )),
     )
 
@@ -3168,43 +3190,43 @@ DocumentSummaryBody = (
 #------------------------------------------------------------------
 
 ProtAbstProtID = (
-    XProc(prefix=PROTOCOLDEF, order=XProc.ORDER_TOP),
+    XProc(prefix=PROTOCOLDEF, order=XProc.ORDER_TOP_FRONT),
 
     XProc(element  = "/Protocol/ProtocolAdminInfo/ProtocolLeadOrg",
-          order    = XProc.ORDER_TOP,
+          order    = XProc.ORDER_TOP_FRONT,
           preProcs = ((protLeadOrg, ()),)),
 
     XProc(element="/Protocol/ProtocolIDs/PrimaryID/IDString",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix=r"  \newcommand{\ProtocolID}{",
           suffix="}\n"),
 
     # Concatenating Other protocol IDs
-    XProc(prefix="  \\newcommand{\OtherID}{\n  ", order=XProc.ORDER_TOP),
+    XProc(prefix="  \\newcommand{\OtherID}{\n  ", order=XProc.ORDER_TOP_FRONT),
     XProc(element="/Protocol/ProtocolIDs/OtherID/IDString",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix="   \\\\",
           suffix="\n  "),
-    XProc(prefix="}\n", order=XProc.ORDER_TOP),
+    XProc(prefix="}\n", order=XProc.ORDER_TOP_FRONT),
 
     XProc(element="CurrentProtocolStatus",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix="  \\newcommand{\ProtocolStatus}{",
           suffix="}\n"),
     XProc(element="LowAge",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix="  \\renewcommand{\LowAge}{",
           suffix="}\n"),
     XProc(element="HighAge",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix="  \\renewcommand{\HighAge}{",
           suffix="}\n"),
     XProc(element="AgeText",
-          order=XProc.ORDER_TOP,
+          order=XProc.ORDER_TOP_FRONT,
           prefix=r"  \newcommand{\AgeText}{",
           suffix="}\n  "),
     XProc(preProcs  = [[protPhaseAndDesign]],
-          order     = XProc.ORDER_TOP)
+          order     = XProc.ORDER_TOP_FRONT)
     )
 
 ProtAbstInfo = (
@@ -3554,18 +3576,18 @@ DocumentProtocolHeader =(
     )
 
 DocumentSummaryHeader =(
-    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
-    XProc(prefix=FONT, order=XProc.ORDER_TOP),
-    XProc(prefix=TOCHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
-    XProc(prefix=CITATION, order=XProc.ORDER_TOP),
+    XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP_FRONT),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=FONT, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=TOCHEADER, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=QUOTES, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=CITATION, order=XProc.ORDER_TOP_FRONT),
     XProc(element="SummaryTitle",
           prefix=r"  \newcommand{\SummaryTitle}{",
-          suffix="}", order=XProc.ORDER_TOP),
-    XProc(prefix=SUMMARY_HDRTEXT, order=XProc.ORDER_TOP),
-    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
-    XProc(prefix=ENDSUMMARYPREAMBLE, order=XProc.ORDER_TOP)
+          suffix="}", order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=SUMMARY_HDRTEXT, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP_FRONT),
+    XProc(prefix=ENDSUMMARYPREAMBLE, order=XProc.ORDER_TOP_FRONT)
     )
 
 DocumentOrgHeader =(
