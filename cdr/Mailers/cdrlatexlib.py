@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.46 2003-07-01 14:21:36 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.47 2003-07-01 21:58:19 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.46  2003/07/01 14:21:36  bkline
+# Fixed missing brace in macro for protocol title.
+#
 # Revision 1.45  2003/06/26 19:49:32  bkline
 # Switched protocol abstract mailer to use vendor filter output.
 #
@@ -318,27 +321,19 @@ class XProc:
         if self.attr == None:
             return 1
 
-        # If node has no attributes, return value is based on presence of !
-        if node.hasAttributes() == 0:
+        # Is value we're testing for present?
+        if node.getAttribute (self.attrName) == self.attrValue:
+
+            # If we want this value, success
+            if not self.attrNegate:
+                return 1
+
+        else:
+            # If we don't want this value, success
             if self.attrNegate:
                 return 1
-            return 0
 
-        # Collect the attributes and search them
-        attrs = node.attributes
-        i = 0
-        while i < attrs.length:
-            if attrs.item(i).name == self.attrName:
-                if attrs.item(i).nodeValue == self.attrValue:
-                    # Attribute name and value both match
-                    if self.attrNegate:
-                        return 0
-                    return 1
-            i += 1
-
-        # Attribute not found
-        if self.attrNegate:
-            return 1
+        # Failed
         return 0
 
     #---------------------------------------------------------------
@@ -506,36 +501,70 @@ class Address:
                 elif child.nodeName == "PostalCode_ZIP":
                     self.zip = getText(child)
 
-class Contact:
-    "Contact object, including address information."
-    def __init__(self, node = None):
-        self.name          = None
-        self.orgNames      = []
+class Location:
+    """
+    Base class for all address type objects based on the Vendor DTD
+    %Location entity used as a definition for several address/contact
+    type elements.  However, not all elements come from the
+    address/contact node.  Some are added from elsewhere.
+
+    Location entity information is parsed here.
+
+    Subclasses add anything else from around the location.
+    """
+    def __init__(self, node = None, locType = None):
+        """
+        Create all of the location elements.
+
+        If a DOM node is passed, initialize them with info from the
+        node.
+
+        Base class for a number of larger classes that incorporate
+        location information.
+
+        Pass:
+            node    - DOM node with location information, or None.
+            locType - "PrivatePractice", "Home", etc.
+        """
+        self.id            = None       # ID attribute for this location elem
+        self.locType       = locType    # Location usage
+        self.name          = None       # Name of person
+        self.cipsContact   = 0          # True=This is a CIPS contact address
+        self.personTitle   = None
+        self.orgNames      = []         # Can be nested org names in list
         self.address       = None
         self.phone         = None
         self.tollFreePhone = None
+        self.fax           = None
         self.email         = None
         self.web           = None
+        self.emailPublic   = 1          # True=Can publish email address
+
         if node:
             for child in node.childNodes:
-                if child.nodeName == "ContactName":
-                    self.name = getText(child)
-                elif child.nodeName == "ContactDetail":
-                    for grandchild in child.childNodes:
-                        if grandchild.nodeName == "OrganizationName":
-                            self.orgNames.append(getText(grandchild))
-                        elif grandchild.nodeName == "PostalAddress":
-                            self.address = Address(grandchild)
-                        elif grandchild.nodeName == "Phone":
-                            self.phone = getText(grandchild)
-                        elif grandchild.nodeName == "TollFreePhone":
-                            self.tollFreePhone = getText(grandchild)
-                        elif grandchild.nodeName == "Email":
-                            self.email = getText(grandchild)
-                        elif grandchild.nodeName == "WebSite":
-                            self.web = getText(grandchild)
-        
+                if child.nodeName == "OrganizationName":
+                    self.orgNames.append(getText(child))
+                elif child.nodeName == "PostalAddress":
+                    self.address = Address(child)
+                elif child.nodeName == "Phone":
+                    self.phone = getText(child)
+                elif child.nodeName == "TollFreePhone":
+                    self.tollFreePhone = getText(child)
+                elif child.nodeName == "Email":
+                    self.email = getText(child)
+                    if child.getAttribute ("Public") == "No":
+                        self.emailPublic = 0
+                elif child.nodeName == "WebSite":
+                    self.web = getText(child)
+            if node.getAttribute ("CIPSContact") == "Y":
+                self.cipsContact = 1
+
     def format(self, includeCountry = 0):
+        """
+        Basic address formatter.  May be embellished by calling routine.
+        Pass:
+            includeCountry - True=Include country name in address.
+        """
         if not self.address:
             return ""
         output = ""
@@ -555,6 +584,43 @@ class Contact:
         if self.address.country and includeCountry:
             output += "  %s \\\\\n" % self.address.country
         return output
+
+    def formatAddress(self, includeCountry = 0):
+        """
+        Richer address formatter.  Adds title and org names to basic
+        address format.
+
+        XXXX - MAYBE MAKE THESE HISTORICAL METHOD NAMES LESS CONFUSING - XXXX
+
+        Pass:
+            includeCountry - True=Include country name in address.
+        """
+        result = self.format(includeCountry)
+        # Create person title followed by orgname, or vice versa
+        orgNames = ""
+        if self.cipsContact and self.personTitle:
+            orgNames += "  %s \\\\\n" % self.personTitle
+        for orgName in self.orgNames:
+            orgNames += "  %s \\\\\n" % orgName
+        if not self.cipsContact and self.personTitle:
+            orgNames += "  %s \\\\\n" % self.personTitle
+        return orgNames + result
+
+class Contact(Location):
+    """
+    Contact object, including name and address information
+    from protocol contact.
+    """
+    def __init__(self, node = None):
+        locationNode = None
+        if node:
+            for child in node.childNodes:
+                if child.nodeName == "ContactName":
+                    self.name = getText(child)
+                elif child.nodeName == "ContactDetail":
+                    locationNode = child
+
+        Location.__init__(self, locationNode)
 
 class List:
     "Remembers list style and type."
@@ -606,7 +672,10 @@ class ProtLeadOrg:
                     self.sendMailerTo = person
 
 class OrgLoc:
-    "Object representing an organization location."
+    """
+    Represents an organization location.
+    XXXX - MUST CHANGE - INHERIT FROM Location - XXXX
+    """
     def __init__(self, node):
         self.id          = None
         self.cipsContact = ""
@@ -731,93 +800,44 @@ class PersonLocation:
         self.web            = None
         self.orgNames       = []
         self.emailPublic    = ""
-    def formatAddress(self, includeCountry = 0):
-        result = self.address.format(includeCountry)
-        isContact = self.cipsContact and len(self.cipsContact) > 0
-        # Create person title followed by orgname, or vice versa
-        orgNames = ""
-        if isContact and self.personTitle:
-            orgNames += "  %s \\\\\n" % self.personTitle
-        for orgName in self.orgNames:
-            orgNames += "  %s \\\\\n" % orgName
-        if not isContact and self.personTitle:
-            orgNames += "  %s \\\\\n" % self.personTitle
-        return orgNames + result
 
-class PrivatePracticeLocation(PersonLocation):
-    "Derived class for a physician's private practice location."
+class PrivatePracticeLocation(Location):
+    """
+    Derived class for a physician's private practice location.
+    Where do we find out that email is public?
+    """
     def __init__(self, node):
-        PersonLocation.__init__(self)
-        for child in node.childNodes:
-            if child.nodeName == "PrivatePracticeLocation":
-                self.id = child.getAttribute("id")
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "PostalAddress":
-                        self.address = Address(grandchild)
-                    elif grandchild.nodeName == "CIPSContact":
-                        self.cipsContact = getText(grandchild)
-            elif child.nodeName == "Phone":
-                self.phone = getText(child)
-            elif child.nodeName == "TollFreePhone":
-                self.tollFreePhone = getText(child)
-            elif child.nodeName == "Fax":
-                self.fax = getText(child)
-            elif child.nodeName == "Email":
-                self.email = getText(child)
-                self.emailPublic = child.getAttribute("Public")
+        Location.__init__(self, node, "PrivatePractice")
 
-class OtherPracticeLocation(PersonLocation):
+class OtherPracticeLocation (Location):
     "Derived class for an other practice location for a person."
     def __init__(self, node):
-        PersonLocation.__init__(self)
-        self.id = node.getAttribute("id")
-        orderParentNameFirst = 0
+        # Get subelements and hold them in local variables
+        personOrgLoc = None
+        personTitle  = None
         for child in node.childNodes:
-            if child.nodeName == "SpecificPostalAddress":
-                self.address = Address(child)
-            elif child.nodeName in ("Phone", "SpecificPhone"):
-                self.phone = getText(child)
-            elif child.nodeName in ("TollFreePhone", "SpecificTollFreePhone"):
-                self.tollFreePhone = getText(child)
-            elif child.nodeName in ("Fax", "SpecificFax"):
-                self.fax = getText(child)
-            elif child.nodeName in ("Email", "SpecificEmail"):
-                self.email = getText(child)
-                self.emailPublic = child.getAttribute("Public")
-            elif child.nodeName == "CIPSContact":
-                self.cipsContact = getText(child)
-            elif child.nodeName == "OrganizationAddressNames":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "OrganizationName":
-                        name = getText(grandchild)
-                        if name: self.orgNames.append(name)
-            elif child.nodeName == "OrganizationLocation":
-                if child.getAttribute("OrderParentNameFirst") == "Yes":
-                    orderParentNameFirst = 1
-            elif child.nodeName == "PersonTitle":
-                self.personTitle = getText(child)
-        if orderParentNameFirst and len(self.orgNames) > 1:
-            self.orgNames.reverse()
+            if child.nodeName == "PersonTitle":
+                personTitle = getText (child)
+            elif child.nodeName == "PersonOrganizationLocation":
+                personOrgLoc = child
 
-class HomeLocation(PersonLocation):
-    "Derived class for a home location for a person."
+        # Construct base class using any Location info found
+        Location.__init__(self, personOrgLoc, "OtherPractice")
+
+        # Add in title from sibling elements of personOrgLoc
+        if personTitle:
+            self.personTitle = personTitle
+
+        # CIPS contact yes/no is here, not in lower level node
+        if node.getAttribute ("CIPSContact") == "Y":
+            self.cipsContact = 1
+
+class HomeLocation (Location):
+    """
+    Derived class for a home location for a person.
+    """
     def __init__(self, node):
-        PersonLocation.__init__(self)
-        self.id = node.getAttribute("id")
-        for child in node.childNodes:
-            if child.nodeName == "CIPSContact":
-                self.cipsContact = getText(child)
-            if child.nodeName == "PostalAddress":
-                self.address = Address(child)
-            elif child.nodeName == "Phone":
-                self.phone = getText(child)
-            elif child.nodeName == "TollFreePhone":
-                self.tollFreePhone = getText(child)
-            elif child.nodeName == "Fax":
-                self.fax = getText(child)
-            elif child.nodeName == "Email":
-                self.email = getText(child)
-                self.emailPublic = child.getAttribute("Public")
+        Location.__init__(self, node, "Home")
 
 class SiteContact:
     "Contains name string and phone for Status & Participant site contact."
@@ -1656,7 +1676,7 @@ def personLocs(pp):
   \subsection*{Preferred Contact Method}
 
   For future updates, how would you prefer to be contacted?
-  
+
    $\bigcirc$ E-mail \qquad $\bigcirc$ Mail \\
 
 """ % (cipsContact.phone or blankLine,
@@ -1678,7 +1698,7 @@ def personLocs(pp):
 
   {\it (Medical centers, hospitals, or cancer centers where you
   provide patient care or participate in clinical trials)} \\
-  
+
 
 """ % cipsContactInfo
 
