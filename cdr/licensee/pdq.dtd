@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.21 2002-07-12 15:35:32 arkd Exp $
+ $Id: pdq.dtd,v 1.22 2002-07-16 17:04:28 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -143,11 +143,11 @@
 <!ELEMENT THead (ColSpec*,Row+)>
 <!ATTLIST THead Valign (Bottom | Middle | Top) #IMPLIED>
 
-<!ELEMENT Row (Entry+)>
+<!ELEMENT Row (entry+)>
 <!ATTLIST Row RowSep (0 | 1) #IMPLIED Valign (Bottom | Middle | Top) #IMPLIED>
 
-<!ELEMENT Entry (%ParaElements;)*>
-<!ATTLIST Entry Align (Center | Char | Justify | Left | Right) #IMPLIED
+<!ELEMENT entry (%ParaElements;)*>
+<!ATTLIST entry Align (Center | Char | Justify | Left | Right) #IMPLIED
                 Char CDATA #IMPLIED
                 Charoff CDATA #IMPLIED
                 ColSep (0 | 1) #IMPLIED
