@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.16 2002-10-08 13:56:23 ameyer Exp $
+# $Id: cdrmailer.py,v 1.17 2002-10-09 02:01:55 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2002/10/08 13:56:23  ameyer
+# Changes to logging, exception handling, directory creation.
+#
 # Revision 1.15  2002/10/08 01:39:00  bkline
 # Fixed address parsing to match Lakshmi's new rules and to pick up
 # additional information.  Added optional flag to suppress printing.
@@ -170,6 +173,7 @@ class MailerJob:
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
     __LOGFILE       = _LOGFILE
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
+    __INCLUDE_PATH  = "d:/cdr/Mailers/include"
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
     __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode "\
                       "-include-directory d:/cdr/mailers/style"
@@ -204,10 +208,12 @@ class MailerJob:
     def getRecipients(self): return self.__recipients
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
+    def getMailerIncludePath(self): return self.__INCLUDE_PATH
     def addToQueue   (self, job):   self.__queue.append(job)
     def getParm      (self, name):
         v = self.__parms.get(name)
         return v and tuple(v) or ()
+    def suppressPrint(self): self.__suppressPrinting = 1
 
     #------------------------------------------------------------------
     # Driver for mailer job processing.
@@ -317,7 +323,7 @@ class MailerJob:
 </CdrDoc>
 """ % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(),
        address, docId, doc.getTitle(), self.__now, self.__deadline)
-        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y", 
+        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y",
                            ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
         if match:
@@ -337,24 +343,59 @@ class MailerJob:
     #------------------------------------------------------------------
     # Retrieve the CIPS contact address for a mailer recipient.
     #------------------------------------------------------------------
-    def getCipsContactAddress(self, id):
+    def getCipsContactAddress(self, id, docType = 'Person'):
         """
         Parameters:
-            doc         - Object of type Document, defined below
             id          - Integer ID for CDR Person document.
+            docType     - 'Person' (default) or 'Organization'
         Return value:
             Returns an XML string containing an Address element
             for the ContactDetail information in a Person document
             identified as the CIPS contact address.
         """
         docId   = cdr.normalize(id)
-        filters = ["name:CIPS Contact Address"]
-        result  = cdr.filterDoc(self.__session, filters, docId)
+        # XXXX - MODIFY TO PASS A docType PARM
+        fragId  = self.__lookupCipsContactFragId(id)
+        if not fragId:
+            raise StandardError("no CIPSContact for %s" % docId)
+
+        # Filter for person or organization
+        if docType == 'Person':
+            filters = ["name:Person Address Fragment With Name"]
+        elif docType == 'Organization':
+            filters = ["name:Organization Address Fragment"]
+        else:
+            raise StandardError (
+                "Invalid docType '%s' in getCipsContactAddress" % docType)
+
+        result  = cdr.filterDoc(self.__session, filters, docId,
+                                parm = (('fragId', fragId),))
+
+        # Expecting tuple of xml fragment, messages.  Single string is error.
         if type(result) == type(""):
             raise StandardError ( \
                 "failure extracting contact address for %s: %s" % ( docId,
                 result))
         return Address(result[0])
+
+    #------------------------------------------------------------------
+    # Find the fragment ID for the CIPS contact location in a Person
+    # or organization document.
+    #------------------------------------------------------------------
+    # XXXX - MODIFY THIS TO ACCEPT A docType PARM
+    def __lookupCipsContactFragId(self, id):
+        try:
+            self.__cursor.execute("""\
+                SELECT value
+                  FROM query_term
+                 WHERE path = '/Person/PersonLocations/CIPSContact'
+                   AND doc_id = ?""", id)
+            row = self.__cursor.fetchone()
+            if not row:
+                return None
+            return row[0]
+        except cdrdb.Error, info:
+            raise "database error retrieving contact FragId: %s" % info[1][0]
 
     #------------------------------------------------------------------
     # Generate an index of the mailers in order of country + postal code.
@@ -587,8 +628,9 @@ class MailerJob:
         try:
             # Find id, version, title, document type name
             #   for each document previously selected for mailing
+            # XXXX FOR DEBUG - top 2
             self.__cursor.execute("""\
-                SELECT pub.doc_id, pub.doc_version,
+                SELECT top 2 pub.doc_id, pub.doc_version,
                        doc.title, type.name
                   FROM pub_proc_doc pub
                   JOIN document doc
@@ -694,20 +736,16 @@ class MailerJob:
     #------------------------------------------------------------------
     def __updateStatus(self, status, message = None):
         self.log("~~In update status, status=%s" % status)
+        message = message and str(message)
         try:
             if message:
-                self.__cursor.execute("""\
-                    UPDATE pub_proc
-                       SET status = ?,
-                           messages = ?,
-                           completed = GETDATE()
-                     WHERE id = ?""", (status, message, self.__id))
-            else:
-                self.__cursor.execute("""\
-                    UPDATE pub_proc
-                       SET status = ?,
-                           completed = GETDATE()
-                     WHERE id = ?""", (status, self.__id))
+                self.log ("  (message: %s)" % message)
+            self.__cursor.execute("""\
+                UPDATE pub_proc
+                   SET status = ?,
+                       messages = ?,
+                       completed = GETDATE()
+                 WHERE id = ?""", (status, message, self.__id))
             self.__conn.commit()
         except:
             self.log ("__updateStatus failed, status was '%s'" % status,
@@ -942,9 +980,10 @@ class Address:
             xmlFragment    - Either DOM object for parsed address XML,
                              or the string containing the XML for the
                              address.
+                             The top node should be <AddressElements>
         """
         self.__addressee     = None
-        self.__orgs          = []
+        self.__orgs          = []   # Main + parent orgs in right order
         self.__street        = []
         self.__city          = None
         self.__citySuffix    = None
@@ -953,16 +992,27 @@ class Address:
         self.__postalCode    = None
         self.__codePos       = None
         if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
-            cdr.logwrite (("Parsing address from string", xmlFragment),
-                           _LOGFILE)
             dom = xml.dom.minidom.parseString(xmlFragment)
         else:
             dom = xmlFragment
+
+        # No organization name nodes identified yet
+        orgParentNode = None
+
+        # Parse parts of an address
         for node in dom.documentElement.childNodes:
             if node.nodeName == 'PostalAddress':
                 self.__parsePostalAddress(node)
             elif node.nodeName == 'Name':
                 self.__addressee = self.__buildName(node)
+            elif node.nodeName == 'OrgName':
+                self.__orgs.append (cdr.getTextContent(node))
+            elif node.nodeName == 'ParentNames':
+                orgParentNode = node
+
+        # If we got them, get org parent names to __orgs in right order
+        if orgParentNode:
+            self.__parseOrgParents (orgParentNode)
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -1005,9 +1055,13 @@ class Address:
     # Extract postal address element values.
     #------------------------------------------------------------------
     def __parsePostalAddress(self, node):
-        org          = ""
-        parents      = []
-        parentsFirst = 0
+        """
+        Extracts individual elements from street address, storing
+        each in a field of the Address object.
+
+        Pass:
+            node    - DOM node of PostalAddress element
+        """
         for child in node.childNodes:
             if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
                 if child.nodeName == "Street":
@@ -1016,7 +1070,7 @@ class Address:
                     self.__city = cdr.getTextContent(child)
                 elif child.nodeName == "CitySuffix":
                     self.__citySuffix = cdr.getTextContent(child)
-                elif child.nodeName == "State":
+                elif child.nodeName in ("State", "PoliticalSubUnit_State"):
                     self.__state = cdr.getTextContent(child)
                 elif child.nodeName == "Country":
                     self.__country = cdr.getTextContent(child)
@@ -1024,19 +1078,30 @@ class Address:
                     self.__postalCode = cdr.getTextContent(child)
                 elif child.nodeName == "CodePosition":
                     self.__codePos = cdr.getTextContent(child)
-                elif child.nodeName == "OrgName":
-                    org = cdr.getTextContent(child)
-                elif child.nodeName == "ParentNames":
-                    pfAttr = child.getAttribute("OrderParentNameFirst")
-                    if pfAttr == "Yes":
-                        parentsFirst = 1
-                    for grandchild in child.childNodes:
-                        if grandchild.nodeName == "ParentName":
-                            parents.append(cdr.getTextContent(grandchild))
-        if org:
-            self.__orgs = [org] + parents
-            if parentsFirst:
-                self.__orgs.reverse()
+
+    #------------------------------------------------------------------
+    # Extract and sort (if necessary) organization name values of parents
+    #------------------------------------------------------------------
+    def __parseOrgParents (self, node):
+        """
+        Parses a ParentNames element, extracting organization names
+        and appending them, in the right order, to the list of
+        organizations.
+
+        Pass:
+            node    - DOM node of ParentNames element
+        """
+        # Attribute tells us the order in which to place parents
+        parentsFirst = 0
+        pfAttr = node.getAttribute("OrderParentNameFirst")
+        if pfAttr == "Yes":
+            parentsFirst = 1
+
+        for child in node.childNodes:
+            if child.nodeName == "ParentName":
+                self.__orgs.append(cdr.getTextContent(child))
+        if parentsFirst:
+            self.__orgs.reverse()
 
     #------------------------------------------------------------------
     # Construct name string from components.
@@ -1068,11 +1133,12 @@ class Address:
                             suffix = cdr.getTextContent(grandchild)
                             if suffix:
                                 pSuffixes.append(suffix)
-                    
+
         name = ("%s %s" % (prefix, givenName)).strip()
+        name = ("%s %s" % (name, mi)).strip()
         name = ("%s %s" % (name, surname)).strip()
         if gSuffix:
-            name = "%s, %s" % (name, self.genSuffix)
+            name = "%s, %s" % (name, gSuffix)
         rest = ", ".join(pSuffixes).strip()
         if rest:
             name = "%s, %s" % (name, rest)
