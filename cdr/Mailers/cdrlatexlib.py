@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.35 2003-02-19 16:49:48 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.36 2003-03-03 20:08:23 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.35  2003/02/19 16:49:48  bkline
+# Removed "Principal Investigator" from label for Contact column of
+# S&P mailers.  Set \footskip to 60pt for S&P mailers.
+#
 # Revision 1.34  2003/02/11 21:28:47  bkline
 # Added code to pick up CitySuffix.
 #
@@ -783,27 +787,24 @@ class HomeLocation(PersonLocation):
 class ParticipatingSite:
     "Interesting information for an org participating in a protocol."
     def __init__(self, node):
-        self.name          = None
-        self.pi            = None
-        self.phone         = None
-        self.status        = None
-        self.genericPerson = None
-        self.genericPhone  = None
+        self.name           = None
+        self.specificPerson = None
+        self.genericPerson  = None
+        self.phone          = None
+        self.status         = None
         for child in node.childNodes:
-            if child.nodeName == "Site":
+            if child.nodeName == "OrgSiteName":
                 self.name = getText(child)
+            elif child.nodeName == "PrivatePracticeSiteName":
+                self.name = PersonName(child).format(1)
             elif child.nodeName == "SiteStatus":
                 self.status = getText(child)
-            elif child.nodeName == "PI":
-                self.pi = PersonName(child)
+            elif child.nodeName == "SpecificPerson":
+                self.specificPerson = PersonName(child)
+            elif child.nodeName == "GenericPerson":
+                self.genericPerson = getText(child)
             elif child.nodeName == "Phone":
                 self.phone = getText(child)
-            elif child.nodeName == "GenericPerson":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "PersonTitle":
-                        self.genericPerson = getText(grandchild)
-                    elif grandchild.nodeName == "Phone":
-                        self.genericPhone = getText(grandchild)
 
     def __cmp__(self, other):
         if self.status == "Active":
@@ -2106,14 +2107,11 @@ def statProtSites(pp):
     sites.sort()
     for site in sites:
         contact = ""
-        phone = ""
-        if site.pi:
-            contact = site.pi.format()
-            phone   = site.phone
+        phone   = site.phone
+        if site.specificPerson:
+            contact = site.specificPerson.format()
         elif site.genericPerson:
             contact = site.genericPerson
-            if site.genericPhone:
-                phone = site.genericPhone
         output += " %s & %s & %s \\Check{%s} \\\\ \\hline \n" % (
             site.name, contact, phone,
             site.status == 'Active' and 'Y' or 'N')
