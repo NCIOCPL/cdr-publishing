@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.27 2002-10-23 03:33:14 ameyer Exp $
+# $Id: cdrmailer.py,v 1.28 2002-10-23 11:44:08 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.27  2002/10/23 03:33:14  ameyer
+# Added code to get proper Organization address.
+# Replaced some code with calls to new cdr.getQueryTermValueForId().
+#
 # Revision 1.26  2002/10/22 18:10:22  bkline
 # Changed mailing label to use fixed-pitch font and to word-wrap long lines.
 #
@@ -171,6 +175,16 @@ class MailerJob:
             Returns the tuple of document IDs found in the
             pub_proc_doc table.
 
+        getMaxDocs()
+            Returns the cap on the number of documents which
+            will be processed.
+
+        setMaxDocs(maxDocs)
+            Overrides the default for the cap on the number of
+            documents which will be processed.  The default is
+            sys.maxint, which will result in all documents in
+            the queue being published.
+
         getRecipients()
             Returns the dictionary containing the Recipient
             objects associated with this job.  Populated by
@@ -230,6 +244,7 @@ class MailerJob:
         self.__parms            = {}
         self.__printer          = MailerJob.__DEF_PRINTER
         self.__batchPrinting    = batchPrinting
+        self.__maxDocs          = sys.maxint
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -243,6 +258,8 @@ class MailerJob:
     def getRecipients(self): return self.__recipients
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
+    def getMaxDocs   (self): return self.__maxDocs
+    def setMaxDocs   (self, maxDocs): self.__maxDocs = maxDocs
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
     def printDirect  (self): self.__batchPrinting = 0
     def addToQueue   (self, job):   self.__queue.append(job)
@@ -475,7 +492,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
     #------------------------------------------------------------------
-    def makeLatex(self, doc, filters, mailType, parms = []):
+    def makeLatex(self, doc, filters, mailType = '', parms = None):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -502,8 +519,9 @@ class MailerJob:
         """
 
         # XXX Specify version when Mike's ready.
+        parm = parms or []
         docId = cdr.normalize(doc.getId())
-        result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
+        result = cdr.filterDoc(self.__session, filters, docId, parm = parm)
         if type(result) == type(""):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
@@ -914,7 +932,7 @@ class PrintJob:
             else                              : prolog = self.__PLAIN_NAME
             outFile.write("copy %s+%s %%1\n" % (prolog, self.__filename))
         else:
-            prn = open(self.__printer, "w")
+            prn = open(outFile, "w")
             doc = open(self.__filename).read()
             if self.__staple:
                 prn.write(self.__STAPLE_PROLOG + doc)
