@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.7 2003-02-07 22:36:23 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.8 2003-05-05 21:08:08 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2003/02/07 22:36:23  bkline
+# Added call to UnicodeToLatex.convert() for title.
+#
 # Revision 1.6  2002/10/24 02:39:39  bkline
 # Added code to handle worst-case combinations of protocol/recipient/org.
 #
@@ -103,6 +106,10 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
                              ON lead_org.doc_id = person_link.doc_id
                             AND LEFT(lead_org.node_loc, 8) =
                                 LEFT(person_link.node_loc, 8)
+                           JOIN query_term lead_org_status
+                             ON lead_org_status.doc_id = lead_org.doc_id
+                            AND LEFT(lead_org.node_loc, 8) =
+                                LEFT(lead_org_status.node_loc, 8)
                            JOIN document org
                              ON org.id = lead_org.int_val
                            JOIN document protocol
@@ -120,6 +127,10 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
                             AND person_role.path      = '%s'
                             AND org_type.path         = '%s'
                             AND person_role.value     = 'Update person'
+                            AND lead_org_status.value IN (
+                                                   'Active',
+                                                   'Approved-not yet active',
+                                                   'Temporarily closed')
                             AND NOT EXISTS (SELECT *
                                               FROM query_term contact_mode
                                              WHERE contact_mode.path = '%s'
