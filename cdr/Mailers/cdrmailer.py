@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.33 2002-10-24 21:34:15 bkline Exp $
+# $Id: cdrmailer.py,v 1.34 2002-10-24 22:22:42 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.33  2002/10/24 21:34:15  bkline
+# Pulled throttle, which has been moved to web interface.
+#
 # Revision 1.32  2002/10/24 17:51:35  bkline
 # Adjustment to remailerFor parameter.
 #
@@ -156,6 +159,11 @@ class MailerJob:
         getCipsContactAddress(id)
             Returns an Address object for the ContactDetail information
             in a Person document identified as the CIPS contact address.
+
+        getOrganizationAddress (id):
+            Returns an Address object for the ContactDetail information
+            in an Organization document.  Handles cases of directly
+            referenced CIPSContactPerson, and generic Administrators.
 
         makeIndex()
             Builds an index list of recipients from the dictionary
@@ -343,7 +351,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Generate a document for tracking a mailer.
     #------------------------------------------------------------------
-    def addMailerTrackingDoc(self, doc, recipient, mailerType, 
+    def addMailerTrackingDoc(self, doc, recipient, mailerType,
                              remailerFor = None):
         """
         Parameters:
@@ -441,7 +449,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Retrieve the CIPS contact Address object for an Organization
     #------------------------------------------------------------------
-    def __getOrganizationAddress (self, id):
+    def getOrganizationAddress (self, id):
         """
         Parameters:
             id - Integer ID of the organization document.
@@ -473,7 +481,7 @@ class MailerJob:
 
         filters = ["name:Organization Address Fragment"]
         parms   = (("fragId", rows[0]),)
-        result  = cdr.filterDoc(self.__session, filters, id, parms)
+        result  = cdr.filterDoc(self.__session, filters, id, parm=parms)
 
         # Expecting tuple of xml fragment, messages.  Single string is error.
         if type(result) == type(""):
@@ -975,7 +983,7 @@ class Org:
         self.__name    = name
     def getId     (self): return self.__id
     def getName   (self): return self.__name
-    
+
 #----------------------------------------------------------------------
 # Object to hold information about a mailer recipient.
 #----------------------------------------------------------------------
