@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.15 2003-01-15 03:34:52 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.16 2003-01-22 14:32:55 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.15  2003/01/15 03:34:52  bkline
+# Fixed problem with Unicode in title for cover letter.
+#
 # Revision 1.14  2002/11/08 21:45:27  bkline
 # Added Latin 1 encoding of title.
 #
@@ -265,6 +268,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         protId    = pieces[0]
         protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
+        address   = UnicodeToLatex.convert(address)
+        protTitle = UnicodeToLatex.convert(address)
 
         # Replace placeholders:
         latex     = template.replace('@@ADDRESS@@', address)
