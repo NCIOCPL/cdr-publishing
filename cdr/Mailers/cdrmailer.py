@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.10 2002-02-14 20:21:18 ameyer Exp $
+# $Id: cdrmailer.py,v 1.11 2002-04-25 15:54:09 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2002/02/14 20:21:18  ameyer
+# Removed the block on printing.  Will add a new control for this soon.
+#
 # Revision 1.9  2002/02/06 00:23:30  ameyer
 # Replaced stub latex converter with reference to the real thing.
 #
@@ -67,6 +70,11 @@ class MailerJob:
             Invoked by the derived classes' imlementations of
             fillQueue() to insert a Mailer document into the CDR.
 
+        formatAddress(addr, org)
+            Formats address information into a block of printable
+            text lines and returns the block.  Optional organization
+            information may be passed.
+
         getCipsContactAddress(id)
             Returns an XML string containing an Address element
             for the ContactDetail information in a Person document
@@ -99,6 +107,11 @@ class MailerJob:
         getDocIds()
             Returns the tuple of document IDs found in the
             pub_proc_doc table.
+
+        getDocList()
+            Returns the list of tuples of document IDs plus
+            version numbers found in the pub_proc_doc table.
+            getDocIds() returns a subset of this - just the ids.
 
         getRecipients()
             Returns the dictionary containing the Recipient
@@ -166,6 +179,7 @@ class MailerJob:
     def getSession   (self): return self.__session
     def getDeadline  (self): return self.__deadline
     def getDocIds    (self): return self.__docIds
+    def getDocList   (self): return self.__docList
     def getRecipients(self): return self.__recipients
     def getDocuments (self): return self.__documents
     def addToQueue   (self, job):   self.__queue.append(job)
@@ -360,6 +374,53 @@ class MailerJob:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue or eType
             raise "failure generating LaTeX for %s: %s" % (docId, eMsg)
+
+    #------------------------------------------------------------------
+    # Create a formatted address block.
+    # If org is passed, will include organization in addressing.
+    #------------------------------------------------------------------
+    def formatAddress(self, addr, org=None):
+        block = ""
+        orgName = None
+        if org:
+            orgName = org.getName()
+        addressee = addr.getAddressee()
+        if orgName: block += orgName + " \\\\\n"
+        if orgName and addressee: block += "c/o "
+        if addressee: block += addressee + " \\\\\n"
+        for i in range(addr.getNumStreetLines()):
+            streetLine = addr.getStreetLine(i)
+            if streetLine:
+                block += streetLine + " \\\\\n"
+        city    = addr.getCity()
+        state   = addr.getState()
+        zip     = addr.getPostalCode()
+        pos     = addr.getCodePosition()
+        country = addr.getCountry()
+        line    = ""
+        if zip and pos == "before City":
+            line = zip
+            if city: line += " "
+        if city: line += city
+        if zip and pos == "after City":
+            if line: line += " "
+            line += zip
+        if state:
+            if line: line += ", "
+            line += state
+        if zip and (not pos or pos == "after PoliticalUnit_State"):
+            if line: line += " "
+            line += zip
+        if line: block += "%s \\\\\n" % line
+        if country:
+            block += country
+        if zip and pos == "after Country":
+            if country:
+                block += " "
+            block += zip
+        if country or zip:
+            block += " \\\\\n"
+        return block
 
     #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
