@@ -16,8 +16,11 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.3 2004-10-15 20:25:22 bkline Exp $
+# $Id: FtpHotfixDocs.py,v 1.4 2005-01-24 22:48:25 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2004/10/15 20:25:22  bkline
+# Fixed error of processing if no removed documents exist.
+#
 # Revision 1.2  2004/10/07 23:08:08  bkline
 # Fixed the FTP process and changed the directory name to cdr from update.
 #
@@ -40,7 +43,7 @@ pubDir = 'd:\\' + os.path.join('cdr', 'publishing')
 hfDir  = os.path.join(outDir, 'mid-month')
 dateStr = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 newDir = os.path.join(hfDir, dateStr)
-
+rmDir  = 0
 
 jobId = string.atoi(sys.argv[1])
 divider = "=" * 60
@@ -79,6 +82,7 @@ try:
    
 	     if not os.path.exists(destDir):
 	         os.mkdir(destDir)
+                 rmDir = 1
 	     
 	     shutil.copy(file, destDir)
              open(log, "a").write("    %d: Copied %s to %s\n" %
@@ -115,15 +119,15 @@ try:
     ftpCmd.write('lcd d:/cdr/Output/mid-month/' + dateStr + '\n')
     ftpCmd.write('lcd cdr\n')
     ftpCmd.write('cd cdr\n')
-    ftpCmd.write('mput CDR*.xml\n')
+    ftpCmd.write('mput *\n')
 
     # Only add this part if removed documents exist.
     # ----------------------------------------------
-    if re.search(rmDoc, text):
+    if rmDir:
        ftpCmd.write('mkdir ../remove\n')
        ftpCmd.write('lcd ../remove\n')
        ftpCmd.write('cd  ../remove\n')
-       ftpCmd.write('mput CDR*.xml\n')
+       ftpCmd.write('mput *\n')
     ftpCmd.write('bye\n')
     ftpCmd.close()
 
