@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.44 2003-06-02 14:29:08 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.45 2003-06-26 19:49:32 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.44  2003/06/02 14:29:08  bkline
+# Added handling of SummaryFragmentRef.
+#
 # Revision 1.43  2003/05/27 18:22:02  bkline
 # Fixed a problem with the protocol title handling (didn't do the right
 # thing with markup).
@@ -423,20 +426,15 @@ class XmlLatexException(Exception):
     pass
 
 class OrgProtStatus:
-    "Object representing an organization's protocol status."
-    def __init__(self, statuses):
+    "Object representing an organization's current protocol status."
+    def __init__(self, node):
         self.value = None
         self.date  = None
-        child      = statuses.firstChild
-        while child:
-            if child.nodeName == "CurrentOrgStatus":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "StatusName":
-                        self.value = getText(grandchild)
-                    elif grandchild.nodeName == "StatusDate":
-                        self.date = getText(grandchild)
-                return
-            child = child.nextSibling
+        for child in node.childNodes:
+            if child.nodeName == "StatusName":
+                self.value = getText(child)
+            elif child.nodeName == "StatusDate":
+                self.date = getText(child)
 
 class PersonName:
     "Object representing a person's name, including professional suffixes."
@@ -459,12 +457,9 @@ class PersonName:
             elif child.nodeName == "Prefix":
                 self.prefix = getText(child)
             elif child.nodeName == "ProfessionalSuffix":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName in ("StandardProfessionalSuffix",
-                                               "CustomProfessionalSuffix"):
-                        suffix = getText(grandchild)
-                        if suffix:
-                            self.profSuffixes.append(suffix)
+                suffix = getText(child)
+                if suffix:
+                    self.profSuffixes.append(suffix)
 
     def format(self, full = 0):
         name = ("%s %s" % (self.givenName, self.initials)).strip()
@@ -481,18 +476,15 @@ class Address:
     "Object holding an address (not including company names)."
 
     def __init__(self, node = None):
-        self.street     = []
-        self.city       = ""
-        self.state      = ""
-        self.country    = ""
-        self.zip        = ""
-        self.zipPos     = ""
-        self.citySuffix = ""
+        self.street      = []
+        self.city        = ""
+        self.state       = ""
+        self.stateAbbrev = ""
+        self.country     = ""
+        self.zip         = ""
+        self.zipPos      = ""
+        self.citySuffix  = ""
         if node:
-            stateShortName   = ""
-            stateFullName    = ""
-            countryShortName = ""
-            countryFullName  = ""
             for child in node.childNodes:
                 if child.nodeName == "Street":
                     self.street.append(getText(child))
@@ -500,34 +492,65 @@ class Address:
                     self.city = getText(child)
                 elif child.nodeName == "CitySuffix":
                     self.citySuffix = getText(child)
+                elif child.nodeName == "PoliticalSubUnitName":
+                    self.state = getText(child)
                 elif child.nodeName == "PoliticalSubUnitShortName":
-                    stateShortName = getText(child)
-                elif child.nodeName == "PoliticalSubUnitFullName":
-                    stateFullName = getText(child)
-                elif child.nodeName == "CountryShortName":
-                    countryShortName = getText(child)
-                elif child.nodeName == "CountryFullName":
-                    countryFullName = getText(child)
+                    self.stateAbbrev = getText(child)
+                elif child.nodeName == "CountryName":
+                    self.country = getText(child)
                 elif child.nodeName == "PostalCodePosition":
                     self.zipPos = getText(child)
                 elif child.nodeName == "PostalCode_ZIP":
                     self.zip = getText(child)
-            self.state = stateShortName or stateFullName
-            self.country = countryShortName or countryFullName
 
+class Contact:
+    "Contact object, including address information."
+    def __init__(self, node = None):
+        self.name          = None
+        self.orgNames      = []
+        self.address       = None
+        self.phone         = None
+        self.tollFreePhone = None
+        self.email         = None
+        self.web           = None
+        if node:
+            for child in node.childNodes:
+                if child.nodeName == "ContactName":
+                    self.name = getText(child)
+                elif child.nodeName == "ContactDetail":
+                    for grandchild in child.childNodes:
+                        if grandchild.nodeName == "OrganizationName":
+                            self.orgNames.append(getText(grandchild))
+                        elif grandchild.nodeName == "PostalAddress":
+                            self.address = Address(grandchild)
+                        elif grandchild.nodeName == "Phone":
+                            self.phone = getText(grandchild)
+                        elif grandchild.nodeName == "TollFreePhone":
+                            self.tollFreePhone = getText(grandchild)
+                        elif grandchild.nodeName == "Email":
+                            self.email = getText(grandchild)
+                        elif grandchild.nodeName == "WebSite":
+                            self.web = getText(grandchild)
+        
     def format(self, includeCountry = 0):
+        if not self.address:
+            return ""
         output = ""
-        for street in self.street:
+        for orgName in self.orgNames:
+            output += "  %s \\\\\n" % orgName
+        for street in self.address.street:
             output += "  %s \\\\\n" % street
-        statePlusZip = "%s %s" % (self.state or "", self.zip or "")
+        state = self.address.stateAbbrev or self.address.state
+        statePlusZip = "%s %s" % (state or "", self.address.zip or "")
         statePlusZip = statePlusZip.strip()
-        city = ("%s %s" % (self.city, self.citySuffix)).strip() or ""
+        city = ("%s %s" % (self.address.city,
+                           self.address.citySuffix)).strip() or ""
         comma = city and statePlusZip and ", " or ""
         lastLine = "%s%s%s" % (city, comma, statePlusZip)
         if lastLine:
             output += "  %s \\\\\n" % lastLine
-        if self.country and includeCountry:
-            output += "  %s \\\\\n" % self.country
+        if self.address.country and includeCountry:
+            output += "  %s \\\\\n" % self.address.country
         return output
 
 class List:
@@ -540,72 +563,44 @@ class LeadOrgPerson:
     "Object representing a Protocol Lead Organization person."
     def __init__(self, node):
         self.name    = None
-        self.phone   = None
         self.roles   = []
-        self.address = Address()
-        self.id      = node.getAttribute("id")
-        self.orgs    = []
+        self.contact = Contact()
         for child in node.childNodes:
-            if child.nodeName == "Person":
+            if child.nodeName == "ProtPerson":
                 for grandchild in child.childNodes:
                     if grandchild.nodeName == "PersonNameInformation":
                         self.name = PersonName(grandchild)
-                    elif grandchild.nodeName == "OrganizationAddressNames":
-                        for org in grandchild.childNodes:
-                            if org.nodeName == "OrganizationName":
-                                self.orgs.append(getText(org))
-                    elif grandchild.nodeName == "Phone":
-                        self.phone = getText(grandchild)
-                    elif grandchild.nodeName == "Street":
-                        self.address.street.append(
-                                getText(grandchild))
-                    elif grandchild.nodeName == "City":
-                        self.address.city = getText(grandchild)
-                    elif grandchild.nodeName == "PoliticalSubUnit_State":
-                        self.address.state = getState(grandchild)
-                    elif grandchild.nodeName == "PostalCode_ZIP":
-                        self.address.zip = getText(grandchild)
-                    elif grandchild.nodeName == "Country":
-                        shortName = None
-                        fullName  = None
-                        for cName in grandchild.childNodes:
-                            if cName.nodeName == "CountryFullName":
-                                fullName = getText(cName)
-                            elif cName.nodeName == "CountryShortName":
-                                shortName = getText(cName)
-                        self.address.country = shortName or fullName
-            elif child.nodeName == "PersonRole":
-                self.roles.append(getText(child))
+                    elif grandchild.nodeName == "PersonRole":
+                        self.roles.append(getText(grandchild))
+                    elif grandchild.nodeName == "Contact":
+                        self.contact = Contact(grandchild)
     def hasRole(self, role):
         return role in self.roles
 
 class ProtLeadOrg:
     "Object representing a Protocol Lead Organization."
     def __init__(self, orgNode):
-        sendMailerTo       = ""
-        self.personnel     = {}
+        self.personnel     = []
         self.sendMailerTo  = None
         self.officialName  = None
-        self.orgRoles      = {}
+        self.orgRoles      = []
         self.protChair     = None
         self.currentStatus = None
         for child in orgNode.childNodes:
-            if child.nodeName == "MailAbstractTo":
-                sendMailerTo = getText(child, transformToLatex = 0)
-            elif child.nodeName == "LeadOrgProtocolStatuses":
+            if child.nodeName == "LeadOrgProtocolStatus":
                 self.currentStatus = OrgProtStatus(child)
-            elif child.nodeName == "OfficialName":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "Name":
-                        self.officialName = getText(grandchild)
+            elif child.nodeName == "LeadOrgName":
+                self.officialName = getText(child)
+            elif child.nodeName == "LeadOrgRole":
+                self.orgRoles.append(getText(child))
             elif child.nodeName == "LeadOrgPersonnel":
                 person = LeadOrgPerson(child)
-                self.personnel[person.id] = person
+                self.personnel.append(person)
                 for role in person.roles:
                     if role.upper() != "UPDATE PERSON":
                         self.protChair = person
-        if sendMailerTo and self.personnel.has_key(sendMailerTo):
-            self.sendMailerTo = self.personnel[sendMailerTo]
+                if child.getAttribute("MailAbstractTo") == 'Y':
+                    self.sendMailerTo = person
 
 class OrgLoc:
     "Object representing an organization location."
@@ -1004,18 +999,25 @@ def bibitem (pp):
 def protocolTitle (pp):
     "Get the PDQ and original protocol titles for the summary mailer."
     node = pp.getCurNode()
-    attr = node.getAttribute("Type")
+    attr = node.getAttribute("Audience")
     macro = None
     if attr == "Professional":
         macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQ Title:} "
     elif attr == "Original":
-        macro = "\\newcommand\\OriginalProtocolTitle{{\\bfseries "\
-                "Original Title:} "
+        macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
+                 "Original Title:} ")
     elif attr == "Patient":
-        macro = ("\\newcommand\\PatientProtocolTitle{{\\bfseries "
+        macro = ("\\newcommand\\PatientProtocolTitle{\\bfseries "
                  "Patient Title:} ")
+        """
+        macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
+                 "Original Title:} DON'T HAVE ONE YET \\\\} \n"
+                 "\\newcommand\\PatientProtocolTitle{{\\bfseries "
+                 "Patient Title:} "
+                 )
+        """
     else:
-        macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title: "
+        macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title:} "
     pp.setOutput(macro)
     #if macro:
     #    pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
@@ -1441,21 +1443,21 @@ def protLeadOrg(pp):
         protChair = "Not specified"
         phone     = ""
     else:
-        addressOrgs = ""
         roles = ", ".join(leadOrg.protChair.roles)
-        for addressOrg in leadOrg.protChair.orgs:
-            addressOrgs += "  %s \\\\\n" % addressOrg
-        if not leadOrg.protChair.name:
-            protChair = "[Name Unknown], %s" % roles
-        else:
+        if leadOrg.protChair.name:
             protChair = "%s, %s" % (leadOrg.protChair.name.format(1), roles)
-        phone = leadOrg.protChair.phone or "Not specified"
-        if not leadOrg.protChair.address:
-            address = "Not specified"
+        elif leadOrg.protChair.contact and leadOrg.protChair.contact.name:
+            protChair = "%s, %s" % (leadOrg.protChair.contact.name, roles)
         else:
-            address = addressOrgs + leadOrg.protChair.address.format(1)
-            if not address:
-                address = "Not specified"
+            protChair = "[Name Unknown], %s" % roles
+        if leadOrg.protChair.contact:
+            phone = leadOrg.protChair.contact.phone or "Not specified"
+            address = leadOrg.protChair.contact.format(1)
+        else:
+            phone   = "Not specified"
+            address = "Not specified"
+        if not address:
+            address = "Not specified"
 
     # Assemble the macros.
     pp.setOutput(r"""
@@ -1527,14 +1529,14 @@ def protRetrievalTerms(pp):
                 terms[getText(term)] = "Diagnosis"
     keys = terms.keys()
     keys.sort()
-    output = r"""\
+    output = r"""
   \subsection*{Disease Retrieval Terms}
   \begin{itemize}{\setlength{\itemsep}{-5pt}}
   \setlength{\parskip}{0mm}
 """
     for term in keys:
         output += "  \\item %s\n" % term
-    pp.setOutput(output + r"""\
+    pp.setOutput(output + r"""
   \end{itemize}
   \setlength{\parskip}{1.2mm}
 """)
@@ -1594,7 +1596,7 @@ def personLocs(pp):
     adminOnly = "(For administrative use only)"
     address = cipsContact and cipsContact.formatAddress() or ""
     cipsContactInfo = "  \\PersonNameWithSuffixes \\\\\n"
-    blankTemplate = r"""\
+    blankTemplate = r"""
   \begin{entry}
     \item[Name of Organization]                          %s      \\
     \item[Address of Organization]                       %s      \\
@@ -1622,7 +1624,7 @@ def personLocs(pp):
        blankLine,
        blankLine)
     if not cipsContact and not otherLocs:
-        pp.setOutput(r"""\
+        pp.setOutput(r"""
   \newcommand{\ewidth}{180pt}
   \PersonNameWithSuffixes
 """ + blankTemplate)
@@ -1707,7 +1709,7 @@ def personLocs(pp):
         output += "  \\end{enumerate}\n"
 
     else:
-        output += r"""\
+        output += r"""
   \renewcommand{\ewidth}{180pt}
 """ + blankTemplate
 
@@ -2042,7 +2044,7 @@ SELECT COUNT(*) FROM (
                                     'Temporarily Closed')""")
     row = cursor.fetchone()
     closedTrials = row[0]
-    pp.setOutput(r"""\
+    pp.setOutput(r"""
   \subsection*{PDQ/Cancer.gov Clinical Trial Listing}
   \begin{tabbing}
     Closed Protocols: \= \kill
@@ -3120,18 +3122,18 @@ DocumentSummaryBody = (
 ProtAbstProtID = (
     XProc(prefix=PROTOCOLDEF, order=XProc.ORDER_TOP),
 
-    XProc(element  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg",
+    XProc(element  = "/Protocol/ProtocolAdminInfo/ProtocolLeadOrg",
           order    = XProc.ORDER_TOP,
           preProcs = ((protLeadOrg, ()),)),
 
-    XProc(element="/InScopeProtocol/ProtocolIDs/PrimaryID/IDString",
+    XProc(element="/Protocol/ProtocolIDs/PrimaryID/IDString",
           order=XProc.ORDER_TOP,
           prefix=r"  \newcommand{\ProtocolID}{",
           suffix="}\n"),
 
     # Concatenating Other protocol IDs
     XProc(prefix="  \\newcommand{\OtherID}{\n  ", order=XProc.ORDER_TOP),
-    XProc(element="/InScopeProtocol/ProtocolIDs/OtherID/IDString",
+    XProc(element="/Protocol/ProtocolIDs/OtherID/IDString",
           order=XProc.ORDER_TOP,
           prefix="   \\\\",
           suffix="\n  "),
@@ -3204,76 +3206,31 @@ ProtAbstInfo = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "End Points")), )),
-#    XProc(order     = XProc.ORDER_TOP,
-#          textOut   = 0,
-#          postProcs = ((checkNotAbstracted,
-#                       ("EndPoints", "End Points")), )),
     XProc(element   = "Stratification",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*",
                                       "Stratification Parameters")), )),
-#    XProc(order     = XProc.ORDER_TOP,
-#          textOut   = 0,
-#          postProcs = ((checkNotAbstracted,
-#                       ("Stratification", "Stratification Parameters")), )),
     XProc(element   = "SpecialStudyParameters",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*",
                                       "Special Study Parameters")), )),
-#    XProc(order     = XProc.ORDER_TOP,
-#          textOut   = 0,
-#          postProcs = ((checkNotAbstracted,
-#                       ("SpecialStudyParameters",
-#                        "Special Study Parameters")), )),
     XProc(element   = "DoseSchedule",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "Dose Schedule")), )),
-#    XProc(order     = XProc.ORDER_TOP,
-#          textOut   = 0,
-#          postProcs = ((checkNotAbstracted,
-#                       ("DoseSchedule", "Dose Schedule")), )),
     XProc(element   = "DosageForm",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "Dosage Form")), )),
-#    XProc(order     = XProc.ORDER_TOP,
-#          textOut   = 0,
-#          postProcs = ((checkNotAbstracted,
-#                       ("DosageForm", "Dosage Form")), )),
-#    XProc(element   = "Rationale",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Protocol Rationale")),
-#    XProc(element   = "Purpose",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Protocol Purpose")),
-#    XProc(element   = "EligibilityText",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Eligibility Text")),
-#    XProc(element   = "TreatmentIntervention",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Treatment/Intervention")),
-#    XProc(element   = "ProfessionalDisclaimer",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Professional Disclaimer")),
-#    XProc(element   = "PatientDisclaimer",
-#          textOut   = 0,
-#          order     = XProc.ORDER_TOP,
-#          prefix    = sectPrefix("subsection*", "Patient Disclaimer")),
     XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
 
     # Mask these out.
     XProc(element   = "GlossaryTerm",
           textOut   = 0,
           descend   = 0),
-    XProc(element   = "/InScopeProtocol/ProtocolAbstract/Patient",
+    XProc(element   = "/Protocol/ProtocolAbstract/Patient",
           textOut   = 0,
           descend   = 0),
     XProc(element   = "ProfessionalDisclaimer",
@@ -3580,7 +3537,7 @@ DocumentOrgHeader =(
     XProc(prefix="  \\setlength{\\textheight}{7.0in}\n", order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
     XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP),
-    XProc(prefix=r"""\
+    XProc(prefix=r"""
   \thispagestyle{myheadings}
   \setlength{\textheight}{8.0in}
 """, order=XProc.ORDER_TOP)
@@ -3599,7 +3556,7 @@ DocumentPersonHeader =(
     XProc(prefix="  \\setlength{\\textheight}{7.0in}\n", order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
     XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP),
-    XProc(prefix=r"""\
+    XProc(prefix=r"""
   \thispagestyle{myheadings}
   \setlength{\textheight}{8.0in}
 """, order=XProc.ORDER_TOP)
@@ -3674,7 +3631,7 @@ DOCFTR=r"""
 # Putting together static footer sections for each mailer
 # -------------------------------------------------------
 DocumentProtocolFooter =(
-    XProc(element='InScopeProtocol',
+    XProc(element='Protocol',
           suffix=DOCFTR,
           order=XProc.ORDER_TOP,
           textOut = 0),
