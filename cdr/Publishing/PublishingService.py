@@ -1,3 +1,10 @@
+#
+# This script starts the publishing service.
+#
+# $Id: PublishingService.py,v 1.2 2002-02-06 16:22:39 pzhang Exp $
+# $Log: not supported by cvs2svn $
+#
+
 import cdrdb, os, time, cdr, sys, string
 
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
