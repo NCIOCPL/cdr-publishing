@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.27 2002-07-26 13:59:56 arkd Exp $
+ $Id: pdq.dtd,v 1.28 2002-07-26 14:15:49 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -1030,7 +1030,7 @@
 			    PoliticalSubUnitAlternateName*,
 			    CountryName,
 			    DateFirstPublished?,
-			    DateLastModified?,
+			    DateLastModified?
 			   )>
 <!ATTLIST PoliticalSubUnit id CDATA #REQUIRED>
 <!ATTLIST PoliticalSubUnit LegacyPDQID CDATA #IMPLIED>
