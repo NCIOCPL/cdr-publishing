@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.29 2003-01-23 19:28:49 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.30 2003-01-28 14:23:33 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.29  2003/01/23 19:28:49  ameyer
+# Changed handling of Publish Email address circles again.
+#
 # Revision 1.28  2003/01/16 23:35:42  ameyer
 # Added \YESno and \yesNO macros to centralize handling of default values
 # for check circles.
@@ -762,10 +765,12 @@ class HomeLocation(PersonLocation):
 class ParticipatingSite:
     "Interesting information for an org participating in a protocol."
     def __init__(self, node):
-        self.name   = None
-        self.pi     = None
-        self.phone  = None
-        self.status = None
+        self.name          = None
+        self.pi            = None
+        self.phone         = None
+        self.status        = None
+        self.genericPerson = None
+        self.genericPhone  = None
         for child in node.childNodes:
             if child.nodeName == "Site":
                 self.name = getText(child)
@@ -775,6 +780,12 @@ class ParticipatingSite:
                 self.pi = PersonName(child)
             elif child.nodeName == "Phone":
                 self.phone = getText(child)
+            elif child.nodeName == "GenericPerson":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "PersonTitle":
+                        self.genericPerson = getText(grandchild)
+                    elif grandchild.nodeName == "Phone":
+                        self.genericPhone = getText(grandchild)
 
     def __cmp__(self, other):
         if self.status == "Active":
@@ -2123,8 +2134,17 @@ def statProtSites(pp):
             sites.append(ParticipatingSite(child))
     sites.sort()
     for site in sites:
+        contact = ""
+        phone = ""
+        if site.pi:
+            contact = site.pi.format()
+            phone   = site.phone
+        elif site.genericPerson:
+            contact = site.genericPerson
+            if site.genericPhone:
+                phone = site.genericPhone
         output += " %s & %s & %s \\Check{%s} \\\\ \\hline \n" % (
-            site.name, site.pi.format(), site.phone,
+            site.name, contact, phone,
             site.status == 'Active' and 'Y' or 'N')
     pp.setOutput(output)
 
