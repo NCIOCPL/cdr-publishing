@@ -42,7 +42,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? d.id,
+      SELECT TOP ?NumDocs? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
