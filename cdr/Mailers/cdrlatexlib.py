@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.58 2003-08-19 13:55:32 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.59 2003-08-21 18:08:50 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.58  2003/08/19 13:55:32  ameyer
+# Made significant new modifications to TrialGroups handling - simplifying
+# the logic for Physicians in accord with what was done for Organization -
+# made possible by the new, simpler, XML format we are now reading.
+#
 # Revision 1.57  2003/08/08 00:42:57  ameyer
 # Fixed duplication of OrgName in other locations.
 # Left original code commented out in place because I don't know if I've
@@ -1354,8 +1359,8 @@ def orgLocs(pp):
                 formattedAddress = loc.format(1)
                 if formattedAddress:
                     output += r"""
-  %%%% \item        %%%% <- Duplicates OrgName in formattedAddress
-  %%%% \OrgName \\  %%%%    but left here in case I've broken something else
+  \item
+  %%%% \OrgName \\ %%%% <- Duplicates OrgName in formattedAddress
 %s
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
