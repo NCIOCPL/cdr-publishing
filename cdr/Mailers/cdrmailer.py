@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.21 2002-10-10 13:43:41 bkline Exp $
+# $Id: cdrmailer.py,v 1.22 2002-10-10 17:44:44 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.21  2002/10/10 13:43:41  bkline
+# Added __NONSTAPLE_PROLOG.
+#
 # Revision 1.20  2002/10/09 20:40:09  bkline
 # Dropped obsolete includeCountry argument for assembling address lines.
 #
@@ -852,11 +855,15 @@ class PrintJob:
             Used for constructor's filetype parameter to identify
             an ancillary document which should not be stapled.
 
+        PLAIN
+            Used for non-PostScript which should not be stapled.
+
         Print()
             Writes the current print job to the specified printer.
     """
     MAINDOC       = 1
     COVERPAGE     = 2
+    PLAIN         = 3
     __PAGES_PATTERN = re.compile("%%Pages: (\\d+)")
     __MAX_STAPLED   = 25
     __STAPLE_PROLOG = """\
@@ -870,6 +877,10 @@ class PrintJob:
 \033%-12345X@PJL
 @PJL SET OUTBIN=OPTIONALOUTBIN2
 @PJL ENTER LANGUAGE=POSTSCRIPT
+"""
+    __PLAIN_PROLOG = """\
+\033%-12345X@PJL
+@PJL SET OUTBIN=OPTIONALOUTBIN2
 """
     def __init__(self, filename, filetype):
         self.__filename = filename
@@ -900,11 +911,13 @@ class PrintJob:
 
         if not justTesting:
             prn = open(printer, "w")
-            doc = open(self.__filename)
-            prn.write((self.__staple and self.__STAPLE_PROLOG or 
-                                         self.__NONSTAPLE_PROLOG) +
-                      doc.read())
-            doc.close()
+            doc = open(self.__filename).read()
+            if self.__staple:
+                prn.write(self.__STAPLE_PROLOG + doc)
+            elif self.__filetype != PrintJob.PLAIN:
+                prn.write(self.__NONSTAPLE_PROLOG + doc)
+            else:
+                prn.write(self.__PLAIN_PROLOG + doc)
             prn.close()
 
 #----------------------------------------------------------------------
