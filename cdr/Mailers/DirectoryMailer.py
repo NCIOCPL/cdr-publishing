@@ -1,10 +1,16 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.5 2002-11-06 03:14:51 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.6 2003-05-09 03:45:24 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2002/11/06 03:14:51  ameyer
+# Fully working version.
+# Removed some unnecessary assertions and fixed some syntax errors that
+# somehow crept into the code (my fingers sometimes type while my mind
+# is elsewhere.)
+#
 # Revision 1.4  2002/10/11 03:36:48  ameyer
 # Removed protocol address code - not needed, never tested anyway.
 # It's in the archive if we ever need it.
@@ -139,7 +145,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
             # If not found (the normal case), create recipient
             if not recip:
                 if docType == 'Person':
-                    address = self.getCipsContactAddress (recipId)
+                    address = self.getCipsContactAddress (recipId,
+                          withPersonTitle=cdrmailer.TITLE_AFTER_NAME)
                 elif docType == 'Organization':
                     address = self.getOrganizationAddress (docId)
                 else:
