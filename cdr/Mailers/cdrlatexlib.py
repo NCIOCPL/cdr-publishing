@@ -1,6 +1,6 @@
 """CdrXmlLatexSummaryInst: Processing instructions for generating a summary"""
 
-import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables
+import cdr, sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 
 #-------------------------------------------------------------------
 # getAttribute
@@ -32,11 +32,11 @@ def getAttribute (domNode, attrName):
 # getText
 #   Extracts and concatenates the text nodes from an element.
 #----------------------------------------------------------------------
-def getText(nodelist):
+def getText(node):
     result = ""
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            result = result + node.data
+    for child in node.childNodes:
+        if child.nodeType == node.TEXT_NODE:
+            result = result + child.data
     return result
 
 #-------------------------------------------------------------------
@@ -707,7 +707,7 @@ def openList(pp):
         compact = 1
         output += "  \\setlength{\\itemsep}{-2pt}\n"
     for title in node.getElementsByTagName("ListTitle"):
-        output += "  {\\bfseries %s}\n" % getText(title.childNodes)
+        output += "  {\\bfseries %s}\n" % getText(title)
     listStack.append(List(compact))
     pp.setOutput(output + listStyle + "  \\begin{%s}\n" % command)
 
@@ -748,9 +748,9 @@ class OrgProtStatus:
             if child.nodeName == "CurrentOrgStatus":
                 for grandchild in child.childNodes:
                     if grandchild.nodeName == "StatusName":
-                        self.value = getText(grandchild.childNodes)
+                        self.value = getText(grandchild)
                     elif grandchild.nodeName == "StatusDate":
-                        self.date = getText(grandchild.childNodes)
+                        self.date = getText(grandchild)
                 return
             child = child.nextSibling
                 
@@ -763,20 +763,219 @@ class PersonalName:
         self.givenName = None
         for child in node.childNodes:
             if child.nodeName == "SurName":
-                self.surname = getText(child.childNodes)
+                self.surname = getText(child)
             elif child.nodeName == "GivenName":
-                self.givenName = getText(child.childNodes)
+                self.givenName = getText(child)
 
 #----------------------------------------------------------------------
 # Object representing an address.
 #----------------------------------------------------------------------
 class Address:
-    def __init__(self):
-        self.street = []
-        self.city   = None
-        self.state  = None
-        self.zip    = None
 
+    def __init__(self, node = None):
+        self.street  = []
+        self.city    = None
+        self.state   = None
+        self.country = None
+        self.zip     = None
+        self.zipPos  = None
+        if node:
+            stateShortName   = None
+            stateFullName    = None
+            countryShortName = None
+            countryFullName  = None
+            for child in node.childNodes:
+                if child.nodeName == "Street":
+                    self.street.append(getText(child))
+                elif child.nodeName == "City":
+                    self.city = getText(child)
+                elif child.nodeName == "PoliticalSubUnitShortName":
+                    stateShortName = getText(child)
+                elif child.nodeName == "PoliticalSubUnitFullName":
+                    stateFullName = getText(child)
+                elif child.nodeName == "CountryShortName":
+                    countryShortName = getText(child)
+                elif child.nodeName == "CountryFullName":
+                    countryFullName = getText(child)
+                elif child.nodeName == "PostalCodePosition":
+                    self.zipPos = getText(child)
+                elif child.nodeName == "PostalCode_ZIP":
+                    self.zip = getText(child)
+            self.state = stateShortName or stateFullName
+            self.country = countryShortName or countryFullName
+
+    def format(self, includeCountry = 0):
+        output = ""
+        for street in self.street:
+            output += "  %s \\\\\n" % street
+        statePlusZip = "%s %s" % (self.state or "", self.zip or "")
+        statePlusZip = statePlusZip.strip()
+        city = self.city.strip() or ""
+        comma = city and statePlusZip and ", " or ""
+        lastLine = "%s%s%s" % (city, comma, statePlusZip)
+        if lastLine:
+            output += "  %s \\\\\n" % lastLine
+        if self.country and includeCountry:
+            output += "  %s \\\\\n" % self.country
+        return output
+
+#----------------------------------------------------------------------
+# Object representing an organization location.
+#----------------------------------------------------------------------
+class OrgLoc:
+    def __init__(self, node):
+        self.id          = None
+        self.cipsContact = ""
+        self.address     = None
+        self.phone       = None
+        self.fax         = None
+        self.email       = None
+        self.web         = None
+        self.emailPublic = ""
+        self.orgNames    = []
+        for child in node.childNodes:
+            if child.nodeName == "Location":
+                self.id = child.getAttribute("id")
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "CIPSContact":
+                        self.cipsContact = getText(grandchild)
+                    elif grandchild.nodeName == "PostalAddress":
+                        self.address = Address(grandchild)
+                    elif grandchild.nodeName == "Phone":
+                        self.phone = getText(grandchild)
+                    elif grandchild.nodeName == "Fax":
+                        self.fax = getText(grandchild)
+                    elif grandchild.nodeName == "Email":
+                        self.email = getText(grandchild)
+                        self.emailPublic = grandchild.getAttribute("Public")
+                    elif grandchild.nodeName == "WebSite":
+                        self.web = getText(grandchild)
+                    elif grandchild.nodeName == "OrganizationAddressNames":
+                        for ggc in grandchild.childNodes:
+                            if ggc.nodeName == "OrganizationName":
+                                self.orgNames.append(getText(ggc))
+
+#----------------------------------------------------------------------
+# Handle organization locations.
+#----------------------------------------------------------------------
+def orgLocs(pp):
+    otherLocs = []
+    cipsContact = None
+    for child in pp.getCurNode().childNodes:
+        if child.nodeName == "OrganizationLocation":
+            loc = OrgLoc(child)
+            if loc.cipsContact:
+                cipsContact = loc
+            else:
+                otherLocs.append(loc)
+    output = "\n  \\OrgName \\\\\n\n  \\OrgIntro\n\n"
+    if cipsContact and cipsContact.address:
+        formattedAddress = cipsContact.address.format()
+        if formattedAddress:
+            output = r"""
+  \OrgName \\
+%s
+
+  \OrgIntro
+
+  \subsection*{CIPS Contact Information}
+        
+  \OrgName \\
+%s
+
+   \newcommand{\ewidth}{180pt}
+   \begin{entry}
+      \item[Main Organization Phone]            %s      \\
+      \item[Main Organization Fax\footnotemark] %s      \\
+      \item[Main Organization E-Mail]           %s      \\
+      \item[Publish E-Mail in PDQ Directory]    \yesno  \\
+      \item[Website]                            %s
+   \end{entry}
+   \footnotetext{For administrative use only}
+""" % (formattedAddress, cipsContact.address.format(1),
+       cipsContact.phone or "Not specified",
+       cipsContact.fax   or "Not specified",
+       cipsContact.email or "Not specified",
+       cipsContact.web   or "Not specified")
+    if otherLocs:
+        output += r"""
+  \subsection*{Other Locations}
+  \begin{enumerate}
+"""
+        for loc in otherLocs:
+            if loc.address:
+                formattedAddress = loc.address.format(1)
+                if formattedAddress:
+                    output += r"""
+  \item
+  \OrgName \\
+%s
+  \renewcommand{\ewidth}{180pt}
+  \begin{entry}
+    \item[Phone]                           %s       \\
+    \item[Fax]                             %s       \\
+    \item[E-Mail]                          %s       \\
+    \item[Publish E-Mail in PDQ Directory] \yesno   \\
+    \item[Website]                         %s
+  \end{entry}
+  \vspace{15pt}
+""" % (formattedAddress,
+       loc.phone or "Not specified",
+       loc.fax   or "Not specified",
+       loc.email or "Not specified",
+       loc.web   or "Not specified")
+        output += """
+  \end{enumerate}
+"""
+    pp.setOutput(output)
+
+#----------------------------------------------------------------------
+# Extract an organization's memberships in cooperative groups.
+#----------------------------------------------------------------------
+def getCoopMemberships(node):
+    coops = []
+    for child in node.childNodes:
+        if child.nodeName == "AffiliateMemberOf":
+            for grandchild in child.childNodes:
+                if grandchild.nodeName == "CooperativeGroup":
+                    for greatgrandchild in grandchild.childNodes:
+                        if greatgrandchild.nodeName == "Name":
+                            coops.append(getText(greatgrandchild))
+    return coops
+                        
+#----------------------------------------------------------------------
+# Handle organization locations.
+#----------------------------------------------------------------------
+def orgAffil(pp):
+    profOrgs = []
+    coops    = []
+    for child in pp.getCurNode().childNodes:
+        if child.nodeName == "MemberOfProfessionalOrganization":
+            profOrgs.append(getText(child))
+        elif child.nodeName == "MemberOfCooperativeGroups":
+            coops = getCoopMemberships(child)
+    output = r"""
+  \subsection*{Affiliations}
+  \subsubsection*{Professional Organizations}
+"""
+    if profOrgs:
+        output += "  \\begin{itemize}\n"
+        for org in profOrgs:
+            output += "  \\item %s\n" % org
+        output += "  \\end{itemize}\n"
+    else:
+        output += "  None\n"
+    
+    output += "  \\subsubsection*{Cooperative Groups}\n"
+    if coops:
+        output += "  \\begin{itemize}\n"
+        for org in coops:
+            output += "  \\item %s\n" % org
+        output += "  \\end{itemize}\n"
+    else:
+        output += "  None\n"
+    pp.setOutput(output)
+        
 #----------------------------------------------------------------------
 # Extract the state name from a PoliticalSubUnit_State element.
 #----------------------------------------------------------------------
@@ -785,9 +984,9 @@ def getState(node):
     fullName  = None
     for child in node.childNodes:
         if child.nodeName == "PoliticalSubUnitShortName":
-            shortName = getText(child.childNodes)
+            shortName = getText(child)
         elif child.nodeName == "PoliticalSubUnitFullName":
-            fullName = getText(child.childNodes)
+            fullName = getText(child)
     return shortName or fullName
 
 #----------------------------------------------------------------------
@@ -806,18 +1005,18 @@ class LeadOrgPerson:
                     if grandchild.nodeName == "PersonNameInformation":
                         self.name = PersonalName(grandchild)
                     elif grandchild.nodeName == "Phone":
-                        self.phone = getText(grandchild.childNodes)
+                        self.phone = getText(grandchild)
                     elif grandchild.nodeName == "Street":
                         self.address.street.append(
-                                getText(grandchild.childNodes))
+                                getText(grandchild))
                     elif grandchild.nodeName == "City":
-                        self.address.city = getText(grandchild.childNodes)
+                        self.address.city = getText(grandchild)
                     elif grandchild.nodeName == "PoliticalSubUnit_State":
                         self.address.state = getState(grandchild)
                     elif grandchild.nodeName == "PostalCode_ZIP":
-                        self.zip = getText(grandchild.childNodes)
+                        self.zip = getText(grandchild)
             elif child.nodeName == "PersonRole":
-                self.role = getText(child.childNodes)
+                self.role = getText(child)
 
 #----------------------------------------------------------------------
 # Object representing a Protocol Lead Organization.
@@ -833,13 +1032,13 @@ class ProtLeadOrg:
         self.currentStatus = None
         for child in orgNode.childNodes:
             if child.nodeName == "MailAbstractTo":
-                sendMailerTo = getText(child.childNodes)
+                sendMailerTo = getText(child)
             elif child.nodeName == "LeadOrgProtocolStatuses":
                 self.currentStatus = OrgProtStatus(child)
             elif child.nodeName == "OfficialName":
                 for grandchild in child.childNodes:
                     if grandchild.nodeName == "Name":
-                        self.officialName = getText(grandchild.childNodes)
+                        self.officialName = getText(grandchild)
             elif child.nodeName == "LeadOrgPersonnel":
                 person = LeadOrgPerson(child)
                 self.personnel[person.id] = person
@@ -881,20 +1080,7 @@ def protLeadOrg(pp):
         if not leadOrg.protChair.address:
             address = "Not specified"
         else:
-            addrObj = leadOrg.protChair.address
-            address = ""
-            for street in addrObj.street:
-                address += "  %s \\\\\n" % street
-            stateZip = "%s %s" % (addrObj.state or "", addrObj.zip or "")
-            stateZip = stateZip.strip()
-            city = addrObj.city.strip() or ""
-            if city and stateZip:
-                comma = ", "
-            else:
-                comma = ""
-            lastLine = "%s%s%s" % (city, comma, stateZip)
-            if lastLine:
-                address += "  %s \\\\\n" % lastLine
+            address = leadOrg.protChair.address.format()
             if not address:
                 address = "Not specified"
 
@@ -927,19 +1113,25 @@ def optProtSect(pp):
 def checkNotAbstracted(pp):
     topNode = pp.getTopNode()
     target, section = pp.args
-    sys.stderr.write("checking %s\n" % target)
     nodes = topNode.getElementsByTagName(target)
     #if nodes:
     if nodes and nodes[0].hasChildNodes():
-        sys.stderr.write("found it\n")
         return
-    sys.stderr.write("not abstracted\n")
     pp.setOutput(r"""
   \subsection*{%s}
 
   Not abstracted.
 """ % section)
     
+def getDeadline():
+    now = list(time.localtime())
+    now[2] += 60
+    then = time.mktime(now)
+    return time.strftime("%b. %d, %Y", time.localtime(then))
+    
+def personSpecialties(pp):
+    pass
+
 ####################################################################
 # Constants
 ####################################################################
@@ -1059,7 +1251,8 @@ STATPART_HDRTEXT=r"""
 ORG_HDRTEXT=r"""
   %% ORG_HDRTEXT %%
   %% ----------- %%
-  \newcommand{\CenterHdr}{Organization ID: @@ORGID@@ \\ {\bfseries XX \OrgName}}
+  %\newcommand{\CenterHdr}{Organization ID: @@ORGID@@ \\ {\bfseries XX \OrgName}}
+  \newcommand{\CenterHdr}{{\bfseries \OrgName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\LeftHdr}{PDQ Organization Update \\ \today \\}
 %
@@ -1384,8 +1577,6 @@ PERSON_PRINT_CONTACT=r"""
 ORG_AFFILIATIONS=r"""
    %% ORG_AFFILIATIONS %%
    %% ---------------- %%
-   \end{enumerate}
-
 
    \subsection*{Affiliations}
    \subsubsection*{Professional Organizations}
@@ -1773,8 +1964,7 @@ ENDPREAMBLE=r"""
   \setlength{\headheight}{48pt}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
-  %\renewcommand{\theenumii}{\Roman{enumii}}
-  %\renewcommand{\labelenumii}{\theenumii.}
+  \newcommand{\deadline}{""" + getDeadline() + r"""}
 
   %% -- END -- Document Declarations and Definitions
 
@@ -2285,90 +2475,41 @@ ProtAbstInfo = (
 #------------------------------------------------------------------
 # --------- START: First section Contact Information ---------
 DocumentOrgBody = (\
-XProc(element="OfficialName/Name",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\newcommand{\OrgName}{",
-          suffix="}\n"),
-    XProc(element="Name",
-          prefix="  \\newcommand{\Person}{",
-          suffix="}\n", order=XProc.ORDER_TOP),
-    XProc(element="Address",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="Street",
-          textOut=0,
-          preProcs=( (street, ()), )),
-    XProc(element="City",
-          prefix="  \\renewcommand{\City}{",
-          suffix="}\n"),
-    XProc(element="PoliticalUnit_State",
-          prefix="  \\renewcommand{\PoliticalUnitState}{",
-          suffix="}\n"),
-    XProc(element="Country",
-          prefix="  \\renewcommand{\Country}{",
-          suffix="}\n"),
-    XProc(element="PostalCode_ZIP",
-          prefix="  \\renewcommand{\PostalCodeZIP}{",
-          suffix="}\n"),
-    XProc(element="Phone",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Phone}{",
-          suffix="}\n"),
-    XProc(element="Fax",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Fax}{",
-          suffix="}\n"),
-    XProc(element="Email",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Email}{",
-          suffix="}\n"),
-    XProc(element="URI",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Web}{",
-          suffix="}\n"),
-    XProc(prefix=ORG_PRINT_CONTACT),
-# --------- END: First section Contact Information ---------
-    XProc(element="/OrgMailer/OtherLocation",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          prefix=ORG_RESET_OTHER,
-          suffix=ORG_PRINT_OTHER),
-    XProc(element="/OrgMailer/OtherLocation/Address",
-          textOut=0,
-          order=XProc.ORDER_PARENT),
-    XProc(element="/OrgMailer/OtherLocation/Address/Street",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          preProcs=( (street, ()), )),
-    XProc(element="/OrgMailer/OtherLocation/Phone",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Phone}{",
-          suffix="}\n"),
-    XProc(element="/OrgMailer/OtherLocation/Fax",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Fax}{",
-          suffix="}\n"),
-    XProc(element="/OrgMailer/OtherLocation/Email",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Email}{",
-          suffix="}\n"),
-    XProc(element="/OrgMailer/OtherLocation/URI",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Web}{",
-          suffix="}\n"),
+
+    XProc(element   = "/Organization/OrganizationNameInformation"
+                      "/OfficialName/Name",
+          order     = XProc.ORDER_TOP,
+          prefix    = "  \\newcommand{\OrgName}{",
+          suffix    = "}\n"),
+    XProc(element   = "OrganizationLocations",
+          preProcs  = ((orgLocs, ()), ),
+          textOut   = 0,
+          order     = XProc.ORDER_TOP),
+    XProc(element   = "OrganizationAffiliations",
+          preProcs  = ((orgAffil, ()), ),
+          textOut   = 0,
+          order     = XProc.ORDER_TOP),
 # --------- Start: Affiliations Section ---------
-    XProc(prefix=ORG_AFFILIATIONS, order=XProc.ORDER_TOP),
-    XProc(prefix="\n  \\begin{itemize}\n", order=XProc.ORDER_TOP),
-    XProc(element="ProfessionalOrg",
-          order=XProc.ORDER_TOP,
-          prefix="\n    \\item "),
-    XProc(prefix="\n  \\end{itemize}\n", order=XProc.ORDER_TOP),
-    XProc(prefix="\n  \\subsubsection*{Cooperative Groups}",
-            order=XProc.ORDER_TOP),
-    XProc(prefix="\n  \\begin{itemize}\n", order=XProc.ORDER_TOP),
-    XProc(element="MemberOf",
-          order=XProc.ORDER_TOP,
-          prefix="\n    \\item "),
-    XProc(prefix="\n  \\end{itemize}\n", order=XProc.ORDER_TOP)
+#    XProc(prefix    = ORG_AFFILIATIONS, 
+#          order     = XProc.ORDER_TOP),
+#    XProc(prefix    = "\n  \\begin{itemize}\n", 
+#          order     = XProc.ORDER_TOP),
+#    XProc(element   = "MemberOfProfessionalOrganization",
+#          order     = XProc.ORDER_TOP,
+#          prefix    = "\n    \\item "),
+#    XProc(prefix    = "\n  \\end{itemize}\n", 
+#          order     = XProc.ORDER_TOP),
+#    XProc(prefix    = "\n  \\subsubsection*{Cooperative Groups}",
+#          order     = XProc.ORDER_TOP),
+#    XProc(prefix    = "\n  \\begin{itemize}\n", 
+#          order     = XProc.ORDER_TOP),
+#    XProc(element   = "/Organization/OrganizationAffiliations"
+#                      "/MemberOfCooperativeGroups/AffiliateMemberOf"
+#                      "/CooperativeGroup/Name",
+#          order     = XProc.ORDER_TOP,
+#          prefix    = "\n    \\item "),
+#    XProc(prefix    = "\n  \\end{itemize}\n", 
+#          order     = XProc.ORDER_TOP)
     )
 
 
@@ -2472,38 +2613,40 @@ DocumentPersonBody = (
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
     XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_SPECIALTY_TAB, order=XProc.ORDER_TOP),
-    XProc(element="SpecialtyCategory",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="BoardCertifiedSpecialtyName",
-          order=XProc.ORDER_PARENT,
-          postProcs=((yesno,("BoardCertifiedSpecialtyName",
-                             "BoardCertifiedSpecialtyName",)),)),
-    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_TRAINING_TAB, order=XProc.ORDER_TOP),
-    XProc(element="TrainingCategory",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="/PersonMailer/TrainingCategory/Name",
-          order=XProc.ORDER_PARENT,
-          postProcs=((yesno,("Name","YesNo",)),)),
-    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_SOCIETY_TAB, order=XProc.ORDER_TOP),
-    XProc(element="ProfSociety",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="MemberOfMedicalSociety",
-          order=XProc.ORDER_PARENT,
-          postProcs=((yesno,("MemberOfMedicalSociety","YesNo",)),)),
-    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_CLINGRP_TAB, order=XProc.ORDER_TOP),
-    XProc(element="TrialGroup",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="/Person/ProfessionalInformation/PhysicianDetails"
-                  "/PhysicianMembershipInformation/MemberOfCooperativeGroup"
-                  "/CooperativeGroup/OfficialName/Name",
-          order=XProc.ORDER_PARENT,
-          postProcs=((yesno,("Name","YesNo",)),)),
-    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_CCOP_TAB, order=XProc.ORDER_TOP),
+    XProc(order=XProc.ORDER_TOP,
+          preProcs=((personSpecialties, ()), )),
+#    XProc(prefix=PERSON_SPECIALTY_TAB, order=XProc.ORDER_TOP),
+#    XProc(element="SpecialtyCategory",
+#          textOut=0, order=XProc.ORDER_TOP),
+#    XProc(element="BoardCertifiedSpecialtyName",
+#          order=XProc.ORDER_PARENT,
+#          postProcs=((yesno,("BoardCertifiedSpecialtyName",
+#                             "BoardCertifiedSpecialtyName",)),)),
+#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+#    XProc(prefix=PERSON_TRAINING_TAB, order=XProc.ORDER_TOP),
+#    XProc(element="TrainingCategory",
+#          textOut=0, order=XProc.ORDER_TOP),
+#    XProc(element="/PersonMailer/TrainingCategory/Name",
+#          order=XProc.ORDER_PARENT,
+#          postProcs=((yesno,("Name","YesNo",)),)),
+#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+#    XProc(prefix=PERSON_SOCIETY_TAB, order=XProc.ORDER_TOP),
+#    XProc(element="ProfSociety",
+#          textOut=0, order=XProc.ORDER_TOP),
+#    XProc(element="MemberOfMedicalSociety",
+#          order=XProc.ORDER_PARENT,
+#          postProcs=((yesno,("MemberOfMedicalSociety","YesNo",)),)),
+#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+#    XProc(prefix=PERSON_CLINGRP_TAB, order=XProc.ORDER_TOP),
+#    XProc(element="TrialGroup",
+#          textOut=0, order=XProc.ORDER_TOP),
+#    XProc(element="/Person/ProfessionalInformation/PhysicianDetails"
+#                  "/PhysicianMembershipInformation/MemberOfCooperativeGroup"
+#                  "/CooperativeGroup/OfficialName/Name",
+#          order=XProc.ORDER_PARENT,
+#          postProcs=((yesno,("Name","YesNo",)),)),
+#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
+#    XProc(prefix=PERSON_CCOP_TAB, order=XProc.ORDER_TOP),
     )
 
 
