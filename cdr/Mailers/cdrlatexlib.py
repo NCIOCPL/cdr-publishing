@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.41 2003-05-13 20:01:24 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.42 2003-05-19 18:41:57 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.41  2003/05/13 20:01:24  bkline
+# Implemented changes to Physician mailers requested in issue #730.
+#
 # Revision 1.40  2003/05/09 03:44:06  ameyer
 # Added support for PersonTitle field in physician directory output.
 #
@@ -915,7 +918,10 @@ def cite (pp):
         return 0
 
     # Beginning of list of one or more citation numbers
-    citeString = r"\cite{"
+    if not cdrlatextables.tableCellDepth:
+        citeString = r"\cite{"
+    else:
+        citeString = r"{\footnotesize["
 
     # Capture the text of all contiguous citation references,
     #   separating them with commas
@@ -925,7 +931,10 @@ def cite (pp):
 
         # Comma separator before all but the first one
         if count > 0:
-            citeString += r","
+            if cdrlatextables.tableCellDepth:
+                citeString += r",\D{}"
+            else:
+                citeString += r","
 
         # Reference index number is in the refidx attribute
         # Extract the attribute value from the Citation
@@ -940,7 +949,10 @@ def cite (pp):
         citeNode = citeNode.nextSibling
 
     # Terminate the Latex for the list of citation
-    citeString += r"} "
+    if not cdrlatextables.tableCellDepth:
+        citeString += r"} "
+    else:
+        citeString += "] }"
 
     # Return info to caller, who will output it to the Latex
     pp.setOutput (citeString)
@@ -2394,6 +2406,7 @@ CITATION=r"""
   \usepackage{overcite}
   \renewcommand\citeform[1]{\bfseries #1}
   \makeatletter\def\@cite#1{\textsuperscript{[#1]}}\makeatother
+  \newcommand{\D}{\discretionary{}{}{}}
 
   \usepackage{chapterbib}
 

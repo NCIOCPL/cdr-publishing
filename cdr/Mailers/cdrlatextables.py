@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.3 2003-01-06 21:01:29 bkline Exp $
+# $Id: cdrlatextables.py,v 1.4 2003-05-19 18:41:57 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2003/01/06 21:01:29  bkline
+# Fixed column width conversion math.
+#
 # Revision 1.2  2002/11/07 21:19:44  bkline
 # Better multirow cell support.
 #
@@ -25,6 +28,7 @@ IN_TFOOT    = 3
 WIDTH_EXPR  = re.compile(r"(\d*\.?\d*)([^\d.]+)")
 
 tableStack = []
+tableCellDepth = 0
 
 #----------------------------------------------------------------------
 # Object representing current framing settings.
@@ -751,6 +755,8 @@ def openCell(pp):
     table = tableStack[-1]
     if not table.groupStack:
         raise StandardError("Internal error: empty Group stack")
+    global tableCellDepth
+    tableCellDepth += 1
     group = table.groupStack[-1]
     group.currentCellRow.append(Cell(group, pp))
     return
@@ -893,5 +899,7 @@ def closeCell(pp):
     if not group.currentCellRow:
         raise StandardError("Internal error: no open cell found")
     group.currentCellRow[-1].content = pp.procNode.releaseOutput().strip()
+    global tableCellDepth
+    tableCellDepth -= 1
     #sys.stderr.write("CONTENT: %s\n" % group.currentCellRow[-1].content)
     #pp.setOutput("%s\n" % group.tail)
