@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.11 2002-10-24 17:52:06 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.12 2002-11-07 21:22:07 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2002/10/24 17:52:06  bkline
+# Added support for RemailerFor element.
+#
 # Revision 1.10  2002/10/24 17:17:16  bkline
 # Added document version to constructor invocation.
 #
@@ -70,7 +73,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                                 recipient.title,
                                 protocol.id,
                                 protocol.title,
-                                doc_version.num,
+                                pub_proc_doc.doc_version,
                                 cdrref.value
                            FROM document recipient
                            JOIN query_term cdrref
@@ -84,11 +87,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                             AND idref.value = cdrid.value
                            JOIN document protocol
                              ON protocol.id = idref.doc_id
-                           JOIN doc_version
-                             ON doc_version.id = protocol.id
                            JOIN pub_proc_doc
-                             ON pub_proc_doc.doc_version = doc_version.num
-                            AND pub_proc_doc.doc_id = protocol.id
+                             ON pub_proc_doc.doc_id = protocol.id
                           WHERE pub_proc_doc.pub_proc = ?
                             AND cdrref.path = '/InScopeProtocol'
                                             + '/ProtocolAdminInfo'
