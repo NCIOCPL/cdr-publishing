@@ -2,8 +2,10 @@
 
   This DTD defines the external structure of the NCI PDQ XML data
 
-  Revision 0    2001/12/17  Michael M Rubenstein
-                            Preliminary version
+  $Id: pdq.dtd,v 1.5 2002-02-26 19:11:13 bkline Exp $
+
+  2001/12/17  Michael M Rubenstein
+              Preliminary version
                             
 -->
 
