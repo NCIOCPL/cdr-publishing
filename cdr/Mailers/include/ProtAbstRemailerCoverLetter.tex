@@ -1,0 +1,126 @@
+%----------------------------------------------------------------------
+% Top-level declarations for the cover letter for a set of status and
+% participant site check mailers.
+%----------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{letter}
+
+%----------------------------------------------------------------------
+% Package and macro used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{textcomp}
+\newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+
+\usepackage{graphicx}
+
+%----------------------------------------------------------------------
+% Package used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{calc}
+
+%----------------------------------------------------------------------
+% Eliminate warnings on overfull hbox by adjusting the stretch parameters
+%----------------------------------------------------------------------
+\tolerance=1000
+\emergencystretch=20pt
+
+%----------------------------------------------------------------------
+% Package and code to set double-quotes correctly.
+%----------------------------------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+    \addtocounter{qC}{1}%
+    \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+%----------------------------------------------------------------------
+% Set up the margins.
+%----------------------------------------------------------------------
+%\setlength{\headwidth}{6.5in}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{8.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0mm}
+\setlength{\headheight}{-.5in}
+
+%----------------------------------------------------------------------
+% Start the document and import the standard mailer templates.
+%----------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------
+% Don't put a page number on this page.
+%----------------------------------------------------------------------
+\thispagestyle{empty}
+
+%----------------------------------------------------------------------
+% Lay out the letterhead.
+%----------------------------------------------------------------------
+\hspace{-.8in}
+\begin{tabular}{p{2.7in}p{1.5in}p{1.5in}p{1.5in}}
+ \begin{minipage}[t]{2.6in}{
+  \scriptsize
+  U.S. Department of Health and Human Services \vspace{-2mm} \\
+  Public Health Services                       \vspace{-2mm} \\
+  National Institutes of Health}
+ \end{minipage} &
+ \raisebox{-.7in}{
+  \includegraphics[width=1.2in]{/cdr/mailers/include/nciLogo.eps}} &
+ \begin{minipage}[t]{1.4in}{\footnotesize
+  Cancer Information \vspace{-2mm} \\
+  Products and Systems}
+ \end{minipage} &
+ \begin{minipage}[t]{1.4in}{\scriptsize
+  Cancer.gov/PDQ          \vspace{-2mm} \\
+  6116 Executive Blvd.    \vspace{-2mm} \\
+  Suite 3002B MSC-8321    \vspace{-2mm} \\
+  Bethesda, MD 20892-8321 \vspace{-2mm} \\
+  Phone: 301-496-7406     \vspace{-2mm} \\
+  Fax: 301-402-6728}
+ \end{minipage}
+\end{tabular}
+  
+\vspace{36pt}
+
+August 6, 2001
+
+Suyu Shu, Ph.D. \\
+Cleveland Clinic Taussig Cancer Center \\
+Center for Surgery Research \\
+FF50 \\
+9500 Euclid Avenue \\
+Clevland, OH 44195
+
+\vspace{12pt}
+
+Subject: Review of PDQ protocol abstract
+
+We have not yet received your review of the protocol:
+
+\begin{verse}
+
+Protocol ID: CCF-BB-IND-6154 \\
+Protocol Title: Phase II Study of Adoptive Immunotherapy in Patients 
+with Glioblastoma Multiforme or Anaplastic Astrocytoma (Summary Last Modified
+02/2001).
+
+\end{verse}
+
+If you have already returned your review of the above protocol, please
+disregard this letter.  If your schedule does not permit you to complete 
+the review within ten days of receipt of this letter, please contact
+the PDQ Protocol Coordinator at 301-496-7406 (voice), 301-402-6728 (fax),
+or protrev@cips.nci.nih.gov.  Please feel free to contact us if you 
+have any questions about the review process.
+
+We appreciate the time and effort in helping us to include protocols
+in PDQ.
+
+\vspace{12pt}
+
+PDQ Protocol Coordinator \\
+Cancer Information Products and Systems
+
+\vfill
+\end{document}
