@@ -738,7 +738,6 @@
                         OrganizationLocations,
                         OrganizationAffiliations?,
                         OrganizationType+,
-                        ProtocolIDAcronym*,
                         PreferredProtocolOrganization?
                        )
 >
@@ -822,7 +821,6 @@
 <!ATTLIST MemberOfAdHocGroup ref CDATA #IMPLIED>
 
 <!ELEMENT OrganizationType (#PCDATA)>
-<!ELEMENT ProtocolIDAcronym (#PCDATA)>
 
 <!ELEMENT PreferredProtocolOrganization (#PCDATA)>
 <!ATTLIST PreferredProtocolOrganization ref CDATA #IMPLIED>
@@ -839,9 +837,7 @@
                         TermPronunciation?,
                         TermDefinition,
                         SpanishTermName?,
-                        SpanishTermDefinition?,
-                        TermSource,
-                        TermTypeRef+
+                        SpanishTermDefinition?
                        )
 >
 <!ATTLIST GlossaryTerm id CDATA #REQUIRED>
@@ -857,9 +853,6 @@
 
 <!ELEMENT SpanishTermDefinition (%TextSectionElements;)*>
 <!ATTLIST SpanishTermDefinition id CDATA #IMPLIED>
-
-<!ELEMENT TermSource (#PCDATA)>
-<!ELEMENT TermTypeRef (#PCDATA)>
 
 <!-- End Glossary -->
 
