@@ -742,6 +742,41 @@ def encodeString (s, args=None):
 
     return tmpStr
 
+#-------------------------------------------------------------------
+# createAddressLabel()
+#
+# Generates LaTeX to print a sheet which contains nothing but
+# an address label, positioned correctly for maximum visibility
+# in the window envelopes used by CIPS to send out mailers.
+#
+# Pass:
+#   String containing formatted address block.
+#   Number of lines in block.
+#
+# Return
+#   String containing LaTeX for mailing label sheet.
+#-------------------------------------------------------------------
+def createAddressLabelPage(block, numLines):
+    return r"""\documentclass{article}
+\usepackage{textcomp}
+\newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%%
+    \addtocounter{qC}{1}%%
+    \ifthenelse{\isodd{\value{qC}}}{``}{''}%%
+}
+\begin{document}
+\small
+\thispagestyle{empty}
+\setlength{\parindent}{0mm}
+\setlength\voffset{%d.2\baselineskip}
+\setlength\oddsidemargin{10em}
+
+%s
+
+\end{document}
+""" % (26 - numLines, block)
 
 #-------------------------------------------------------------------
 # log()

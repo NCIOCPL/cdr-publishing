@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.17 2002-10-09 02:01:55 ameyer Exp $
+# $Id: cdrmailer.py,v 1.18 2002-10-09 18:09:15 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.17  2002/10/09 02:01:55  ameyer
+# Changes in address generation based on new filters and new XML for
+# addresses returned from the server.
+#
 # Revision 1.16  2002/10/08 13:56:23  ameyer
 # Changes to logging, exception handling, directory creation.
 #
@@ -60,6 +64,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
+import UnicodeToLatex
 
 debugCtr = 1
 
@@ -461,26 +466,50 @@ class MailerJob:
                 "failure generating LaTeX for %s: %s" % (docId, eMsg))
 
     #------------------------------------------------------------------
-    # Create a formatted address block.
+    # Create a formatted address block from an Address object.
     # If org is passed, will include organization in addressing.
+    # In the normal case, the organization information will already
+    # be included in the Address object.
     #------------------------------------------------------------------
-    def formatAddress(self, addr, org=None):
+    def formatAddress(self, addr, org = None):
+        lines = self.__assembleAddressLines(addr, org, includeCountry)
+        return self.__formatAddressFromLines(lines)
+    
+    #------------------------------------------------------------------
+    # Format an address block from its address lines.
+    #------------------------------------------------------------------
+    def __formatAddressFromLines(self, lines):
         block = ""
-        orgLines = ""
+        for line in lines:
+            block += "%s \\\\\n" % UnicodeToLatex.convert(line)
+        return block
+    
+    #------------------------------------------------------------------
+    # Construct a list of strings representing the lines of a
+    # formatted address.  See the notes on the public formatAddress()
+    # above, for which the component logic is broken out so we
+    # can invoke the pieces separately when we create the address
+    # label page.
+    #------------------------------------------------------------------
+    def __assembleAddressLines(self, addr, org = None):
+        lines = []
+        orgLines = []
         if addr.getNumOrgs():
             for i in range(addr.getNumOrgs()):
-                orgLines += addr.getOrg(i) + " \\\\\n"
+                org = addr.getOrg(i)
+                if org:
+                    orgLines.append(addr.getOrg(i))
         elif org:
-            orgLines = org.getName() + " \\\\\n"
+            orgLines.append(org)
         addressee = addr.getAddressee()
-        #if orgName: block += orgName + " \\\\\n"
-        #if orgName and addressee: block += "c/o "
-        if addressee: block += addressee + " \\\\\n"
-        if orgLines: block += orgLines
+        if addressee:
+            lines.append(addressee)
+        if orgLines:
+            lines += orgLines
         for i in range(addr.getNumStreetLines()):
             streetLine = addr.getStreetLine(i)
             if streetLine:
-                block += streetLine + " \\\\\n"
+                lines.append(streetLine)
         city    = addr.getCity()
         state   = addr.getState()
         zip     = addr.getPostalCode()
@@ -500,17 +529,25 @@ class MailerJob:
         if zip and (not pos or pos == "after PoliticalUnit_State"):
             if line: line += " "
             line += zip
-        if line: block += "%s \\\\\n" % line
+        if line:
+            lines.append(line)
         if country:
-            block += country
-        if zip and pos == "after Country":
-            if country:
-                block += " "
-            block += zip
-        if country or zip:
-            block += " \\\\\n"
-        return block
+            if zip and pos == "after Country":
+                lines.append("%s %s" % (country, zip))
+            else:
+                lines.append(country)
+        elif zip and pos == "after Country":
+            lines.append(zip)
+        return lines
 
+    def createAddressLabelPage(self, addr, upperCase = 0):
+        lines = self.__assembleAddressLines(addr)
+        if upperCase:
+            for i in range(len(lines)):
+                lines[i] = lines[i].upper()
+        addressBlock = self.__formatAddressFromLines(lines)
+        return cdrxmllatex.createAddressLabelPage(addressBlock, len(lines))
+    
     #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
     #------------------------------------------------------------------
@@ -1000,15 +1037,16 @@ class Address:
         orgParentNode = None
 
         # Parse parts of an address
-        for node in dom.documentElement.childNodes:
-            if node.nodeName == 'PostalAddress':
-                self.__parsePostalAddress(node)
-            elif node.nodeName == 'Name':
-                self.__addressee = self.__buildName(node)
-            elif node.nodeName == 'OrgName':
-                self.__orgs.append (cdr.getTextContent(node))
-            elif node.nodeName == 'ParentNames':
-                orgParentNode = node
+        if dom:
+            for node in dom.documentElement.childNodes:
+                if node.nodeName == 'PostalAddress':
+                    self.__parsePostalAddress(node)
+                elif node.nodeName in ('Name', 'PersonName'):
+                    self.__addressee = self.__buildName(node)
+                elif node.nodeName == 'OrgName':
+                    self.__orgs.append (cdr.getTextContent(node))
+                elif node.nodeName == 'ParentNames':
+                    orgParentNode = node
 
         # If we got them, get org parent names to __orgs in right order
         if orgParentNode:
