@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.7 2003-07-01 22:06:06 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.8 2003-08-07 19:33:59 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2003/07/01 22:06:06  ameyer
+# Using new filter set for generating Person XML.
+#
 # Revision 1.6  2003/05/09 03:45:24  ameyer
 # Added PersonTitle.
 #
@@ -194,7 +197,7 @@ class DirectoryMailer(cdrmailer.MailerJob):
             # Identify filters for each mailer
             if doc.getDocType() == 'Organization':
                 # Organization denormalization
-                filters = ['name:Denormalization Filter (1/1): Organization']
+                filters = ['set:Mailer Organization Set']
             else:
                 # Person denormalization and reorganization filters
                 filters = ['set:Mailer Person Set']
