@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.41 2003-04-09 18:56:15 bkline Exp $
+   $Id: pdq.dtd,v 1.42 2003-07-09 21:04:40 pzhang Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,12 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.41  2003/04/09 18:56:15  bkline
+   Altered GlossaryTerm definition:
+    * made TermDefinition and SpanishTermDefinition multiply occurring;
+    * added optional Dictionary attribute to GlossaryTerm element; and
+    * added optional Audience attribute to (Spanish)TermDefinition.
+
    Revision 1.40  2003/04/01 19:25:07  bkline
    Added optional ReplacementFor attribute to top-level Summary element.
 
@@ -879,19 +885,18 @@
                        )>
 <!ATTLIST GlossaryTerm id CDATA #REQUIRED>
 <!ATTLIST GlossaryTerm LegacyPDQID CDATA #IMPLIED>
-<!ATTLIST GlossaryTerm Dictionary (Exclude) #IMPLIED>
 
 <!ELEMENT TermName (#PCDATA)>
-
+<!ELEMENT SpanishTermName (#PCDATA)>
 <!ELEMENT TermPronunciation (#PCDATA)>
 
-<!ELEMENT TermDefinition (%TextSectionElements;)*>
-<!ATTLIST TermDefinition Audience (HealthProfessional) #IMPLIED>
-
-<!ELEMENT SpanishTermName (#PCDATA)>
-
-<!ELEMENT SpanishTermDefinition (%TextSectionElements;)*>
-<!ATTLIST SpanishTermDefinition Audience (HealthProfessional) #IMPLIED>
+<!ELEMENT TermDefinition (DefinitionText,
+                          Dictionary*,
+                          Audience+)>
+<!ELEMENT SpanishTermDefinition (DefinitionText,
+                                 Dictionary*,
+                                 Audience+)>
+<!ELEMENT DefinitionText (%TextSectionElements;)*>
 
 <!-- End Glossary -->
 
