@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.65 2004-03-03 22:06:47 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.66 2004-04-15 20:04:58 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.65  2004/03/03 22:06:47  bkline
+# Modified display of Protocol Personnel section of abstract mailer to
+# use the person pointed to by the MailAbstractTo element (request
+# #1103 from Sheri).
+#
 # Revision 1.64  2003/12/10 19:55:53  bkline
 # Fixed code to generate the PDQ/Cancer.gov Clinical Trial Listing
 # in the Person mailers (the denormalization output had replaced
@@ -1747,7 +1752,7 @@ def personLocs(pp):
 
   For future updates, how would you prefer to be contacted?
 
-   $\bigcirc$ E-mail \qquad $\bigcirc$ Mail \\
+   \mailMode \\
 
 """ % (cipsContact.phone or blankLine,
        cipsContact.fax   or blankLine, adminOnly,
@@ -2139,6 +2144,27 @@ SELECT COUNT(*) FROM (
   \end{tabbing}
 """ % (activeTrials, closedTrials))
 
+def preferredContactMode(pp):
+    """
+    Changes the meaning of a macro to indicate the preferred contact mode
+    is email or regular mail.
+
+    The default is regular mail.  If the PreferredContactMode exists
+    and has the value "Electronic", it is changed to email.
+    """
+    # Current node should be PreferredContactNode element
+    node = pp.getCurNode()
+    if node.nodeName != "PreferredContactMode":
+        raise XmlLatexException (\
+            "preferredContactMode() called on wrong element")
+    mode = getText (node)
+
+    # Redefine command if we know whether to include or not
+    if mode == "Electronic":
+        pp.setOutput (\
+            r"  \renewcommand{\mailMode}{\textcircled{x} Email " + \
+            r"\qquad $\bigcirc$ Mail}")
+
 def personDirectoryInclude(pp):
     """
     Changes the meaning of a macro to put out circles for a user to check for
@@ -2467,6 +2493,7 @@ PERSON_HDRTEXT=r"""
   \newcommand{\directoryIncludeYesOrNoCircles}{\yesno}
   \newcommand{\retiredYesOrNoCircles}{\yesno}
   \newcommand{\emailPublicYesOrNoCircles}{\yesno}
+  \newcommand{\mailMode}{$\bigcirc$ Email \qquad \textcircled{x} Mail}
 %%
 %% -----
 """ % time.strftime("%B %Y")
@@ -2627,8 +2654,8 @@ PHONE_RULER=r"""
   \newcommand{\yes}[1]{%
       \ifthenelse{\equal{#1}{Y}}{$\bigotimes$}{$\bigcirc$}}
   \newcommand{\yesno}{$\bigcirc$ Yes \qquad $\bigcirc$ No}
-  \newcommand{\YESno}{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}
-  \newcommand{\yesNO}{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}
+  \newcommand{\YESno}{\textcircled{x} Yes \qquad $\bigcirc$ No}
+  \newcommand{\yesNO}{$\bigcirc$ Yes \qquad \textcircled{x} No}
 
   % Define the check marks for the 3 column tables
   % enter \Check{Y} or \Check{N} to set the mark
@@ -3380,6 +3407,12 @@ DocumentPersonBody = (
     XProc(element   = "PersonNameInformation",
           order     = XProc.ORDER_TOP,
           preProcs  = ((personName, ()), ),
+          textOut   = 0,
+          descend   = 0),
+    XProc(element   = "/Person/ProfessionalInformation/PhysicianDetails" + \
+                      "/AdministrativeInformation/PreferredContactMode",
+          order     = XProc.ORDER_TOP,
+          preProcs  = ((preferredContactMode, ()), ),
           textOut   = 0,
           descend   = 0),
     XProc(element   = "PersonLocations",
