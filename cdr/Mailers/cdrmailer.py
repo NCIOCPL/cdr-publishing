@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.47 2003-08-21 19:43:06 bkline Exp $
+# $Id: cdrmailer.py,v 1.48 2003-08-21 22:08:57 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.47  2003/08/21 19:43:06  bkline
+# Added support for ProtocolOrg element in mailer tracking document for
+# S&P mailers.
+#
 # Revision 1.46  2003/06/24 12:23:01  bkline
 # Added code to use local copy of template.tex.
 #
@@ -420,12 +424,12 @@ class MailerJob:
         """
 
         if remailerFor:
-            remailerFor = "\n  <RemailerFor cdr:ref='%s'/>" % \
+            remailerFor = "\n   <RemailerFor cdr:ref='%s'/>" % \
                           cdr.normalize(remailerFor)
         else:
             remailerFor = ""
         if protOrgId:
-            protOrg     = "\n  <ProtocolOrg cdr:ref='%s'/>" % \
+            protOrg     = "\n   <ProtocolOrg cdr:ref='%s'/>" % \
                           cdr.normalize(protOrgId)
         else:
             protOrg     = ""
@@ -450,7 +454,7 @@ class MailerJob:
  </CdrDocXml>
 </CdrDoc>
 """ % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
-       protOrg, recipient.getName(), address, docId, doc.getTitle(),
+       recipient.getName(), protOrg, address, docId, doc.getTitle(),
        self.__now, self.__deadline)
         rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
                            checkIn = "Y", ver = "Y", val = 'Y')
