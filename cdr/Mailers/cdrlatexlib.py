@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.37 2003-03-14 01:32:28 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.38 2003-03-18 16:37:00 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.37  2003/03/14 01:32:28  bkline
+# Added an extra line for the Physician mailer so the Organization name
+# can be provided for new OtherPracticeLocation information.
+#
 # Revision 1.36  2003/03/03 20:08:23  bkline
 # Implemented changes requested by Sheri in issue #591.
 #
@@ -787,13 +791,17 @@ class HomeLocation(PersonLocation):
                 self.email = getText(child)
                 self.emailPublic = child.getAttribute("Public")
 
+class SiteContact:
+    "Contains name string and phone for Status & Participant site contact."
+    def __init__(self, name = "", phone = ""):
+        self.name   = name
+        self.phone  = phone
+
 class ParticipatingSite:
     "Interesting information for an org participating in a protocol."
     def __init__(self, node):
         self.name           = None
-        self.specificPerson = None
-        self.genericPerson  = None
-        self.phone          = None
+        self.contacts       = []
         self.status         = None
         for child in node.childNodes:
             if child.nodeName == "OrgSiteName":
@@ -803,11 +811,15 @@ class ParticipatingSite:
             elif child.nodeName == "SiteStatus":
                 self.status = getText(child)
             elif child.nodeName == "SpecificPerson":
-                self.specificPerson = PersonName(child)
+                self.contacts.append(SiteContact(PersonName(child).format()))
             elif child.nodeName == "GenericPerson":
-                self.genericPerson = getText(child)
+                self.contacts.append(SiteContact(getText(child)))
             elif child.nodeName == "Phone":
-                self.phone = getText(child)
+                phone = getText(child)
+                if not self.contacts or self.contacts[-1].phone:
+                    self.contacts.append(SiteContact(phone = phone))
+                else:
+                    self.contacts[-1].phone = phone
 
     def __cmp__(self, other):
         if self.status == "Active":
@@ -2111,6 +2123,14 @@ def statProtSites(pp):
             sites.append(ParticipatingSite(child))
     sites.sort()
     for site in sites:
+        template = " %s & %%s & %%s \\Check{%s} \\\\ \\hline \n" % \
+            (site.name, site.status == 'Active' and 'Y' or 'N')
+        if not site.contacts:
+            site.contacts.append(SiteContact())
+        for contact in site.contacts:
+            output += template % (contact.name, contact.phone)
+            template = " & %s & %s & & \\\\ \\hline \n"
+        """
         contact = ""
         phone   = site.phone
         if site.specificPerson:
@@ -2120,6 +2140,7 @@ def statProtSites(pp):
         output += " %s & %s & %s \\Check{%s} \\\\ \\hline \n" % (
             site.name, contact, phone,
             site.status == 'Active' and 'Y' or 'N')
+        """
     pp.setOutput(output)
 
 def statSiteStatus(pp):
