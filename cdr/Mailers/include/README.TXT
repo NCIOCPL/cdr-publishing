@@ -26,5 +26,5 @@ using the numbering from Margaret's cover letter checklist document.
 7. Protocol Initial Status/Participant Check (Non-Coop.):
         StatPartCoverLetterNonCoop.tex
 
-7. Physician--Initial:
-        PhysAnnualCoverLetter.tex
+8. Physician--Initial:
+        PhysInitCoverLetter.tex
