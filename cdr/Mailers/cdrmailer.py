@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.54 2004-11-02 19:50:35 bkline Exp $
+# $Id: cdrmailer.py,v 1.55 2004-11-03 17:03:46 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.54  2004/11/02 19:50:35  bkline
+# Enhancements to support RTF mailers.
+#
 # Revision 1.53  2004/05/18 18:00:18  bkline
 # Modified tarfile code to match changed API.
 #
@@ -1575,11 +1578,11 @@ class Address:
                     self.__personalName = PersonalName(node)
                     self.__addressee = self.__personalName.format()
                 elif node.nodeName == 'OrgName':
-                    self.__orgs.append (cdr.getTextContent(node))
+                    self.__orgs.append (cdr.getTextContent(node).strip())
                 elif node.nodeName == 'ParentNames':
                     orgParentNode = node
                 elif node.nodeName == 'PersonTitle':
-                    self.__personTitle = cdr.getTextContent(node)
+                    self.__personTitle = cdr.getTextContent(node).strip()
 
         # If we got them, get org parent names to __orgs in right order
         if orgParentNode:
@@ -1688,20 +1691,19 @@ class Address:
         for child in node.childNodes:
             if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
                 if child.nodeName == "Street":
-                    self.__street.append(cdr.getTextContent(child))
+                    self.__street.append(cdr.getTextContent(child).strip())
                 elif child.nodeName == "City":
-                    self.__city = cdr.getTextContent(child)
+                    self.__city = cdr.getTextContent(child).strip()
                 elif child.nodeName == "CitySuffix":
-                    self.__citySuffix = cdr.getTextContent(child)
-                    print "citySuffix: %s" % self.__citySuffix
+                    self.__citySuffix = cdr.getTextContent(child).strip()
                 elif child.nodeName in ("State", "PoliticalSubUnit_State"):
-                    self.__state = cdr.getTextContent(child)
+                    self.__state = cdr.getTextContent(child).strip()
                 elif child.nodeName == "Country":
-                    self.__country = cdr.getTextContent(child)
+                    self.__country = cdr.getTextContent(child).strip()
                 elif child.nodeName == "PostalCode_ZIP":
-                    self.__postalCode = cdr.getTextContent(child)
+                    self.__postalCode = cdr.getTextContent(child).strip()
                 elif child.nodeName == "CodePosition":
-                    self.__codePos = cdr.getTextContent(child)
+                    self.__codePos = cdr.getTextContent(child).strip()
 
     #------------------------------------------------------------------
     # Extract and sort (if necessary) organization name values of parents
@@ -1723,7 +1725,7 @@ class Address:
 
         for child in node.childNodes:
             if child.nodeName == "ParentName":
-                self.__orgs.append(cdr.getTextContent(child))
+                self.__orgs.append(cdr.getTextContent(child).strip())
         if parentsFirst:
             self.__orgs.reverse()
 
