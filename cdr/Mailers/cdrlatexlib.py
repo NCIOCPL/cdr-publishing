@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.47 2003-07-01 21:58:19 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.48 2003-07-02 02:02:07 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.47  2003/07/01 21:58:19  ameyer
+# Modifications to Person mailers for new denormalization/mailer filters.
+# All address handling was revised plus other minor changes.
+#
 # Revision 1.46  2003/07/01 14:21:36  bkline
 # Fixed missing brace in macro for protocol title.
 #
@@ -568,6 +572,8 @@ class Location:
         if not self.address:
             return ""
         output = ""
+        if self.personTitle:
+            output += "  %s \\\\\n" % self.personTitle
         for orgName in self.orgNames:
             output += "  %s \\\\\n" % orgName
         for street in self.address.street:
@@ -584,27 +590,6 @@ class Location:
         if self.address.country and includeCountry:
             output += "  %s \\\\\n" % self.address.country
         return output
-
-    def formatAddress(self, includeCountry = 0):
-        """
-        Richer address formatter.  Adds title and org names to basic
-        address format.
-
-        XXXX - MAYBE MAKE THESE HISTORICAL METHOD NAMES LESS CONFUSING - XXXX
-
-        Pass:
-            includeCountry - True=Include country name in address.
-        """
-        result = self.format(includeCountry)
-        # Create person title followed by orgname, or vice versa
-        orgNames = ""
-        if self.cipsContact and self.personTitle:
-            orgNames += "  %s \\\\\n" % self.personTitle
-        for orgName in self.orgNames:
-            orgNames += "  %s \\\\\n" % orgName
-        if not self.cipsContact and self.personTitle:
-            orgNames += "  %s \\\\\n" % self.personTitle
-        return orgNames + result
 
 class Contact(Location):
     """
@@ -775,31 +760,6 @@ class PersonLists:
                                    'oncology program')
               ORDER BY o.value""")
         return cursor.fetchall()
-
-class PersonLocation:
-    """
-    Base class for a person's private practice and other practice locations.
-    Note that the denormalized Person document has already matched up the
-    CIPSContact element with the location it points to, so the presence
-    of that element inside a location element (Home, PrivatePractice,
-    or OtherPracticeLocation) indicates the CIPS contact location, without
-    the necessity to inspect the actual value of the CIPSContact element.
-    There is one twist, though.  For a PrivatePractice, the CIPSContact
-    element is down one level, underneath the child PrivatePracticeLocation
-    element for some reason.
-    """
-    def __init__(self):
-        self.id             = None
-        self.cipsContact    = ""
-        self.personTitle    = None
-        self.address        = None
-        self.phone          = None
-        self.tollFreePhone  = None
-        self.fax            = None
-        self.email          = None
-        self.web            = None
-        self.orgNames       = []
-        self.emailPublic    = ""
 
 class PrivatePracticeLocation(Location):
     """
@@ -1605,7 +1565,7 @@ def personLocs(pp):
         loc = None
         if node.nodeName == "OtherPracticeLocation":
             loc = OtherPracticeLocation(node)
-        elif node.nodeName == "PrivatePractice":
+        elif node.nodeName == "PrivatePracticeLocation":
             loc = PrivatePracticeLocation(node)
         elif node.nodeName == "Home":
             loc = HomeLocation(node)
@@ -1617,7 +1577,6 @@ def personLocs(pp):
 
     # Output the address block for the mailer.
     adminOnly = "(For administrative use only)"
-    address = cipsContact and cipsContact.formatAddress() or ""
     cipsContactInfo = "  \\PersonNameWithSuffixes \\\\\n"
     blankTemplate = r"""
   \begin{entry}
@@ -1654,9 +1613,10 @@ def personLocs(pp):
         return
 
     if cipsContact:
-        cipsContactInfo += address
-        if cipsContact.address.country:
-            cipsContactInfo += "  %s \\\\\n" % cipsContact.address.country
+        # Formatted address, with country
+        if cipsContact.address:
+            cipsContactInfo += cipsContact.format(1)
+
         # Make email public Yes or No
         cipsContactInfo += personEmailPublic(cipsContact.email,
                                              cipsContact.emailPublic)
@@ -1723,7 +1683,7 @@ def personLocs(pp):
     \item[Website]                                       %s      \\
   \end{entry}
   \vspace{15pt}
-""" % (loc.formatAddress(1),
+""" % (loc.format(1),
        loc.phone or blankLine,
        loc.fax   or blankLine, adminOnly,
        loc.email or blankLine,
