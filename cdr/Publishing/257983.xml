@@ -85,6 +85,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -174,6 +178,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -252,6 +260,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -330,6 +342,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -423,6 +439,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -511,6 +531,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -608,6 +632,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -701,6 +729,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
@@ -793,6 +825,10 @@
     <OptionName>AbortOnError</OptionName>
     <OptionValue>50</OptionValue>
    </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
   </SubsetOptions>
  </SystemSubset>
 
