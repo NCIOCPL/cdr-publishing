@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.9 2002-09-26 22:05:29 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.10 2002-09-30 14:25:25 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2002/09/26 22:05:29  bkline
+# Second draft for person and org mailers.
+#
 # Revision 1.8  2002/09/25 18:30:42  bkline
 # First working status and participant site check mailers.
 #
@@ -19,102 +22,102 @@ import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 personLists = None
 listStack   = []
 
-#-------------------------------------------------------------------
-# XProc
-#
-#   All information needed to perform one step in a conversion.
-#
-#   A control table defined in cdrlatexlib.py will contain a tuple
-#   of these which describes how to process a document in a format.
-#
-# Fields:
-#
-#   element   - XML element to process, None if this is pure processing
-#               Elements may be specifed as simple names, or as fully
-#                qualified names starting at the root, e.g.:
-#                  Title
-#                 or:
-#                  /Summary/SummarySection/Title
-#               The program will search for a match on the fully qualified
-#                name first and, only if it doesn't find anything, will it
-#                look to see if there is an XProc for a simple name.
-#                Therefore if both "Title" and "/Summary...Title" are
-#                specified, the Title for the SummarySection will be
-#                processed according to the SummarySection/Title rule
-#                and all other Titles will be processed according to the
-#                other rule.
-#               Full XPath notation is NOT supported.
-#   attr      - Attribute specification.  If not None, only process this
-#                element if the specification fits the element.
-#                Valid specifications are:
-#                  attrname=attrValue
-#                 or
-#                  attrname!=attrValue
-#                Only used if there is an element tag.
-#   occs      - Max num occs to process, 0 = unlimited
-#                Only used if there is an element tag
-#   order     - How we order an xml element during output, one of:
-#                XProc.ORDER_DOCUMENT:
-#                  This is the default order for processing document nodes.
-#                  If no other order is specified the nodes are processed 
-#                  in the order they appear in the input document.  For
-#                  this ordering mode, the order in which the processing
-#                  rules are specified is not significant.
-#                XProc.ORDER_TOP:
-#                  A processing rule can be specified to use ORDER_TOP to
-#                  cause the matching nodes to be processed before any other
-#                  nodes or after all other nodes.  Place all ORDER_TOP
-#                  rules which should be processed first at the beginning
-#                  of the list of rules.  These rules will be processed in
-#                  their order of appearance in the list.  Place all ORDER_TOP
-#                  rules which should be processed last at the end of the
-#                  list of rules.  These, too, will be processed in their
-#                  order of appearance in the list.
-#                XProc.ORDER_PARENT:
-#                  This mode of ordering behaves similarly to ORDER_TOP,
-#                  but only with respect to the sibling elements which
-#                  are children of the same parent element.  In other words,
-#                  the engine collects all of the nodes which are children
-#                  of a given parent, and finds the rule which matches
-#                  each of those nodes.  The nodes in this set whose rules are
-#                  designated as ORDER_PARENT, and whose rules are specified
-#                  before any ORDER_DOCUMENT rules in this set will be
-#                  processed first (in the order in which these rules appear
-#                  in the rule list), followed by the nodes whose matching
-#                  rules are designated as ORDER_DOCUMENT (in the order
-#                  of node appearance in the input document), followed by
-#                  those nodes matching the remaining ORDER_PARENT rules 
-#                  (that is, ORDER_PARENT rules which were specified
-#                  following an ORDER_DOCUMENT rule within the set of rules
-#                  which match this set of siblings).
-#               Example showing how XProc.ORDER_DOCUMENT works:
-#                Instructions:
-#                  Element='A', order=XProc.ORDER_TOP
-#                  Element='B', order=XProc.ORDER_TOP
-#                  Element='C', order=XProc.ORDER_DOCUMENT
-#                  Element='D', order=XProc.ORDER_DOCUMENT
-#                  Element='E', order=XProc.ORDER_TOP
-#                Input record has elements in following order:
-#                  C1 C2 D3 A4 B5 C6 E7 C8 D9
-#                Output record gets:
-#                  A4 B5 C1 C2 D3 C6 C8 D9 E7
-#                (That's perfectly clear, isn't it?)
-#                Only used if there is an element tag.
-#   prefix    - Latex constant string to output prior to processing
-#   preProcs  - List of routines+parms to call before textOut output
-#   textOut   - True=Output the text of this element
-#                Only used if there is an element tag
-#   descend   - True=Examine children of element, else skip them
-#                Only used if there is an element tag
-#   postProcs - List of routines+parms tuples to call at end
-#   suffix    - Latex constant string to output after processing
-#   filters   - Optional sequence of filters to be applied to the
-#               collected output for the children of a node; each 
-#               filter must be a function which takes a string 
-#               and returns a string.
-#
-#-------------------------------------------------------------------
 class XProc:
+    """
+    All information needed to perform one step in a conversion.
+
+    A control table defined in cdrlatexlib.py will contain a tuple
+    of these which describes how to process a document in a format.
+
+     Fields:
+
+       element   - XML element to process, None if this is pure processing
+                   Elements may be specifed as simple names, or as fully
+                    qualified names starting at the root, e.g.:
+                      Title
+                     or:
+                      /Summary/SummarySection/Title
+                   The program will search for a match on the fully qualified
+                    name first and, only if it doesn't find anything, will it
+                    look to see if there is an XProc for a simple name.
+                    Therefore if both "Title" and "/Summary...Title" are
+                    specified, the Title for the SummarySection will be
+                    processed according to the SummarySection/Title rule
+                    and all other Titles will be processed according to the
+                    other rule.
+                   Full XPath notation is NOT supported.
+       attr      - Attribute specification.  If not None, only process this
+                    element if the specification fits the element.
+                    Valid specifications are:
+                      attrname=attrValue
+                     or
+                      attrname!=attrValue
+                    Only used if there is an element tag.
+       occs      - Max num occs to process, 0 = unlimited
+                    Only used if there is an element tag
+       order     - How we order an xml element during output, one of:
+                    XProc.ORDER_DOCUMENT:
+                      This is the default order for processing document nodes.
+                      If no other order is specified the nodes are processed 
+                      in the order they appear in the input document.  For
+                      this ordering mode, the order in which the processing
+                      rules are specified is not significant.
+                    XProc.ORDER_TOP:
+                      A processing rule can be specified to use ORDER_TOP to
+                      cause the matching nodes to be processed before any
+                      other nodes or after all other nodes.  Place all
+                      ORDER_TOP rules which should be processed first at the
+                      beginning of the list of rules.  These rules will be
+                      processed in their order of appearance in the list.
+                      Place all ORDER_TOP rules which should be processed
+                      last at the end of the list of rules.  These, too,
+                      will be processed in their order of appearance in the
+                      list.
+                    XProc.ORDER_PARENT:
+                      This mode of ordering behaves similarly to ORDER_TOP,
+                      but only with respect to the sibling elements which
+                      are children of the same parent element.  In other
+                      words, the engine collects all of the nodes which are
+                      children of a given parent, and finds the rule which
+                      matches each of those nodes.  The nodes in this set
+                      whose rules are designated as ORDER_PARENT, and whose
+                      rules are specified before any ORDER_DOCUMENT rules in
+                      this set will be processed first (in the order in which
+                      these rules appear in the rule list), followed by the
+                      nodes whose matching rules are designated as
+                      ORDER_DOCUMENT (in the order of node appearance in the
+                      input document), followed by those nodes matching the
+                      remaining ORDER_PARENT rules (that is, ORDER_PARENT
+                      rules which were specified following an ORDER_DOCUMENT
+                      rule within the set of rules which match this set of
+                      siblings).
+                   Example showing how XProc.ORDER_DOCUMENT works:
+                    Instructions:
+                      Element='A', order=XProc.ORDER_TOP
+                      Element='B', order=XProc.ORDER_TOP
+                      Element='C', order=XProc.ORDER_DOCUMENT
+                      Element='D', order=XProc.ORDER_DOCUMENT
+                      Element='E', order=XProc.ORDER_TOP
+                    Input record has elements in following order:
+                      C1 C2 D3 A4 B5 C6 E7 C8 D9
+                    Output record gets:
+                      A4 B5 C1 C2 D3 C6 C8 D9 E7
+                    (That's perfectly clear, isn't it?)
+                    Only used if there is an element tag.
+       prefix    - Latex constant string to output prior to processing
+       preProcs  - List of routines+parms to call before textOut output
+       textOut   - True=Output the text of this element
+                    Only used if there is an element tag
+       descend   - True=Examine children of element, else skip them
+                    Only used if there is an element tag
+       postProcs - List of routines+parms tuples to call at end
+       suffix    - Latex constant string to output after processing
+       filters   - Optional sequence of filters to be applied to the
+                   collected output for the children of a node; each 
+                   filter must be a function which takes a string 
+                   and returns a string.
+    """
+
     # Pattern for checking attribute name =/!= value
     attrPat = re.compile(r'([A-Za-z_]+)\s*(!?)=\s*(.*)')
     ORDER_TOP      = 1  # Process in order given in instructions, at top level
@@ -239,40 +242,39 @@ class XProc:
         return str
 
 
-#-------------------------------------------------------------------
-# ProcParms
-#
-#   A reference to an instance of procParms is passed to any preProc
-#   or postProc executed during the conversion.
-#
-#   It acts as a container for information made available to the
-#   procedure, and for information coming back.
-#
-#   Fields include:
-#
-#       topNode - Reference to DOM node at top of XML document, i.e.
-#                 the document element.
-#       curNode - The current DOM node, i.e., the one for the current
-#                 element.  This may be None if the procedure is
-#                 is invoked outside the context of an element (if
-#                 XProc.element=None.)
-#       args    - A tuple of arguments associated with the current
-#                 procedure in the XProc.preProcs or postProcs field.
-#       output  - Initially, an empty string.
-#                 If the procedure needs to output data, place a string
-#                 in ProcParms.output and the conversion driver will
-#                 handle it.
-#
-#   The output element is handled by the conversion driver as follows:
-#
-#       Initialize output=''
-#       Invoke each preProc (or postProc) in the XProc tuple of procedures
-#       (Note: each procedure sees the previous output, which may no longer
-#           be ''.  Each subsequent procedure can, if desired, examine,
-#           replace, or append to the current output.
-#       Write the last value of output to the actual Latex output string.
-#-------------------------------------------------------------------
 class ProcParms:
+    """
+       A reference to an instance of procParms is passed to any preProc
+       or postProc executed during the conversion.
+
+       It acts as a container for information made available to the
+       procedure, and for information coming back.
+
+       Fields include:
+
+           topNode - Reference to DOM node at top of XML document, i.e.
+                     the document element.
+           curNode - The current DOM node, i.e., the one for the current
+                     element.  This may be None if the procedure is
+                     is invoked outside the context of an element (if
+                     XProc.element=None.)
+           args    - A tuple of arguments associated with the current
+                     procedure in the XProc.preProcs or postProcs field.
+           output  - Initially, an empty string.
+                     If the procedure needs to output data, place a string
+                     in ProcParms.output and the conversion driver will
+                     handle it.
+
+       The output element is handled by the conversion driver as follows:
+
+           Initialize output=''
+           Invoke each preProc (or postProc) in the XProc tuple of procedures
+           (Note: each procedure sees the previous output, which may no longer
+               be ''.  Each subsequent procedure can, if desired, examine,
+               replace, or append to the current output.
+           Write the last value of output to the actual Latex output string.
+    """
+    
     def __init__(self, top, cur, args, output):
         self.topNode = top
         self.curNode = cur
@@ -326,11 +328,12 @@ class OrgProtStatus:
 #----------------------------------------------------------------------
 class PersonName:
     def __init__(self, node):
-        self.givenName    = None
-        self.surname      = None
+        self.givenName    = ""
+        self.surname      = ""
         self.profSuffixes = []
-        self.genSuffix    = None
-        self.prefix       = None
+        self.genSuffix    = ""
+        self.prefix       = ""
+        self.initials     = ""
         for child in node.childNodes:
             if child.nodeName == "GivenName":
                 self.givenName = getText(child)
@@ -338,6 +341,8 @@ class PersonName:
                 self.surname = getText(child)
             elif child.nodeName == "GenerationSuffix":
                 self.genSuffix = getText(child)
+            elif child.nodeName == "MiddleInitial":
+                self.initials = getText(child)
             elif child.nodeName == "Prefix":
                 self.prefix = getText(child)
             elif child.nodeName == "ProfessionalSuffix":
@@ -349,14 +354,15 @@ class PersonName:
                             self.profSuffixes.append(suffix)
         
     def format(self, full = 0):
-        name = ("%s %s" % (self.givenName, self.surname)).strip()
+        name = ("%s %s" % (self.givenName, self.initials)).strip()
+        name = ("%s %s" % (name, self.surname)).strip()
+        if self.genSuffix:
+            name = "%s, %s" % (name, self.genSuffix)
         if not full: return name
-        suffixes = self.getSuffixes()
-        if suffixes: return "%s, %s" % (name, suffixes)
-        else: return name
-
-    def getSuffixes(self):
-        return " ".join([self.genSuffix or ''] + self.profSuffixes).strip()
+        profSuffixes = ", ".join(self.profSuffixes).strip()
+        if profSuffixes:
+            name = "%s, %s" % (name, profSuffixes)
+        return name
 
 #----------------------------------------------------------------------
 # Object representing an address.
@@ -431,11 +437,16 @@ class LeadOrgPerson:
         self.role    = None
         self.address = Address()
         self.id      = node.getAttribute("id")
+        self.orgs    = []
         for child in node.childNodes:
             if child.nodeName == "Person":
                 for grandchild in child.childNodes:
                     if grandchild.nodeName == "PersonNameInformation":
                         self.name = PersonName(grandchild)
+                    elif grandchild.nodeName == "OrganizationAddressNames":
+                        for org in grandchild.childNodes:
+                            if org.nodeName == "OrganizationName":
+                                self.orgs.append(getText(org))
                     elif grandchild.nodeName == "Phone":
                         self.phone = getText(grandchild)
                     elif grandchild.nodeName == "Street":
@@ -446,7 +457,16 @@ class LeadOrgPerson:
                     elif grandchild.nodeName == "PoliticalSubUnit_State":
                         self.address.state = getState(grandchild)
                     elif grandchild.nodeName == "PostalCode_ZIP":
-                        self.zip = getText(grandchild)
+                        self.address.zip = getText(grandchild)
+                    elif grandchild.nodeName == "Country":
+                        shortName = None
+                        fullName  = None
+                        for cName in grandchild.childNodes:
+                            if cName.nodeName == "CountryFullName":
+                                fullName = getText(cName)
+                            elif cName.nodeName == "CountryShortName":
+                                shortName = getText(cName)
+                        self.address.country = shortName or fullName
             elif child.nodeName == "PersonRole":
                 self.role = getText(child)
 
@@ -474,7 +494,7 @@ class ProtLeadOrg:
             elif child.nodeName == "LeadOrgPersonnel":
                 person = LeadOrgPerson(child)
                 self.personnel[person.id] = person
-                if person.role.upper() == "PROTOCOL CHAIR":
+                if person.role.upper() != "UPDATE PERSON":
                     self.protChair = person
         if sendMailerTo and self.personnel.has_key(sendMailerTo):
             self.sendMailerTo = self.personnel[sendMailerTo]
@@ -587,6 +607,14 @@ class PersonLists:
         
 #----------------------------------------------------------------------
 # Base class for a person's private practice and other practice locations.
+# Note that the denormalized Person document has already matched up the
+# CIPSContact element with the location it points to, so the presence
+# of that element inside a location element (Home, PrivatePractice,
+# or OtherPracticeLocation) indicates the CIPS contact location, without
+# the necessity to inspect the actual value of the CIPSContact element.
+# There is one twist, though.  For a PrivatePractice, the CIPSContact
+# element is down one level, underneath the child PrivatePracticeLocation
+# element for some reason.
 #----------------------------------------------------------------------
 class PersonLocation:
     def __init__(self):
@@ -602,9 +630,10 @@ class PersonLocation:
         self.emailPublic    = ""
     def formatAddress(self, includeCountry = 0):
         result = self.address.format(includeCountry)
+        orgNames = ""
         for orgName in self.orgNames:
-            result = "  %s \\\\\n%s" % (orgName, result)
-        return result
+            orgNames += "  %s \\\\\n" % orgName
+        return orgNames + result
 
 #----------------------------------------------------------------------
 # Derived class for a physician's private practice location.
@@ -664,6 +693,53 @@ class OtherPracticeLocation(PersonLocation):
             self.orgNames.reverse()
 
 #----------------------------------------------------------------------
+# Derived class for a home location for a person.
+#----------------------------------------------------------------------
+class HomeLocation(PersonLocation):
+    def __init__(self, node):
+        PersonLocation.__init__(self)
+        self.id = node.getAttribute("id")
+        for child in node.childNodes:
+            if child.nodeName == "CIPSContact":
+                self.cipsContact = getText(child)
+            if child.nodeName == "PostalAddress":
+                self.address = Address(child)
+            elif child.nodeName == "Phone":
+                self.phone = getText(child)
+            elif child.nodeName == "TollFreePhone":
+                self.tollFreePhone = getText(child)
+            elif child.nodeName == "Fax":
+                self.fax = getText(child)
+            elif child.nodeName == "Email":
+                self.email = getText(child)
+                self.emailPublic = child.getAttribute("Public")
+
+class ParticipatingSite:
+    "Interesting information for an org participating in a protocol."
+    def __init__(self, node):
+        self.name   = None
+        self.pi     = None
+        self.phone  = None
+        self.status = None
+        for child in node.childNodes:
+            if child.nodeName == "Site":
+                self.name = getText(child)
+            elif child.nodeName == "SiteStatus":
+                self.status = getText(child)
+            elif child.nodeName == "PI":
+                self.pi = PersonName(child)
+            elif child.nodeName == "Phone":
+                self.phone = getText(child)
+
+    def __cmp__(self, other):
+        if self.status == "Active":
+            if other.status != "Active":
+                return -1
+        elif other.status == "Active":
+            return 1
+        return cmp(self.name, other.name)
+    
+#----------------------------------------------------------------------
 # getText
 #   Extracts and concatenates the text nodes from an element.
 #----------------------------------------------------------------------
@@ -672,8 +748,28 @@ def getText(node):
     for child in node.childNodes:
         if child.nodeType == node.TEXT_NODE:
             result = result + child.data
-    return result
+    return UnicodeToLatex.convert(result)
 
+#----------------------------------------------------------------------
+# Find a node by its relative XPath and extract its text value.  Very
+# crude tool; does not handle attributes, and assumes that there is
+# exactly one occurrence of each element in the path name.
+#----------------------------------------------------------------------
+def getTextByPath(path, node):
+    if not node:
+        return None
+    for elemName in path.split("/"):
+        newNode = None
+        for child in node.childNodes:
+            if child.nodeName == elemName:
+                newNode = child
+                break
+        if not newNode:
+            return None
+        node = newNode
+    return getText(node)
+                
+    
 #------------------------------------------------------------------
 # findControls
 #   Retrieve the instructions for a given doc format and format type.
@@ -781,31 +877,16 @@ def bibitem (pp):
 #   Professional Title
 #------------------------------------------------------------------
 def protocolTitle (pp):
-
-     # Build output string here
-     refString = ''
-
-     # Get the current citation node
-     refNode = pp.getCurNode()
-     txtNode = refNode.firstChild
-
-     # Reference index number is in the refidx attribute
-     # Extract the attribute value from the Citation
-     # tag
-     # ------------------------------------------------------
-     attrValue = refNode.getAttribute ('Type')
-     if (attrValue == 'Professional'):
-       # Beginning of the ProtocolTitle element
-       refString = r"\newcommand\ProtocolTitle{"
-       refString += UnicodeToLatex.convert(txtNode.nodeValue)
-       # Ending of the ProtocolTitle element
-       refString += "}\n  "
-
-     # Return info to caller, who will output it to the Latex
-     pp.setOutput (refString)
-
-     return 0
-
+    node = pp.getCurNode()
+    attr = node.getAttribute("Type")
+    macro = None
+    if attr == "Professional":
+        macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQTitle:}"
+    elif attr == "Original":
+        macro = "\\newcommand\\OriginalProtocolTitle{{\\bfseries "\
+                "OriginalTitle:}"
+    if macro:
+        pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
 
 #------------------------------------------------------------------
 # address
@@ -1027,17 +1108,25 @@ def openList(pp):
     # Honor the kind of numbering requested in the source document.
     style = node.getAttribute("Style")
     listStyle = ""
+    listLevel = None
+    enumStyle = None
+    if len(listStack) == 0: listLevel = "i"
+    elif len(listStack) == 1: listLevel = "ii"
+    elif len(listStack) == 2: listLevel = "iii"
+    elif len(listStack) == 3: listLevel = "iv"
     if node.nodeName == "ItemizedList":
         command = "itemize"
-    else:
-        command = "enumerate"
-        listLevel = None
-        if len(listStack) == 0: listLevel = "i"
-        elif len(listStack) == 1: listLevel = "ii"
-        elif len(listStack) == 2: listLevel = "iii"
-        elif len(listStack) == 3: listLevel = "iv"
         if listLevel:
-            enumStyle = None
+            if style == "bullet": enumStyle = "$\\bullet$"
+            elif style == "dash": enumStyle = "--"
+            elif style == "simple": enumStyle = ""
+            else: enumStyle = "$\\bullet$"
+            listStyle = "  \\renewcommand{\\labelitem%s}{%s}\n" % (listLevel,
+                                                                    enumStyle)
+    else:
+        # XXX We're making everything Roman.  Why?  Were we asked to do this?
+        command = "enumerate"
+        if listLevel:
             if style == "Arabic": enumStyle = "arabic"
             elif style == "UAlpha": enumStyle = "Alph"
             elif style == "URoman": enumStyle = "Roman"
@@ -1061,7 +1150,7 @@ def openList(pp):
         
     # Pick up the list titles if there are any.
     for title in node.getElementsByTagName("ListTitle"):
-        output += "  {\\bfseries %s}\n" % getText(title)
+        output += "  {\\it \\bfseries %s}\n" % getText(title)
         
     # Remember the list so we know how deeply nested we are.
     listStack.append(List(compact))
@@ -1193,13 +1282,21 @@ def orgLocs(pp):
 #----------------------------------------------------------------------
 def getCoopMemberships(node):
     coops = []
+    pathToCoopName = "CooperativeGroup/OfficialName/Name"
     for child in node.childNodes:
-        if child.nodeName == "AffiliateMemberOf":
-            for grandchild in child.childNodes:
-                if grandchild.nodeName == "CooperativeGroup":
-                    for greatgrandchild in grandchild.childNodes:
-                        if greatgrandchild.nodeName == "Name":
-                            coops.append(getText(greatgrandchild))
+        if child.nodeName in ("AffiliateMemberOf", "MainMemberOf"):
+            coopName = getTextByPath(pathToCoopName, child)
+            if coopName:
+                coops.append(coopName)
+            #for grandchild in child.childNodes:
+            #    if grandchild.nodeName == "CooperativeGroup":
+            #        for greatgrandchild in grandchild.childNodes:
+            #            if greatgrandchild.nodeName == "OfficialName":
+            #                for greatgreatgrandchild in \
+            #                        greatgrandchild.childNode:
+            #                    if greatgreatgrandchild.nodeName == "Name":
+            #                        coops.append(getText(
+            #                            greatgreatgrandchild))
     return coops
                         
 #----------------------------------------------------------------------
@@ -1283,17 +1380,19 @@ def protLeadOrg(pp):
         protChair = "Not specified"
         phone     = ""
     else:
+        addressOrgs = ""
+        for addressOrg in leadOrg.protChair.orgs:
+            addressOrgs += "  %s \\\\\n" % addressOrg
         if not leadOrg.protChair.name:
-            protChair = "Name Unknown"
+            protChair = "[Name Unknown], %s" % leadOrg.protChair.role
         else:
-            protChair = "%s, %s" % (
-                leadOrg.protChair.name.surname or "No Surname Found",
-                leadOrg.protChair.name.givenName or "No Given Name Found")
+            protChair = "%s, %s" % (leadOrg.protChair.name.format(1),
+                                    leadOrg.protChair.role)
         phone = leadOrg.protChair.phone or "Not specified"
         if not leadOrg.protChair.address:
             address = "Not specified"
         else:
-            address = leadOrg.protChair.address.format()
+            address = addressOrgs + leadOrg.protChair.address.format(1)
             if not address:
                 address = "Not specified"
 
@@ -1307,6 +1406,11 @@ def protLeadOrg(pp):
 %s}
 """ % (statDate, orgName, protChair, phone, address))
 
+def leadOrgRole(pp):
+    "Remember if this is a secondary lead organization"
+    if getText(pp.getCurNode()) == "Secondary":
+        pp.setOutput("  \\renewcommand{\\secondaryLeadOrg}{ (Secondary)}\n")
+        
 #----------------------------------------------------------------------
 # Create the prefix for a protocol (sub)section.
 #----------------------------------------------------------------------
@@ -1325,6 +1429,46 @@ def optProtSect(pp):
   \setcounter{qC}{0}
   \%s{%s}
 """ % (pp.args[0], pp.args[1]))
+
+def protPhaseAndDesign(pp):
+    phases = []
+    designs = []
+    for child in pp.getTopNode().childNodes:
+        if child.nodeName == "ProtocolPhase":
+            phases.append(getText(child))
+        elif child.nodeName == "ProtocolDesign":
+            designs.append(getText(child))
+    output = "  \\newcommand\\ProtocolPhaseAndDesign{\\item[Protocol Phase] "
+    if phases:
+        output += ", ".join(phases) + " \n"
+    else:
+        output += "*** MISSING ***\n"
+    if designs:
+        output += "\\item[Protocol Design] %s \n" % ", ".join(designs)
+    pp.setOutput(output + "}\n")
+
+def protRetrievalTerms(pp):
+    terms = {}
+    for child in pp.getTopNode().childNodes:
+        if child.nodeName == "ProtocolDetail":
+            for term in child.getElementsByTagName("SpecificCondition"):
+                terms[getText(term)] = "Condition"
+        elif child.nodeName == "Eligibility":
+            for term in child.getElementsByTagName("SpecificDiagnosis"):
+                terms[getText(term)] = "Diagnosis"
+    keys = terms.keys()
+    keys.sort()
+    output = r"""\
+  \subsection*{Disease Retrieval Terms}
+  \begin{itemize}{\setlength{\itemsep}{-5pt}}
+  \setlength{\parskip}{0mm}
+"""
+    for term in keys:
+        output += "  \\item %s\n" % term
+    pp.setOutput(output + r"""\
+  \end{itemize}
+  \setlength{\parskip}{1.2mm}
+""")
 
 #----------------------------------------------------------------------
 # Check for a missing optional protocol section.
@@ -1355,9 +1499,8 @@ def getDeadline():
 #----------------------------------------------------------------------
 def personName(pp):
     name = PersonName(pp.getCurNode())
-    formattedName = nameWithSuffixes = name.format()
-    suffixes = name.getSuffixes()
-    if suffixes: nameWithSuffixes += (", %s" % suffixes)
+    formattedName = name.format(0)
+    nameWithSuffixes = name.format(1)
     pp.setOutput(r"""
   \newcommand{\PersonName}{%s}
   \newcommand{\PersonNameWithSuffixes}{%s}
@@ -1373,14 +1516,18 @@ def personLocs(pp):
     otherLocs   = []
     blankLine   = r"\makebox[200pt]{\hrulefill}"
     for node in pp.getCurNode().childNodes:
+        loc = None
         if node.nodeName == "OtherPracticeLocation":
             loc = OtherPracticeLocation(node)
-        elif node.nodeName == "PrivatePracticeLocation":
+        elif node.nodeName == "PrivatePractice":
             loc = PrivatePracticeLocation(node)
-        else:
-            continue
-        if loc.cipsContact: cipsContact = loc
-        else: otherLocs.append(loc)
+        elif node.nodeName == "Home":
+            loc = HomeLocation(node)
+        if loc:
+            if loc.cipsContact:
+                cipsContact = loc
+            else:
+                otherLocs.append(loc)
         
     # Output the address block for the mailer.
     adminOnly = "(For administrative use only)"
@@ -1694,7 +1841,7 @@ def statPup(pp):
     phone   = ""
     for node in pp.getCurNode().childNodes:
         if node.nodeName == "Name":
-            name = getText(node)
+            name = PersonName(node)
         elif node.nodeName == "Location":
             for child in node.childNodes:
                 if child.nodeName == "PersonTitle":
@@ -1709,6 +1856,10 @@ def statPup(pp):
   \newcommand{\PUP}{%s}
   %s%s \\
 """ % (name, name, title)
+
+    # This is all we do now.    
+    pp.setOutput("  \\newcommand{\\PUP}{%s}\n" % name.format())
+    """
     if org:
         output += "  %s \\\\\n" % org
     if address:
@@ -1716,6 +1867,7 @@ def statPup(pp):
     if phone:
         output += "  Ph.: %s \\\\\n" % phone
     pp.setOutput(output)
+    """
     
 def statPersonnel(pp):
     name = ""
@@ -1724,7 +1876,7 @@ def statPersonnel(pp):
     phone = ""
     for node in pp.getCurNode().childNodes:
         if node.nodeName == "Name":
-            name = getText(node)
+            name = PersonName(node).format(1)
         elif node.nodeName == "Location":
             for child in node.childNodes:
                 if child.nodeName == "PostalAddress":
@@ -1743,11 +1895,35 @@ def statPersonnel(pp):
 %s}
 """ % (name, role, phone, address))
 
+def statProtSites(pp):
+    """
+    Originally did these one at a time, in pieces, using Alan's
+    model for element-driven processing.  But then Lakshmi and
+    Margaret asked for complex sorting, which couldn't be done
+    in the XSL/T phase without adding an additional filter.
+    """
+    sites = []
+    output = ""
+    for child in pp.getCurNode().childNodes:
+        if child.nodeName == "ParticipatingSite":
+            sites.append(ParticipatingSite(child))
+    sites.sort()
+    for site in sites:
+        output += " %s & %s & %s \\Check{%s} \\\\ \\hline \n" % (
+            site.name, site.pi.format(), site.phone,
+            site.status == 'Active' and 'Y' or 'N')
+    pp.setOutput(output)
+    
 def statSiteStatus(pp):
     status = getText(pp.getCurNode())
     flag = (status == 'Active') and 'Y' or 'N'
     pp.setOutput("  \\Check{%s} \\\\ \\hline \n" % flag)
 
+def piName(pp):
+    "Add name of principal investigator to table."
+    name = PersonName(pp.getCurNode())
+    pp.setOutput(name.format() + "& ")
+    
 ####################################################################
 # Constants
 ####################################################################
@@ -1833,14 +2009,14 @@ TOCHEADER=r"""
 
 
 PROTOCOL_HDRTEXT=r"""
-  %% PROTOCOL_HDRTEXT%%
-  %% --------------- %%
-  \newcommand{\CenterHdr}{{\bfseries Protocol ID \ProtocolID} \\ }
-  \newcommand{\RightHdr}{MailerDocID:  @@MailerDocID@@}
-  \newcommand{\LeftHdr}{\today}
-%
-% -----
-"""
+  %%%% PROTOCOL_HDRTEXT%%%%
+  %%%% --------------- %%%%
+  \newcommand{\LeftHdr}{PDQ/Cancer.gov Abstract Update \\ %s \\}
+  \newcommand{\CenterHdr}{{\bfseries Protocol ID: \ProtocolID}}
+  \newcommand{\RightHdr}{Mailer ID:  @@MailerDocID@@ \\ Doc ID: @@DOCID@@ \\}
+%%
+%% -----
+""" % time.strftime("%B %Y")
 
 
 SUMMARY_HDRTEXT=r"""
@@ -1854,14 +2030,15 @@ SUMMARY_HDRTEXT=r"""
 """
 
 STATPART_HDRTEXT=r"""
-  %% STATPART_HDRTEXT %%
-  %% ---------------- %%
-  \newcommand{\CenterHdr}{PUP ID: @@PUPID@@ \\ {\bfseries Protocol Update Person: \PUP}}
+  %%%% STATPART_HDRTEXT %%%%
+  %%%% ---------------- %%%%
+  \newcommand{\CenterHdr}{{\bfseries Protocol Update Person: \PUP}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
-  \newcommand{\LeftHdr}{PDQ Status \& Participant Site Check \\ \today \\}
-%
-% -----
-"""
+  \newcommand{\LeftHdr}{PDQ/Cancer.gov Status \& Participant Site Check \\
+                        %s \\}
+%%
+%% -----
+""" % time.strftime("%B %Y")
 
 # Defining the document header for each page
 # Used by:  Organization
@@ -1888,11 +2065,6 @@ PERSON_HDRTEXT=r"""
   %%%% -------------- %%%%
   \newcommand{\LeftHdr}{PDQ/Cancer.gov Physician Update \\ %s \\}
   \newcommand{\CenterHdr}{{\bfseries \PersonNameWithSuffixes}}
-  %%\newcommand{\CenterHdr}{%%
-  %%    \raisebox{.5in}[.5in]{%%
-  %%        \includegraphics[width=100pt]{%%
-  %%            /cdr/mailers/include/ncilogo.eps}} \\ {%%
-  %%                \bfseries \PersonNameWithSuffixes}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
 %%
 %% -----
@@ -2013,7 +2185,7 @@ ENTRYBFLIST=r"""
      {\begin{list}{}%
          {\renewcommand{\makelabel}{\entrylabel}%
           \setlength{\labelwidth}{\ewidth}%
-          \setlength{\itemsep}{-10pt}%
+          \setlength{\itemsep}{-2pt}%
           \setlength{\leftmargin}{\labelwidth+\labelsep}%
          }%
   }%
@@ -2112,7 +2284,7 @@ STATUS_CCOPMAIN_TAB=r"""
 \begin{longtable}{|>{\raggedright }p{160pt}|>{\raggedright }p{115pt}|p{75pt}|p{27pt}|p{27pt}|}  \hline
     \bfseries           & \bfseries Principal &
     \bfseries           & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries Sites     & \bfseries Investigator/ &
+    \bfseries Site      & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries (Main Members) & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
@@ -2120,7 +2292,7 @@ STATUS_CCOPMAIN_TAB=r"""
     \multicolumn{5}{l}{(continued from previous page)} \\ \hline
                         & \bfseries Principal &
                         & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries Sites     & \bfseries Investigator/ &
+    \bfseries Site      & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries (Main Members) & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
@@ -2136,7 +2308,7 @@ STATUS_CCOPAFFL_TAB=r"""
 \begin{longtable}{|>{\raggedright }p{160pt}|>{\raggedright }p{115pt}|p{75pt}|p{27pt}|p{27pt}|}  \hline
     \bfseries           & \bfseries Principal &
     \bfseries           & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries Sites     & \bfseries Investigator/ &
+    \bfseries Site      & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries (Affiliate Members) & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
@@ -2144,7 +2316,7 @@ STATUS_CCOPAFFL_TAB=r"""
     \multicolumn{5}{l}{(continued from previous page)} \\ \hline
                         & \bfseries Principal &
                         & \multicolumn{2}{c|}{\bfseries Partici-} \\
-    \bfseries Sites     & \bfseries Investigator/ &
+    \bfseries Site      & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
     \bfseries (Affiliate Members) & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
@@ -2162,7 +2334,7 @@ STATUS_TAB=r"""
     \bfseries           & \multicolumn{2}{c|}{\bfseries Partici-} \\
     \bfseries           & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
-    \bfseries Sites     & \bfseries Contact &
+    \bfseries Site      & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
 \endfirsthead
     \multicolumn{5}{l}{(continued from previous page)} \\ \hline
@@ -2170,7 +2342,7 @@ STATUS_TAB=r"""
                         & \multicolumn{2}{c|}{\bfseries Partici-} \\
     \bfseries           & \bfseries Investigator/ &
     \bfseries Contact   & \multicolumn{2}{c|}{\bfseries pating} \\
-    \bfseries Sites     & \bfseries Contact &
+    \bfseries Site      & \bfseries Contact &
     \bfseries Phone     & \multicolumn{1}{c|}{\bfseries Yes} & \multicolumn{1}{c|}{\bfseries No} \\ \hline \hline
 \endhead
 %
@@ -2231,6 +2403,9 @@ STATPART_TITLE=r"""
     National Cancer Institute's PDQ Database \\
     Cooperative Group Clinical Trial Status and Participating Sites Check
   }
+  \newcommand{\secondaryLeadOrg}{}
+  \setlength{\hoffset}{-18pt}
+
 %
 % -----
 """
@@ -2286,7 +2461,14 @@ ENDPROTOCOLPREAMBLE=r"""
   \setlength{\parskip}{1.2mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
-
+  \setlength{\hoffset}{-40pt}
+  \setlength{\hoffset}{-18pt}
+  %\setlength{\textwidth}{7in}
+  \setlength{\headwidth}{6.5in}
+  \setlength{\textwidth}{6.5in}
+  \setlength{\textheight}{8.0in}
+  \setlength{\oddsidemargin}{0in}
+  
   \renewcommand{\thesection}{\hspace{-1.0em}}
   \renewcommand{\theenumii}{\Roman{enumii}}
   \renewcommand{\labelenumii}{\theenumii.}
@@ -2344,7 +2526,8 @@ PROTOCOLTITLE=r"""
 
   \setcounter{qC}{0}
   \subsection*{Protocol Title}
-  \ProtocolTitle
+  \OriginalProtocolTitle
+  \PDQProtocolTitle
 %
 % -----
 """
@@ -2362,16 +2545,17 @@ PROTOCOLINFO=r"""
   \begin{entry}
      \item[Protocol ID]                \ProtocolID
                                        \OtherID
-     \item[Protocol Activation Date]   \ProtocolActiveDate
+%    \item[Protocol Activation Date]   \ProtocolActiveDate
+     \item[Current Protocol Status]    \ProtocolStatus
      \item[Lead Organization]          \ProtocolLeadOrg
-     \item[Protocol Chairman]          \ProtocolChair
-     \item[Phone]                      \ChairPhone\
+     \item[Protocol Personnel]         \ProtocolChair
+     \item[Phone]                      \ChairPhone
      \item[Address]                    \ChairAddress
-     \item[Protocol Status]            \ProtocolStatus
-
+     %\vspace{6pt}
      \item[Eligible Patient Age Range] \AgeText
      \item[Lower Age Limit]            \LowAge
      \item[Upper Age Limit]            \HighAge
+     \ProtocolPhaseAndDesign
   \end{entry}
 %
 % -----
@@ -2385,37 +2569,42 @@ PROTOCOLBOILER=r"""
   \newpage
   Please initial this page and fax or send hard copy to the address below.
 
-  If you are requesting any changes to the submitted document please include
-  the edited pages of this document.
+  If you are requesting any changes to the submitted document please
+  return the document in the enclosed envelope.
 
-  You may fax the information to the PDQ Protocol Coordinator at:
+  You may also fax the information to the PDQ Protocol Coordinator at:
   \begin{verse}
       Fax \#:  301-480-8105
   \end{verse}
 
   \begin{verse}
-      PDQ Protocol Coordinator    \\
+      PDQ/Cancer.gov Protocol Coordinator    \\
       Attn: CIAT                  \\
       Cancer Information Products and Systems, NCI, NIH   \\
       6116 Executive Blvd. Suite 3002B MSC-8321           \\
       Bethesda, MD 20892-8321
   \end{verse}
 
+  If the status of this protocol has changed, please indicate
+  the current status:
+  \begin{verse}
+      Approved \\
+      Active \\
+      Temporarily Closed \\
+      Closed \\
+      Completed \\
+      Withdrawn
+  \end{verse}
+
+  \StatusDefinition
+
+  Please list/attach any citations resulting from this study.
+  
+  \vspace{20pt}
+  
   Please initial here if summary is satisfactory to you.
   \hrulefill
 
-  If the study is permanently closed to patient entry, please give approximate
-  date of closure.
-  \hrulefill
-
-  Reason for closure.
-  \hrulefill      \newline
-    \mbox{}\hrulefill \newline
-  \mbox{}\hrulefill \newline
-  \mbox{}\hrulefill \newline
-  \mbox{}\hrulefill
-
-  Please list/attach any citations resulting from this study.
 %
 % -----
 """
@@ -2642,6 +2831,8 @@ ProtAbstProtID = (
           order=XProc.ORDER_TOP,
           prefix=r"  \newcommand{\AgeText}{",
           suffix="}\n  "),
+    XProc(preProcs  = [[protPhaseAndDesign]],
+          order     = XProc.ORDER_TOP)
     )
 
 ProtAbstInfo = (
@@ -2651,16 +2842,8 @@ ProtAbstInfo = (
           preProcs=( (protocolTitle, ()), ),),
     XProc(prefix=PROTOCOLTITLE, order=XProc.ORDER_TOP),
     XProc(prefix=PROTOCOLINFO, order=XProc.ORDER_TOP),
-    XProc(element   = "/InScopeProtocol/Eligibility",
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Disease Retrieval Terms")
-                    + "  \\begin{itemize}{\\setlength{\\itemsep}{-5pt}}\n"
-                      "  \\setlength{\\parskip}{0mm}\n",
-          suffix    = "  \\end{itemize}\n  \\setlength{\\parskip}{1.2mm}\n"),
-    XProc(element   = "SpecificDiagnosis",
-          order     = XProc.ORDER_PARENT,
-          prefix    = "  \\item ",
-          suffix    = "\n"),
+    XProc(preProcs  = [[protRetrievalTerms]],
+          order     = XProc.ORDER_TOP),
     XProc(element   = "Objectives",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
@@ -2697,73 +2880,79 @@ ProtAbstInfo = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "End Points")), )),
-    XProc(order     = XProc.ORDER_TOP,
-          textOut   = 0,
-          postProcs = ((checkNotAbstracted, 
-                       ("EndPoints", "End Points")), )),
+#    XProc(order     = XProc.ORDER_TOP,
+#          textOut   = 0,
+#          postProcs = ((checkNotAbstracted, 
+#                       ("EndPoints", "End Points")), )),
     XProc(element   = "Stratification",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", 
                                       "Stratification Parameters")), )),
-    XProc(order     = XProc.ORDER_TOP,
-          textOut   = 0,
-          postProcs = ((checkNotAbstracted, 
-                       ("Stratification", "Stratification Parameters")), )),
+#    XProc(order     = XProc.ORDER_TOP,
+#          textOut   = 0,
+#          postProcs = ((checkNotAbstracted, 
+#                       ("Stratification", "Stratification Parameters")), )),
     XProc(element   = "SpecialStudyParameters",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", 
                                       "Special Study Parameters")), )),
-    XProc(order     = XProc.ORDER_TOP,
-          textOut   = 0,
-          postProcs = ((checkNotAbstracted, 
-                       ("SpecialStudyParameters", 
-                        "Special Study Parameters")), )),
+#    XProc(order     = XProc.ORDER_TOP,
+#          textOut   = 0,
+#          postProcs = ((checkNotAbstracted, 
+#                       ("SpecialStudyParameters", 
+#                        "Special Study Parameters")), )),
     XProc(element   = "DoseSchedule",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "Dose Schedule")), )),
-    XProc(order     = XProc.ORDER_TOP,
-          textOut   = 0,
-          postProcs = ((checkNotAbstracted, 
-                       ("DoseSchedule", "Dose Schedule")), )),
+#    XProc(order     = XProc.ORDER_TOP,
+#          textOut   = 0,
+#          postProcs = ((checkNotAbstracted, 
+#                       ("DoseSchedule", "Dose Schedule")), )),
     XProc(element   = "DosageForm",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "Dosage Form")), )),
-    XProc(order     = XProc.ORDER_TOP,
-          textOut   = 0,
-          postProcs = ((checkNotAbstracted, 
-                       ("DosageForm", "Dosage Form")), )),
-    XProc(element   = "Rationale",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Protocol Rationale")),
-    XProc(element   = "Purpose",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Protocol Purpose")),
-    XProc(element   = "EligibilityText",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Eligibility Text")),
-    XProc(element   = "TreatmentIntervention",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Treatment/Intervention")),
-    XProc(element   = "ProfessionalDisclaimer",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Professional Disclaimer")),
-    XProc(element   = "PatientDisclaimer",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Patient Disclaimer")),
+#    XProc(order     = XProc.ORDER_TOP,
+#          textOut   = 0,
+#          postProcs = ((checkNotAbstracted, 
+#                       ("DosageForm", "Dosage Form")), )),
+#    XProc(element   = "Rationale",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Protocol Rationale")),
+#    XProc(element   = "Purpose",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Protocol Purpose")),
+#    XProc(element   = "EligibilityText",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Eligibility Text")),
+#    XProc(element   = "TreatmentIntervention",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Treatment/Intervention")),
+#    XProc(element   = "ProfessionalDisclaimer",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Professional Disclaimer")),
+#    XProc(element   = "PatientDisclaimer",
+#          textOut   = 0,
+#          order     = XProc.ORDER_TOP,
+#          prefix    = sectPrefix("subsection*", "Patient Disclaimer")),
     XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
 
     # Mask these out.
     XProc(element   = "GlossaryTerm",
+          textOut   = 0,
+          descend   = 0),
+    XProc(element   = "/InScopeProtocol/ProtocolAbstract/Patient",
+          textOut   = 0,
+          descend   = 0),
+    XProc(element   = "ProfessionalDisclaimer",
           textOut   = 0,
           descend   = 0),
     ) 
@@ -2847,15 +3036,16 @@ STATUSDEFCCOP=r"""
 STATUSPROTINFO=r"""
    %% STATUSPROTINFO %%
    %% -------------- %%
-  \newpage
+  %\newpage
   %\item
   \textit{\ProtocolTitle}
   \renewcommand{\ewidth}{120pt}
   \begin{entry}
      \item[Protocol ID]        \ProtocolID
      \item[Current Status]     \CurrentStatus
-     \item[Status Change]      Please indicate new status and the
-                               status change date (MM/DD/YYYY)
+     \item[Status Change]      If status has changed, please indicate
+                               new status and the status change
+                               date (MM/DD/YYYY)
                                \ProtStatDefinition
   \end{entry}
 %
@@ -2866,7 +3056,7 @@ STATUSCHAIRINFO=r"""
    %% STATUSCHAIRINFO %%
    %% -------------- %%
   \begin{entry}
-     \item[Lead Organization]        \LeadOrg
+     \item[Lead Organization]        \LeadOrg \secondaryLeadOrg
      \item[Protocol Personnel]       \LeadPerson,  \LeadRole
      \item[Address]                  \LeadAddress
      \item[Phone]                    \LeadPhone
@@ -2877,8 +3067,6 @@ STATUSCHAIRINFO=r"""
 
 
 DocumentStatusCheckBody = (
-# --------- START: First section Contact Information ---------
-#    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
     XProc(element   = "/SPSCheck/Protocol/ProtocolTitle",
           order     = XProc.ORDER_TOP,
           prefix    = "  \\newcommand{\\ProtocolTitle}{",
@@ -2895,20 +3083,14 @@ DocumentStatusCheckBody = (
           order     = XProc.ORDER_TOP,
           prefix    = "  \\newcommand{\\LeadOrg}{",
           suffix    = "}\n"),
+    XProc(element   = "/SPSCheck/Protocol/LeadOrgRole",
+          textOut   = 0, 
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[leadOrgRole]]),
     XProc(element   = "/SPSCheck/PUP",
           textOut   = 0, 
           order     = XProc.ORDER_TOP,
           preProcs  = [[statPup]]),
-    XProc(prefix    = STATUSDEF,
-          order     = XProc.ORDER_TOP),
-#    XProc(element="/SPSCheck/PUP/Street",
-#          textOut=0,
-#          preProcs=( (street, ()), )),
-#    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
-#    XProc(prefix=STATUSDEF,
-#          suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
-# --------- END: First section Contact Information ---------
-# --------- START: Second section Protocol Information ---------
     XProc(element   = "/SPSCheck/Protocol/Personnel",
           order     = XProc.ORDER_TOP,
           preProcs  = [[statPersonnel]],
@@ -2917,58 +3099,29 @@ DocumentStatusCheckBody = (
                       STATUS_TAB_INTRO + STATUS_TAB),
     XProc(element   = "/SPSCheck/Protocol/ProtocolSites",
           textOut   = 0,
+          preProcs  = [[statProtSites]],
           suffix    = END_TABLE, 
           order     = XProc.ORDER_TOP),
-    # Need to start the table header as a suffix of the Personnel field
-    # in order to create the table for each protocol record.
-#    XProc(element="Personnel",
-#          order=XProc.ORDER_PARENT,
-#          textOut=0,
-#          suffix=STATUSPROTINFO + STATUSCHAIRINFO + 
-#                 STATUS_TAB_INTRO + STATUS_TAB),
-#    XProc(element="/SPSCheck/Protocol/Personnel/Name",
-#          order=XProc.ORDER_PARENT,
-#          prefix="  \\renewcommand{\\LeadPerson}{",
-#          suffix="  }\n"),
-#    XProc(element="/SPSCheck/Protocol/Personnel/Role",
-#          order=XProc.ORDER_PARENT,
-#          prefix="  \\renewcommand{\\LeadRole}{",
-#          suffix="  }\n"),
-#    XProc(element="/SPSCheck/Protocol/Personnel/Street",
-#          textOut=0,
-#          order=XProc.ORDER_PARENT,
-#          preProcs=( (street, ()), )),
-#    XProc(element="/SPSCheck/Protocol/Personnel/Phone",
-#          order=XProc.ORDER_PARENT,
-#          prefix="  \\renewcommand{\\LeadPhone}{",
-#          suffix="  }\n"),
-# --------- END: Second section Protocol Information ---------
-# --------- START: Third section Protocol Information ---------
-#    XProc(prefix=STATUS_SITES_TAB),
-    XProc(element="ParticipatingSite",
-          order=XProc.ORDER_PARENT,
-          textOut=0),
-    XProc(element="Site",
-          order=XProc.ORDER_PARENT,
-          suffix="& "),
-    XProc(element="PI",
-          order=XProc.ORDER_PARENT,
-          suffix="& "),
-    XProc(element="/SPSCheck/Protocol/ProtocolSites/ParticipatingSite/Phone",
-          order=XProc.ORDER_PARENT),
-    XProc(element = "SiteStatus",
-          preProcs = [[statSiteStatus]],
-          textOut = 0,
-          order = XProc.ORDER_PARENT)
-#          postProcs=((yesno,("Phone","Recruiting",)),)),
-    # XProc(prefix=END_TABLE),
-#    XProc(prefix="  \\end{enumerate}", order=XProc.ORDER_TOP),
+#    XProc(element   = "ParticipatingSite",
+#          order     = XProc.ORDER_PARENT,
+#          textOut   = 0),
+#    XProc(element   = "Site",
+#          order     = XProc.ORDER_PARENT,
+#          suffix    = " & "),
+#    XProc(element   = "PI",
+#          textOut   = 0,
+#          preProcs  = [[piName]],
+#          order     = XProc.ORDER_PARENT),
+#    XProc(element   = "/SPSCheck/Protocol/ProtocolSites/ParticipatingSite/Phone",
+#          order     = XProc.ORDER_PARENT),
+#    XProc(element   = "SiteStatus",
+#          preProcs  = [[statSiteStatus]],
+#          textOut   = 0,
+#          order     = XProc.ORDER_PARENT)
     )
 
 
 DocumentStatusCheckCCOPBody = (
-# --------- START: First section Contact Information ---------
-#    XProc(prefix=STATUSPROTOCOLDEF, order=XProc.ORDER_TOP),
     XProc(element="PUP",
           textOut=0, order=XProc.ORDER_TOP),
     XProc(element="/SPSCheck/PUP/Name",
@@ -3149,7 +3302,7 @@ DocumentStatusCheckHeader =(
     XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
     XProc(prefix=STATPART_TITLE, order=XProc.ORDER_TOP),
-    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
+    XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP),
     )
 
 
@@ -3161,7 +3314,7 @@ DocumentTestHeader =(
     XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
     XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
-    XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
+    XProc(prefix=ALTENDPREAMBLE, order=XProc.ORDER_TOP)
     )
 
 # ###########################################################
