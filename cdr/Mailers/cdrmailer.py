@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.31 2002-10-24 17:18:44 bkline Exp $
+# $Id: cdrmailer.py,v 1.32 2002-10-24 17:51:35 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.31  2002/10/24 17:18:44  bkline
+# Added remailerFor to addMailerTrackingDoc().
+#
 # Revision 1.30  2002/10/24 02:37:48  bkline
 # Turned on doc versions; removed org type.
 #
@@ -351,7 +354,7 @@ class MailerJob:
     # Generate a document for tracking a mailer.
     #------------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType, 
-                             remailerFor = ""):
+                             remailerFor = None):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -370,6 +373,8 @@ class MailerJob:
         if remailerFor:
             remailerFor = "\n  <RemailerFor cdr:ref='%s'/>" % \
                           cdr.normalize(remailerFor)
+        else:
+            remailerFor = ""
         recipId = "CDR%010d" % recipient.getId()
         docId   = "CDR%010d" % doc.getId()
         address = recipient.getAddress().getXml()
