@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.6 2002-10-22 20:22:19 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.7 2002-10-22 20:23:29 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2002/10/22 20:22:19  bkline
+# Switch to use of makeIndex() from the base class.  Fixed subset name.
+#
 # Revision 1.5  2002/10/10 17:45:16  bkline
 # Mods to cover letters.
 #
@@ -172,7 +175,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     def __makeMailer(self, recip, doc, template):
 
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recip, self.MAILER_TYPE)
+        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
 
         # Create a mailing label.
         latex     = self.createAddressLabelPage(recip.getAddress())
