@@ -1,0 +1,109 @@
+%----------------------------------------------------------------------
+% Top-level declarations for the cover letter for a set of status and
+% participant site check mailers.
+%----------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{letter}
+
+%----------------------------------------------------------------------
+% Package and macro used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{textcomp}
+\newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+
+%----------------------------------------------------------------------
+% Eliminate warnings on overfull hbox by adjusting the stretch parameters
+%----------------------------------------------------------------------
+\tolerance=1000
+\emergencystretch=20pt
+
+%----------------------------------------------------------------------
+% Package and code to set double-quotes correctly.
+%----------------------------------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+    \addtocounter{qC}{1}%
+    \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+%----------------------------------------------------------------------
+% Set up the margins.
+%----------------------------------------------------------------------
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\parskip}{6pt}
+\setlength{\parindent}{0mm}
+\setlength{\headheight}{-.5in}
+\setlength{\topmargin}{0in}
+\setlength{\footskip}{-.5in}
+
+%----------------------------------------------------------------------
+% Start the document and import the standard mailer templates.
+%----------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------
+% Don't put a page number on this page.
+%----------------------------------------------------------------------
+\thispagestyle{empty}
+
+\begin{center}
+ \textbf{PDQ\textregistered/Cancer.gov Information Summary \\
+         Reviewer Check List}
+\end{center}
+
+\vspace{24pt}
+
+\textbf{Reviewer: } Barnett Kramer
+
+\vspace{12pt}
+
+\textbf{Summary Topic: } Prostate Cancer
+
+\rule{6.5in}{.02in}
+
+\vspace{12pt}
+
+Please review the attached cancer information summary and \textbf{make
+all proposed revisions directly on the printout.}
+
+\vspace{12pt}
+
+\begin{tabular}{llp{4.5in}}
+\hspace{.25in}\rule{1in}{.01in} & a. & Summary is acceptable as it stands 
+                                      and \textbf{requires no change.} \\
+\\
+\hspace{.25in}\rule{1in}{.01in} & b. & Summary requires minor \textbf{text
+                                      revision(s)} as noted on page
+                                      \rule{.5in}{.01in} of the printout. \\
+\\
+\hspace{.25in}\rule{1in}{.01in} & c. & \textbf{Replace or include citations(s)}
+                                      as noted on page \rule{.5in}{.01in}
+                                      of the printout. \\
+\\
+\hspace{.25in}\rule{1in}{.01in} & d. & \textbf{Editorial Board should discuss
+                                      citations(s)} as noted on page
+                                      \rule{.5in}{.01in} of the printout.
+\end{tabular}
+
+\vspace{18pt}
+
+Other comments or relevant articles:
+
+\vspace{12pt}
+
+\makebox[6.5in]{\hrulefill} \\ \\
+\makebox[6.5in]{\hrulefill} \\ \\
+\makebox[6.5in]{\hrulefill} \\ \\
+\makebox[6.5in]{\hrulefill}
+
+\vspace{12pt}
+
+Please return this form and the revised summary in the enclosed envelope
+within 30 days of receipt.
+
+Thank you.
+
+\vfill
+\end{document}
