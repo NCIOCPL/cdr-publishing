@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.57 2003-08-08 00:42:57 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.58 2003-08-19 13:55:32 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.57  2003/08/08 00:42:57  ameyer
+# Fixed duplication of OrgName in other locations.
+# Left original code commented out in place because I don't know if I've
+# tested enough cases to be sure this is right everywhere.
+#
 # Revision 1.56  2003/08/07 20:54:27  ameyer
 # Removed unused getState() function.
 # Removed MemberOfCooperativeGroup processing, replacing it with
@@ -753,22 +758,33 @@ class PersonLists:
             if vvList[0] == "MemberOfMedicalSociety":
                 return vvList[1]
         raise XmlLatexException("Unable to find list of medical societies")
+
     def __getTrialGroups(self, conn):
+        """
+        Get names of legal NCI trial groups from the database into
+        a sorted list.
+        Pass:
+            Database connection.
+        Return:
+            Sorted list.
+        """
         cursor = conn.cursor()
         cursor.execute("""\
-       SELECT DISTINCT d.id,
-                       o.value
-                  FROM document d
-                  JOIN query_term o
-                    ON o.doc_id = d.id
+       SELECT DISTINCT o.value
+                  FROM query_term o
                   JOIN query_term t
-                    ON t.doc_id = d.id
+                    ON t.doc_id = o.doc_id
                  WHERE o.path   = '/Organization/OrganizationNameInformation'
                                 + '/OfficialName/Name'
                    AND t.path   = '/Organization/OrganizationType'
                    AND t.value  = 'NCI-supported clinical trials group'
               ORDER BY o.value""")
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+        groups = []
+        for row in rows:
+            groups.append (row[0])
+        return groups
+
     def __getOncologyPrograms(self, conn):
         cursor = conn.cursor()
         cursor.execute("""\
@@ -1716,6 +1732,7 @@ def personSpecialties(pp):
     boardSpecialties = {}
     otherSpecialties = {}
     profSocieties    = {}
+    # Structure here is groupname:1 means person is in this group
     trialGroups      = {}
     # oncologyPrograms = {}
 
@@ -1735,22 +1752,8 @@ def personSpecialties(pp):
         otherSpecialties[getText(elem)] = 1
     for elem in node.getElementsByTagName("MemberOfMedicalSociety"):
         profSocieties[getText(elem)] = 1
-    for elem in node.getElementsByTagName("CooperativeGroup"):
-        child = elem.firstChild
-        link = None
-        while child and not link:
-            if child.nodeName == "Ref":
-                link = getText(child)
-            child = child.nextSibling
-        if link:
-            tail = link.find('#')
-            if tail != -1:
-                link = link[:tail]
-            link = re.sub(r"[^\d]", "", link)
-            try:
-                trialGroups[int(link)] = 1
-            except:
-                pass
+    for elem in node.getElementsByTagName("MemberOfCooperativeGroup"):
+        trialGroups[getText(elem)] = 1
 
     # Don't yet know how to find out what oncology programs they're members of.
     # Find out from Lakshmi. XXX
@@ -1904,8 +1907,8 @@ def personSpecialties(pp):
 
     # Populate the table.
     for group in personLists.trialGroups:
-        flag = trialGroups.has_key(group[0]) and "Y" or "N"
-        output += "  %s \\Check{%s} \\\\ \\hline\n" % (group[1], flag)
+        flag = trialGroups.has_key(group) and "Y" or "N"
+        output += "  %s \\Check{%s} \\\\ \\hline\n" % (group, flag)
     output += r"""
   \end{longtable}
 """
