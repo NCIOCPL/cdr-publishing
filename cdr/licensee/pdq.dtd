@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.45 2003-08-15 13:55:36 bkline Exp $
+   $Id: pdq.dtd,v 1.46 2003-10-08 12:43:25 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.45  2003/08/15 13:55:36  bkline
+   Made ProtocolSpecialCategory multiply-occurring.
+
    Revision 1.44  2003/08/12 18:18:23  bkline
    Added definitions for Audience and Dictionary (GlossaryTerm section).
 
@@ -1109,5 +1112,119 @@
 <!ELEMENT PoliticalSubUnitAlternateName (#PCDATA)>
 
 <!-- End PoliticalSubUnit -->
+
+<!-- CTGovProtocol, start element CTGovProtocol -->
+
+<!ENTITY % CTGovContact        "GivenName?,
+                                MiddleInitial?,
+                                SurName,
+                                ProfessionalSuffix?,
+                                Phone?,
+                                PhoneExt?,
+                                Email?">
+
+<!ELEMENT CTGovProtocol        (RequiredHeader,
+                                IDInfo,
+                                BriefTitle,
+                                OfficialTitle?,
+                                Sponsors,
+                                BriefSummary,
+                                DetailedDescription?,
+                                CTEntryCriteria,
+                                CTGovDisclaimer,
+                                CurrentProtocolStatus,
+                                StartDate?,
+                                EndDate?,
+                                ProtocolPhase+,
+                                ProtocolDetail,
+                                Eligibility,
+                                Location*,
+                                VerificationDate,
+                                LastChangedDate?)>
+
+<!ELEMENT RequiredHeader       (DownloadDate, 
+                                LinkText)>
+
+<!ELEMENT IDInfo               (OrgStudyID, 
+                                SecondaryID*, 
+                                NCTID)>
+
+<!ELEMENT Sponsors             (PDQSponsorship*,
+                                LeadSponsor,
+                                Collaborator*,
+                                OverallOfficial*,
+                                OverallContact?,
+                                OverallContactBackup?)>
+
+<!ELEMENT OverallOfficial      (GivenName?,
+                                MiddleInitial?,
+                                SurName,
+                                ProfessionalSuffix?,
+                                Role?,
+                                Affiliation?)>
+
+<!ELEMENT Location             (Facility,
+                                Status,
+                                CTGovContact*,
+                                CTGovContactBackup?,
+                                Investigator*)>
+
+<!ELEMENT Facility             (FacilityName?,
+                                PostalAddress)>
+
+<!ELEMENT Investigator         (GivenName?,
+                                MiddleInitial?,
+                                SurName,
+                                ProfessionalSuffix?,
+                                Role?)>
+
+<!-- CTGov contact elements. -->
+<!ELEMENT CTGovContact         (%CTGovContact;)>
+<!ELEMENT CTGovContactBackup   (%CTGovContact;)>
+<!ELEMENT OverallContact       (%CTGovContact;)>
+<!ELEMENT OverallContactBackup (%CTGovContact;)>
+
+<!-- CTGov text content elements. -->
+<!ELEMENT Affiliation          (#PCDATA)>
+<!ELEMENT BriefTitle           (#PCDATA)>
+<!ELEMENT Collaborator         (#PCDATA)>
+<!ELEMENT CTGovDisclaimer      (#PCDATA)>
+<!ELEMENT DownloadDate         (#PCDATA)>
+<!ELEMENT EndDate              (#PCDATA)>
+<!ELEMENT FacilityName         (#PCDATA)>
+<!ELEMENT LastChangedDate      (#PCDATA)>
+<!ELEMENT LeadSponsor          (#PCDATA)>
+<!ELEMENT LinkText             (#PCDATA)>
+<!ELEMENT NCTID                (#PCDATA)>
+<!ELEMENT OfficialTitle        (#PCDATA)>
+<!ELEMENT OrgStudyID           (#PCDATA)>
+<!ELEMENT PDQSponsorship       (#PCDATA)>
+<!ELEMENT PhoneExt             (#PCDATA)>
+<!ELEMENT Role                 (#PCDATA)>
+<!ELEMENT SecondaryID          (#PCDATA)>
+<!ELEMENT StartDate            (#PCDATA)>
+<!ELEMENT Status               (#PCDATA)>
+<!ELEMENT VerificationDate     (#PCDATA)>
+
+<!-- (Modestly) marked-up text. -->
+<!ELEMENT BriefSummary         ((Para|ItemizedList)+)>
+<!ELEMENT CTEntryCriteria      ((Para|ItemizedList)+)>
+<!ELEMENT DetailedDescription  ((Para|ItemizedList)+)>
+
+<!-- Links (and other attributes) for CTGov elements. -->
+<!ATTLIST Collaborator          ref  CDATA                 #IMPLIED>
+<!ATTLIST Collaborator          type (Person|Organization) #IMPLIED>
+<!ATTLIST CTGovContact          ref  CDATA                 #IMPLIED>
+<!ATTLIST CTGovContactBackup    ref  CDATA                 #IMPLIED>
+<!ATTLIST CTGovProtocol         id   CDATA                 #REQUIRED>
+<!ATTLIST FacilityName          ref  CDATA                 #IMPLIED>
+<!ATTLIST Investigator          ref  CDATA                 #IMPLIED>
+<!ATTLIST LeadSponsor           ref  CDATA                 #IMPLIED>
+<!ATTLIST LeadSponsor           type (Person|Organization) #IMPLIED>
+<!ATTLIST LinkText              xref CDATA                 #REQUIRED>
+<!ATTLIST OverallContact        ref  CDATA                 #IMPLIED>
+<!ATTLIST OverallOfficial       ref  CDATA                 #IMPLIED>
+
+<!-- End CTGovProtocol -->
 
 <!-- End CDR DTD -->
