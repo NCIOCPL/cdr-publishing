@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.28 2003-01-16 23:35:42 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.29 2003-01-23 19:28:49 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.28  2003/01/16 23:35:42  ameyer
+# Added \YESno and \yesNO macros to centralize handling of default values
+# for check circles.
+# Added default handling for three more check circles in the form.
+#
 # Revision 1.27  2003/01/15 04:52:34  ameyer
 # Added 'x' in circles for public email Yes or No for each email address.
 #
@@ -517,7 +522,6 @@ class LeadOrgPerson:
                                 shortName = getText(cName)
                         self.address.country = shortName or fullName
             elif child.nodeName == "PersonRole":
-                role = getText(child)
                 self.roles.append(getText(child))
     def hasRole(self, role):
         return role in self.roles
@@ -964,7 +968,7 @@ def protocolTitle (pp):
 #       # ----------------------------------------------------------
 #       txtNode = addressNode.firstChild
 #       while txtNode != None:
-#          addressString += UnicodeToLatex.convert(txtNode.nodeValue);
+#          addressString += UnicodeToLatex.convert(txtNode.nodeValue)
 #          txtNode = txtNode.nextSibling
 
 
@@ -1031,7 +1035,7 @@ def street (pp):
                 if count > 0:
                     streetString += " \\newline \n"
                 if streetNode.nodeName == 'Street':
-                    streetString += UnicodeToLatex.convert(txtNode.nodeValue);
+                    streetString += UnicodeToLatex.convert(txtNode.nodeValue)
                 txtNode = txtNode.nextSibling
                 count += 1
 
@@ -1065,7 +1069,7 @@ def yesno (pp):
     If the Description field is a SpecialtyCategory an additional
     check is set for the board certification.
     """
-    rootField = pp.args[0]
+    rootField  = pp.args[0]
     checkField = pp.args[1]
     # Build output string here
     checkString = ''
@@ -1078,7 +1082,6 @@ def yesno (pp):
     # them with a LaTeX newline and line break
     # ------------------------------------------------------------
     checkNode = pp.getCurNode()
-    count = 0
     while checkNode != None and \
            checkNode.nodeName == rootField:
 
@@ -1592,7 +1595,8 @@ def personLocs(pp):
         if cipsContact.address.country:
             cipsContactInfo += "  %s \\\\\n" % cipsContact.address.country
         # Make email public Yes or No
-        cipsContactInfo += personEmailPublic(cipsContact.emailPublic);
+        cipsContactInfo += personEmailPublic(cipsContact.email,
+                                             cipsContact.emailPublic)
         # Form itself
         cipsContactInfo += r"""
   \renewcommand{\ewidth}{180pt}
@@ -1628,7 +1632,7 @@ def personLocs(pp):
         output += "  \\begin{enumerate}\n"
         for loc in otherLocs:
             # Make email public Yes or No for this location
-            output += personEmailPublic(loc.emailPublic);
+            output += personEmailPublic(loc.email, loc.emailPublic)
             # Full location data
             output += r"""
   \item
@@ -2014,7 +2018,7 @@ def personDirectoryInclude(pp):
 
     # If value is anything else ("Pending"), do nothing
 
-def personEmailPublic(noString):
+def personEmailPublic(emailAddr, noString):
     """
     Same concept as personDirectoryInclude, but used to tell whether
     Email is public or not.
@@ -2032,13 +2036,14 @@ def personEmailPublic(noString):
         A LaTeX string containing the renewcommand for
         emailPublicYesOrNoCircles.
     """
-    # Redefine command based on whether email is defined as not public
+    # Redefine command based on whether email exists and is public
+    if not emailAddr or emailAddr == "":
+        return r"\renewcommand{\emailPublicYesOrNoCircles}{\yesno}"
     if not noString or noString != "No":
         # Undefined, empty, or something other than 'No'
         return r"\renewcommand{\emailPublicYesOrNoCircles}{\YESno}"
-    else:
-        # Email attribute said Public="No"
-        return r"\renewcommand{\emailPublicYesOrNoCircles}{\yesNO}"
+    # Email exists and attribute said Public="No"
+    return r"\renewcommand{\emailPublicYesOrNoCircles}{\yesNO}"
 
 def statPup(pp):
     "Build the address block for the protocol update person."
