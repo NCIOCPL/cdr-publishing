@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.45 2003-06-26 19:49:32 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.46 2003-07-01 14:21:36 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.45  2003/06/26 19:49:32  bkline
+# Switched protocol abstract mailer to use vendor filter output.
+#
 # Revision 1.44  2003/06/02 14:29:08  bkline
 # Added handling of SummaryFragmentRef.
 #
@@ -1007,7 +1010,7 @@ def protocolTitle (pp):
         macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
                  "Original Title:} ")
     elif attr == "Patient":
-        macro = ("\\newcommand\\PatientProtocolTitle{\\bfseries "
+        macro = ("\\newcommand\\PatientProtocolTitle{{\\bfseries "
                  "Patient Title:} ")
         """
         macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
