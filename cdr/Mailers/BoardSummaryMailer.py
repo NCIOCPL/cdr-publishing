@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.10 2003-05-13 19:57:21 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.11 2004-04-19 15:54:25 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2003/05/13 19:57:21  bkline
+# Replaced explitly enumerated filter list with named filter set invocation.
+#
 # Revision 1.9  2003/02/13 20:17:36  bkline
 # Added filter to strip out "Changes to summary" SummarySection elements.
 #
@@ -171,12 +174,6 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __makePacket(self, recipient, coverLetterTemplate, sepSheetTemplate):
         self.log("building packet for %s" % recipient.getName())
-
-        # Create a mailing label.
-        latex     = self.createAddressLabelPage(recipient.getAddress())
-        basename  = 'MailingLabel-%d' % recipient.getId()
-        jobType   = cdrmailer.PrintJob.COVERPAGE
-        self.addToQueue(self.makePS(latex, 1, basename, jobType))
 
         # Create a separator sheet.
         docList   = ""
