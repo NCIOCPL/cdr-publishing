@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.51 2004-05-11 20:52:10 bkline Exp $
+# $Id: cdrmailer.py,v 1.52 2004-05-18 13:04:30 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.51  2004/05/11 20:52:10  bkline
+# Added comment for protOrgId parameter for addMailerTrackingDoc().
+#
 # Revision 1.50  2004/04/27 15:44:00  bkline
 # Added support for use of PDQBoardMemberInfo documents.
 #
@@ -288,6 +291,13 @@ class MailerJob:
         getDeadline()
             Returns a string in the form YYYY-MM-DD for the deadline
             by which the mailer must be responded to.
+
+        getJobTime()
+            Returns a string in the form YYYY-MM-DDTHH:MM:SS
+            representing the date/time the job processing began.
+
+        commit()
+            Commits the current open database transaction.
     """
 
     #------------------------------------------------------------------
@@ -333,9 +343,11 @@ class MailerJob:
     def getRecipients(self): return self.__recipients
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
+    def getJobTime   (self): return self.__now
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
     def printDirect  (self): self.__batchPrinting = 0
     def addToQueue   (self, job):   self.__queue.append(job)
+    def commit       (self):        self.__conn.commit()
     def getParm      (self, name):
         v = self.__parms.get(name)
         return v and tuple(v) or ()
@@ -358,6 +370,7 @@ class MailerJob:
             self.log("~~Finished __createQueue")
             self.fillQueue()
             self.__printQueue(self.__batchPrinting)
+            self.createEmailers()
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
             self.log("******** finished mailer job ********")
             return 0
@@ -415,10 +428,20 @@ class MailerJob:
         raise StandardError ("fillQueue() must be defined by derived class")
 
     #------------------------------------------------------------------
+    # Placeholder for method to create electronic mailers (if any).
+    #------------------------------------------------------------------
+    def createEmailers(self):
+        """
+        Do nothing if the derived class does not override this method.
+        """
+        pass
+
+    #------------------------------------------------------------------
     # Generate a document for tracking a mailer.
     #------------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType,
-                             remailerFor = None, protOrgId = None):
+                             remailerFor = None, protOrgId = None,
+                             email = None):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -430,12 +453,13 @@ class MailerJob:
                           an earlier mailer that was sent out and
                           never responded to, and for which this
                           is a followup remailer.
-            protOrgId   - string form of CDR ID for a protocol's
-                          lead organization (the one to which
-                          this mailer is being sent); used to
+            protOrgId   - string or integer form of CDR ID for a 
+                          protocol's lead organization (the one to 
+                          which this mailer is being sent); used to
                           distinguish between Status and Participant
                           mailers for the same protocol in the
                           same job.
+            email       - address used for electronic mailer.
         Return value:
             Integer ID for the newly inserted Mailer document.
         """
@@ -450,27 +474,35 @@ class MailerJob:
                           cdr.normalize(protOrgId)
         else:
             protOrg     = ""
-        recipId = "CDR%010d" % recipient.getId()
-        docId   = "CDR%010d" % doc.getId()
-        address = recipient.getAddress().getXml()
-        xml     = u"""\
+        if email:
+            mode        = "Web-based"
+            address     = """\
+   <MailerAddress>
+    <Email>%s</Email>
+   </MailerAddress>""" % email
+        else:
+            mode        = "Mail"
+            address     = recipient.getAddress().getXml()
+        recipId         = "CDR%010d" % recipient.getId()
+        docId           = "CDR%010d" % doc.getId()
+        xml             = u"""\
 <CdrDoc Type="Mailer">
  <CdrDocCtl>
   <DocTitle>Mailer for document %s sent to %s</DocTitle>
  </CdrDocCtl>
  <CdrDocXml><![CDATA[
   <Mailer xmlns:cdr="cips.nci.nih.gov/cdr">
-   <Type>%s</Type>%s
+   <Type Mode='%s'>%s</Type>%s
    <JobId>%d</JobId>
    <Recipient cdr:ref="%s">%s</Recipient>%s
-   %s
+%s
    <Document cdr:ref="%s">%s</Document>
    <Sent>%s</Sent>
    <Deadline>%s</Deadline>
   </Mailer>]]>
  </CdrDocXml>
 </CdrDoc>
-""" % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
+""" % (docId, recipId, mode, mailerType, remailerFor, self.__id, recipId,
        recipient.getName(), protOrg, address, docId, doc.getTitle(),
        self.__now, self.__deadline)
         rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
@@ -739,9 +771,47 @@ class MailerJob:
                                                               eMsg)
 
     #------------------------------------------------------------------
+    # Create the directory for electronic mailers.  Callback used by
+    # the derived class where appropriate.
+    #------------------------------------------------------------------
+    def initEmailers(self):
+
+        # Does the output directory already exist
+        try:
+            os.chdir(self.__emailerDir)
+        except:
+            # Doesn't exist, try to create it
+            try:
+                os.makedirs(self.__emailerDir)
+            except:
+                self.log ("Unable to create emailer directory", tback=1)
+                raise "failure creating emailer directory %s" % \
+                      self.__emailerDir
+            try:
+                os.chdir(self.__emailerDir)
+            except:
+                self.log ("Unable to change to emailer directory", tback=1)
+                raise "failure setting working directory to %s" % \
+                      self.__emailerDir
+
+    #------------------------------------------------------------------
+    # Retrieve the string for an email address from an XML address
+    # fragment document.
+    #------------------------------------------------------------------
+    def extractEmailAddress(self, docXml):
+        dom = xml.dom.minidom.parseString(docXml)
+        for node in dom.documentElement.childNodes:
+            if node.nodeName == "ContactDetail":
+                for child in node.childNodes:
+                    if child.nodeName == "Email":
+                        return cdr.getTextContent(child)
+
+    #------------------------------------------------------------------
     # Clear out orphaned mailer tracking documents (from failed jobs).
     #------------------------------------------------------------------
     def __mailerCleanup(self):
+        if os.getenv('SKIP_MAILER_CLEANUP'):
+            return # for faster testing
         try:
             results = cdr.mailerCleanup(self.__session)
             if results[0]:
@@ -812,6 +882,7 @@ class MailerJob:
             if not row:
                 raise "unable to find job %d" % self.__id
             (self.__outputDir, self.__email, self.__subset) = row
+            self.__emailerDir = self.__outputDir + "-e"
         except cdrdb.Error, info:
             raise "database error retrieving pub_proc row: %s" % info[1][0]
 
@@ -917,6 +988,17 @@ class MailerJob:
     # Print the jobs in the queue.
     #------------------------------------------------------------------
     def __printQueue(self, batchPrint = 1):
+
+        # If no mailers at this point, we're just doing electronic mailers.
+        if not self.__nMailers:
+            for file in os.listdir("."):
+                os.unlink("./%s" % file)
+            os.chdir("..")
+            os.rmdir(self.__outputDir)
+
+            # Nothing to print.
+            return
+        
         if batchPrint:
             PrintJob(0, PrintJob.DUMMY).writePrologFiles()
             outputFile = open("PrintJob.cmd", "w")
@@ -1015,7 +1097,11 @@ class MailerJob:
         self.log("~~In packageFailureFiles")
         dir  = "Job%d" % self.getId()
         name = "FailedJob%d.tar" % self.getId()
-        os.chdir("..")
+        try:
+            os.chdir(self.__outputDir)
+            os.chdir("..")
+        except:
+            return
         if not os.path.isdir(dir):
             self.log("Cannot find directory %s" % dir)
             return
@@ -1238,16 +1324,21 @@ class Recipient:
         getDocs()
             Returns the list of Document objects representing documents
             sent to this recipient.
+
+        getEmailers()
+            Returns the list of Emailer objects for this recipient.
     """
     def __init__(self, id, name, address = None):
-        self.__id      = id
-        self.__name    = name
-        self.__address = address
-        self.__docs    = []
-    def getId     (self): return self.__id
-    def getName   (self): return self.__name
-    def getAddress(self): return self.__address
-    def getDocs   (self): return self.__docs
+        self.__id       = id
+        self.__name     = name
+        self.__address  = address
+        self.__docs     = []
+        self.__emailers = []
+    def getId      (self): return self.__id
+    def getName    (self): return self.__name
+    def getAddress (self): return self.__address
+    def getDocs    (self): return self.__docs
+    def getEmailers(self): return self.__emailers
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer document.
@@ -1677,3 +1768,15 @@ class Address:
     #------------------------------------------------------------------
     def __lineIsUS(self, line):
         return line.strip().upper() in ("US", "USA", "U.S.", "U.S.A.")
+
+#----------------------------------------------------------------------
+# Object for an electronic mailer.
+#----------------------------------------------------------------------
+class Emailer:
+    def __init__(self, document, recipient, leadOrg = None):
+        self.__document  = document
+        self.__recipient = recipient
+        self.__leadOrg   = leadOrg
+    def getLeadOrgId(self): return self.__leadOrg
+    def getRecipient(self): return self.__recipient
+    def getDocument (self): return self.__document
