@@ -315,7 +315,6 @@
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Persons</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
@@ -404,7 +403,6 @@
       <SubsetFilterName>Person QC Report Filter</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Persons</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
