@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.4 2003-05-19 18:41:57 bkline Exp $
+# $Id: cdrlatextables.py,v 1.5 2003-07-02 21:22:53 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2003/05/19 18:41:57  bkline
+# Modified handling of citations in table cells to allow line breaking
+# after a comma in a series of citation numbers (request #735)
+#
 # Revision 1.3  2003/01/06 21:01:29  bkline
 # Fixed column width conversion math.
 #
@@ -561,9 +565,10 @@ def closeGroup(pp):
     #sys.stderr.write("headEnds=%d bodyEnds=%d footEnds=%d\n" % (headEnds,
     #                                                            bodyEnds,
     #                                                            footEnds))
-    body = group.assembleRows(group.head, group.outer, headEnds) + \
-           group.assembleRows(group.body, group.outer, bodyEnds) + \
-           group.assembleRows(group.foot, group.outer, footEnds)
+    endHead = group.head and "  \\endhead\n" or ""       
+    body = (group.assembleRows(group.head, group.outer, headEnds) + endHead +
+            group.assembleRows(group.body, group.outer, bodyEnds) +
+            group.assembleRows(group.foot, group.outer, footEnds))
 
     pp.setOutput(body + "\n" + hline + tabEnd + vspace)
 
