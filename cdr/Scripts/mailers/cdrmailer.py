@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.9 2002-02-06 00:23:30 ameyer Exp $
+# $Id: cdrmailer.py,v 1.10 2002-02-14 20:21:18 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2002/02/06 00:23:30  ameyer
+# Replaced stub latex converter with reference to the real thing.
+#
 # Revision 1.8  2002/01/23 17:13:14  bkline
 # Temporary stubs to work around gaps in cdrxmllatex in Alan's absence.
 #
@@ -189,7 +192,7 @@ class MailerJob:
             return 0
         except:
             (eType, eValue) = sys.exc_info()[:2]
-            errMessage = eValue and eValue or eType
+            errMessage = eValue or eType
             self.log("ERROR: %s" % errMessage)
             self.__cleanup("Failure", errMessage)
             return 1
@@ -351,10 +354,11 @@ class MailerJob:
             debugCtr += 1
             open(fname, "w").write(result[0])
             docDom = xml.dom.minidom.parseString(result[0])
-            return cdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
+            return cdrxmllatex.makeLatex(docDom, doc.getDocType(),
+                                         mailType, self.log)
         except:
             (eType, eValue) = sys.exc_info()[:2]
-            eMsg = eValue and eValue or eType
+            eMsg = eValue or eType
             raise "failure generating LaTeX for %s: %s" % (docId, eMsg)
 
     #------------------------------------------------------------------
@@ -395,7 +399,7 @@ class MailerJob:
 
         except:
             (eType, eValue) = sys.exc_info()[:2]
-            eMsg = eValue and eValue or eType
+            eMsg = eValue or eType
             raise "failure converting %s.tex to %s.ps: %s" % (basename,
                                                               basename,
                                                               eMsg)
@@ -629,13 +633,13 @@ class PrintJob:
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
-        if 0:
-            prn = open(printer, "w")
-            doc = open(self.__filename)
-            prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
-                       doc.read())
-            doc.close()
-            prn.close()
+
+        prn = open(printer, "w")
+        doc = open(self.__filename)
+        prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
+                   doc.read())
+        doc.close()
+        prn.close()
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer organization.
