@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.20 2002-10-09 20:40:09 bkline Exp $
+# $Id: cdrmailer.py,v 1.21 2002-10-10 13:43:41 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.20  2002/10/09 20:40:09  bkline
+# Dropped obsolete includeCountry argument for assembling address lines.
+#
 # Revision 1.19  2002/10/09 19:41:46  bkline
 # Added code to drop country line for domestic address labels.
 #
@@ -863,6 +866,11 @@ class PrintJob:
 @PJL SET OUTBIN=OPTIONALOUTBIN2
 @PJL ENTER LANGUAGE=POSTSCRIPT
 """
+    __NONSTAPLE_PROLOG = """\
+\033%-12345X@PJL
+@PJL SET OUTBIN=OPTIONALOUTBIN2
+@PJL ENTER LANGUAGE=POSTSCRIPT
+"""
     def __init__(self, filename, filetype):
         self.__filename = filename
         self.__filetype = filetype
@@ -893,7 +901,8 @@ class PrintJob:
         if not justTesting:
             prn = open(printer, "w")
             doc = open(self.__filename)
-            prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
+            prn.write((self.__staple and self.__STAPLE_PROLOG or 
+                                         self.__NONSTAPLE_PROLOG) +
                       doc.read())
             doc.close()
             prn.close()
