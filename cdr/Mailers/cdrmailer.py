@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.11 2002-04-25 15:54:09 ameyer Exp $
+# $Id: cdrmailer.py,v 1.12 2002-05-15 01:40:29 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2002/04/25 15:54:09  ameyer
+# Added formatAddress - Bob's formatter used in several mailers.
+# Added getDocList - to return the list of doc ids plus version numbers.
+#
 # Revision 1.10  2002/02/14 20:21:18  ameyer
 # Removed the block on printing.  Will add a new control for this soon.
 #
@@ -80,6 +84,11 @@ class MailerJob:
             for the ContactDetail information in a Person document
             identified as the CIPS contact address.
 
+        makeIndex()
+            Builds an index list of recipients from the dictionary
+            of Recipient objects and sorts it by country and
+            postalCode.
+
         makeLatex(doc, filters, mailType)
             Obtains a document from the repository, applies the
             caller's filters to it, and uses the cdrxmllatex
@@ -107,11 +116,6 @@ class MailerJob:
         getDocIds()
             Returns the tuple of document IDs found in the
             pub_proc_doc table.
-
-        getDocList()
-            Returns the list of tuples of document IDs plus
-            version numbers found in the pub_proc_doc table.
-            getDocIds() returns a subset of this - just the ids.
 
         getRecipients()
             Returns the dictionary containing the Recipient
@@ -166,6 +170,7 @@ class MailerJob:
         self.__nMailers    = 0
         self.__docIds      = []
         self.__recipients  = {}
+        self.__index       = []
         self.__documents   = {}
         self.__parms       = {}
         self.__printer     = MailerJob.__DEF_PRINTER
@@ -179,8 +184,8 @@ class MailerJob:
     def getSession   (self): return self.__session
     def getDeadline  (self): return self.__deadline
     def getDocIds    (self): return self.__docIds
-    def getDocList   (self): return self.__docList
     def getRecipients(self): return self.__recipients
+    def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
     def addToQueue   (self, job):   self.__queue.append(job)
     def getParm      (self, name):
@@ -327,6 +332,20 @@ class MailerJob:
                 docId,
                 result)
         return Address(result[0])
+
+    #------------------------------------------------------------------
+    # Generate an index of the mailers in order of country + postal code.
+    #------------------------------------------------------------------
+    def makeIndex(self):
+        recipients     = self.getRecipients()
+        for recipKey in recipients.keys():
+            recip      = recipients[recipKey]
+            address    = recip.getAddress()
+            country    = address.getCountry()
+            postalCode = address.getPostalCode()
+            for doc in recip.getDocs():
+                self.__index.append((country, postalCode, recip, doc))
+        self.__index.sort()
 
     #------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
@@ -529,20 +548,47 @@ class MailerJob:
             raise "database error retrieving pub_proc row: %s" % info[1][0]
 
     #------------------------------------------------------------------
-    # Load the list of document IDs (with version numbers) for this job.
+    # Load the list of document IDs and other descriptive information
+    # for each document to be mailed by this job.
     #------------------------------------------------------------------
     def __getPubProcDocRows(self):
+
         try:
+            # Find id, version, title, document type name
+            #   for each document previously selected for mailing
             self.__cursor.execute("""\
-                SELECT doc_id, doc_version
-                  FROM pub_proc_doc
+                SELECT pub.doc_id, pub.doc_version,
+                       doc.title, type.name
+                  FROM pub_proc_doc pub
+                  JOIN document doc
+                    ON pub.doc_id = doc.id
+                  JOIN doc_type type
+                    ON doc.doc_type = type.id
                  WHERE pub_proc = ?""", (self.__id,))
-            self.__docList = self.__cursor.fetchall()
-            if not self.__docList:
+            docDescriptorList = self.__cursor.fetchall()
+
+            # Can't continue if there aren't any
+            if not docDescriptorList:
                 raise "no documents found for job %d" % self.__id
-            for doc in self.__docList:
-                self.__docIds.append(doc[0])
+
+            # Build a list of pure docIds (used by some software)
+            #   and of fuller information
+            for row in docDescriptorList:
+
+                # Append the id to plain list of ids
+                self.__docIds.append(row[0])
+
+                # Create a document object and add it to list of objects
+                self._documents[row(0)] = \
+                    Document (row[0], row[2], row[3], row[1])
+
+            if not docDescriptorList:
+                raise "no documents found for job %d" % self.__id
+
+            # Convert the id list to a faster tuple
+            # [Not sure why Bob did this]
             self.__docIds = tuple(self.__docIds)
+
         except cdrdb.Error, err:
             raise "database error retrieving pub_proc_doc rows: %s" % err[1][0]
 
@@ -774,14 +820,21 @@ class Document:
             Returns the name of this document's CDR document type (e.g.,
             "Summary").
 
+        getVersion()
+            Returns the version number in the version archive of the
+            document to be mailed.  If None, we are mailing the
+            current working document.
+
     """
-    def __init__(self, id, title, docType):
+    def __init__(self, id, title, docType, version=None):
         self.__id         = id
         self.__title      = title
         self.__docType    = docType
+        self.__version    = version
     def getId     (self): return self.__id
     def getTitle  (self): return self.__title
     def getDocType(self): return self.__docType
+    def getVersion(self): return self.__version
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer address.
