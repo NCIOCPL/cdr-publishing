@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.26 2002-07-19 19:43:38 arkd Exp $
+ $Id: pdq.dtd,v 1.27 2002-07-26 13:59:56 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -659,7 +659,7 @@
 <!ATTLIST LeadOrgName ref CDATA #REQUIRED>
 
 <!ELEMENT LeadOrgRole (#PCDATA)>
-<!-- Role can be primary or secondary -->
+<!-- Role can be Primary or Secondary -->
 
 <!ELEMENT LeadOrgProtocolID (#PCDATA)>
 
@@ -795,7 +795,7 @@
 
 <!--At present there will be no genetics directory-->
 
-<!ELEMENT PreferredProtocolContactMode (#PCDATA)>
+<!--<!ELEMENT PreferredProtocolContactMode (#PCDATA)>-->
 
 <!ELEMENT OrganizationLocations (OrganizationLocation+)>
 
@@ -924,7 +924,7 @@
 				TYPE*,
 				SPECIALTY*,
 				TEAMSERVICES*,
-				GENETICSERVICES+,
+				GENETICSERVICES*,
 				MEMBERSHIP*,
 				NOTES?
 			       )>
@@ -946,13 +946,19 @@
 			     CPHN?,
 			     CEML?
 			    )>
-<!ELEMENT SPECIALTY ((BDCT?)?)>
+<!ELEMENT SPECIALTY (SPECIALTYNAME,BDCT?)>
+
+<!ELEMENT SPECIALTYNAME (#PCDATA)>
 
 <!ELEMENT GENETICSERVICES (FAMILYCANCERSYNDROME+)>
 
-<!ELEMENT FAMILYCANCERSYNDROME ((CANCERTYPE?)+)>
+<!ELEMENT FAMILYCANCERSYNDROME (SYNDROMENAME,CANCERTYPE*)>
 
-<!ELEMENT CANCERTYPE ((CANCERSITE?)*)>
+<!ELEMENT SYNDROMENAME (#PCDATA)>
+
+<!ELEMENT CANCERTYPE (TYPENAME,CANCERSITE*)>
+
+<!ELEMENT TYPENAME (#PCDATA)>
 
 <!ELEMENT MEMBERSHIP (INSTITUTION+)>
 
@@ -996,13 +1002,13 @@
 
 <!-- Country, start element Country -->
 
-<!ELEMENT Country (DateFirstPublished?,
-		   DateLastModified?,
-		   CountryFullName,
+<!ELEMENT Country (CountryFullName,
 		   CountryShortName?,
 		   CountryAlternateName*,
 		   Continent,
-		   PostalCodePosition
+		   PostalCodePosition,
+      	   DateFirstPublished?,
+		   DateLastModified?
 		  )>
 <!ATTLIST Country id CDATA #REQUIRED>
 <!ATTLIST Country LegacyPDQID CDATA #IMPLIED>
@@ -1019,12 +1025,12 @@
 
 <!-- PoliticalSubUnit, start element PoliticalSubUnit -->
 
-<!ELEMENT PoliticalSubUnit (DateFirstPublished?,
-			    DateLastModified?,
-			    PoliticalSubUnitFullName,
+<!ELEMENT PoliticalSubUnit (PoliticalSubUnitFullName,
 			    PoliticalSubUnitShortName?,
 			    PoliticalSubUnitAlternateName*,
-			    CountryName
+			    CountryName,
+			    DateFirstPublished?,
+			    DateLastModified?,
 			   )>
 <!ATTLIST PoliticalSubUnit id CDATA #REQUIRED>
 <!ATTLIST PoliticalSubUnit LegacyPDQID CDATA #IMPLIED>
