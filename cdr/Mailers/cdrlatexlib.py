@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.18 2002-11-07 21:21:20 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.19 2002-11-08 16:11:45 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.18  2002/11/07 21:21:20  bkline
+# Improved table support.
+#
 # Revision 1.17  2002/11/06 03:09:27  ameyer
 # Changed initial values of address lines from None to "", to avoid
 # rare cases where xxx.strip() would fail because address line named xxx
@@ -868,10 +871,10 @@ def protocolTitle (pp):
     attr = node.getAttribute("Type")
     macro = None
     if attr == "Professional":
-        macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQTitle:}"
+        macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQ Title:}"
     elif attr == "Original":
         macro = "\\newcommand\\OriginalProtocolTitle{{\\bfseries "\
-                "OriginalTitle:}"
+                "Original Title:}"
     if macro:
         pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
 
