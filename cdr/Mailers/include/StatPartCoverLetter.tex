@@ -1,27 +1,33 @@
 %----------------------------------------------------------------------
 %
-% $Id: StatPartCoverLetter.tex,v 1.2 2002-09-27 18:07:52 bkline Exp $
+% $Id: StatPartCoverLetter.tex,v 1.3 2002-10-12 16:35:43 bkline Exp $
 %
 % Template for the cover letter for a set of status and participant 
 % site check mailers.
 %
 % $Log: not supported by cvs2svn $
+% Revision 1.2  2002/09/27 18:07:52  bkline
+% Cleaned up comments.
+%
 % Revision 1.1  2002/09/27 18:06:13  bkline
 % Cover letter for status and participant site check mailers.
 %
 %----------------------------------------------------------------------
-\documentclass[letterpaper,12pt]{article}
+\documentclass[letterpaper,12pt]{letter}
+
+\usepackage{graphicx}
+\usepackage{longtable}
+
+%----------------------------------------------------------------------
+% Common definitions.
+%----------------------------------------------------------------------
+\include{d:/cdr/mailers/include/template}
 
 %----------------------------------------------------------------------
 % Package and macro used for special symbols, such as \texteuro.
 %----------------------------------------------------------------------
 \usepackage{textcomp}
 \newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
-
-%----------------------------------------------------------------------
-% Package used for special symbols, such as \texteuro.
-%----------------------------------------------------------------------
-\usepackage{calc}
 
 %----------------------------------------------------------------------
 % Eliminate warnings on overfull hbox by adjusting the stretch parameters
@@ -55,61 +61,90 @@
 }
 
 %----------------------------------------------------------------------
-% Set up the headers/footers.
-%----------------------------------------------------------------------
-\usepackage{fancyhdr}
-\newcommand{\ShortTitle}{PDQ/Cancer.gov Status \& Participant Site Check}
-\newcommand{\CenterHdr}{{\bfseries Protocol Update Person: @@PUPNAME@@}}
-\newcommand{\RightHdr}{}
-\newcommand{\LeftHdr}{\ShortTitle \\ @@THISMONTH@@ \\}
-\pagestyle{fancy}
-\fancyhead[C]{\CenterHdr}
-\fancyhead[L]{\LeftHdr}
-\fancyhead[R]{\RightHdr}
-\fancyfoot[C]{\thepage}
-\renewcommand\headrulewidth{1pt}
-\renewcommand\footrulewidth{1pt}
-
-%----------------------------------------------------------------------
 % Set up the margins.
 %----------------------------------------------------------------------
-\setlength{\headwidth}{6.5in}
 \setlength{\textwidth}{6.5in}
 \setlength{\textheight}{8.5in}
 \setlength{\oddsidemargin}{0in}
-\setlength{\parskip}{1.2mm}
+\setlength{\parskip}{12pt}
 \setlength{\parindent}{0mm}
-\setlength{\headheight}{48pt}
-\renewcommand{\thesection}{\hspace{-1.0em}}
+\setlength{\headheight}{-.5in}
 
 %----------------------------------------------------------------------
-% Start the document and import the standard mailer templates.
+% Start the document.
 %----------------------------------------------------------------------
 \begin{document}
-\include{/cdr/mailers/include/template}
 
 %----------------------------------------------------------------------
-% Print the title of the mailers.
+% Don't put a page number on this page.
 %----------------------------------------------------------------------
-\begin{center}\bfseries\large
-    National Cancer Institute's PDQ Database \\
-    Cooperative Group Clinical Trial Status and Participating Sites Check
-\end{center}
+\thispagestyle{empty}
 
 %----------------------------------------------------------------------
-% Add the address of the protocol update person.
+% Lay out the letterhead.
+%----------------------------------------------------------------------
+\LetterheadWithLogo
+  
+\vspace{36pt}
+
+%----------------------------------------------------------------------
+% Print the address for the PUP.
 %----------------------------------------------------------------------
 @@PUPADDRESS@@
 
 %----------------------------------------------------------------------
-% Print the intro paragraph (from the mailer template include file).
+% Body of the letter.
 %----------------------------------------------------------------------
-\StatusIntro
+Subject:\ \ Review of status and participating sites for PDQ/Cancer.gov NCI
+Cooperative Group clinical trials
 
-%----------------------------------------------------------------------
-% Print the available statuses with their definitions.
-%----------------------------------------------------------------------
-\StatusDefinition
+Thank you for listing the following trials conducted by your organization in
+the National Cancer Institute's PDQ/Cancer.gov clinical trials database.  We
+will contact you four times a year to verify status and participating site
+information to ensure that your listings are current and accurate.
+
+Please review the current status and participating site information for each
+of the trials listed in this packet.  Mark any changes directly on the form.
+As a reminder, when a protocol submitted to PDQ/Cancer.gov by the National
+Cancer Institute's Cancer Therapy Evaluation Program indicates that the trial
+is open group-wide, all main/full member institutions (and affiliates for some
+groups) are listed as participating sites, with the designated
+Principal Investigator as the contact person.  If there are any member
+institutions/CCOPs missing from the list of participating sites, please
+include the following information for each institution: 
+
+\begin{itemize}
+ \item Institution name, address, phone, fax, and e-mail.
+ \item Principal Investigator name, address, phone, fax, and e-mail.
+ \item Trials on which the institution should be listed as a participating
+ site. 
+\end{itemize}
+
+\textbf{Please return this packet in the enclosed envelope even if you have
+    made no changes.}
+
+\textbf{PDQ/Cancer.gov defines protocol statuses as:}
+
+\begin{longtable}{p{2in}p{4in}}
+Approved-not yet active & Approved by NCI, but not yet accepting
+                          patients for accrual \\
+Active                  & Accepting patients for accrual \\
+Temporarily closed      & Patient accrual on hold, pending study evaluation \\
+Closed                  & No longer accepting patients; previously entered
+                          patients will continue treatment \\
+Completed               & Study closed, data collection completed \\
+Withdrawn               & Study discontinued, and to be removed from
+                          the PDQ/Cancer.gov database
+\end{longtable}
+
+Thank you for your assistance in keeping PQ/Cancer.gov up-to-date.  If you
+have any questions, please feel free to contact the PDQ/Cancer.gov Protocol
+Coordinator at ***REMOVED*** or send e-mail to pdqprot@cips.nci.nih.gov.
+
+\vspace{12pt}
+
+PDQ/Cancer.gov Protocol Coordinator \\
+Cancer Information Products and Systems
 
 %----------------------------------------------------------------------
 % Done; wrap it up.
