@@ -16,8 +16,11 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.2 2004-10-07 23:08:08 bkline Exp $
+# $Id: FtpHotfixDocs.py,v 1.3 2004-10-15 20:25:22 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2004/10/07 23:08:08  bkline
+# Fixed the FTP process and changed the directory name to cdr from update.
+#
 # Revision 1.1  2004/10/06 21:48:44  bkline
 # Initial version of program to package and copy hot-fix documents to the
 # FTP server.
@@ -48,6 +51,7 @@ open(log, "a").write("Job %d: %s\n    %d: Started at: %s\n" % \
                     (jobId, divider, jobId, time.ctime(time.time())))
 try:
 
+    print "Processing files..."
     rmDoc = re.compile('Removed this document')
     for k in sys.argv[1:]:
        oldDir = os.path.join(outDir, 'Job' + k)
@@ -108,20 +112,26 @@ try:
     ftpCmd.write('mkdir ' + dateStr + '\n')
     ftpCmd.write('cd ' + dateStr + '\n')
     ftpCmd.write('mkdir cdr\n')
-    ftpCmd.write('mkdir remove\n')
     ftpCmd.write('lcd d:/cdr/Output/mid-month/' + dateStr + '\n')
     ftpCmd.write('lcd cdr\n')
     ftpCmd.write('cd cdr\n')
     ftpCmd.write('mput CDR*.xml\n')
-    ftpCmd.write('lcd ../remove\n')
-    ftpCmd.write('cd  ../remove\n')
-    ftpCmd.write('mput CDR*.xml\n')
+
+    # Only add this part if removed documents exist.
+    # ----------------------------------------------
+    if re.search(rmDoc, text):
+       ftpCmd.write('mkdir ../remove\n')
+       ftpCmd.write('lcd ../remove\n')
+       ftpCmd.write('cd  ../remove\n')
+       ftpCmd.write('mput CDR*.xml\n')
     ftpCmd.write('bye\n')
     ftpCmd.close()
 
 
     open(log, "a").write("    %d: Copy files to ftp server\n" %
                         (jobId))
+    print "Copy files to ftp server..."
+
     # FTP the Hot-fix documents to ftpserver
     # --------------------------------------
     mycmd = cdr.runCommand("c:/Winnt/System32/ftp.exe -i -s:FtpHotfixDocs.txt")
