@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.48 2003-08-21 22:08:57 bkline Exp $
+# $Id: cdrmailer.py,v 1.49 2004-01-13 21:05:56 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.48  2003/08/21 22:08:57  bkline
+# Fixed bug in placement of protOrg when generating XML for
+# mailer tracking document.
+#
 # Revision 1.47  2003/08/21 19:43:06  bkline
 # Added support for ProtocolOrg element in mailer tracking document for
 # S&P mailers.
@@ -355,6 +359,7 @@ class MailerJob:
             (eType, eValue) = sys.exc_info()[:2]
             errMessage = eValue or eType
             self.log("ERROR: %s" % errMessage, tback=1)
+            self.__packageFailureFiles()
             self.__cleanup("Failure", errMessage)
             return 1
 
@@ -965,6 +970,34 @@ class MailerJob:
                 os.unlink("%s/%s" % (dir, file))
         except:
             raise StandardError("failure creating print job package")
+        os.rmdir(dir)
+
+    #------------------------------------------------------------------
+    # Create single archive package for a failed job's files.
+    #------------------------------------------------------------------
+    def __packageFailureFiles(self):
+        self.log("~~In packageFailureFiles")
+        dir  = "Job%d" % self.getId()
+        name = "FailedJob%d.tar" % self.getId()
+        os.chdir("..")
+        if not os.path.isdir(dir):
+            self.log("Cannot find directory %s" % dir)
+            return
+        try:
+            file = tarfile.TarFile(name, 'w')
+            for fName in glob.glob('%s/*' % dir):
+                file.write(fName)
+            file.close()
+            p = os.popen('bzip2 %s' % name)
+            output = p.read()
+            if p.close():
+                self.log("Failure packing files for failed job: %s" % output)
+                return
+            for file in glob.glob('%s/*' % dir):
+                os.unlink(file)
+        except Exception, e:
+            self.log("failure packing files for failed job: %s" % str(e))
+            return
         os.rmdir(dir)
 
     #------------------------------------------------------------------
