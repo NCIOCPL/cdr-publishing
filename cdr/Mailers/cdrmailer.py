@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.40 2002-11-09 16:55:32 bkline Exp $
+# $Id: cdrmailer.py,v 1.41 2003-01-28 16:15:33 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.40  2002/11/09 16:55:32  bkline
+# Added code to package files after the job has completed.
+#
 # Revision 1.39  2002/11/08 22:41:14  bkline
 # Added utf-8 encoding for mailer tracking document's XML.
 #
@@ -835,28 +838,31 @@ class MailerJob:
     # Note: all files with the extensions '.xml', '.tex', '.log',
     # '.aux', and '.dvi' are packaged in a separate compressed tar
     # archive for intermediate files.  Everything else goes into a
-    # ZIP archive, used to print the actual mailer documents.  Make
-    # sure nothing needed by the ZIP archive gets a filename extension
-    # used for the intermediate file archive.
+    # second tar archive, used to print the actual mailer documents.  
+    # Make sure nothing needed by this second archive gets a filename 
+    # extension used for the intermediate file archive.
     #------------------------------------------------------------------
     def __packageFiles(self):
         self.log("~~In packageFiles")
-        workExt = ('xml', 'tex', 'log', 'aux', 'dvi')
-        dir     = "Job%d" % self.getId()
-        tarName = "SupportFilesForJob%d.tgz" % self.getId()
-        zipName = "PrintFilesForJob%d.zip" % self.getId()
-        tarType = tarfile.TAR_GZIPPED
-        zipType = zipfile.ZIP_DEFLATED
+        workExt   = ('xml', 'tex', 'log', 'aux', 'dvi')
+        dir       = "Job%d" % self.getId()
+        workName  = "SupportFilesForJob%d.tar" % self.getId()
+        printName = "PrintFilesForJob%d.tar" % self.getId()
         os.chdir("..")
         if not os.path.isdir(dir):
             raise StandardError("INTERNAL ERROR: cannot find directory %s"
                     % dir)
         try:
-            tfile = tarfile.TarFile(tarName, 'w', tarType)
+            workFile = tarfile.TarFile(workName, 'w')
             for ext in workExt:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
-                    tfile.write(file)
-            tfile.close()
+                    workFile.write(file)
+            workFile.close()
+            p = os.popen('bzip2 %s' % workName)
+            output = p.read()
+            if p.close():
+                raise StandardError("failure packing working files for job: %s"
+                                    % output)
             for ext in workExt:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
                     os.unlink(file)
@@ -864,17 +870,15 @@ class MailerJob:
             raise StandardError("failure packing working files for job")
 
         try:
-            zfile = zipfile.ZipFile(zipName, 'w', zipType)
+            printFile = tarfile.TarFile(printName, 'w')
             for file in os.listdir(dir):
-                zfile.write("%s/%s" % (dir, file))
-            zfile.close()
-            zfile = zipfile.ZipFile(zipName, 'r')
-            badfile = zfile.testzip()
-            if badfile:
-                raise StandardError(
-                    "zip archive corrupted; first bad file encountered: %s"
-                    % badfile)
-            zfile.close()
+                printFile.write("%s/%s" % (dir, file))
+            printFile.close()
+            p = os.popen('bzip2 %s' % printName)
+            output = p.read()
+            if p.close():
+                raise StandardError("failure creating print job package: %s"
+                                    % output)
             for file in os.listdir(dir):
                 os.unlink("%s/%s" % (dir, file))
         except:
