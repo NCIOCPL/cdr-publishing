@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.10 2004-05-18 13:09:59 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.11 2004-05-18 17:58:48 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2004/05/18 13:09:59  bkline
+# Added support for electronic mailers.
+#
 # Revision 1.9  2003/08/21 19:43:06  bkline
 # Added support for ProtocolOrg element in mailer tracking document for
 # S&P mailers.
@@ -150,7 +153,7 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
         manifest = open("manifest.xml", "w")
         manifest.write("""\
 <?xml version='1.0' encoding='UTF-8'?>
-<Manifest jobTime='%s'>
+<EmailerManifest JobTime='%s' JobType='ProtocolStatusAndParticipant'>
 """ % self.getJobTime())
         counter = 0
 
@@ -174,12 +177,12 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
             if not email:
                 raise "No email address found for %s" % str(fragId)
             manifest.write("""\
- <UpdatePerson>
-  <ID>%s</ID>
-  <Password>%s</Password>
-  <DocFile>%s</DocFile>
-  <EmailAddress>%s</EmailAddress>
-  <Documents>
+ <EmailerRecipient>
+  <EmailerRecipientID>%s</EmailerRecipientID>
+  <EmailerRecipientPassword>%s</EmailerRecipientPassword>
+  <EmailerFilename>%s</EmailerFilename>
+  <EmailerAddress>%s</EmailerAddress>
+  <EmailerDocuments>
 """ % (id, pw, name, email))
             file = open(name, "wb")
             file.write(rsp[0])
@@ -207,14 +210,14 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
                 file.close()
                 protocolParms = ProtocolParms(rsp[0])
                 manifest.write((u"""\
-   <Document id='CDR%010d'>
-    <DocFile>%s</DocFile>
-    <Attrs>
-     <Attr name='ProtID'>%s</Attr>
-     <Attr name='Title'>%s</Attr>
-     <Attr name='Status'>%s</Attr>
-    </Attrs>
-   </Document>
+   <EmailerDocument id='CDR%010d'>
+    <EmailerFilename>%s</EmailerFilename>
+    <EmailerAttrs>
+     <EmailerAttr name='ProtID'>%s</EmailerAttr>
+     <EmailerAttr name='Title'>%s</EmailerAttr>
+     <EmailerAttr name='Status'>%s</EmailerAttr>
+    </EmailerAttrs>
+   </EmailerDocument>
 """ % (document.getId(),
        name,
        protocolParms.protId,
@@ -226,11 +229,11 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
                                           email = email)
                 counter += 1
             manifest.write("""\
-  </Documents>
- </UpdatePerson>
+  </EmailerDocuments>
+ </EmailerRecipient>
 """)
         manifest.write("""\
-</Manifest>
+</EmailerManifest>
 """)
         manifest.close()
         self.log("%d emailers successfully generated" % counter)
