@@ -312,7 +312,7 @@ def cite (pp):
      # If it's a sibling to another one, we've already processed it
      # Don't neeed to do any more
      prevNode = citeNode.previousSibling
-     if prevNode.nodeName == 'CitationReference':
+     if prevNode.nodeName == 'CitationLink':
         return 0
 
      # Beginning of list of one or more citation numbers
@@ -322,14 +322,14 @@ def cite (pp):
      #   separating them with commas
      count = 0
      while citeNode != None and \
-           citeNode.nodeName == 'CitationReference':
+           citeNode.nodeName == 'CitationLink':
 
         # Comma separator before all but the first one
         if count > 0:
             citeString += r","
 
         # Reference index number is in the refidx attribute
-        # Extract the attribute value from the CitationReference
+        # Extract the attribute value from the Citation
         # tag
         # ------------------------------------------------------
         attrValue = getAttribute (citeNode, 'refidx')
@@ -367,16 +367,49 @@ def bibitem (pp):
      refString = r"  \bibitem{"
 
      # Reference index number is in the refidx attribute
-     # Extract the attribute value from the CitationReference
+     # Extract the attribute value from the Citation
      # tag
      # ------------------------------------------------------
      attrValue = getAttribute (refNode, 'refidx')
      if (attrValue != None):
-        # refString += refNode.nextSibling
-        refString += attrValue
+       refString += attrValue
+       ## refString += refNode.nextSibling
+
 
      # Terminate the Latex for the list of citation
      refString += r"}"
+
+     # Return info to caller, who will output it to the Latex
+     pp.setOutput (refString)
+
+     return 0
+
+
+#------------------------------------------------------------------
+# protocolTitle
+#   From the three possible protocol titles only select the
+#   Professional Title
+#------------------------------------------------------------------
+def protocolTitle (pp):
+
+     # Build output string here
+     refString = ''
+
+     # Get the current citation node
+     refNode = pp.getCurNode()
+     txtNode = refNode.firstChild
+
+     # Reference index number is in the refidx attribute
+     # Extract the attribute value from the Citation
+     # tag
+     # ------------------------------------------------------
+     attrValue = getAttribute (refNode, 'Type')
+     if (attrValue == 'Professional'):
+       # Beginning of the ProtocolTitle element
+       refString = r"  \newcommand\ProtocolTitle{"
+       refString += UnicodeToLatex.convert(txtNode.nodeValue)
+       # Ending of the ProtocolTitle element
+       refString += "}\n  "
 
      # Return info to caller, who will output it to the Latex
      pp.setOutput (refString)
@@ -521,7 +554,7 @@ def street (pp):
 #       Description     Yes     No
 #    ===============================
 #     My Description     X
-#     Next Desctiption           X
+#     Next Description           X
 #
 #    After the description field is printed this procedure finds
 #    the sibling element with the Yes/No flag information and prints
@@ -561,7 +594,7 @@ def yesno (pp):
            if checkNode.nodeName == checkField:
               txtNode = checkNode.firstChild
               checkit = txtNode.nodeValue
-              if checkit == "Y":
+              if checkit == "Yes":
                  checkString += " \\Check{Y}"
               else:
                  checkString += " \\Check{N}"
@@ -571,12 +604,12 @@ def yesno (pp):
               # certification earlier.  However, the Check{} for this
               # certification must come as a second entry in LaTeX
               # -----------------------------------------------------
-              if checkNode.nodeName == "Specialty":
+              if checkNode.nodeName == "BoardCertifiedSpecialtyName":
                  while boardNode != None:
                     if boardNode.nodeName == "BoardCertified":
                        txtNode = boardNode.firstChild
                        checkboard = txtNode.nodeValue
-                       if checkboard == "Y":
+                       if checkboard == "Yes":
                           checkString += " \\Check{Y}"
                        else:
                           checkString += " \\Check{B}"
@@ -587,7 +620,7 @@ def yesno (pp):
         # Once we know the YesNo value we can end the LaTeX line and
         # return to the calling program
         # ----------------------------------------------------------
-        checkString += " \\\\ \hline\n"
+        checkString += " \\Check{B} \\\\ \hline\n"
         pp.setOutput (checkString)
 
         return 0
@@ -668,6 +701,16 @@ TOCHEADER=r"""
 """
 
 
+PROTOCOL_HDRTEXT=r"""
+  %% PROTOCOL_HDRTEXT%%
+  %% --------------- %%
+  \newcommand{\CenterHdr}{{\bfseries Protocol ID \ProtocolID} \\ }
+  \newcommand{\RightHdr}{MailerDocID:  @@MailerDocID@@}
+  \newcommand{\LeftHdr}{\today}
+%
+% -----
+"""
+
 
 SUMMARY_HDRTEXT=r"""
   %% SUMMARY_HDRTEXT%%
@@ -695,7 +738,7 @@ STATPART_HDRTEXT=r"""
 ORG_HDRTEXT=r"""
   %% ORG_HDRTEXT %%
   %% ----------- %%
-  \newcommand{\CenterHdr}{Organization ID: @@ORGID@@ \\ {\bfseries XX \Org}}
+  \newcommand{\CenterHdr}{Organization ID: @@ORGID@@ \\ {\bfseries XX \OrgName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\LeftHdr}{PDQ Organization Update \\ \today \\}
 %
@@ -711,19 +754,6 @@ PERSON_HDRTEXT=r"""
   \newcommand{\LeftHdr}{PDQ Physician Update \\ \today \\}
   \newcommand{\CenterHdr}{Physician ID: @@PERID@@ \\ {\bfseries \Person}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
-%
-% -----
-"""
-
-# Defining the document header for each page
-# Used by:  Protocol
-# ------------------------------------------
-PROTOCOL_HDRTEXT=r"""
-  %% PROTOCOL_HDRTEXT %%
-  %% -------------- %%
-  \newcommand{\LeftHdr}{                     \\ \today }
-  \newcommand{\CenterHdr}{Protocol ID: @@PROTID@@ \\                    }
-  \newcommand{\RightHdr}{                        \\ Doc ID: @@DOCID@@ }
 %
 % -----
 """
@@ -818,7 +848,7 @@ SPACING=r"""
 
 
 STYLES=r"""
-  %% STYLES %%
+  %% Styles %%
   %% ------ %%
   % Package longtable used to print tables over multiple pages
   % ----------------------------------------------------------
@@ -924,15 +954,15 @@ ORG_DEFS=r"""
   %% -------- %%
   % Variable Definitions
   % --------------------
-  \newcommand{\Phone}{}
-  \newcommand{\Fax}{}
-  \newcommand{\Email}{}
-  \newcommand{\Web}{}
-  \newcommand{\Street}{}
-  \newcommand{\City}{}
-  \newcommand{\PoliticalUnitState}{}
-  \newcommand{\Country}{}
-  \newcommand{\PostalCodeZIP}{}
+  \newcommand{\Phone}{oPhone}
+  \newcommand{\Fax}{oFax}
+  \newcommand{\Email}{oEmail}
+  \newcommand{\Web}{oWeb}
+  \newcommand{\Street}{oStreet}
+  \newcommand{\City}{oCity}
+  \newcommand{\PoliticalUnitState}{oState}
+  \newcommand{\Country}{oCountry}
+  \newcommand{\PostalCodeZIP}{oZip}
 %
 % -----
 """
@@ -942,26 +972,16 @@ PERSON_DEFS=r"""
   %% -------- %%
   % Variable Definitions
   % --------------------
-  \newcommand{\Org}{}
+  \newcommand{\OrgName}{pOrg}
   \newcommand{\Phone}{}
   \newcommand{\Fax}{}
   \newcommand{\Email}{}
   \newcommand{\Web}{}
-  \newcommand{\Street}{}
-  \newcommand{\City}{}
-  \newcommand{\PoliticalUnitState}{}
-  \newcommand{\Country}{}
-  \newcommand{\PostalCodeZIP}{}
-%
-% -----
-"""
-
-PROTOCOL_DEFS=r"""
-  %% PERSON_DEFS %%
-  %% -------- %%
-  % Variable Definitions
-  % --------------------
-  \newcommand{\ProtocolID}{}
+  \newcommand{\Street}{pStreet}
+  \newcommand{\City}{pCity}
+  \newcommand{\PoliticalUnitState}{pState}
+  \newcommand{\Country}{pCountry}
+  \newcommand{\PostalCodeZIP}{pZip}
 %
 % -----
 """
@@ -970,15 +990,15 @@ ORG_PRINT_CONTACT=r"""
    %% ORG_PRINT_CONTACT %%
    %% ----------------- %%
    \Person  \\
-   \Org     \\
-   \Street   \\
+   \OrgName \\
+   \Street  \\
    \City, \PoliticalUnitState\  \PostalCodeZIP \\
 
    \OrgIntro
 
    \subsection*{CIPS Contact Information}
 
-   \Org     \\
+   \OrgName     \\
    \Street   \\
    \City, \PoliticalUnitState\  \PostalCodeZIP \\
    \Country  \\
@@ -1005,8 +1025,8 @@ ORG_PRINT_CONTACT=r"""
 PERSON_PRINT_CONTACT=r"""
    %% PERSON_PRINT_CONTACT %%
    %% -------------------- %%
-   \Person, \PerSuffix  \\
-   \Org     \\
+   \Person, \GenSuffix \PerSuffix  \\
+   \OrgName    \\
    \Street   \\
    \City, \PoliticalUnitState\  \PostalCodeZIP \\
 
@@ -1276,7 +1296,7 @@ ORG_RESET_OTHER=r"""
    \renewcommand{\Fax}{}
    \renewcommand{\Email}{}
    \renewcommand{\Web}{}
-   \renewcommand{\Org}{}
+   \renewcommand{\OrgName}{}
    \renewcommand{\Street}{}
    \renewcommand{\City}{}
    \renewcommand{\PoliticalUnitState}{}
@@ -1308,7 +1328,7 @@ ORG_PRINT_OTHER=r"""
    %% ORG_PRINT_OTHER %%
    %% --------------- %%
    \item
-   \Org     \\
+   \OrgName     \\
    \Street  \\
    \City, \PoliticalUnitState\  \PostalCodeZIP \\
    \Country  \\
@@ -1378,7 +1398,8 @@ ENDSUMMARYPREAMBLE=r"""
 
   \begin{center}{\bfseries \Large
     \SummaryTitle \\
-    Font: \myfont}
+%    Font: \myfont
+    }
   \end{center}
   \tableofcontents
 
@@ -1445,14 +1466,14 @@ ENDPREAMBLE=r"""
   \begin{center}\bfseries \large
     \mailertitle
   \end{center}
-  \centerline{Font: \myfont}
+%  \centerline{Font: \myfont}
 %
 % -----
 """
 
 
-ENDPROTPREAMBLE=r"""
-  %% ENDPROTPREAMBLE %%
+ENDPROTOCOLPREAMBLE=r"""
+  %% ENDPROTOCOLPREAMBLE %%
   %% ----------- %%
   \setlength{\parskip}{1.2mm}
   \setlength{\parindent}{0mm}
@@ -1467,17 +1488,18 @@ ENDPROTPREAMBLE=r"""
 
   \begin{document}
   \include{/cdr/mailers/include/template}
+
 %
 % -----
 """
 
 
 ADDRESS = (
-    XProc(element="Name",
+    XProc(element="GivenName",
           occs=0,
           prefix="  \\newcommand{\Person}{",
           suffix="}\n"),
-    XProc(element="ProfSuffix",
+    XProc(element="ProfessionalSuffix/StandardProfessionalSuffix",
           occs=0,
           prefix="  \\newcommand{\PerSuffix}{",
           suffix="}\n"),
@@ -1493,12 +1515,12 @@ ADDRESS = (
           order=3,
           prefix="  \\renewcommand{\City}{",
           suffix="}\n"),
-    XProc(element="PoliticalUnit_State",
+    XProc(element="SpecificPostalAddress/PoliticalSubUnitShortName",
           occs=0,
           order=3,
           prefix="  \\renewcommand{\PoliticalUnitState}{",
           suffix="}\n"),
-    XProc(element="Country",
+    XProc(element="CountryFullName",
           occs=0,
           order=3,
           prefix="  \\renewcommand{\Country}{",
@@ -1506,7 +1528,7 @@ ADDRESS = (
     XProc(element="PostalCode_ZIP",
           occs=0,
           order=3,
-          prefix="  \\renewcommand{\PostalCodeZIP}{",
+          prefix="  \\renewcommand{\PostalCode_ZIP}{",
           suffix="}\n"),
     XProc(element="Phone",
           occs=0,
@@ -1531,9 +1553,46 @@ ADDRESS = (
     )
 
 
-PROTOCOL_TITLE=r"""
-  %% PROTOCOL_TITLE %%
-  %% -------------- %%
+PROTOCOLDEF=r"""
+  %% PROTOCOLDEF %%
+  %% ----------- %%
+  \newcommand{\HighAge}{XXX}
+  \newcommand{\LowAge}{XXX}
+  \newcommand{\Disease}{XXX}
+  \newcommand{\EligibilityText}{XXX}
+  \newcommand{\Outline}{XXX}
+  \newcommand{\BaselineTreatmentProcedures}{XXX}
+  \newcommand{\MeasureofResponse}{XXX}
+  \newcommand{\ProjectedAccrual}{XXX}
+  \newcommand{\DiseaseCaveat}{XXX}
+  \newcommand{\StratificationParameters}{XXX}
+  \newcommand{\DosageFormulation}{XXX}
+  \newcommand{\DosageSchedule}{XXX}
+  \newcommand{\DiseaseCharacteristics}{XXX}
+  \newcommand{\PatientCharacteristics}{XXX}
+  \newcommand{\PriorConcurrentTherapy}{XXX}
+  \newcommand{\ProtocolLeadOrg}{XXX}
+  \newcommand{\ChairPhone}{XXX}
+%
+% -----
+"""
+
+
+PROTOCOLTITLE=r"""
+  %% PROTOCOLTITLE %%
+  %% ------------- %%
+
+  % Tell fancyhdr package to modify the plain style (plain style is
+        % default on a cover page), e.g. put header on first page as well.
+  % ----------------------------------------------------------------
+  \fancypagestyle{plain}{%
+      % \fancyhf{}%
+      \fancyhead[L]{\today}
+      \fancyfoot[C]{\thepage}
+      \renewcommand\headrulewidth{1pt}
+      \renewcommand\footrulewidth{1pt}}
+
+      \makeatletter \renewcommand\@biblabel[1]{[#1]} \makeatother
 
   \setcounter{qC}{0}
   \subsection*{Protocol Title}
@@ -1543,24 +1602,28 @@ PROTOCOL_TITLE=r"""
 """
 
 
-PROTOCOL_INFORMATION=r"""
-  %% PROTOCOL_INFORMATION %%
-  %% -------------------- %%
 
-  \setcounter{qC}{0}
+PROTOCOLINFO=r"""
+  %% PROTOCOLINFO %%
+  %% ------------ %%
+
   \subsection*{General Protocol Information}
-  \renewcommand{\ewidth}{200pt}
+
+  \par
+    \setcounter{qC}{0}
+
+  \renewcommand{\ewidth}{180pt}
   \begin{entry}
      \item[Protocol ID]                \ProtocolID
-                                       \ProtocolOtherID
+                                       \OtherID
      \item[Protocol Activation Date]   \ProtocolActiveDate
      \item[Lead Organization]          \ProtocolLeadOrg
      \item[Protocol Chairman]          \ProtocolChair
-     \item[Phone]                      \ChairPhone
+     \item[Phone]                      \ChairPhone\ XX
      \item[Address]                    \ChairAddress
-     \item[Protocol Status]            \CurrentStatus
+     \item[Protocol Status]            \ProtocolStatus
 
-     \item[Eligible Patient Age Range] \AgeRange
+     \item[Eligible Patient Age Range] \AgeText
      \item[Lower Age Limit]            \LowAge
      \item[Upper Age Limit]            \HighAge
   \end{entry}
@@ -1569,66 +1632,61 @@ PROTOCOL_INFORMATION=r"""
 """
 
 
-DISEASE_TERMS=r"""
-  %% DISEASE_TERMS %%
-  %% ------------------- %%
+PROTOCOLDISEASES=r"""
+  %% PROTOCOLDISEASES %%
+  %% ----------- %%
   \setcounter{qC}{0}
   \subsection*{Disease Retrieval Terms}
-  % \newcommand{\DiseaseTerms}{%
-  \begin{list}{$\circ$}{\setlength{\itemsep}{-5pt}}
-  \item stage IV rectal cancer
-  \end{list}
-
-  % \DiseaseTerms
-% }
+  \subsubsection{Diseases}
+  \Disease
+  \subsubsection{Condition}
+  \Condition
 %
 % -----
 """
 
 
-PROTOCOL_OBJECTIVE=r"""
-  %% PROTOCOL_OBJECTIVE %%
+PROTOCOLOBJECTIVES=r"""
+  %% PROTOCOLOBJECTIVES %%
   %% ------------------ %%
   \setcounter{qC}{0}
   \subsection*{Protocol Objectives}
-  \ProtocolObjectives
 %
 % -----
 """
 
 
-PATIENT_ELIGIBILITY=r"""
-  %% PATINET_ELIGIBILITY %%
-  %% ------------------- %%
+PROTOCOLPATIENTELIGIBILITY=r"""
+  %% PROTOCOLPATIENTELIGIBILITY %%
+  %% -------------------------- %%
   \setcounter{qC}{0}
   \subsection*{Patient Eligibility}
-  \subsubsection*{Disease Characteristics}
+  \subsubsection{Disease Characteristics}
   \DiseaseCharacteristics
-
-  \subsubsection*{Prior/Concurrent Therapy}
-  \PriorTherapy
-
-  \subsubsection*{Patient Characteristics}
+  \subsubsection{Patient Characteristics}
   \PatientCharacteristics
+  \subsubsection{Prior Concurrent Therapy}
+  \PriorConcurrentTherapy
+
+  \PatientEligibility
 %
 % -----
 """
 
 
-PROTOCOL_OUTLINE=r"""
-  %% PROTOCOL_OUTLINE %%
-  %% ---------------- %%
-  \setcounter{qC}{0}
+PROTOCOLOUTLINE=r"""
+  %% PROTOCOLOUTLINE %%
+  %% ----------- %%
   \subsection*{Protocol Outline}
-  \ProtocolOutline
+  \Outline
 %
 % -----
 """
 
 
-STRATIFICATION_PARAMETERS=r"""
-  %% STRATIFICATION_PARAMETERS %%
-  %% ------------------------- %%
+PROTOCOLSTRATIFICATION=r"""
+  %% PROTOCOLSTRATIFICATION %%
+  %% ----------- %%
   \setcounter{qC}{0}
   \subsection*{Stratification Parameters}
   \StratificationParameters
@@ -1637,67 +1695,115 @@ STRATIFICATION_PARAMETERS=r"""
 """
 
 
-PROJECTED_ACCRUAL=r"""
-  %% PROJECTED_ACCRUAL %%
-  %% ----------------- %%
+PROTOCOLTREATMENT=r"""
+  %% PROTOCOLTREATMENT %%
+  %% ----------- %%
+  \setcounter{qC}{0}
+  \subsection*{Baseline and Treatment Procedures}
+  \BaselineTreatmentProcedures
+%
+% -----
+"""
+
+
+PROTOCOLRESPONSE=r"""
+  %% PROTOCOLRESPONSE %%
+  %% ----------- %%
+  \setcounter{qC}{0}
+  \subsection*{Measure of Response}
+  \MeasureofResponse
+%
+% -----
+"""
+
+
+PROTOCOLACCRUAL=r"""
+  %% PROTOCOLACCRUAL %%
+  %% ----------- %%
   \setcounter{qC}{0}
   \subsection*{Projected Accrual}
-  \ProjectedAccrual
+    \ProjectedAccrual
 %
 % -----
 """
 
-ENDPOINTS=r"""
-  %% ENDPOINTS %%
-  %% --------- %%
+
+PROTOCOLSCHEDULE=r"""
+  %% PROTOCOLSCHEDULE %%
+  %% ----------- %%
   \setcounter{qC}{0}
-  \subsection*{End Points}
-  \EndPoints
+  \subsection*{Dosage Schedule}
+  \DosageSchedule
 %
 % -----
 """
 
-STRATIFICATION=r"""
-  %% STRATIFICATION %%
-  %% -------------- %%
-  \setcounter{qC}{0}
-  \subsection*{Stratification}
-  \Stratification
-%
-% -----
-"""
 
-STUDY_PARAMETERS=r"""
-  %% STUDY_PARAMETERS %%
-  %% ------_--------- %%
-  \setcounter{qC}{0}
-  \subsection*{Study Parameters}
-  \StudyParameters
-%
-% -----
-"""
-
-DOSE_SCHEDULE=r"""
-  %% DOSE_SCHEDULE %%
-  %% ------------- %%
-  \setcounter{qC}{0}
-  \subsection*{Dose Schedule}
-  \DoseSchedule
-%
-% -----
-"""
-
-DOSAGE_FORM=r"""
-  %% DOSAGE_FORM %%
+PROTOCOLFORM=r"""
+  %% PROTOCOLFORM %%
   %% ----------- %%
   \setcounter{qC}{0}
   \subsection*{Dosage Formulation}
-  \DosageForm
+  \DosageFormulation
 %
 % -----
 """
 
 
+PROTOCOLCAVEAT=r"""
+  %% PROTOCOLCAVEAT %%
+  %% ----------- %%
+  \setcounter{qC}{0}
+  \subsection*{Caveat for use of Disease}
+  \DiseaseCaveat
+%
+% -----
+"""
+
+
+
+PROTOCOLBOILER=r"""
+  %% PROTOCOLBOILER %%
+  %% ----------- %%
+  % Following Text is Boilerplate
+
+  \newpage
+  Please initial this page and fax or send hard copy to the address below.
+
+  If you are requesting any changes to the submitted document please include
+  the edited pages of this document.
+
+  You may fax the information to the PDQ Protocol Coordinator at:
+  \begin{verse}
+      Fax \#:  301-480-8105
+  \end{verse}
+
+  \begin{verse}
+      PDQ Protocol Coordinator    \\
+      Attn: CIAT                  \\
+      Cancer Information Products and Systems, NCI, NIH   \\
+      6116 Executive Blvd. Suite 3002B MSC-8321           \\
+      Bethesda, MD 20892-8321
+  \end{verse}
+
+  Please initial here if summary is satisfactory to you.
+  \hrulefill
+
+  If the study is permanently closed to patient entry, please give approximate
+  date of closure.
+  \hrulefill
+
+  Reason for closure.
+  \hrulefill      \newline
+    \mbox{}\hrulefill \newline
+  \mbox{}\hrulefill \newline
+  \mbox{}\hrulefill \newline
+  \mbox{}\hrulefill
+
+  Please list/attach any citations resulting from this study.
+%
+% -----
+"""
 
 ###################################################################
 # Processing instructions for mailers
@@ -1747,7 +1853,7 @@ DocumentSummaryBody = (\
           occs=0,   \
           textOut=1,\
           suffix=   "\n  \\end{cbunit}\n\n"),\
-    XProc(element="Title",\
+    XProc(element="/Summary/SummarySection/Title",\
     	  occs=0, \
           order=2,\
           prefix="  \\section{",\
@@ -1762,7 +1868,7 @@ DocumentSummaryBody = (\
           occs=0,\
           order=2),\
     XProc(element="/Summary/SummarySection/SummarySection/Title",\
-	  occs=0,\
+	      occs=0,\
           order=2,\
           prefix="  \\subsection{",\
 	  suffix=   "}\n"),\
@@ -1787,12 +1893,12 @@ DocumentSummaryBody = (\
           occs=0, \
 	  order=3,\
 	  prefix="  \\item "),
-    XProc(element="CitationReference",\
+    XProc(element="CitationLink",\
     	  occs=0,\
           order=3,\
-          textOut=1,\
+          textOut=0,\
           preProcs=((cite,()),)),\
-    XProc(element="References",\
+    XProc(element="ReferenceList",\
 	  order=2,\
           textOut=0,\
           prefix="\n  \\begin{thebibliography}{999}\n",\
@@ -1823,127 +1929,233 @@ DocumentSummaryBody = (\
 #
 #   Putting together the header
 #------------------------------------------------------------------
-DocumentProtocolBody =(
-    XProc(element="ProtocolTitle",
+ProtAbstProtID =(\
+    XProc(prefix=PROTOCOLDEF),
+    XProc(element="/InScopeProtocol/ProtocolIDs/PrimaryID/IDString",
           order=2,
-          occs=1,
-          prefix="  \\newcommand{\ProtocolTitle}{",
+          prefix=r"  \newcommand{\ProtocolID}{",
           suffix="}\n"),
-    XProc(prefix=PROTOCOL_TITLE),
-    XProc(element="PrimaryID",
-          textOut=0,
-          order=2,),
-    XProc(element="IDString",
+
+    # Concatenating Other protocol IDs
+    XProc(prefix="  \\newcommand{\OtherID}{\n  "),
+    XProc(element="/InScopeProtocol/ProtocolIDs/OtherID/IDString",
           order=2,
-          prefix="  \\renewcommand{\ProtocolID}{",
+          prefix="   \\\\",
+          suffix="\n  "),
+    XProc(prefix="}\n"),
+
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgProtocolStatuses/CurrentOrgStatus/StatusDate",
+          order=2,
+          prefix="\n  \\newcommand{\ProtocolActiveDate}{",
+          suffix="}\n  "),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/OfficialName/Name",
+          order=2,
+          prefix="\\renewcommand{\ProtocolLeadOrg}{",
           suffix="}\n"),
-    XProc(element="HighAge",
-          prefix="  \\newcommand{\HighAge}{",
+
+    # Concatenating LastName, Firstname of Protocol chair
+    XProc(prefix="  \\newcommand{\\ProtocolChair}{"),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/SurName",
+          order=2,
+          suffix=", "),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PersonNameInformation/GivenName",
+          order=2,
+          suffix=""),
+    XProc(prefix="}\n"),
+
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Phone",
+          order=2,
+          prefix="  \\renewcommand{\ChairPhone}{",
+          suffix="}\n"),
+
+    # Concatenating Protocol chair address
+    XProc(prefix="  \\newcommand{\\ChairAddress}{"),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/Street",
+          order=2,
+          suffix="\\\\ \n  "),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/City",
+          order=2,
+          suffix=", "),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PoliticalSubUnit_State/PoliticalSubUnitShortName",
+          order=2,
+          suffix="  "),
+    XProc(element="/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg/LeadOrgPersonnel/Person/PostalCode_ZIP",
+          order=2,
+          suffix="\n"),
+    XProc(prefix="}\n"),
+
+    XProc(element="CurrentProtocolStatus",
+          order=2,
+          prefix="  \\newcommand{\ProtocolStatus}{",
           suffix="}\n"),
     XProc(element="LowAge",
-          prefix="  \\newcommand{\LowAge}{",
+          order=2,
+          prefix="  \\renewcommand{\LowAge}{",
           suffix="}\n"),
+    XProc(element="HighAge",
+          order=2,
+          prefix="  \\renewcommand{\HighAge}{",
+          suffix="}\n"),
+    )
+
+ProtAbstInfo =(
+    XProc(element="ProtocolTitle",
+          textOut=0,
+          order=2,
+          preProcs=( (protocolTitle, ()), ),),
+#   XProc(element="HighAge",
+#         textOut=1,
+#         order=2,
+#         prefix="\\renewcommand{\HighAge}{",
+#         suffix="}\n  "),
+#   XProc(element="LowAge",
+#         textOut=1,
+#         order=2,
+#         prefix="\\renewcommand{\LowAge}{",
+#         suffix="}\n  "),
     XProc(element="AgeText",
-          prefix="  \\newcommand{\AgeRange}{",
-          suffix="}\n"),
-    XProc(element="CurrentProtocolStatus",
-          prefix="  \\newcommand{\CurrentStatus}{",
-          suffix="}\n"),
-    XProc(prefix=PROTOCOL_INFORMATION),
-    XProc(prefix=DISEASE_TERMS),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Objectives/OrderedList",
-          textOut=0,
-          prefix="  \\newcommand{\\ProtocolObjectives}{%\n  \\renewcommand{\\theenumi}{\\Roman{enumi}}\n  \\renewcommand{\\labelenumi}{\\theenumi.}\n  \\begin{enumerate}\n",
-          suffix="  \\end{enumerate}\n}\n"),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Objectives/OrderedList/ListItem",
           order=2,
-          prefix="  \\item ",
-          suffix="  \n"),
-    XProc(prefix=PROTOCOL_OBJECTIVE),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/DiseaseCharacteristics",
-          textOut=0,
-          prefix="  \\newcommand{\\DiseaseCharacteristics}{%\n",
-          suffix="  }\n"),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PatientCharacteristics",
-          textOut=0,
-          prefix="  \\newcommand{\\PriorTherapy}{\n",
-          suffix="  }\n"),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PriorConcurrentTherapy",
-          textOut=0,
-          prefix="  \\newcommand{\\PatientCharacteristics}{\n",
-          suffix="  }\n"),
-    XProc(prefix=PATIENT_ELIGIBILITY),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Outline",
-          textOut=0,
-          prefix="  \\newcommand{\\ProtocolOutline}{\n",
-          suffix="  }\n"),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Outline/Para",
+          prefix=r"\newcommand{\AgeText}{",
+          suffix="}\n  "),
+    XProc(element="Diseases",
+          textOut=1,
           order=2,
-          suffix="  \n\n"),
-    XProc(prefix=PROTOCOL_OUTLINE),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/ProjectedAccrual",
-          textOut=0,
-          prefix="  \\newcommand{\\ProjectedAccrual}{\n",
-          suffix="  }\n"),
-    XProc(prefix=PROJECTED_ACCRUAL),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EndPoints/Para",
-          textOut=0),
-#         prefix="  \\newcommand{\\EndPoints}{\n",
-#         suffix="  }\n"),
-#   XProc(prefix=ENDPOINTS),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Stratification/Para",
-          textOut=0),
-#         prefix="  \\newcommand{\\Stratification}{\n",
-#         suffix="  }\n"),
-#   XProc(prefix=STRATIFICATION),
-    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/SpecialStudyParameters/Para",
-          textOut=0),
-#         prefix="  \\newcommand{\\StudyParameters}{\n",
-#         suffix="  }\n"),
-#   XProc(prefix=STUDY_PARAMETERS),
-     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/DoseSchedule/Para",
-           textOut=0),
-#          prefix="  \\newcommand{\\DoseSchedule}{\n",
-#          suffix="  }\n"),
-#    XProc(prefix=DOSE_SCHEDULE),
-     XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/DosageForm/Para",
-           textOut=0),
-#          prefix="  \\newcommand{\\DosageForm}{\n",
-#          suffix="  }\n"),
-#    XProc(prefix=DOSAGE_FORM),
-    XProc(element="Para",
-    	  occs=0,
+          prefix="\\renewcommand{\Diseases}{",
+          suffix="}\n  "),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EligibilityText/ItemizedList/ListItem",
+          order=1,
+          prefix="    \\item",),
+    XProc(element="Outline",
+          textOut=1,
           order=2,
-          prefix="\n  \\setcounter{qC}{0}\n",
-          suffix="\n\n"),
-#  Within an itemized list is always a ListTitle and a ListItem.  The
-#  ListTitle has to be displayed BEFORE the start of the list but ends with
-#  the end of the ItemizedList tag
-#  -------------------------------------------------------------------------
-    XProc(element="ItemizedList",
-          textOut=0,
+          prefix=r"\renewcommand{\Outline}{",
+          suffix="}\n  "),
+    XProc(element="LowAge",
+          textOut=1,
           order=2,
-          suffix="  \\end{itemize}"),
-    XProc(element="ListTitle",
+          prefix=r"\renewcommand{\BaselineTreatmentProcedures}{",\
+          suffix="}\n  "),\
+    XProc(element="LowAge",\
+          textOut=1,
           order=2,
-          prefix="  {\\bfseries \it ",
-          suffix="}\n  \\begin{itemize}\n"),
-    XProc(element="ListItem",
+          prefix=r"\renewcommand{\MeasureofResponse}{",
+          suffix="}\n  "),
+    XProc(element="ProjectedAccrual",
+          textOut=1,
+          order=2,
+          prefix=r"\renewcommand{\ProjectedAccrual}{",
+          suffix="}\n  "),
+    XProc(element="Caveat",
+          textOut=1,
+          order=2,
+          prefix=r"\renewcommand{\DiseaseCaveat}{",
+          suffix="}\n  "),
+# -- Setting String End
+    XProc(prefix=PROTOCOLTITLE),
+    XProc(prefix=PROTOCOLINFO),
+    XProc(prefix=PROTOCOLDISEASES),
+
+    XProc(prefix="\n  \\begin{list}{$\\circ$}{\\setlength{\\itemsep}{-5pt}}\n"),
+    XProc(prefix="\\renewcommand{\\ProjectedAccrual}{"),
+    XProc(element="Condition",
+          textOut=1,
           order=2,
           prefix="    \\item ",
           suffix="\n"),
-        )
+    XProc(prefix="  \\end{list}\n"),
+    XProc(prefix="}"),
+
+    XProc(prefix=PROTOCOLOBJECTIVES),
+    XProc(prefix="  \\renewcommand{\\theenumi}{\\Roman{enumi}}\n  \\begin{enumerate}\n"),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/Objectives/OrderedList/ListItem",
+          order=1,
+          prefix="    \\item "),
+    XProc(prefix="  \\end{enumerate}\n"),
+    XProc(prefix="\n  \\renewcommand{\\DiseaseCharacteristics}{"),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/DiseaseCharacteristics/Para",
+	      occs=0,
+	      textOut=1,
+	      suffix="\n",
+          order=1),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/DiseaseCharacteristics/ItemizedList/ListItem",
+	      occs=0,
+	      textOut=1,
+	      prefix="\n  \\item ",
+          order=1),
+    XProc(suffix="}\n"),
+    XProc(prefix="  \\renewcommand{\PatientCharacteristics}{"),
+    XProc(prefix="  \\begin{enumerate}"),
+    XProc(prefix="  \\end{enumerate}\n"),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PatientCharacteristics/Para",
+	      occs=0,
+	      textOut=1,
+	      suffix="\n\n",
+          order=1),
+    XProc(suffix="}\n  "),
+    XProc(prefix="  \\renewcommand{\PriorConcurrentTherapy}{"),
+    XProc(element="/InScopeProtocol/ProtocolAbstract/Professional/EntryCriteria/PriorConcurrentTherapyCharacteristics/Para",
+	      occs=0,
+	      textOut=1,
+	      suffix="\n\n",
+          order=1),
+    XProc(suffix="}\n  "),
+    XProc(prefix=PROTOCOLPATIENTELIGIBILITY),
+    XProc(prefix=PROTOCOLOUTLINE),
+#   XProc(prefix=PROTOCOLSTRATIFICATION),
+    XProc(prefix=PROTOCOLTREATMENT),
+    XProc(prefix=PROTOCOLRESPONSE),
+    XProc(prefix=PROTOCOLACCRUAL),
+    XProc(prefix=PROTOCOLSCHEDULE),
+#   XProc(prefix=PROTOCOLFORM),
+    XProc(prefix=PROTOCOLCAVEAT),
+    XProc(prefix=PROTOCOLBOILER),
+    XProc(element="ItemizedList",
+          occs=0,
+          order=3,
+          textOut=0,
+          prefix="\n  \\begin{itemize}\n",
+	      suffix="\n  \\end{itemize}\n"),
+    XProc(element="Para",
+    	  occs=0,
+          order=3,
+          prefix="\n  \\setcounter{qC}{0}\n",
+          suffix="\n\n"),
+    XProc(element="OrderedList",
+          occs=0,
+          order=3,
+          textOut=0,
+          prefix="\n  \\begin{enumerate}x\n",
+	      suffix="\n  \\end{enumerate}\n")
+         )
+
+
+
+#    # Collect the data Elements and create LaTeX variables
+#    XProc(element="PrimaryID",\
+#          textOut=0, order=XProc.ORDER_TOP),\
+#    XProc(element="OtherID",\
+#          textOut=0, order=XProc.ORDER_TOP, occs=0),\
+#    XProc(element="IDstring",\
+#          order=XProc.ORDER_PARENT,\
+#          prefix="\newcommand{\ProtocolID}{",\
+#          suffix="}"),\
+#    XProc(prefix=FANCYHDR),\
+#    XProc(prefix=   ),\
+#    XProc(element="Person",)
+#    # More goes here in the list\
+#    XProc(suffix=DOCFTR),\
+# )
 
 
 #------------------------------------------------------------------
 # Organization Mailer Instructions (Body)
 #   Instructions for formatting all Organization Mailers
 #------------------------------------------------------------------
-DocumentOrgBody =(
 # --------- START: First section Contact Information ---------
-    XProc(element="Org",
+DocumentOrgBody = (\
+XProc(element="OfficialName/Name",
           order=2,
-          prefix="  \\newcommand{\Org}{",
+          prefix="  \\newcommand{\OrgName}{",
           suffix="}\n"),
     XProc(element="Name",
           prefix="  \\newcommand{\Person}{",
@@ -2038,54 +2250,61 @@ DocumentOrgBody =(
 #------------------------------------------------------------------
 DocumentPersonBody = (
 # --------- START: First section Contact Information ---------
-    XProc(element="CipsContact",
+    XProc(element="CIPSContact",
           occs=1,
           textOut=0),
-    XProc(element="/PersonMailer/CipsContact/Org",
+    XProc(element="/Person/PersonLocations/OtherPracticeLocation/Organization/Name",
           order=1,
-          prefix="  \\renewcommand{\Org}{",
+          prefix="  \\renewcommand{\OrgName}{",
           suffix="}\n"),
-    XProc(element="/PersonMailer/Name",
+    XProc(element="GivenName",
+          order=1,
           prefix="  \\newcommand{\Person}{",
+          suffix=" "),
+    XProc(element="SurName",
+          order=1,
           suffix="}\n"),
-    XProc(element="ProfSuffix",
+    XProc(element="GenerationSuffix",
+          prefix="  \\newcommand{\GenSuffix}{",
+          suffix=" }\n"),
+    XProc(element="StandardProfessionalSuffix",
           prefix="  \\newcommand{\PerSuffix}{",
           suffix="}\n"),
     XProc(element="Address",
           textOut=0),
     XProc(element="Street",
           textOut=0,
-          order=3,
+          order=2,
           preProcs=( (street, ()), )),
     XProc(element="City",
-          order=3,
+          order=1,
           prefix="  \\renewcommand{\City}{",
           suffix="}\n"),
-    XProc(element="PoliticalUnit_State",
-          order=3,
+    XProc(element="PoliticalSubUnitShortName",
+          order=1,
           prefix="  \\renewcommand{\PoliticalUnitState}{",
           suffix="}\n"),
-    XProc(element="Country",
-          order=3,
+    XProc(element="CountryFullName",
+          order=1,
           prefix="  \\renewcommand{\Country}{",
           suffix="}\n"),
     XProc(element="PostalCode_ZIP",
-          order=3,
+          order=1,
           prefix="  \\renewcommand{\PostalCodeZIP}{",
           suffix="}\n"),
-    XProc(element="Phone",
+    XProc(element="SpecificPhone",
           order=1,
           prefix="  \\renewcommand{\Phone}{",
           suffix="}\n"),
-    XProc(element="Fax",
+    XProc(element="SpecificFax",
           order=1,
           prefix="  \\renewcommand{\Fax}{",
           suffix="}\n"),
-    XProc(element="Email",
+    XProc(element="SpecificEmail",
           order=1,
           prefix="  \\renewcommand{\Email}{",
           suffix="}\n"),
-    XProc(element="URI",
+    XProc(element="SpecificWeb",
           order=1,
           prefix="  \\renewcommand{\Web}{",
           suffix="}\n"),
@@ -2127,28 +2346,28 @@ DocumentPersonBody = (
     XProc(prefix=PERSON_SPECIALTY_TAB),
     XProc(element="SpecialtyCategory",
           textOut=0),
-    XProc(element="/PersonMailer/SpecialtyCategory/Name",
+    XProc(element="BoardCertifiedSpecialtyName",
           order=2,
-          postProcs=((yesno,("Name","Specialty",)),)),
+          postProcs=((yesno,("BoardCertifiedSpecialtyName","BoardCertifiedSpecialtyName",)),)),
     XProc(prefix=END_TABLE),
     XProc(prefix=PERSON_TRAINING_TAB),
     XProc(element="TrainingCategory",
           textOut=0),
     XProc(element="/PersonMailer/TrainingCategory/Name",
           order=2,
-          postProcs=((yesno,("Name","Training",)),)),
+          postProcs=((yesno,("Name","YesNo",)),)),
     XProc(prefix=END_TABLE),
     XProc(prefix=PERSON_SOCIETY_TAB),
     XProc(element="ProfSociety",
           textOut=0),
-    XProc(element="/PersonMailer/ProfSociety/Name",
+    XProc(element="MemberOfMedicalSociety",
           order=2,
-          postProcs=((yesno,("Name","YesNo",)),)),
+          postProcs=((yesno,("MemberOfMedicalSociety","YesNo",)),)),
     XProc(prefix=END_TABLE),
     XProc(prefix=PERSON_CLINGRP_TAB),
     XProc(element="TrialGroup",
           textOut=0),
-    XProc(element="/PersonMailer/TrialGroup/Name",
+    XProc(element="/Person/ProfessionalInformation/PhysicianDetails/PhysicianMembershipInformation/MemberOfCooperativeGroup/CooperativeGroup/OfficialName/Name",
           order=2,
           postProcs=((yesno,("Name","YesNo",)),)),
     XProc(prefix=END_TABLE),
@@ -2444,6 +2663,21 @@ DocumentTestBody =(
 # Creating the different types of Headers for each mailer
 # ###########################################################
 
+DocumentProtocolHeader =(
+    XProc(prefix=LATEXHEADER),
+    XProc(prefix=DRAFT),
+    XProc(prefix=FONT),
+    XProc(prefix=ENTRYBFLIST),
+    XProc(prefix=QUOTES),
+    XProc(prefix=CITATION),
+    XProc(element="ProtocolIDs/PrimaryID/IDString",
+          prefix=r"  \newcommand{\ProtocolID}{",
+	  suffix="}"),
+    XProc(prefix=PROTOCOL_HDRTEXT),
+    XProc(prefix=FANCYHDR),
+    XProc(prefix=ENDPROTOCOLPREAMBLE)
+    )
+
 DocumentSummaryHeader =(
     XProc(prefix=LATEXHEADER),
     XProc(prefix=DRAFT),
@@ -2507,22 +2741,6 @@ DocumentStatusCheckHeader =(
     )
 
 
-DocumentProtocolHeader =(
-    XProc(prefix=LATEXHEADER),
-    XProc(prefix=DRAFT),
-    XProc(prefix=FONT),
-    XProc(prefix=STYLES),
-    XProc(prefix=ENTRYBFLIST),
-    XProc(prefix=QUOTES),
-    XProc(prefix=PROTOCOL_HDRTEXT),
-    XProc(prefix=FANCYHDR),
-    XProc(prefix=TEXT_BOX),
-    XProc(prefix=PHONE_RULER),
-    XProc(prefix=PROTOCOL_DEFS),
-    XProc(prefix=ENDPROTPREAMBLE)
-    )
-
-
 DocumentTestHeader =(
     XProc(prefix=LATEXHEADER),
     XProc(prefix=DRAFT),
@@ -2551,16 +2769,6 @@ APPROVAL=r"""
 """
 
 
-PROTOCOL_APPROVAL=r"""
-  %% PROTOCOL_APPROVAL %%
-  %% -------- %%
-    \subsection*{Approval}
-    \protapproval
-%
-% -----
-"""
-
-
 # End tag for the LaTeX document
 # ------------------------------
 DOCFTR=r"""
@@ -2574,6 +2782,10 @@ DOCFTR=r"""
 
 # Putting together static footer sections for each mailer
 # -------------------------------------------------------
+DocumentProtocolFooter =(
+    XProc(prefix=DOCFTR),
+    )
+
 DocumentSummaryFooter =(
     XProc(prefix=DOCFTR),
     )
@@ -2592,9 +2804,7 @@ DocumentStatusCheckFooter =(
     XProc(prefix=DOCFTR),
     )
 
-DocumentProtocolFooter =(
-    XProc(prefix=APPROVAL),
-    XProc(prefix=PROTOCOL_APPROVAL),
+ProtAbstUpdateInstructions =(
     XProc(prefix=DOCFTR),
     )
 
@@ -2606,36 +2816,37 @@ DocumentTestFooter =(
 # Putting the three main sections of document together
 # Header + Body + Footer
 # ----------------------------------------------------
-SummaryInstructions = \
-  DocumentSummaryHeader   + \
-  DocumentSummaryBody     + \
+ProtocolInstructions =     \
+  DocumentProtocolHeader + \
+  ProtAbstProtID         + \
+  ProtAbstInfo           + \
+  DocumentProtocolFooter
+
+SummaryInstructions =      \
+  DocumentSummaryHeader  + \
+  DocumentSummaryBody    + \
   DocumentSummaryFooter
 
-OrgInstructions = \
+OrgInstructions =     \
   DocumentOrgHeader + \
   DocumentOrgBody   + \
   DocumentOrgFooter
 
 # ADDRESS              +
-PersonInstructions = \
+PersonInstructions =     \
   DocumentPersonHeader + \
   DocumentPersonBody   + \
   DocumentPersonFooter
 
-StatusCheckInstructions = \
+StatusCheckInstructions =     \
   DocumentStatusCheckHeader + \
   DocumentStatusCheckBody   + \
   DocumentStatusCheckFooter
 
-StatusCheckCCOPInstructions = \
-  DocumentStatusCheckHeader + \
-  DocumentStatusCheckCCOPBody   + \
+StatusCheckCCOPInstructions =   \
+  DocumentStatusCheckHeader   + \
+  DocumentStatusCheckCCOPBody + \
   DocumentStatusCheckFooter
-
-ProtocolInstructions = \
-  DocumentProtocolHeader  + \
-  DocumentProtocolBody    + \
-  DocumentProtocolFooter
 
 #---------------------------------
 # For Testing Purposes only
@@ -2659,11 +2870,11 @@ TestInstructions = \
 #   (First parameter being the XML document being processed.)
 #------------------------------------------------------------------
 ControlTable = {\
+    ("Protocol",         ""):ProtocolInstructions,\
     ("Summary",          ""):SummaryInstructions,\
     ("Summary",      "initial"):SummaryInstructions,\
     ("Organization",     ""):OrgInstructions,\
     ("Person",           ""):PersonInstructions,\
-    ("Protocol",         ""):ProtocolInstructions,\
     ("StatusCheck",      ""):StatusCheckInstructions,\
     ("StatusCheckCCOP",  ""):StatusCheckCCOPInstructions,\
     ("Test",             ""):TestInstructions\
