@@ -1,10 +1,16 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.4 2002-10-11 03:36:48 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.5 2002-11-06 03:14:51 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2002/10/11 03:36:48  ameyer
+# Removed protocol address code - not needed, never tested anyway.
+# It's in the archive if we ever need it.
+#
+# Made cover leter optional.
+#
 # Revision 1.3  2002/10/09 02:00:01  ameyer
 # Myriad changes.  First version to actually produce output.  Not fully tested
 # at all.
@@ -62,27 +68,31 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
         # Get all the recipients corresponding to the docIds in
         #   the pub_proc_doc table
-        self.log("~~About to __getRecipients");
+        self.log("~~About to __getRecipients")
         self.__getRecipients()
+
+        # If using a RemailSelector, we've finished with it, clean it up
+        if self.rms:
+            self.rms.delete()
 
         # Retrieve the actual documents themselves, performing
         #   any necessary filtering and LaTeX generation, and
         #   writing the generated print images to disk
-        self.log("~~About to __createMailerDocs");
+        self.log("~~About to __createMailerDocs")
         self.__createMailerDocs()
 
         # Create an index of the documents
-        self.log("~~About to __makeIndex");
+        self.log("~~About to __makeIndex")
         self.makeIndex()
 
         # Generate a cover sheet for the job a whole, listing
         #   each individual mailer recipient
-        self.log("~~About to __makeCoverSheet");
+        self.log("~~About to __makeCoverSheet")
         self.__makeCoverSheet()
 
         # Fill the print queue with recipient+document object pairs
         #   telling the later print steps the order of printing
-        self.log("~~About to __makeMailers");
+        self.log("~~About to __makeMailers")
         self.__makeMailers()
 
     #------------------------------------------------------------------
@@ -109,25 +119,12 @@ class DirectoryMailer(cdrmailer.MailerJob):
             # Assume no remail tracker for now.
             trackId = None
 
-            # For remailers, get id of recipient and tracking doc
+            # For remailers, get id of tracking doc
             #   from the remailer selection
-            # Should normally be only one recipient, but we allow
-            #   more than one per document - consistent with other
-            #   mailers.
-            # Remailers must only have one.
+            # This has to be there because it was stored at the same
+            #   time that the doc_id was stored.
             if self.remailer:
-                # Get list of pairs of (recipient, tracker)
-                tempList = self.rms.getRelatedIds (docId)
-                trackId  = tempList[0][1]
-
-                # Some debug checks
-                assert len(tempList) == 1, \
-                    "Should be exactly one directory remailer recipient. " \
-                    "Found %d recipients for document id=%d" % \
-                     (len(tempList), docId)
-                assert tempList[0][0] == docId, \
-                    "Directory remailer should have recipient=doc id, but " \
-                    "recipient=%d, document=%d" % (tempList[0][0], docId)
+                trackId = self.rms.getRelatedId (docId)
 
             # Filters are different for physicians and organizations
             docType = self.getParm("docType")[0]
@@ -141,7 +138,14 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
             # If not found (the normal case), create recipient
             if not recip:
-                address = self.getCipsContactAddress (recipId, docType)
+                if docType == 'Person':
+                    address = self.getCipsContactAddress (recipId)
+                elif docType == 'Organization':
+                    address = self.getOrganizationAddress (docId)
+                else:
+                    raise StandardError (
+                        "Unknown directory docType %s - can't happen" %
+                        docType)
 
                 # Response should be list of filtered doc + messages
                 # If it's a single string, it's an error message
@@ -241,8 +245,20 @@ class DirectoryMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __makeMailer(self, recip, doc, template):
 
+        # If this is not a remailer, null remailerFor
+        if not self.remailer:
+            recip.remailTracker = None
+
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
+        mailerId = self.addMailerTrackingDoc(doc, recip,
+                           mailerType = self.getSubset(),
+                           remailerFor = recip.remailTracker)
+
+        # Create a mailing label sheet
+        latex     = self.createAddressLabelPage(recip.getAddress())
+        basename  = 'MailingLabel-%d-%d' % (recip.getId(), doc.getId())
+        jobType   = cdrmailer.PrintJob.COVERPAGE
+        self.addToQueue(self.makePS(latex, 1, basename, jobType))
 
         # Create a cover letter, if needed
         if template:
