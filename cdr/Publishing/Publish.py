@@ -2,8 +2,11 @@
 #
 # Bridge PublishingService.py to cdrpub.py
 #
-# $Id: Publish.py,v 1.3 2002-04-18 01:18:05 bkline Exp $
+# $Id: Publish.py,v 1.4 2002-07-26 19:59:44 pzhang Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2002/04/18 01:18:05  bkline
+# Added exception handling code.
+#
 # Revision 1.2  2002/04/04 22:44:55  bkline
 # Modified to match new cdrpub.py.
 #
@@ -12,7 +15,7 @@
 #
 #----------------------------------------------------------------------
 
-import sys, string, cdrpub, time
+import sys, string, cdrdb, cdrpub, time
 
 log = "d:/cdr/log/publish.log" 
 jobId = string.atoi(sys.argv[1])
