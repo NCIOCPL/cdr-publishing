@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.48 2004-10-14 17:56:35 ameyer Exp $
+   $Id: pdq.dtd,v 1.49 2005-03-23 19:53:16 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,11 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.48  2004/10/14 17:56:35  ameyer
+   Replace placeholder Multimedia element with new MediaLink.
+   Added definitions and positioning for MediaLink.
+   Added MediaRef as an internal reference to a MediaLink.
+
    Revision 1.47  2004/01/29 20:59:52  bkline
    Added 'None' as a valid value for the Frame attribute of the Table
    element.
@@ -467,6 +472,8 @@
 
 <!ELEMENT SummaryMetaData (SummaryType,
                            SummaryAudience,
+                           SummaryDescription,
+                           SummaryURL,
                            SummaryLanguage,
                            MainTopics+,
                            SecondaryTopics*
@@ -494,6 +501,12 @@
   Possible values are:
     English
     Spanish -->
+
+<!ELEMENT SummaryDescription (#PCDATA)>                           
+
+<!-- Used by Cancer.gov website to link to the summary. -->
+<!ELEMENT SummaryURL (#PCDATA)>                           
+<!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>                           
 
@@ -952,6 +965,7 @@
                )>
 <!ATTLIST Term id CDATA #REQUIRED>
 <!ATTLIST Term LegacyPDQID CDATA #IMPLIED>
+<!ATTLIST Term NCIThesaurusConceptID CDATA #IMPLIED>
 
 <!ELEMENT PreferredName (#PCDATA)>
 
