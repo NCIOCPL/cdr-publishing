@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.11 2004-05-18 17:58:48 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.12 2004-06-15 14:25:44 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2004/05/18 17:58:48  bkline
+# Modified emailer manifest element names to match schema.
+#
 # Revision 1.10  2004/05/18 13:09:59  bkline
 # Added support for electronic mailers.
 #
@@ -209,8 +212,12 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
                 file.write(rsp[0])
                 file.close()
                 protocolParms = ProtocolParms(rsp[0])
+                trackerId = self.addMailerTrackingDoc(document, pup,
+                                                      self.getSubset(),
+                                                      protOrgId = leadOrgId,
+                                                      email = email)
                 manifest.write((u"""\
-   <EmailerDocument id='CDR%010d'>
+   <EmailerDocument id='CDR%010d' tracker='%d'>
     <EmailerFilename>%s</EmailerFilename>
     <EmailerAttrs>
      <EmailerAttr name='ProtID'>%s</EmailerAttr>
@@ -219,14 +226,11 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
     </EmailerAttrs>
    </EmailerDocument>
 """ % (document.getId(),
+       trackerId,
        name,
        protocolParms.protId,
        protocolParms.title,
        protocolParms.status)).encode('utf-8'))
-                self.addMailerTrackingDoc(document, pup,
-                                          self.getSubset(),
-                                          protOrgId = leadOrgId,
-                                          email = email)
                 counter += 1
             manifest.write("""\
   </EmailerDocuments>
