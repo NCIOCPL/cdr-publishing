@@ -6,7 +6,7 @@ for fancy printing of documents sent out in mailers.
 See cdrxmllatex.txt for high level documentation of this module.
 """
 
-import sys, os, time, string, re, xml.dom.minidom, UnicodeToLatex
+import sys, os, time, xml.dom.minidom, UnicodeToLatex
 
 from cdrlatexlib import XProc, ProcParms, XmlLatexException, findControls
 
@@ -280,6 +280,7 @@ class ProcNode:
 #   docFmt       - Format info passed by top level caller.
 #   fmtType      - Format subtype info passed by top caller.
 #   instBlock    - Dictionary of processing instructions.
+#   latexPasses  - Number of LaTeX passes required for this format.
 #   elementIndex - Index into instBlock:
 #                    Key   = xml element tag.
 #                    Value = Reference to instructions for processing
@@ -333,9 +334,10 @@ class Ctl:
         #   createProcessingNode() for ORDER_DOCUMENT.
         self.orderDoc = {}
 
-        # Find the instructions for processing this info
-        self.instBlock = findControls (docFmt, fmtType)
-        ### self.instBlock = cdrlatexlib.findControls (docFmt, fmtType)
+        # Search the control table to find the instructions for
+        #   processing this document format and format type, and
+        #   the number of passes required by LaTeX.
+        (self.instBlock, self.latexPasses) = findControls (docFmt, fmtType)
 
         # Generate indexing info into the instructions
         # Could cache these in a future version if desired,
@@ -724,6 +726,14 @@ class Ctl:
     def getDomTree (self):
         return self.topNode
 
+    #---------------------------------------------------------------
+    # getLatexPasses
+    #
+    #   Get the number of passes required by LaTeX on this format.
+    #---------------------------------------------------------------
+    def getLatexPasses (self):
+        return self.latexPasses
+
 
 ####################################################################
 # Common routines
@@ -898,9 +908,6 @@ def makeLatex (Xml, docFmt, fmtType='', params=None, logFunc=None):
     # Clear any previous output
     #outClear()
 
-    # Save parameters in global dictionary
-    G_calling_parms = params
-
     # Output the preamble required to make Unicode->Latex conversion work
     # XXXX Can't do it here because it can't be the first thing output
     # XXXX Ideally, should NOT do it as part of the fixed constants
@@ -920,6 +927,7 @@ def makeLatex (Xml, docFmt, fmtType='', params=None, logFunc=None):
     # Get the results
     Timer().stamp ("Returning results")
     log (logFunc, "--Returning results")
-    doc = LatexDoc (ctl.getProcTree().output)
+    doc = LatexDoc (ctl.getProcTree().output,
+                    latexPassCount=ctl.getLatexPasses())
 
     return doc
