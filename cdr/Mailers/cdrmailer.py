@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.24 2002-10-16 18:07:36 bkline Exp $
+# $Id: cdrmailer.py,v 1.25 2002-10-18 11:46:08 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.24  2002/10/16 18:07:36  bkline
+# Fixed typo in tags for state name in XML for address.
+#
 # Revision 1.23  2002/10/14 12:47:23  bkline
 # Made actual mailer printing a separate batch job.
 #
@@ -116,10 +119,14 @@ class MailerJob:
             Invoked by the derived classes' imlementations of
             fillQueue() to insert a Mailer document into the CDR.
 
-        formatAddress(addr, org)
+        formatAddress(addr)
             Formats address information into a block of printable
-            text lines and returns the block.  Optional organization
-            information may be passed.
+            text lines and returns the block.
+
+        createAddressLabelPage(addr, upperCase)
+            Creates LaTeX for a sheet containing just an address label.
+            If upperCase is true (which it is by default, the address
+            strings are uppercased before being marked up for LaTeX.
 
         getCipsContactAddress(id)
             Returns an XML string containing an Address element
@@ -485,83 +492,14 @@ class MailerJob:
 
     #------------------------------------------------------------------
     # Create a formatted address block from an Address object.
-    # If org is passed, will include organization in addressing.
-    # In the normal case, the organization information will already
-    # be included in the Address object.
     #------------------------------------------------------------------
-    def formatAddress(self, addr, org = None):
-        lines = self.__assembleAddressLines(addr, org)
-        return self.__formatAddressFromLines(lines)
+    def formatAddress(self, addr):
+        return addr.format()
     
-    #------------------------------------------------------------------
-    # Format an address block from its address lines.
-    #------------------------------------------------------------------
-    def __formatAddressFromLines(self, lines):
-        block = ""
-        for line in lines:
-            block += "%s \\\\\n" % UnicodeToLatex.convert(line)
-        return block
-    
-    #------------------------------------------------------------------
-    # Construct a list of strings representing the lines of a
-    # formatted address.  See the notes on the public formatAddress()
-    # above, for which the component logic is broken out so we
-    # can invoke the pieces separately when we create the address
-    # label page.
-    #------------------------------------------------------------------
-    def __assembleAddressLines(self, addr, org = None):
-        lines = []
-        orgLines = []
-        if addr.getNumOrgs():
-            for i in range(addr.getNumOrgs()):
-                org = addr.getOrg(i)
-                if org:
-                    orgLines.append(addr.getOrg(i))
-        elif org:
-            orgLines.append(org)
-        addressee = addr.getAddressee()
-        if addressee:
-            lines.append(addressee)
-        if orgLines:
-            lines += orgLines
-        for i in range(addr.getNumStreetLines()):
-            streetLine = addr.getStreetLine(i)
-            if streetLine:
-                lines.append(streetLine)
-        city    = addr.getCity()
-        state   = addr.getState()
-        zip     = addr.getPostalCode()
-        pos     = addr.getCodePosition()
-        country = addr.getCountry()
-        line    = ""
-        if zip and pos == "before City":
-            line = zip
-            if city: line += " "
-        if city: line += city
-        if zip and pos == "after City":
-            if line: line += " "
-            line += zip
-        if state:
-            if line: line += ", "
-            line += state
-        if zip and (not pos or pos == "after PoliticalUnit_State"):
-            if line: line += " "
-            line += zip
-        if line:
-            lines.append(line)
-        if country:
-            if zip and pos == "after Country":
-                lines.append("%s %s" % (country, zip))
-            else:
-                lines.append(country)
-        elif zip and pos == "after Country":
-            lines.append(zip)
-        return lines
-
     #------------------------------------------------------------------
     # Create LaTeX for a sheet containing just an address label.
     #------------------------------------------------------------------
-    def createAddressLabelPage(self, addr, upperCase = 0):
+    def createAddressLabelPage(self, addr, upperCase = 1):
         """
         Parameters:
             addr        - Object representing an address.
@@ -575,14 +513,9 @@ class MailerJob:
             String containing LaTeX for address label sheet.
         """
 
-        lines = self.__assembleAddressLines(addr)
-        if len(lines) and lines[-1].upper() in ("US", "USA", "U.S.", "U.S.A."):
-            lines = lines[:-1]
-        if upperCase:
-            for i in range(len(lines)):
-                lines[i] = lines[i].upper()
-        addressBlock = self.__formatAddressFromLines(lines)
-        return cdrxmllatex.createAddressLabelPage(addressBlock, len(lines))
+        addressBlock = addr.format(upperCase = upperCase, dropUS = 1)
+        numLines = addr.getNumAddressLines(dropUS = 1)
+        return cdrxmllatex.createAddressLabelPage(addressBlock, numLines)
     
     #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
@@ -1054,6 +987,20 @@ class Address:
     """
     Public methods:
 
+        format(upperCase, dropUS)
+            Returns address in a format ready for inclusion in a
+            LaTeX document.  If upperCase is true (default is false),
+            then the address uses uppercase versions of the data
+            for the formatted block.  If dropUS is true (default
+            is false), the last line is omitted if it contains
+            only the abbreviation for the United States.
+
+        getNumAddressLines(dropUS)
+            Returns the number of lines in the formatted address.
+            The last line is not counted if dropUS is true and the
+            last line contains only the abbreviation for the United
+            States.
+
         getAddressee()
             Returns concatenation of prefix, forename, and surname.
 
@@ -1113,6 +1060,8 @@ class Address:
         self.__country       = None
         self.__postalCode    = None
         self.__codePos       = None
+        self.__addressLines  = None
+
         if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
             dom = xml.dom.minidom.parseString(xmlFragment)
         else:
@@ -1152,27 +1101,44 @@ class Address:
     def getCodePosition   (self): return self.__codePos
     def getAddressee      (self): return self.__addressee
 
+
+    #------------------------------------------------------------------
+    # Calculate the number of lines in a formatted address block.
+    #------------------------------------------------------------------
+    def getNumAddressLines(self, dropUS = 0):
+        lines = self.__getAddressLines()
+        if not lines: return 0
+        if self.__lineIsUS(lines[-1]): return len(lines) - 1
+        return len(lines)
+
+    #------------------------------------------------------------------
+    # Create a LaTeX-ready string representing this address.
+    #------------------------------------------------------------------
+    def format(self, upperCase = 0, dropUS = 0):
+        lines = self.__getAddressLines()
+        if upperCase:
+            upperLines = []
+            for line in lines:
+                upperLines.append(line.upper())
+            lines = upperLines
+        if dropUS and len(lines) and self.__lineIsUS(lines[-1]):
+            lines = lines[:-1]
+        return self.__formatAddressFromLines(lines)
+
     #------------------------------------------------------------------
     # Create XML string from address information.
     #------------------------------------------------------------------
     def getXml(self):
-        xml = "<Address><PostalAddress>"
-        for line in self.__street:
-            xml += "<Street>%s</Street>" % line
-        if self.__city:
-            xml += "<City>%s</City>" % self.__city
-        if self.__citySuffix:
-            xml += "<CitySuffix>%s</CitySuffix>" % self.__citySuffix
-        if self.__state:
-            xml += "<PoliticalSubUnit_State>%s<PoliticalSubUnit_State>" \
-                % self.__state
+        lines = self.__getAddressLines()
+        xml = "<MailerAddress>"
         if self.__country:
             xml += "<Country>%s</Country>" % self.__country
         if self.__postalCode:
-            xml += "<PostalCode_ZIP>%s</PostalCode_ZIP>" % self.__postalCode
-        if self.__codePos:
-            xml += "<CodePosition>%s</CodePosition>" % self.__codePos
-        return xml + "</PostalAddress></Address>"
+            xml += "<PostalCode>%s</PostalCode>" % self.__postalCode
+        if lines:
+            for line in self.__street:
+                xml += "<AddressLines>%s</AddressLines>" % line
+        return xml + "</MailerAddress>"
 
     #------------------------------------------------------------------
     # Extract postal address element values.
@@ -1266,3 +1232,77 @@ class Address:
         if rest:
             name = "%s, %s" % (name, rest)
         return name
+
+    #------------------------------------------------------------------
+    # Format an address block from its address lines.
+    #------------------------------------------------------------------
+    def __formatAddressFromLines(self, lines):
+        block = ""
+        for line in lines:
+            block += "%s \\\\\n" % UnicodeToLatex.convert(line)
+        return block
+    
+    #------------------------------------------------------------------
+    # Construct a list of strings representing the lines of a
+    # formatted address.  This part of address formatting is broken
+    # out separately, so we can cache the results, and so we can
+    # hand out the lines without the formatting for routines like
+    # the one which creates address label sheets (which use uppercase
+    # versions of the address line strings).
+    #------------------------------------------------------------------
+    def __getAddressLines(self):
+        if self.__addressLines is None:
+            lines = []
+            orgLines = []
+            if self.getNumOrgs():
+                for i in range(self.getNumOrgs()):
+                    org = self.getOrg(i)
+                    if org:
+                        orgLines.append(self.getOrg(i))
+            elif org:
+                orgLines.append(org)
+            addressee = self.getAddressee()
+            if addressee:
+                lines.append(addressee)
+            if orgLines:
+                lines += orgLines
+            for i in range(self.getNumStreetLines()):
+                streetLine = self.getStreetLine(i)
+                if streetLine:
+                    lines.append(streetLine)
+            city    = self.getCity()
+            state   = self.getState()
+            zip     = self.getPostalCode()
+            pos     = self.getCodePosition()
+            country = self.getCountry()
+            line    = ""
+            if zip and pos == "before City":
+                line = zip
+                if city: line += " "
+            if city: line += city
+            if zip and pos == "after City":
+                if line: line += " "
+                line += zip
+            if state:
+                if line: line += ", "
+                line += state
+            if zip and (not pos or pos == "after PoliticalUnit_State"):
+                if line: line += " "
+                line += zip
+            if line:
+                lines.append(line)
+            if country:
+                if zip and pos == "after Country":
+                    lines.append("%s %s" % (country, zip))
+                else:
+                    lines.append(country)
+            elif zip and pos == "after Country":
+                lines.append(zip)
+            self.__addressLines = lines
+        return self.__addressLines
+
+    #------------------------------------------------------------------
+    # Check to see if a line is just U.S. (or the equivalent).
+    #------------------------------------------------------------------
+    def __lineIsUS(self, line):
+        return line.strip().upper() in ("US", "USA", "U.S.", "U.S.A.")

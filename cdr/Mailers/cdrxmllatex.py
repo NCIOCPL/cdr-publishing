@@ -770,13 +770,13 @@ def createAddressLabelPage(block, numLines):
 \small
 \thispagestyle{empty}
 \setlength{\parindent}{0mm}
-\setlength\voffset{%d.2\baselineskip}
+\setlength\voffset{%d\baselineskip}
 \setlength\oddsidemargin{10em}
 
 %s
 
 \end{document}
-""" % (26 - numLines, block)
+""" % (31 - numLines, block)
 
 #-------------------------------------------------------------------
 # log()
