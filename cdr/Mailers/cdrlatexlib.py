@@ -1,9 +1,15 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.56 2003-08-07 20:54:27 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.57 2003-08-08 00:42:57 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.56  2003/08/07 20:54:27  ameyer
+# Removed unused getState() function.
+# Removed MemberOfCooperativeGroup processing, replacing it with
+# much simpler logic that processes the new, much simpler XML structure
+# adopted after changing the denormalization filter.
+#
 # Revision 1.55  2003/08/06 18:17:32  bkline
 # Changed \newcommand(\ewidth ... to \renewcommand ... (because Alan added
 # another \newcommand for this variable last month).
@@ -1332,8 +1338,8 @@ def orgLocs(pp):
                 formattedAddress = loc.format(1)
                 if formattedAddress:
                     output += r"""
-  \item
-  \OrgName \\
+  %%%% \item        %%%% <- Duplicates OrgName in formattedAddress
+  %%%% \OrgName \\  %%%%    but left here in case I've broken something else
 %s
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
