@@ -1385,7 +1385,7 @@
 
    <!--
    ========================================================================
-   InScopeProtocol documents.
+   Open protocol documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
@@ -1399,8 +1399,7 @@
           ON q.doc_id = d.id
        WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
                     + '/CurrentProtocolStatus'
-         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 
-                         'Active', 'Approved-Not Yet Active')
+         AND q.value IN ('Active', 'Approved-Not Yet Active')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
          AND d.active_status = 'A'
@@ -1418,6 +1417,44 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
+    <Subdirectory>OpenProtocols</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Closed protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>ClosedProtocols</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
