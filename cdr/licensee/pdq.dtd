@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.30 2002-08-07 16:56:20 arkd Exp $
+ $Id: pdq.dtd,v 1.31 2002-08-22 21:25:34 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -53,7 +53,9 @@
                                | GeneName         | ScientificName   | Strong
                                | Subscript        | Superscript      | TT ">
 
-<!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
+<!ENTITY % Location "OrganizationName*,PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
+
+<!ELEMENT OrganizationName (#PCDATA)>
 
 <!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent+)>
 
@@ -434,8 +436,7 @@
                           Title?,
                           AltTitle*,
                           KeyPoint*,
-                          (%ParaLevelElements;)*,
-                          SummarySection*,
+                          ((%ParaLevelElements;)*|SummarySection*)*,
                           ReferenceSection?
                          )>
 <!ATTLIST SummarySection id CDATA #IMPLIED>
