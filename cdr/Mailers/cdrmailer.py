@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.13 2002-09-12 23:29:51 ameyer Exp $
+# $Id: cdrmailer.py,v 1.14 2002-09-26 18:28:01 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2002/09/12 23:29:51  ameyer
+# Removed common routine from individual mailers to cdrmailer.py.
+# Added a few trace statements.
+#
 # Revision 1.12  2002/05/15 01:40:29  ameyer
 # Fixed bugs in new code.
 #
@@ -45,7 +49,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom
+import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
 
 debugCtr = 1
 
@@ -153,7 +157,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Class-level values.
     #------------------------------------------------------------------
-    __CDR_EMAIL     = "cdr@mmdb2.nci.nih.gov"
+    __CDR_EMAIL     = "cdr@%s.nci.nih.gov" % socket.gethostname()
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
     __LOGFILE       = "d:/cdr/log/mailer.log"
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
@@ -680,10 +684,10 @@ class MailerJob:
                 message = """\
 Job %d has completed.  You can view a status report for this job at:
 
-    http://mmdb2.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
+    http://%s.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
 
 Please do not reply to this message.
-""" % (self.__id, self.__id)
+""" % (self.__id, socket.gethostname(), self.__id)
                 cdr.sendMail(sender, [self.__email], subject, message)
         except:
             self.log("failure sending email to %s: %s" % (self.__email,
