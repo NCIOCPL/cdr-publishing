@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.39 2002-11-08 22:41:14 bkline Exp $
+# $Id: cdrmailer.py,v 1.40 2002-11-09 16:55:32 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.39  2002/11/08 22:41:14  bkline
+# Added utf-8 encoding for mailer tracking document's XML.
+#
 # Revision 1.38  2002/11/08 17:25:49  bkline
 # Fixed error check for return from filterDoc().
 #
@@ -129,7 +132,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
-import UnicodeToLatex
+import UnicodeToLatex, tarfile, zipfile, glob
 
 debugCtr = 1
 
@@ -821,6 +824,62 @@ class MailerJob:
             outputFile.write("@echo  e.g.: PrintJob \\\\CIPSFS1\\HP8100\n")
             outputFile.write(":done\n")
             outputFile.close()
+            self.__packageFiles()
+
+    #------------------------------------------------------------------
+    # Create archive packages for the job's files.
+    # Assumption: the current working directory is the job's output
+    # output directory.  We switch to the parent of that directory.
+    # This side effect should have no undesirable consequences,
+    # because this is the last thing we do for the job.
+    # Note: all files with the extensions '.xml', '.tex', '.log',
+    # '.aux', and '.dvi' are packaged in a separate compressed tar
+    # archive for intermediate files.  Everything else goes into a
+    # ZIP archive, used to print the actual mailer documents.  Make
+    # sure nothing needed by the ZIP archive gets a filename extension
+    # used for the intermediate file archive.
+    #------------------------------------------------------------------
+    def __packageFiles(self):
+        self.log("~~In packageFiles")
+        workExt = ('xml', 'tex', 'log', 'aux', 'dvi')
+        dir     = "Job%d" % self.getId()
+        tarName = "SupportFilesForJob%d.tgz" % self.getId()
+        zipName = "PrintFilesForJob%d.zip" % self.getId()
+        tarType = tarfile.TAR_GZIPPED
+        zipType = zipfile.ZIP_DEFLATED
+        os.chdir("..")
+        if not os.path.isdir(dir):
+            raise StandardError("INTERNAL ERROR: cannot find directory %s"
+                    % dir)
+        try:
+            tfile = tarfile.TarFile(tarName, 'w', tarType)
+            for ext in workExt:
+                for file in glob.glob('%s/*.%s' % (dir, ext)):
+                    tfile.write(file)
+            tfile.close()
+            for ext in workExt:
+                for file in glob.glob('%s/*.%s' % (dir, ext)):
+                    os.unlink(file)
+        except:
+            raise StandardError("failure packing working files for job")
+
+        try:
+            zfile = zipfile.ZipFile(zipName, 'w', zipType)
+            for file in os.listdir(dir):
+                zfile.write("%s/%s" % (dir, file))
+            zfile.close()
+            zfile = zipfile.ZipFile(zipName, 'r')
+            badfile = zfile.testzip()
+            if badfile:
+                raise StandardError(
+                    "zip archive corrupted; first bad file encountered: %s"
+                    % badfile)
+            zfile.close()
+            for file in os.listdir(dir):
+                os.unlink("%s/%s" % (dir, file))
+        except:
+            raise StandardError("failure creating print job package")
+        os.rmdir(dir)
 
     #------------------------------------------------------------------
     # Clean up.
