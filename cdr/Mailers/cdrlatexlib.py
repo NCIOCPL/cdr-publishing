@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.54 2003-07-15 20:55:14 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.55 2003-08-06 18:17:32 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.54  2003/07/15 20:55:14  bkline
+# Fixed bug in state-plus-zipcode formatting.  Adjusted to accomodate
+# changes in vendor representation of lead org personnel in protocols.
+#
 # Revision 1.53  2003/07/15 15:53:35  ameyer
 # Modified new and renew command definitions for ewidth to insure that it
 # is only made "new" once.
@@ -1671,7 +1675,7 @@ def personLocs(pp):
 
     # Output the CIPS contact location's information.
     output = r"""
-  \newcommand{\ewidth}{180pt}
+  \renewcommand{\ewidth}{180pt}
 
   \PersonIntro
 
@@ -2194,7 +2198,7 @@ def statPersonnel(pp):
                     output += getChairInfo(grandchild)
     pp.setOutput(output + """\
   \\end{entry}
-""" + STATUS_TAB_INTRO + STATUS_TAB)
+""") # + STATUS_TAB_INTRO + STATUS_TAB)
 
 def statProtSites(pp):
     """
@@ -2228,7 +2232,7 @@ def statProtSites(pp):
             site.name, contact, phone,
             site.status == 'Active' and 'Y' or 'N')
         """
-    pp.setOutput(output)
+    pp.setOutput(STATUS_TAB_INTRO + STATUS_TAB + output)
 
 def statSiteStatus(pp):
     "Add the status for a protocol participating organization."
