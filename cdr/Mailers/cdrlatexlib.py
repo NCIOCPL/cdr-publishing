@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.36 2003-03-03 20:08:23 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.37 2003-03-14 01:32:28 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.36  2003/03/03 20:08:23  bkline
+# Implemented changes requested by Sheri in issue #591.
+#
 # Revision 1.35  2003/02/19 16:49:48  bkline
 # Removed "Principal Investigator" from label for Contact column of
 # S&P mailers.  Set \footskip to 60pt for S&P mailers.
@@ -1536,7 +1539,8 @@ def personLocs(pp):
     cipsContactInfo = "  \\PersonNameWithSuffixes \\\\\n"
     blankTemplate = r"""\
   \begin{entry}
-    \item[Address]                                       %s      \\
+    \item[Name of Organization]                          %s      \\
+    \item[Address of Organization]                       %s      \\
                                                          %s      \\
                                                          %s      \\
                                                          %s      \\
@@ -1549,6 +1553,7 @@ def personLocs(pp):
     \item[Website]                                       %s      \\
   \end{entry}
 """ % (blankLine,
+       blankLine,
        blankLine,
        blankLine,
        blankLine,
