@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.67 2004-08-02 17:32:39 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.68 2004-11-03 17:11:48 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.67  2004/08/02 17:32:39  bkline
+# Extended timeouts on SQL queries to 5 minutes (request #1286).
+#
 # Revision 1.66  2004/04/15 20:04:58  ameyer
 # Added support for marking the "Email" vs. "Mail" circles under "how
 # would you prefer to be contactd?"
@@ -1349,7 +1352,16 @@ def closeList(pp):
     else:
         output = "\n  \\end{enumerate}\n"
     if not listStack:
-        output += "  \\setlength{\\parskip}{1.2mm}\n"
+        output += "  \\setlength{\\parskip}{3.0mm}\n"
+    else:
+
+        # We're still in a list; restore item spacing.
+        thisList = listStack[-1]
+        if thisList.compact:
+            output += "  \\setlength{\\itemsep}{-2pt}\n"
+        else:
+            output += "  \\setlength{\\itemsep}{10pt}\n"
+
     pp.setOutput(output)
 
 def preserveLines(str):
@@ -1638,7 +1650,7 @@ def protRetrievalTerms(pp):
         output += "  \\item %s\n" % term
     pp.setOutput(output + r"""
   \end{itemize}
-  \setlength{\parskip}{1.2mm}
+  \setlength{\parskip}{3.0mm}
 """)
 
 def checkNotAbstracted(pp):
@@ -2803,7 +2815,7 @@ END_TABLE=r"""
 ENDSUMMARYPREAMBLE=r"""
   %% ENDSUMMARYPREAMBLE %%
   %% ------------------ %%
-  \setlength{\parskip}{1.2mm}
+  \setlength{\parskip}{3.0mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{28pt}
   \setlength{\headwidth}{6.5in}
@@ -2859,7 +2871,7 @@ STATPART_TITLE=r"""
 ENDPREAMBLE=r"""
   %% ENDPREAMBLE %%
   %% ----------- %%
-  \setlength{\parskip}{1.2mm}
+  \setlength{\parskip}{3.0mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
 
@@ -2883,7 +2895,7 @@ ENDPREAMBLE=r"""
 ALTENDPREAMBLE=r"""
   %% ALTENDPREAMBLE %%
   %% -------------- %%
-  \setlength{\parskip}{1.2mm}
+  \setlength{\parskip}{3.0mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
   \setlength{\footskip}{60pt}
@@ -2905,7 +2917,7 @@ ALTENDPREAMBLE=r"""
 ENDPROTOCOLPREAMBLE=r"""
   %% ENDPROTOCOLPREAMBLE %%
   %% ----------- %%
-  \setlength{\parskip}{1.2mm}
+  \setlength{\parskip}{3.0mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
   \setlength{\hoffset}{-40pt}
@@ -3118,7 +3130,7 @@ CommonMarkupRules = (
           filters   = [stripEnds, stripLines]),
     XProc(element   = "Para",
           filters   = [stripLines],
-          prefix    = "  \\setcounter{qC}{0}\n",
+          prefix    = "  \\setcounter{qC}{0}\\par\n",
           suffix    = "  \\par\n"),
     XProc(element   = "Table",
           textOut   = 0,
