@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.8 2002-10-23 11:44:08 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.9 2002-10-23 22:04:11 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2002/10/23 11:44:08  bkline
+# Fixed access to base class's __index member.
+#
 # Revision 1.7  2002/10/22 20:23:29  bkline
 # *Really* fixed subset name.
 #
@@ -44,7 +47,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     def fillQueue(self):
         self.__getRecipients()
         self.__getDocuments()
-        self.makeIndex()
+        self.__makeIndex()
         self.__makeCoverSheet()
         self.__makeMailers()
 
@@ -138,6 +141,14 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
             doc.latex = self.makeLatex(doc, filters, '')
 
     #------------------------------------------------------------------
+    # Generate an index of the mailers order by country/postal code.
+    #------------------------------------------------------------------
+    def __makeIndex(self):
+    
+        # Hand off the work to the base class.
+        self.makeIndex()
+
+    #------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
     #------------------------------------------------------------------
     def __makeCoverSheet(self):
@@ -148,11 +159,11 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         for country, zip, recip, doc in self.getIndex():
             title = doc.getTitle()
             if len(title) > 60: title = "%s ..." % title[:60]
-            f.write("  Recipient: %010d\n" % recip.getId())
+            f.write("  Recipient: %d\n" % recip.getId())
             f.write("       Name: %s\n" % recip.getName())
             f.write("    Country: %s\n" % country)
             f.write("Postal Code: %s\n" % zip)
-            f.write("   Protocol: %010d\n" % doc.getId())
+            f.write("   Protocol: %d\n" % doc.getId())
             f.write("      Title: %s\n\n" % title)
         f.write("\f")
         f.close()
@@ -164,10 +175,11 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __makeMailers(self):
         coverLetterParm     = self.getParm("CoverLetter")
-        if not coverLetterParm:
-            raise "CoverLetter parameter missing"
-        coverLetterName     = 'd:/cdr/mailers/include/' + coverLetterParm[0]
-        coverLetterTemplate = open(coverLetterName).read()
+        basePath            = self.getMailerIncludePath()
+        coverLetterName     = basePath + coverLetterParm[0]
+        coverLetterFile     = open(coverLetterName)
+        coverLetterTemplate = coverLetterFile.read()
+        coverLetterFile.close()
         for elem in self.getIndex():
             recip, doc = elem[2:]
             self.__makeMailer(recip, doc, coverLetterTemplate)
@@ -196,7 +208,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         protTitle = pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
 
-        # Real placeholders:
+        # Replace placeholders:
         latex     = template.replace('@@ADDRESS@@', address)
         latex     = latex.replace('@@PROTOCOLID@@', protId)
         latex     = latex.replace('@@PROTOCOLTITLE@@', protTitle)
@@ -216,5 +228,3 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
 
 if __name__ == "__main__":
     sys.exit(ProtocolAbstractMailer(int(sys.argv[1])).run())
-
-
