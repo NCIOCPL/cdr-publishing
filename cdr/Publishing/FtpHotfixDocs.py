@@ -16,8 +16,15 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.5 2005-03-02 20:45:32 venglisc Exp $
+# $Id: FtpHotfixDocs.py,v 1.6 2005-03-04 20:44:51 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2005/03/02 20:45:32  venglisc
+# Modified process to correctly handle media_catalog.txt file in case an
+# update ran creating multiple media manifest files during separate publish
+# processes.
+# Also modified process to create the ftp command file correctly in case
+# an interim update only included removed documents. (Bug 1406)
+#
 # Revision 1.4  2005/01/24 22:48:25  venglisc
 # Modified because the removed documents did not get transferred.  The
 # program looked at the remove status of the last document instead of the
@@ -184,6 +191,7 @@ try:
         ftpCmd.write('lcd cdr\n')
         ftpCmd.write('cd cdr\n')
         ftpCmd.write('mput *\n')
+        ftpCmd.write('lcd ..\n')
         ftpCmd.write('cd ..\n')
 
     # Only add this part if removed documents exist.
