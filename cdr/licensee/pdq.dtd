@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.16 2002-05-29 19:02:46 arkd Exp $
+ $Id: pdq.dtd,v 1.17 2002-05-31 17:45:43 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -51,7 +51,7 @@
                                            
 <!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
 
-<!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent)>
+<!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent+)>
 
 <!ELEMENT SpecificDiagnosis (#PCDATA)>
 
@@ -562,7 +562,7 @@
 <!ELEMENT StudyCategoryName (#PCDATA)>
 
 <!ELEMENT Intervention (InterventionType,
-                        InterventionTypeParent,
+                        InterventionTypeParent+,
                         InterventionNameLink*
                        )>
 
@@ -575,7 +575,7 @@
 <!ELEMENT InterventionNameLink (#PCDATA)>
 <!ATTLIST InterventionNameLink ref CDATA #IMPLIED>
 
-<!ELEMENT StudyCondition (SpecificCondition, ConditionParent)>
+<!ELEMENT StudyCondition (SpecificCondition, ConditionParent+)>
 
 <!ELEMENT SpecificCondition (#PCDATA)>
 <!ATTLIST SpecificCondition ref CDATA #IMPLIED>
@@ -664,7 +664,7 @@
 
 <!ELEMENT ProtocolSites (ProtocolSite+)>
 
-<!ELEMENT ProtocolSite (SiteName, ProtPerson+)>
+<!ELEMENT ProtocolSite (SiteName?, ProtPerson+)>
 
 <!ELEMENT SiteName (#PCDATA)>
 <!ATTLIST SiteName ref CDATA #REQUIRED>
@@ -682,8 +682,11 @@
                   DateLastModified
                  )>
 <!ATTLIST Person id CDATA #REQUIRED>
+<!ATTLIST Person Status ref CDATA #IMPLIED>
 
-<!ELEMENT ProfessionalInformation (PhysicianDetails?)>
+<!ELEMENT ProfessionalInformation (PDQBoardMembership*,PhysicianDetails?)>
+<!ELEMENT PDQBoardMembership (#PCDATA)>
+<!ATTLIST PDQBoardMembership ref CDATA #REQUIRED>
 
 <!ELEMENT PhysicianDetails (PhysicianSpecialtyInformation*,
                             PhysicianMembershipInformation?
@@ -750,6 +753,7 @@
 			DateLastModified?
                        )>
 <!ATTLIST Organization id CDATA #REQUIRED>
+<!ATTLIST Organization Status CDATA #IMPLIED>
 
 <!ELEMENT OrganizationNameInformation (OfficialName,
                                        ShortName*,
@@ -799,7 +803,7 @@
 <!ATTLIST CooperativeGroup ref CDATA #IMPLIED>
 
 <!ELEMENT MemberOfCCOP (#PCDATA)>
-<!ATTLIST CCOP ref CDATA #IMPLIED>
+<!ATTLIST MemberOfCCOP ref CDATA #IMPLIED>
 
 <!ELEMENT OrganizationType (#PCDATA)>
 
@@ -1001,8 +1005,6 @@
 <!ELEMENT PoliticalSubUnitShortName (#PCDATA)>
 
 <!ELEMENT PoliticalSubUnitAlternateName (#PCDATA)>
-
-<!ATTLIST CountryName ref CDATA #IMPLIED>
 
 <!-- End PoliticalSubUnit -->
 
