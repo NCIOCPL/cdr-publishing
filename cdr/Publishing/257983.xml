@@ -7,7 +7,88 @@
 <CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
  <SystemName>QcFilterSets</SystemName>
  <SystemDescription>QC all CDR filter sets: vendor filters, QC report filters, etc.</SystemDescription>
- 
+
+<SystemSubset>
+  <SubsetName>Term Vendor Filters</SubsetName>
+  <SubsetDescription>Filter set for Term vendor documents.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+<!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/Term/TermStatus'
+         AND q.value IN ('Reviewed-Problematic',
+                         'Reviewed-Retain',
+                         'Unreviewed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>Terminology</Subdirectory>
+   </SubsetSpecification>
+   
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/filters/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+
 <SystemSubset>
   <SubsetName>Protocol Vendor Filters</SubsetName>
   <SubsetDescription>Filter set for protocol vendor documents.</SubsetDescription>
@@ -75,7 +156,11 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
      </SubsetFilter>
-    </SubsetFilters>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
+    </SubsetFilters> 
    </SubsetSpecification>
 
   </SubsetSpecifications>
@@ -320,6 +405,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -501,6 +590,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -682,6 +775,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>  
    </SubsetSpecification>
 
