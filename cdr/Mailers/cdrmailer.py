@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.30 2002-10-24 02:37:48 bkline Exp $
+# $Id: cdrmailer.py,v 1.31 2002-10-24 17:18:44 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.30  2002/10/24 02:37:48  bkline
+# Turned on doc versions; removed org type.
+#
 # Revision 1.29  2002/10/23 22:06:12  bkline
 # Added org type to Org class.
 #
@@ -347,7 +350,8 @@ class MailerJob:
     #------------------------------------------------------------------
     # Generate a document for tracking a mailer.
     #------------------------------------------------------------------
-    def addMailerTrackingDoc(self, doc, recipient, mailerType):
+    def addMailerTrackingDoc(self, doc, recipient, mailerType, 
+                             remailerFor = ""):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -355,10 +359,17 @@ class MailerJob:
             mailerType  - String containing a values matching the
                           list of valid values for MailerType
                           enumerated in the schema for Mailer docs.
+            remailerFor - optional integer for the document ID of
+                          an earlier mailer that was sent out and
+                          never responded to, and for which this
+                          is a followup remailer.
         Return value:
             Integer ID for the newly inserted Mailer document.
         """
 
+        if remailerFor:
+            remailerFor = "\n  <RemailerFor cdr:ref='%s'/>" % \
+                          cdr.normalize(remailerFor)
         recipId = "CDR%010d" % recipient.getId()
         docId   = "CDR%010d" % doc.getId()
         address = recipient.getAddress().getXml()
@@ -369,7 +380,7 @@ class MailerJob:
  </CdrDocCtl>
  <CdrDocXml><![CDATA[
   <Mailer xmlns:cdr="cips.nci.nih.gov/cdr">
-   <Type>%s</Type>
+   <Type>%s</Type>%s
    <JobId>%d</JobId>
    <Recipient cdr:ref="%s">%s</Recipient>
    %s
@@ -379,8 +390,9 @@ class MailerJob:
   </Mailer>]]>
  </CdrDocXml>
 </CdrDoc>
-""" % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(),
-       address, docId, doc.getTitle(), self.__now, self.__deadline)
+""" % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
+       recipient.getName(), address, docId, doc.getTitle(),
+       self.__now, self.__deadline)
         rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y",
                            ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
