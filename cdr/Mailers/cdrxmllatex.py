@@ -125,6 +125,7 @@ class ProcNode:
         # If no proc list to process, we're done
         if procList != None:
             pp = ProcParms (topNode, self.dom, None, '')
+            pp.procNode = self
             for proc in procList:
 
                 # Find args for called proc, if there are any
@@ -140,6 +141,20 @@ class ProcNode:
 
             # If the entire chain produced any output, add it to the Latex
             self.output += pp.getOutput()
+
+    #---------------------------------------------------------------
+    # releaseOutput
+    #
+    #   Transfers ownership of the collected LaTeX output for
+    #   a node to the caller.
+    #
+    # Return:
+    #   String containing collected output.
+    #---------------------------------------------------------------
+    def releaseOutput (self):
+        tempOutput = self.output
+        self.output = ''
+        return tempOutput
 
     #---------------------------------------------------------------
     # execute
