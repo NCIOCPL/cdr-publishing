@@ -1,11 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.3 2002-09-12 23:29:51 ameyer Exp $
+# $Id: StatAndParticMailer.py,v 1.4 2002-10-23 11:44:08 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2002/09/12 23:29:51  ameyer
+# Removed common routine from individual mailers to cdrmailer.py.
+# Added a few trace statements.
+#
 # Revision 1.2  2002/01/23 17:14:58  bkline
 # Modifications to accomodate changed requirements.
 #
@@ -22,16 +26,10 @@ import cdr, cdrdb, cdrmailer, re, sys
 class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
 
     #------------------------------------------------------------------
-    # Specific constant values for subclass.
-    #------------------------------------------------------------------
-    MAILER_TYPE = "Protocol Status and Participant"
-
-    #------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
     #------------------------------------------------------------------
     def fillQueue(self):
         self.__getRecipients()
-        #self.__getDocuments()
         self.__makeIndex()
         self.__makeCoverSheet()
         self.__makeMailers()
