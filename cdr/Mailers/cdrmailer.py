@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.15 2002-10-08 01:39:00 bkline Exp $
+# $Id: cdrmailer.py,v 1.16 2002-10-08 13:56:23 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.15  2002/10/08 01:39:00  bkline
+# Fixed address parsing to match Lakshmi's new rules and to pick up
+# additional information.  Added optional flag to suppress printing.
+#
 # Revision 1.14  2002/09/26 18:28:01  ameyer
 # Replaced "mmdb2" with socket.gethostname().
 #
@@ -55,6 +59,8 @@
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
 
 debugCtr = 1
+
+_LOGFILE = "d:/cdr/log/mailer.log"
 
 #----------------------------------------------------------------------
 # Object for managing mailer processing.
@@ -162,7 +168,7 @@ class MailerJob:
     #------------------------------------------------------------------
     __CDR_EMAIL     = "cdr@%s.nci.nih.gov" % socket.gethostname()
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
-    __LOGFILE       = "d:/cdr/log/mailer.log"
+    __LOGFILE       = _LOGFILE
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
     __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode "\
@@ -225,14 +231,14 @@ class MailerJob:
         except:
             (eType, eValue) = sys.exc_info()[:2]
             errMessage = eValue or eType
-            self.log("ERROR: %s" % errMessage)
+            self.log("ERROR: %s" % errMessage, tback=1)
             self.__cleanup("Failure", errMessage)
             return 1
 
     #------------------------------------------------------------------
     # Append message to logfile.
     #------------------------------------------------------------------
-    def log(self, message):
+    def log(self, message, tback=None):
         """
         Appends progress or error information to a log file.  Each
         entry is stamped with the current date and time and the
@@ -240,9 +246,11 @@ class MailerJob:
         No exceptions raised.
         """
         try:
-            now = time.ctime(time.time())
-            msg = "[%s] Job %d: %s" % (now, self.__id, message)
-            open(MailerJob.__LOGFILE, "a").write(msg + "\n")
+            msg = "Job %d: %s" % (self.__id, message)
+            cdr.logwrite (msg, MailerJob.__LOGFILE, tback)
+            # now = time.ctime(time.time())
+            # msg = "[%s] Job %d: %s" % (now, self.__id, message)
+            # open(MailerJob.__LOGFILE, "a").write(msg + "\n")
         except:
             pass
 
@@ -270,7 +278,7 @@ class MailerJob:
         files), and the filenames provided to the constructor for the
         PrintJob objects should not include any path information.
         """
-        raise "fillQueue() must be defined by derived class"
+        raise StandardError ("fillQueue() must be defined by derived class")
 
     #------------------------------------------------------------------
     # Generate a document for tracking a mailer.
@@ -314,7 +322,8 @@ class MailerJob:
         match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
-            raise "failure adding tracking document for %s: %s" % (docId, err)
+            raise StandardError (
+                "failure adding tracking document for %s: %s" % (docId, err))
         self.__nMailers += 1
         digits = re.sub("[^\d]", "", rsp)
         return int(digits)
@@ -342,9 +351,9 @@ class MailerJob:
         filters = ["name:CIPS Contact Address"]
         result  = cdr.filterDoc(self.__session, filters, docId)
         if type(result) == type(""):
-            raise "failure extracting contact address for %s: %s" % (
-                docId,
-                result)
+            raise StandardError ( \
+                "failure extracting contact address for %s: %s" % ( docId,
+                result))
         return Address(result[0])
 
     #------------------------------------------------------------------
@@ -394,7 +403,8 @@ class MailerJob:
         docId = cdr.normalize(doc.getId())
         result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
         if type(result) == type(""):
-            raise "failure filtering document %s: %s" % (docId, result)
+            raise StandardError (\
+                "failure filtering document %s: %s" % (docId, result))
         try:
             global debugCtr
             fname = "%d.xml" % debugCtr
@@ -406,7 +416,8 @@ class MailerJob:
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue or eType
-            raise "failure generating LaTeX for %s: %s" % (docId, eMsg)
+            raise StandardError ( \
+                "failure generating LaTeX for %s: %s" % (docId, eMsg))
 
     #------------------------------------------------------------------
     # Create a formatted address block.
@@ -489,10 +500,12 @@ class MailerJob:
             for i in range(passCount):
                 rc = os.system("latex %s %s" % (self.__LATEX_OPTS, filename))
                 if rc:
-                    raise "failure running LaTeX processor on %s" % filename
+                    raise StandardError ( \
+                        "failure running LaTeX processor on %s" % filename)
             rc = os.system("dvips -q %s" % basename)
             if rc:
-                raise "failure running dvips processor on %s.dvi" % basename
+                raise StandardError ( \
+                    "failure running dvips processor on %s.dvi" % basename)
             return PrintJob(basename + ".ps", jobType)
 
         except:
@@ -633,13 +646,28 @@ class MailerJob:
 
     #------------------------------------------------------------------
     # Create and populate the print queue.
+    # Also creates and changes to the output directory.
     #------------------------------------------------------------------
     def __createQueue(self):
         self.__queue = []
+
+        # Does the output directory already exist
         try:
             os.chdir(self.__outputDir)
         except:
-            raise "failure setting working directory to %s" % self.__outputDir
+            # Doesn't exist, try to create it
+            try:
+                os.makedirs(self.__outputDir)
+            except:
+                self.log ("Unable to create working directory", tback=1)
+                raise "failure creating working directory %s" % \
+                      self.__outputDir
+            try:
+                os.chdir(self.__outputDir)
+            except:
+                self.log ("Unable to change to working directory", tback=1)
+                raise "failure setting working directory to %s" % \
+                      self.__outputDir
 
     #------------------------------------------------------------------
     # Print the jobs in the queue.
@@ -652,17 +680,20 @@ class MailerJob:
     # Clean up.
     #------------------------------------------------------------------
     def __cleanup(self, status, message):
+        self.log("~~In cleanup")
         try:
             self.__updateStatus(status, message)
             self.__sendMail()
             if self.__session: cdr.logout(self.__session)
         except:
-            pass
+            self.log ("__cleanup failed, status was '%s'" % status,
+                      tback=1)
 
     #------------------------------------------------------------------
     # Update the pub_proc table's status.
     #------------------------------------------------------------------
     def __updateStatus(self, status, message = None):
+        self.log("~~In update status, status=%s" % status)
         try:
             if message:
                 self.__cursor.execute("""\
@@ -679,7 +710,8 @@ class MailerJob:
                      WHERE id = ?""", (status, self.__id))
             self.__conn.commit()
         except:
-            pass
+            self.log ("__updateStatus failed, status was '%s'" % status,
+                      tback=1)
 
     #------------------------------------------------------------------
     # Inform the user that the job has completed.
@@ -921,6 +953,8 @@ class Address:
         self.__postalCode    = None
         self.__codePos       = None
         if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
+            cdr.logwrite (("Parsing address from string", xmlFragment),
+                           _LOGFILE)
             dom = xml.dom.minidom.parseString(xmlFragment)
         else:
             dom = xmlFragment
