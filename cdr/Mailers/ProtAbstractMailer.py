@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.2 2002-09-12 23:29:50 ameyer Exp $
+# $Id: ProtAbstractMailer.py,v 1.3 2002-10-08 01:43:27 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/09/12 23:29:50  ameyer
+# Removed common routine from individual mailers to cdrmailer.py.
+# Added a few trace statements.
+#
 # Revision 1.1  2002/01/28 09:36:24  bkline
 # Adding remaining CDR scripts.
 #
@@ -13,7 +17,7 @@
 import cdr, cdrdb, cdrmailer, re, sys
 
 #----------------------------------------------------------------------
-# Derived class for PDQ Editorial Board Member mailings.
+# Derived class for protocol abstract mailings.
 #----------------------------------------------------------------------
 class ProtocolAbstractMailer(cdrmailer.MailerJob):
 
@@ -61,6 +65,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                              ON doc_version.id = protocol.id
                            JOIN pub_proc_doc
                              ON pub_proc_doc.doc_version = doc_version.num
+                            AND pub_proc_doc.doc_id = protocol.id
                           WHERE pub_proc_doc.pub_proc = ?
                             AND cdrref.path = '/InScopeProtocol'
                                             + '/ProtocolAdminInfo'
@@ -105,15 +110,16 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         rsp = cdr.filterDoc(self.getSession(), filters, docId, parm = parms)
         if type(rsp) == type("") or type(rsp) == type(u""):
             raise "Unable to find address for %s: %s" % (str(fragLink), rsp)
-        rsp = rsp[0].replace("<ReportBody", "<Address")
-        rsp = rsp.replace("</ReportBody>", "</Address>")
         return rsp
 
     #------------------------------------------------------------------
     # Produce LaTeX source for all summaries to be mailed out.
     #------------------------------------------------------------------
     def __getDocuments(self):
-        filters = ['name:Stub InScopeProtocol Filter For Mailers']
+        filters = [
+            "name:Denormalization Filter (1/1): InScope Protocol",
+            "name:Denormalization: sort OrganizationName for Postal Address"
+        ]
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
@@ -160,7 +166,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         coverLetterParm     = self.getParm("CoverLetter")
         if not coverLetterParm:
             raise "CoverLetter parameter missing"
-        coverLetterName     = "../%s" % coverLetterParm[0]
+        coverLetterName     = coverLetterParm[0]
         coverLetterTemplate = open(coverLetterName).read()
         for elem in self.__index:
             recip, doc = elem[2:]
@@ -176,11 +182,19 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
 
         # Create a cover letter.
         address   = self.formatAddress(recip.getAddress())
-        addressee = "Dear %s:" % recip.getAddress().getAddressee()
+        docTitle  = doc.getTitle()
+        pieces    = docTitle.split(';', 1)
+        if len(pieces) != 2:
+            raise "Protocol title missing component: %s" % docTitle
+        protId    = pieces[0]
+        protTitle = pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
+
+        # Real placeholders:
         latex     = template.replace('@@ADDRESS@@', address)
-        latex     = latex.replace('@@SALUTATION@@', addressee)
-        latex     = latex.replace('@@DOCID@@', docId)
+        latex     = latex.replace('@@PROTOCOLID@@', protId)
+        latex     = latex.replace('@@PROTOCOLTITLE@@', protTitle)
+
         basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
@@ -188,8 +202,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         # Customize the LaTeX for this copy of the protocol.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
-        latex     = latex.replace('@@Recipient@@', recip.getName())
-        latex     = latex.replace('@@MailerDocId@@', str(mailerId))
+        latex     = latex.replace('@@DOCID@@', str(doc.getId()))
+        latex     = latex.replace('@@MailerDocID@@', str(mailerId))
         basename  = 'Mailer-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
