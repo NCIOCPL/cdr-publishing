@@ -1,10 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.3 2002-10-08 01:43:27 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.4 2002-10-10 13:44:25 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2002/10/08 01:43:27  bkline
+# Added missing clause to SQL query.  Brought cover letter processing
+# closer in line with requirements.  Dropped some unnecessary tweaking of
+# the personal address filter output.
+#
 # Revision 1.2  2002/09/12 23:29:50  ameyer
 # Removed common routine from individual mailers to cdrmailer.py.
 # Added a few trace statements.
@@ -110,7 +115,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         rsp = cdr.filterDoc(self.getSession(), filters, docId, parm = parms)
         if type(rsp) == type("") or type(rsp) == type(u""):
             raise "Unable to find address for %s: %s" % (str(fragLink), rsp)
-        return rsp
+        return rsp[0]
 
     #------------------------------------------------------------------
     # Produce LaTeX source for all summaries to be mailed out.
@@ -149,12 +154,14 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
         for country, zip, recip, doc in self.__index:
+            title = doc.getTitle()
+            if len(title) > 60: title = "%s ..." % title[:60]
             f.write("  Recipient: %010d\n" % recip.getId())
             f.write("       Name: %s\n" % recip.getName())
             f.write("    Country: %s\n" % country)
             f.write("Postal Code: %s\n" % zip)
             f.write("   Protocol: %010d\n" % doc.getId())
-            f.write("      Title: %s\n\n" % doc.getTitle())
+            f.write("      Title: %s\n\n\f" % title)
         f.close()
         job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.COVERPAGE)
         self.addToQueue(job)
@@ -180,7 +187,13 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         # Add document to the repository for tracking replies to the mailer.
         mailerId = self.addMailerTrackingDoc(doc, recip, self.MAILER_TYPE)
 
-        # Create a cover letter.
+        # Create a mailing label.
+        latex     = self.createAddressLabelPage(recip.getAddress())
+        basename  = 'MailingLabel-%d-%d' % (recip.getId(), doc.getId())
+        jobType   = cdrmailer.PrintJob.COVERPAGE
+        self.addToQueue(self.makePS(latex, 1, basename, jobType))
+
+        # Create the cover letter.
         address   = self.formatAddress(recip.getAddress())
         docTitle  = doc.getTitle()
         pieces    = docTitle.split(';', 1)
@@ -210,3 +223,5 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
 
 if __name__ == "__main__":
     sys.exit(ProtocolAbstractMailer(int(sys.argv[1])).run())
+
+
