@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.26 2003-01-15 03:12:44 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.27 2003-01-15 04:52:34 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.26  2003/01/15 03:12:44  bkline
+# Added code to handle multiple roles for LeadOrgPerson elements; changed
+# code to get the MailAbstractTo value to avoid calling UnicodeToLatex().
+#
 # Revision 1.25  2002/12/30 19:55:47  bkline
 # Suppressed DRAFT marking.
 #
@@ -1584,6 +1588,9 @@ def personLocs(pp):
         cipsContactInfo += address
         if cipsContact.address.country:
             cipsContactInfo += "  %s \\\\\n" % cipsContact.address.country
+        # Make email public Yes or No
+        cipsContactInfo += personEmailPublic(cipsContact.emailPublic);
+        # Form itself
         cipsContactInfo += r"""
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
@@ -1591,7 +1598,7 @@ def personLocs(pp):
     \item[Fax]                                           %s      \\
                                                          %s      \\
     \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]              \emailPublicYesOrNoCircles  \\
     \item[Website]                                       %s      \\
   \end{entry}
 """ % (cipsContact.phone or blankLine,
@@ -1617,6 +1624,9 @@ def personLocs(pp):
     if otherLocs:
         output += "  \\begin{enumerate}\n"
         for loc in otherLocs:
+            # Make email public Yes or No for this location
+            output += personEmailPublic(loc.emailPublic);
+            # Full location data
             output += r"""
   \item
   %s
@@ -1627,7 +1637,7 @@ def personLocs(pp):
     \item[Fax]                                           %s      \\
                                                          %s      \\
     \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]              \emailPublicYesOrNoCircles  \\
     \item[Website]                                       %s      \\
   \end{entry}
   \vspace{15pt}
@@ -1998,6 +2008,34 @@ def personDirectoryInclude(pp):
 
     # If value is anything else ("Pending"), do nothing
 
+def personEmailPublic(noString):
+    """
+    Same concept as personDirectoryInclude, but used to tell whether
+    Email is public or not.
+
+    Redefines \emailPublicYesOrNoCircles.
+
+    This routine is called from inside routines that are assembling
+    LaTeX strings, so we return the required LaTeX for inclusion in the
+    assembly rather than appending it directly to output.
+
+    Pass:
+        noString = "No" = Put an x in the "no" circle.
+                   Else put an x in the "yes" circle.
+    Return:
+        A LaTeX string containing the renewcommand for
+        emailPublicYesOrNoCircles.
+    """
+    # Redefine command based on whether email is defined as not public
+    if not noString or noString != "No":
+        # Undefined, empty, or something other than 'No'
+        return r"\renewcommand{\emailPublicYesOrNoCircles}" + \
+               r"{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}"
+    else:
+        # Email attribute said Public="No"
+        return r"\renewcommand{\emailPublicYesOrNoCircles}" + \
+               r"{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}"
+
 def statPup(pp):
     "Build the address block for the protocol update person."
     name    = ""
@@ -2227,6 +2265,7 @@ ORG_HDRTEXT=r"""
 # Used by:  Person
 #   \directoryIncludeYesOrNoCircles defaults to two empty circles.
 #    Will be redefined later if "Include" is 'Include' or 'Do not Include'
+#   Ditto for emailPublicYesOrNoCircles.
 # ------------------------------------------
 PERSON_HDRTEXT=r"""
   %%%% PERSON_HDRTEXT %%%%
@@ -2235,6 +2274,7 @@ PERSON_HDRTEXT=r"""
   \newcommand{\CenterHdr}{{\bfseries \PersonNameWithSuffixes}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\directoryIncludeYesOrNoCircles}{\yesno}
+  \newcommand{\emailPublicYesOrNoCircles}{\yesno}
 %%
 %% -----
 """ % time.strftime("%B %Y")
