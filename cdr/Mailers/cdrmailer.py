@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.14 2002-09-26 18:28:01 ameyer Exp $
+# $Id: cdrmailer.py,v 1.15 2002-10-08 01:39:00 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.14  2002/09/26 18:28:01  ameyer
+# Replaced "mmdb2" with socket.gethostname().
+#
 # Revision 1.13  2002/09/12 23:29:51  ameyer
 # Removed common routine from individual mailers to cdrmailer.py.
 # Added a few trace statements.
@@ -168,19 +171,20 @@ class MailerJob:
     #------------------------------------------------------------------
     # Constructor for base class.
     #------------------------------------------------------------------
-    def __init__(self, jobId):
+    def __init__(self, jobId, suppressPrinting = 0):
         """
         Parameters:
-            jobId          - Integer for publication job number.
+            jobId               - Integer for publication job number.
         """
-        self.__id          = jobId
-        self.__nMailers    = 0
-        self.__docIds      = []
-        self.__recipients  = {}
-        self.__index       = []
-        self.__documents   = {}
-        self.__parms       = {}
-        self.__printer     = MailerJob.__DEF_PRINTER
+        self.__id               = jobId
+        self.__nMailers         = 0
+        self.__docIds           = []
+        self.__recipients       = {}
+        self.__index            = []
+        self.__documents        = {}
+        self.__parms            = {}
+        self.__printer          = MailerJob.__DEF_PRINTER
+        self.__suppressPrinting = suppressPrinting
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -214,7 +218,7 @@ class MailerJob:
             self.__createQueue()
             self.log("~~Finished __createQueue")
             self.fillQueue()
-            self.__printQueue()
+            self.__printQueue(self.__suppressPrinting)
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
             self.log("******** finished mailer job ********")
             return 0
@@ -305,7 +309,8 @@ class MailerJob:
 </CdrDoc>
 """ % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(),
        address, docId, doc.getTitle(), self.__now, self.__deadline)
-        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y", ver = "Y")
+        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y", 
+                           ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
@@ -409,13 +414,17 @@ class MailerJob:
     #------------------------------------------------------------------
     def formatAddress(self, addr, org=None):
         block = ""
-        orgName = None
-        if org:
-            orgName = org.getName()
+        orgLines = ""
+        if addr.getNumOrgs():
+            for i in range(addr.getNumOrgs()):
+                orgLines += addr.getOrg(i) + " \\\\\n"
+        elif org:
+            orgLines = org.getName() + " \\\\\n"
         addressee = addr.getAddressee()
-        if orgName: block += orgName + " \\\\\n"
-        if orgName and addressee: block += "c/o "
+        #if orgName: block += orgName + " \\\\\n"
+        #if orgName and addressee: block += "c/o "
         if addressee: block += addressee + " \\\\\n"
+        if orgLines: block += orgLines
         for i in range(addr.getNumStreetLines()):
             streetLine = addr.getStreetLine(i)
             if streetLine:
@@ -635,9 +644,9 @@ class MailerJob:
     #------------------------------------------------------------------
     # Print the jobs in the queue.
     #------------------------------------------------------------------
-    def __printQueue(self):
+    def __printQueue(self, justTesting = 0):
         for job in self.__queue:
-            job.Print(self.__printer, self.log)
+            job.Print(self.__printer, self.log, justTesting)
 
     #------------------------------------------------------------------
     # Clean up.
@@ -745,17 +754,18 @@ class PrintJob:
     #------------------------------------------------------------------
     # Send the current print job to the specified printer.
     #------------------------------------------------------------------
-    def Print(self, printer, logFunc):
+    def Print(self, printer, logFunc, justTesting = 0):
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
 
-        prn = open(printer, "w")
-        doc = open(self.__filename)
-        prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
-                   doc.read())
-        doc.close()
-        prn.close()
+        if not justTesting:
+            prn = open(printer, "w")
+            doc = open(self.__filename)
+            prn.write((self.__staple and self.__STAPLE_PROLOG or "") +
+                      doc.read())
+            doc.close()
+            prn.close()
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer organization.
@@ -902,6 +912,7 @@ class Address:
                              address.
         """
         self.__addressee     = None
+        self.__orgs          = []
         self.__street        = []
         self.__city          = None
         self.__citySuffix    = None
@@ -914,17 +925,18 @@ class Address:
         else:
             dom = xmlFragment
         for node in dom.documentElement.childNodes:
-            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
-                if node.nodeName == 'PostalAddress':
-                    self.__parsePostalAddress(node)
-                elif node.nodeName == 'Name':
-                    self.__addressee = self.__buildName(node)
+            if node.nodeName == 'PostalAddress':
+                self.__parsePostalAddress(node)
+            elif node.nodeName == 'Name':
+                self.__addressee = self.__buildName(node)
 
     #------------------------------------------------------------------
     # Public access methods.
     #------------------------------------------------------------------
     def getNumStreetLines (self): return len(self.__street)
+    def getNumOrgs        (self): return len(self.__orgs)
     def getStreetLine(self, idx): return self.__street[idx]
+    def getOrg       (self, idx): return self.__orgs[idx]
     def getCity           (self): return self.__city
     def getCitySuffix     (self): return self.__citySuffix
     def getState          (self): return self.__state
@@ -959,6 +971,9 @@ class Address:
     # Extract postal address element values.
     #------------------------------------------------------------------
     def __parsePostalAddress(self, node):
+        org          = ""
+        parents      = []
+        parentsFirst = 0
         for child in node.childNodes:
             if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
                 if child.nodeName == "Street":
@@ -967,7 +982,7 @@ class Address:
                     self.__city = cdr.getTextContent(child)
                 elif child.nodeName == "CitySuffix":
                     self.__citySuffix = cdr.getTextContent(child)
-                elif child.nodeName == "PoliticalUnit_State":
+                elif child.nodeName == "State":
                     self.__state = cdr.getTextContent(child)
                 elif child.nodeName == "Country":
                     self.__country = cdr.getTextContent(child)
@@ -975,25 +990,56 @@ class Address:
                     self.__postalCode = cdr.getTextContent(child)
                 elif child.nodeName == "CodePosition":
                     self.__codePos = cdr.getTextContent(child)
+                elif child.nodeName == "OrgName":
+                    org = cdr.getTextContent(child)
+                elif child.nodeName == "ParentNames":
+                    pfAttr = child.getAttribute("OrderParentNameFirst")
+                    if pfAttr == "Yes":
+                        parentsFirst = 1
+                    for grandchild in child.childNodes:
+                        if grandchild.nodeName == "ParentName":
+                            parents.append(cdr.getTextContent(grandchild))
+        if org:
+            self.__orgs = [org] + parents
+            if parentsFirst:
+                self.__orgs.reverse()
 
     #------------------------------------------------------------------
     # Construct name string from components.
     #------------------------------------------------------------------
     def __buildName(self, node):
-        givenName = None
-        surname   = None
-        prefix    = None
+        givenName = ""
+        surname   = ""
+        prefix    = ""
+        gSuffix   = ""
+        mi        = ""
+        pSuffixes = []
         for child in node.childNodes:
             if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
                 if child.nodeName == "GivenName":
-                    surname = cdr.getTextContent(child)
-                elif child.nodeName == "SurName":
                     givenName = cdr.getTextContent(child)
+                elif child.nodeName == "SurName":
+                    surname = cdr.getTextContent(child)
                 elif child.nodeName == "Prefix":
                     prefix = cdr.getTextContent(child)
-        name = ""
-        if prefix: name += prefix + " "
-        if givenName: name += givenName + " "
-        if surname: name += surname
-        name = name.strip()
+                elif child.nodeName == "GenerationSuffix":
+                    gSuffix = cdr.getTextContent(child)
+                elif child.nodeName == "MiddleInitial":
+                    mi = cdr.getTextContent(child)
+                elif child.nodeName == "ProfessionalSuffix":
+                    for grandchild in child.childNodes:
+                        if grandchild.nodeName in (
+                                         "StandardProfessionalSuffix",
+                                         "CustomProfessionalSuffix"):
+                            suffix = cdr.getTextContent(grandchild)
+                            if suffix:
+                                pSuffixes.append(suffix)
+                    
+        name = ("%s %s" % (prefix, givenName)).strip()
+        name = ("%s %s" % (name, surname)).strip()
+        if gSuffix:
+            name = "%s, %s" % (name, self.genSuffix)
+        rest = ", ".join(pSuffixes).strip()
+        if rest:
+            name = "%s, %s" % (name, rest)
         return name
