@@ -1,4 +1,4 @@
-cd \cdr\output\%1
+cd \cdr\VendorDocs
 
 tar cvjf Country.tar.bz2 Country
 tar cvjf PoliticalSubUnit.tar.bz2 PoliticalSubUnit
