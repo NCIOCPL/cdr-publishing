@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.2 2002-11-07 21:19:44 bkline Exp $
+# $Id: cdrlatextables.py,v 1.3 2003-01-06 21:01:29 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/11/07 21:19:44  bkline
+# Better multirow cell support.
+#
 # Revision 1.1  2002/09/15 15:53:37  bkline
 # Module for generating LaTeX for tables.
 #
@@ -447,16 +450,16 @@ def openGroup(pp):
                     raise StandardError("Illegal ColWidth: %s" % col.width)
                 if widthType == "pt":
                     widthType = "in"
-                    amount *= 72
+                    amount /= 72.0
                 elif widthType == "pc":
                     widthType = "in"
-                    amount *= 6
+                    amount /= 6.0
                 elif widthType == "cm":
                     widthType = "in"
-                    amount *= 2.54
+                    amount /= 2.54
                 elif widthType == "mm":
                     widthType = "in"
-                    amount *= 25.4
+                    amount /= 25.4
                 elif widthType != "*":
                     raise StandardError("Illegal ColWidth: %s" % col.width)
             except:
@@ -465,11 +468,13 @@ def openGroup(pp):
             amount = 1
             widthType = "*"
         widthSpecs.append(WidthSpec(widthType, amount))
+        #sys.stderr.write("widthType: %s; amount: %f\n" % (widthType, amount))
 
     # Determine how much space is used by the explicitly specified widths.
     # During this pass we also total up the proportional units.
     usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP + 
                                (nCols + 1) * RULE_WIDTH)
+    #sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
     propTotal = 0
     propCols  = 0
     for spec in widthSpecs:
