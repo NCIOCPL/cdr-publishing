@@ -1,6 +1,8 @@
 """CdrXmlLatexSummaryInst: Processing instructions for generating a summary"""
 
-import cdr, sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
+import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
+
+personLists = None
 
 #-------------------------------------------------------------------
 # getAttribute
@@ -773,12 +775,13 @@ class PersonalName:
 class Address:
 
     def __init__(self, node = None):
-        self.street  = []
-        self.city    = None
-        self.state   = None
-        self.country = None
-        self.zip     = None
-        self.zipPos  = None
+        self.street     = []
+        self.city       = None
+        self.state      = None
+        self.country    = None
+        self.zip        = None
+        self.zipPos     = None
+        self.citySuffix = None
         if node:
             stateShortName   = None
             stateFullName    = None
@@ -789,6 +792,8 @@ class Address:
                     self.street.append(getText(child))
                 elif child.nodeName == "City":
                     self.city = getText(child)
+                elif child.nodeName == "CitySuffix":
+                    self.citySuffix = getText(child)
                 elif child.nodeName == "PoliticalSubUnitShortName":
                     stateShortName = getText(child)
                 elif child.nodeName == "PoliticalSubUnitFullName":
@@ -1129,8 +1134,457 @@ def getDeadline():
     then = time.mktime(now)
     return time.strftime("%b. %d, %Y", time.localtime(then))
     
+#----------------------------------------------------------------------
+# Gather lists of boards, specialties, etc., needed for Person mailers.
+#----------------------------------------------------------------------
+class PersonLists:
+    def __init__(self):
+        import cdr, cdrdb
+        personType = cdr.getDoctype('guest', 'Person')
+        if personType.error:
+            raise StandardError("getDoctype(Person): %s" % personType.error)
+        if not personType.vvLists:
+            raise StandardError("No valid value lists found for Person type")
+        conn = cdrdb.connect('CdrGuest')
+        self.boardSpecialties = self.__getBoardSpecialties(personType)
+        self.otherSpecialties = self.__getOtherSpecialties(personType)
+        self.profSocieties    = self.__getProfSocieties(personType)
+        self.trialGroups      = self.__getTrialGroups(conn)
+        self.oncologyPrograms = self.__getOncologyPrograms(conn)
+    def __getBoardSpecialties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "BoardCertifiedSpecialtyName":
+                return vvList[1]
+        raise StandardError("Unable to find valid board specialties")
+    def __getOtherSpecialties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "OtherSpecialty":
+                return vvList[1]
+        raise StandardError("Unable to find list of non-board specialties")
+    def __getProfSocieties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "MemberOfMedicalSociety":
+                return vvList[1]
+        raise StandardError("Unable to find list of medical societies")
+    def __getTrialGroups(self, conn):
+        cursor = conn.cursor()
+        cursor.execute("""\
+       SELECT DISTINCT d.id,
+                       o.value
+                  FROM document d
+                  JOIN query_term o
+                    ON o.doc_id = d.id
+                  JOIN query_term t
+                    ON t.doc_id = d.id
+                 WHERE o.path = '/Organization/OrganizationNameInformation'
+                              + '/OfficialName/Name'
+                   AND t.path = '/Organization/OrganizationType'
+                   AND t.value IN ('Non-US clinical trials group',
+                                   'Non-US clinical trials group')
+              ORDER BY o.value""")
+        return cursor.fetchall()
+    def __getOncologyPrograms(self, conn):
+        cursor = conn.cursor()
+        cursor.execute("""\
+       SELECT DISTINCT d.id,
+                       o.value
+                  FROM document d
+                  JOIN query_term o
+                    ON o.doc_id = d.id
+                  JOIN query_term t
+                    ON t.doc_id = d.id
+                 WHERE o.path = '/Organization/OrganizationNameInformation'
+                              + '/OfficialName/Name'
+                   AND t.path = '/Organization/OrganizationType'
+                   AND t.value IN ('NCI-funded community clinical ' +
+                                   'oncology program',
+                                   'NCI-funded minority community clinical ' +
+                                   'oncology program')
+              ORDER BY o.value""")
+        return cursor.fetchall()
+        
+class PersonName:
+    def __init__(self, node):
+        self.givenName    = None
+        self.surname      = None
+        self.profSuffixes = []
+        self.genSuffix    = None
+        self.prefix       = None
+        for child in node.childNodes:
+            if child.nodeName == "GivenName":
+                self.givenName = getText(child)
+            elif child.nodeName == "SurName":
+                self.surname = getText(child)
+            elif child.nodeName == "GenerationSuffix":
+                self.genSuffix = getText(child)
+            elif child.nodeName == "Prefix":
+                self.prefix = getText(child)
+            elif child.nodeName == "ProfessionalSuffix":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName in ("StandardProfessionalSuffix",
+                                               "CustomProfessionalSuffix"):
+                        suffix = getText(grandchild)
+                        if suffix:
+                            self.profSuffixes.append(suffix)
+        
+    def format(self):
+        return ("%s %s" % (self.givenName, self.surname)).strip()
+    def getSuffixes(self):
+        return " ".join([self.genSuffix or ''] + self.profSuffixes).strip()
+
+def personName(pp):
+    name = PersonName(pp.getCurNode())
+    formattedName = nameWithSuffixes = name.format()
+    suffixes = name.getSuffixes()
+    if suffixes: nameWithSuffixes += (", %s" % suffixes)
+    pp.setOutput(r"""
+  \newcommand{\PersonName}{%s}
+  \newcommand{\PersonNameWithSuffixes}{%s}
+""" % (formattedName, nameWithSuffixes))
+    
+class PersonLocation:
+    def __init__(self):
+        self.id             = None
+        self.cipsContact    = ""
+        self.address        = None
+        self.phone          = None
+        self.tollFreePhone  = None
+        self.fax            = None
+        self.email          = None
+        self.web            = None
+        self.orgNames       = []
+        self.emailPublic    = ""
+    def formatAddress(self, includeCountry = 0):
+        result = self.address.format(includeCountry)
+        for orgName in self.orgNames:
+            result = "  %s \\\\\n%s" % (orgName, result)
+        return result
+
+class OtherPracticeLocation(PersonLocation):
+    def __init__(self, node):
+        PersonLocation.__init__(self)
+        self.id = node.getAttribute("id")
+        for child in node.childNodes:
+            if child.nodeName == "SpecificPostalAddress":
+                self.address = Address(child)
+            elif child.nodeName in ("Phone", "SpecificPhone"):
+                self.phone = getText(child)
+            elif child.nodeName in ("TollFreePhone", "SpecificTollFreePhone"):
+                self.tollFreePhone = getText(child)
+            elif child.nodeName in ("Fax", "SpecificFax"):
+                self.fax = getText(child)
+            elif child.nodeName in ("Email", "SpecificEmail"):
+                self.email = getText(child)
+                self.emailPublic = child.getAttribute("Public")
+            elif child.nodeName == "CIPSContact":
+                self.cipsContact = getText(child)
+            elif child.nodeName == "OrganizationAddressNames":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "OrganizationName":
+                        name = getText(grandchild)
+                        if name: self.orgNames.append(name)
+
+class PrivatePracticeLocation(PersonLocation):
+    def __init__(self, node):
+        PersonLocation.__init__(self)
+        for child in node.childNodes:
+            if child.nodeName == "PrivatePracticeLocation":
+                self.id = child.getAttribute("id")
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "PostalAddress":
+                        self.address = Address(grandchild)
+                    elif grandchild.nodeName == "CIPSContact":
+                        self.cipsContact = getText(grandchild)
+            elif child.nodeName == "Phone":
+                self.phone = getText(child)
+            elif child.nodeName == "TollFreePhone":
+                self.tollFreePhone = getText(child)
+            elif child.nodeName == "Fax":
+                self.fax = getText(child)
+            elif child.nodeName == "Email":
+                self.email = getText(child)
+                self.emailPublic = child.getAttribute("Public")
+
+def personLocs(pp):
+    cipsContact = None
+    otherLocs = []
+    blankLine = r"\makebox[200pt]{\hrulefill}"
+    for node in pp.getCurNode().childNodes:
+        if node.nodeName == "OtherPracticeLocation":
+            loc = OtherPracticeLocation(node)
+        elif node.nodeName == "PrivatePracticeLocation":
+            loc = PrivatePracticeLocation(node)
+        else:
+            continue
+        if loc.cipsContact: cipsContact = loc
+        else: otherLocs.append(loc)
+        
+    address = cipsContact and cipsContact.formatAddress() or ""
+    cipsContactInfo = "  None provided."
+    if cipsContact:
+        cipsContactInfo = address
+        if cipsContact.address.country:
+            cipsContactInfo += "  %s \\\\\n" % cipsContact.address.country
+        cipsContactInfo += r"""
+  \renewcommand{\ewidth}{180pt}
+  \begin{entry}
+    \item[Phone]                              %s      \\
+    \item[Fax\footnotemark]                   %s      \\
+    \item[E-Mail]                             %s      \\
+    \item[Publish E-Mail in PDQ Directory]    \yesno  \\
+    \item[Website]                            %s      \\
+  \end{entry}
+  \footnotetext{For administrative use only}
+""" % (cipsContact.phone or blankLine,
+       cipsContact.fax   or blankLine,
+       cipsContact.email or blankLine,
+       cipsContact.web   or blankLine)
+
+    output = r"""
+  \newcommand{\ewidth}{180pt}
+  \PersonNameWithSuffixes \\
+%s
+
+  \PersonIntro
+
+  \subsection*{CIPS Contact Information}
+
+%s
+
+  \subsection*{Other Practice Locations}
+
+""" % (address, cipsContactInfo)
+
+    if otherLocs:
+        output += "  \\begin{enumerate}\n"
+        for loc in otherLocs:
+            output += r"""
+  \item
+  %s
+
+  \renewcommand{\ewidth}{180pt}
+  \begin{entry}
+    \item[Phone]                              %s      \\
+    \item[Fax]                                %s      \\
+    \item[E-Mail]                             %s      \\
+    \item[Publish E-Mail in PDQ Directory]    \yesno  \\
+    \item[Website]                            %s      \\
+  \end{entry}
+  \vspace{15pt}
+""" % (loc.formatAddress(1),
+       loc.phone or blankLine,
+       loc.fax   or blankLine,
+       loc.email or blankLine,
+       loc.web   or blankLine)
+
+        output += "  \\end{enumerate}\n"
+       
+    else:
+        output += "  None.\n"
+
+    pp.setOutput(output)
+
+
 def personSpecialties(pp):
-    pass
+    global personLists
+    if not personLists:
+        personLists = PersonLists()
+    node = pp.getTopNode()
+    boardSpecialties = {}
+    otherSpecialties = {}
+    profSocieties    = {}
+    trialGroups      = {}
+    oncologyPrograms = {}
+
+    for elem in node.getElementsByTagName("BoardCertifiedSpecialty"):
+        name = ""
+        certified = 0
+        for child in elem.childNodes:
+            if child.nodeName == "BoardCertifiedSpecialtyName":
+                name = getText(child)
+            elif child.nodeName == "Certified":
+                if getText(child) == "Yes":
+                    certified = 1
+        boardSpecialties[name] = certified
+    for elem in node.getElementsByTagName("OtherSpecialty"):
+        otherSpecialties[getText(elem)] = 1
+    for elem in node.getElementsByTagName("MemberOfMedicalSociety"):
+        profSocieties[getText(elem)] = 1
+    for elem in node.getElementsByTagName("CooperativeGroup"):
+        child = elem.firstChild
+        link = None
+        while child and not link:
+            if child.nodeName == "Ref":
+                link = getText(child)
+            child = child.nextSibling
+        if link:
+            tail = link.find('#')
+            if tail != -1:
+                link = link[:tail]
+            link = re.sub(r"[^\d]", "", link)
+            trialGroups[link] = 1
+
+    # Don't yet know how to find out what oncology programs they're members of.
+    # Find out from Lakshmi. XXX
+
+    output = r"""
+  \subsection*{Specialty Information}
+  
+  \subsubsection*{Board Certified Specialties}
+
+  \setlength{\doublerulesep}{0.5pt}
+  \begin{longtable}[l]{||p{250pt}||p{35pt}|p{35pt}||p{35pt}|p{35pt}||}
+    \hline
+  & \multicolumn{2}{c||}{\bfseries{ }}
+  & \multicolumn{2}{c||}{\bfseries{Board}} \\
+  & \multicolumn{2}{c||}{\bfseries{Specialty}}
+  & \multicolumn{2}{c||}{\bfseries{Certification}} \\
+    \bfseries{Specialty Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
+    \hline 
+    \hline
+  \endfirsthead
+
+    \multicolumn{5}{l}{(continued from previous page)} \\ 
+    \hline
+  & \multicolumn{2}{c||}{\bfseries{ }}
+  & \multicolumn{2}{c||}{\bfseries{Board}} \\
+  & \multicolumn{2}{c||}{\bfseries{Specialty}}
+  & \multicolumn{2}{c||}{\bfseries{Certification}} \\
+    \bfseries{Specialty Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
+    \hline 
+    \hline
+  \endhead
+"""
+    personLists.boardSpecialties.sort()
+    for specialty in personLists.boardSpecialties:
+        if boardSpecialties.has_key(specialty):
+            hasSpecialty = "\\Check{Y}"
+            if boardSpecialties[specialty]:
+                isCertified = "\\Check{Y}"
+            else:
+                isCertified = "\\Check{N}"
+        else:
+            hasSpecialty = isCertified = "\\Check{N}"
+        output += "  %s %s %s \\\\ \\hline\n" % (specialty, hasSpecialty,
+                                                            isCertified)
+    output += r"""
+  \end{longtable}
+
+  \subsubsection*{Other Specialties}
+
+  \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||} 
+    \hline
+  \bfseries{Specialty Training}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
+    \hline 
+    \hline
+  \endfirsthead
+    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \hline
+    \bfseries{Specialty Training}  
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
+    \hline 
+    \hline
+  \endhead
+"""
+    personLists.otherSpecialties.sort()
+    for specialty in personLists.otherSpecialties:
+        flag = otherSpecialties.has_key(specialty) and "Y" or "N"
+        output += "  %s \\Check{%s} \\\\ \\hline\n" % (specialty, flag)
+
+    output += r"""
+  \end{longtable}
+
+  \subsection*{Membership Information}
+  \subsubsection*{Professional Societies}
+  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+    \hline
+  & \multicolumn{2}{c||}{\bfseries{Member of:}}  \\
+    \bfseries{Society Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endfirsthead
+    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \hline
+  & \multicolumn{2}{c|}{\bfseries{Member of:}}  \\
+    \bfseries{Society Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c|}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endhead
+"""
+
+    personLists.profSocieties.sort()
+    for society in personLists.profSocieties:
+        flag = profSocieties.has_key(society) and "Y" or "N"
+        output += "  %s \\Check{%s} \\\\ \\hline\n" % (society, flag)
+    output += r"""
+  \end{longtable}
+
+  \subsubsection*{Clinical Trials Groups}
+  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+    \hline
+    \bfseries{Group Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endfirsthead
+    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \hline
+    \bfseries{Group Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endhead
+"""
+    for group in personLists.trialGroups:
+        flag = trialGroups.has_key(group[0]) and "Y" or "N"
+        output += "  %s \\Check{%s} \\\\ \\hline\n" % (group[1], flag)
+    output += r"""
+  \end{longtable}
+
+  \subsubsection*{Clinical Cancer Oncology Programs}
+  \CCOPIntro
+  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+    \hline
+    \bfseries{Program Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endfirsthead
+    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \hline
+    \bfseries{Program Name}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline 
+    \hline
+  \endhead
+"""
+    for program in personLists.oncologyPrograms:
+        flag = oncologyPrograms.has_key(program[0]) and "Y" or "N"
+        output += "  %s \\Check{%s} \\\\ \\hline\n" % (program[1], flag)
+    output += r"""
+  \end{longtable}
+"""
+    pp.setOutput(output)
+    
 
 ####################################################################
 # Constants
@@ -1266,8 +1720,9 @@ PERSON_HDRTEXT=r"""
   %% PERSON_HDRTEXT %%
   %% -------------- %%
   \newcommand{\LeftHdr}{PDQ Physician Update \\ \today \\}
-  \newcommand{\CenterHdr}{Physician ID: @@PERID@@ \\ {\bfseries \Person}}
-  \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
+  %\newcommand{\CenterHdr}{Physician ID: @@PERID@@ \\ {\bfseries \PersonName}}
+  \newcommand{\CenterHdr}{{\bfseries \PersonName}}
+  \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Physician ID: @@DOCID@@ \\}
 %
 % -----
 """
@@ -1588,7 +2043,6 @@ ORG_AFFILIATIONS=r"""
 PERSON_MISC_INFO=r"""
    %% PERSON_MISC_INFO %%
    %% ---------------- %%
-   \end{enumerate}
 
    \subsection*{Preferred Contact Mode}
    $\bigcirc$ Electronic \qquad $\bigcirc$ Hardcopy
@@ -1601,7 +2055,6 @@ PERSON_MISC_INFO=r"""
     Are you retired from practice?                         \hfill
         \yesno
 
- \subsection*{Speciality Information}
 %
 % -----
 """
@@ -1868,16 +2321,6 @@ PERSON_PRINT_OTHER=r"""
    \City, \PoliticalUnitState\  \PostalCodeZIP \\
    \Country  \\
 
-     \renewcommand{\ewidth}{180pt}
-     \begin{entry}
-        \item[Phone] \ThePhone{\Phone}           \\
-        \item[Fax]  \TheFax{\Fax}           \\
-        \item[E-Mail]  \TheWeb{\Web}        \\
-        \item[Publish E-Mail in PDQ Directory] \yesno   \\
-        \item[Website]  \TheWeb{\Web}
-     \end{entry}
-  \vspace{15pt}
-%
 % -----
 """
 
@@ -2489,164 +2932,29 @@ DocumentOrgBody = (\
           preProcs  = ((orgAffil, ()), ),
           textOut   = 0,
           order     = XProc.ORDER_TOP),
-# --------- Start: Affiliations Section ---------
-#    XProc(prefix    = ORG_AFFILIATIONS, 
-#          order     = XProc.ORDER_TOP),
-#    XProc(prefix    = "\n  \\begin{itemize}\n", 
-#          order     = XProc.ORDER_TOP),
-#    XProc(element   = "MemberOfProfessionalOrganization",
-#          order     = XProc.ORDER_TOP,
-#          prefix    = "\n    \\item "),
-#    XProc(prefix    = "\n  \\end{itemize}\n", 
-#          order     = XProc.ORDER_TOP),
-#    XProc(prefix    = "\n  \\subsubsection*{Cooperative Groups}",
-#          order     = XProc.ORDER_TOP),
-#    XProc(prefix    = "\n  \\begin{itemize}\n", 
-#          order     = XProc.ORDER_TOP),
-#    XProc(element   = "/Organization/OrganizationAffiliations"
-#                      "/MemberOfCooperativeGroups/AffiliateMemberOf"
-#                      "/CooperativeGroup/Name",
-#          order     = XProc.ORDER_TOP,
-#          prefix    = "\n    \\item "),
-#    XProc(prefix    = "\n  \\end{itemize}\n", 
-#          order     = XProc.ORDER_TOP)
-    )
 
+    )
 
 #------------------------------------------------------------------
 # Person Mailer Instructions (Body)
 #   Instructions for formatting all Person Mailers
 #------------------------------------------------------------------
 DocumentPersonBody = (
-# --------- START: First section Contact Information ---------
-    XProc(element="CIPSContact",
-          occs=1,
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="/Person/PersonLocations/OtherPracticeLocation"
-                  "/Organization/Name",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\OrgName}{",
-          suffix="}\n"),
-    XProc(element="GivenName",
-          order=XProc.ORDER_TOP,
-          prefix="  \\newcommand{\Person}{",
-          suffix=" "),
-    XProc(element="SurName",
-          order=XProc.ORDER_TOP,
-          suffix="}\n"),
-    XProc(element="GenerationSuffix",
-          prefix="  \\newcommand{\GenSuffix}{",
-          suffix=" }\n", order=XProc.ORDER_TOP),
-    XProc(element="StandardProfessionalSuffix",
-          prefix="  \\newcommand{\PerSuffix}{",
-          suffix="}\n", order=XProc.ORDER_TOP),
-    XProc(element="Address",
-          textOut=0, order=XProc.ORDER_TOP),
-    XProc(element="Street",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          preProcs=( (street, ()), )),
-    XProc(element="City",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\City}{",
-          suffix="}\n"),
-    XProc(element="PoliticalSubUnitShortName",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\PoliticalUnitState}{",
-          suffix="}\n"),
-    XProc(element="CountryFullName",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Country}{",
-          suffix="}\n"),
-    XProc(element="PostalCode_ZIP",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\PostalCodeZIP}{",
-          suffix="}\n"),
-    XProc(element="SpecificPhone",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Phone}{",
-          suffix="}\n"),
-    XProc(element="SpecificFax",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Fax}{",
-          suffix="}\n"),
-    XProc(element="SpecificEmail",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Email}{",
-          suffix="}\n"),
-    XProc(element="SpecificWeb",
-          order=XProc.ORDER_TOP,
-          prefix="  \\renewcommand{\Web}{",
-          suffix="}\n"),
-# --------- END: First section Contact Information ---------
-    XProc(prefix=PERSON_PRINT_CONTACT, order=XProc.ORDER_TOP),
-    XProc(element="/PersonMailer/OtherLocation",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          prefix=PERSON_RESET_OTHER,
-          suffix=PERSON_PRINT_OTHER),
-    XProc(element="/PersonMailer/OtherLocation/Address",
-          textOut=0,
-          order=XProc.ORDER_PARENT),
-    XProc(element="/PersonMailer/OtherLocation/Address/Street",
-          textOut=0,
-          order=XProc.ORDER_PARENT,
-          preProcs=( (street, ()), )),
-    XProc(element="Org",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Org}{",
-          suffix="}\n"),
-    XProc(element="/PersonMailer/OtherLocation/Phone",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Phone}{",
-          suffix="}\n"),
-    XProc(element="/PersonMailer/OtherLocation/Fax",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Fax}{",
-          suffix="}\n"),
-    XProc(element="/PersonMailer/OtherLocation/Email",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Email}{",
-          suffix="}\n"),
-    XProc(element="/PersonMailer/OtherLocation/URI",
-          order=XProc.ORDER_PARENT,
-          prefix="  \\renewcommand{\Web}{",
-          suffix="}\n"),
+
+    XProc(element   = "PersonNameInformation",
+          order     = XProc.ORDER_TOP,
+          preProcs  = ((personName, ()), ),
+          textOut   = 0,
+          descend   = 0),
+    XProc(element   = "PersonLocations",
+          order     = XProc.ORDER_TOP,
+          preProcs  = ((personLocs, ()), ),
+          textOut   = 0,
+          descend   = 0),
     XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
     XProc(order=XProc.ORDER_TOP,
           preProcs=((personSpecialties, ()), )),
-#    XProc(prefix=PERSON_SPECIALTY_TAB, order=XProc.ORDER_TOP),
-#    XProc(element="SpecialtyCategory",
-#          textOut=0, order=XProc.ORDER_TOP),
-#    XProc(element="BoardCertifiedSpecialtyName",
-#          order=XProc.ORDER_PARENT,
-#          postProcs=((yesno,("BoardCertifiedSpecialtyName",
-#                             "BoardCertifiedSpecialtyName",)),)),
-#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-#    XProc(prefix=PERSON_TRAINING_TAB, order=XProc.ORDER_TOP),
-#    XProc(element="TrainingCategory",
-#          textOut=0, order=XProc.ORDER_TOP),
-#    XProc(element="/PersonMailer/TrainingCategory/Name",
-#          order=XProc.ORDER_PARENT,
-#          postProcs=((yesno,("Name","YesNo",)),)),
-#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-#    XProc(prefix=PERSON_SOCIETY_TAB, order=XProc.ORDER_TOP),
-#    XProc(element="ProfSociety",
-#          textOut=0, order=XProc.ORDER_TOP),
-#    XProc(element="MemberOfMedicalSociety",
-#          order=XProc.ORDER_PARENT,
-#          postProcs=((yesno,("MemberOfMedicalSociety","YesNo",)),)),
-#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-#    XProc(prefix=PERSON_CLINGRP_TAB, order=XProc.ORDER_TOP),
-#    XProc(element="TrialGroup",
-#          textOut=0, order=XProc.ORDER_TOP),
-#    XProc(element="/Person/ProfessionalInformation/PhysicianDetails"
-#                  "/PhysicianMembershipInformation/MemberOfCooperativeGroup"
-#                  "/CooperativeGroup/OfficialName/Name",
-#          order=XProc.ORDER_PARENT,
-#          postProcs=((yesno,("Name","YesNo",)),)),
-#    XProc(prefix=END_TABLE, order=XProc.ORDER_TOP),
-#    XProc(prefix=PERSON_CCOP_TAB, order=XProc.ORDER_TOP),
+
     )
 
 
