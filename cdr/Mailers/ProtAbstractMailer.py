@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.13 2002-11-08 17:27:06 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.14 2002-11-08 21:45:27 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2002/11/08 17:27:06  bkline
+# Switch to using professional title for cover letter at Lakshmi's
+# request (issue #510).
+#
 # Revision 1.12  2002/11/07 21:22:07  bkline
 # Fix for selection query.
 #
@@ -184,7 +188,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
         for country, zip, recip, doc in self.getIndex():
-            title = doc.getTitle()
+            title = doc.getTitle().encode('latin-1', 'replace')
             if len(title) > 60: title = "%s ..." % title[:60]
             f.write("  Recipient: %d\n" % recip.getId())
             f.write("       Name: %s\n" % recip.getName())
