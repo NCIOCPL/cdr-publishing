@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.38 2002-11-08 17:25:49 bkline Exp $
+# $Id: cdrmailer.py,v 1.39 2002-11-08 22:41:14 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.38  2002/11/08 17:25:49  bkline
+# Fixed error check for return from filterDoc().
+#
 # Revision 1.37  2002/11/05 16:46:40  ameyer
 # Fixed bug in getAddressLines() by removing obsolete reference to org.
 #
@@ -389,7 +392,7 @@ class MailerJob:
         recipId = "CDR%010d" % recipient.getId()
         docId   = "CDR%010d" % doc.getId()
         address = recipient.getAddress().getXml()
-        xml     = """\
+        xml     = u"""\
 <CdrDoc Type="Mailer">
  <CdrDocCtl>
   <DocTitle>Mailer for document %s sent to %s</DocTitle>
@@ -409,8 +412,8 @@ class MailerJob:
 """ % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
        recipient.getName(), address, docId, doc.getTitle(),
        self.__now, self.__deadline)
-        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y",
-                           ver = "Y", val = 'Y')
+        rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'), 
+                           checkIn = "Y", ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
