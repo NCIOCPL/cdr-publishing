@@ -7,6 +7,10 @@
 
 %% -- START -- Document Declarations and Definitions
 \documentclass[12pt]{article}
+\usepackage[none,light,bottom]{draftcopy}
+%\usepackage[first,light,bottomafter,timestamp]{draftcopy}
+\draftcopySetGrey{0.90}
+\draftcopyVersion{1.0~~}
 
 % Package and code to set correct double-quotes
 % ---------------------------------------------
@@ -17,7 +21,6 @@
   \ifthenelse{\isodd{\value{qC}}}{``}{''}%
 }
 
-\usepackage{calc}
 
 % Package Fancyhdr for Header/Footer/Reviewer Information
 % -------------------------------------------------------
@@ -25,7 +28,7 @@
 \pagestyle{fancy}
 
 % Placing title, date, and board member in header
-\fancyhead[C]{{\bfseries Protocol ID:  \TheProtocolID} \\}
+\fancyhead[C]{{\bfseries Protocol ID:  \ProtocolID} \\}
 \fancyhead[L]{\today}
 \fancyhead[R]{DocID: \TheDocID}
 \fancyfoot[C]{\thepage}
@@ -37,6 +40,10 @@
 % Wider Margins
 % \setlength{\oddsidemargin}{12pt}
 % \setlength{\textwidth}{6in}
+
+% Package calc used in following list definition
+% ----------------------------------------------
+\usepackage{calc}
 
 % Define list environment
 % -----------------------
@@ -55,9 +62,10 @@
 % \renewcommand{\familydefault}{phv}
 
 % \ProtocolID
-\newcommand{\TheProtocolID}{ACRIN-6655}
+% \TheProtocolID --> XML = <ProtocolIDs.PrimaryID.IDString>
+\newcommand{\ProtocolID}{ACRIN-6655}
 
-% \DocID
+% \DocID --> XML = ????
 \newcommand{\TheDocID}{86539}
 %\newcommand{\DocID}[1]{\renewcommand{\TheDocID}{DocID:  #1}}
 
@@ -66,9 +74,6 @@
 \setlength{\headheight}{28pt}
 
 \renewcommand{\thesection}{\hspace{-1.0em}}
-
-% Ensure that only sections are listed in TOC
-\setcounter{tocdepth}{1}
 
 %% -- END -- Document Declarations and Definitions
 
@@ -88,6 +93,8 @@
      \makeatletter \renewcommand\@biblabel[1]{#1.} \makeatother
  
 \setcounter{qC}{0}
+% Protocol Title section --> XML = <TitleText> of 
+%                                   <ProtocolTitle.TitleType>=Professional
 \subsection*{Protocol Title}
 Phase I/III Randomized Study of Irinotecan, Fluorouracil, and Leucovorin
 Calcium With or Without Hepatic Chemoembolization in Patients With
@@ -98,27 +105,42 @@ Last Modified 09/2001)
 \par
 \setcounter{qC}{0}
 \begin{entry}
+% Internal Protocol Key --> XML = ????
 \item[Internal key]               16138 
-\item[Protocol ID]                \TheProtocolID
+\item[Protocol ID]                \ProtocolID
+% Alternate Protocol IDs --> XML = <ProtocolIDs.OtherID.IDString>
+                                  \\ NCI-H92-0023
+% Protocol Activation Date --> XML = <CurrentProtocolStatus><Date>
+%                                    or
+%                                    <PrevProtocolStatus><Date>
+%                                    depending on the entry of
+%                                    <ProtocolStatusName>
 \item[Protocol Activation Date]           
+% Lead Organization --> XML = <ProtocolLeadOrg><OrganizationID>
 \item[Lead Organization]          American College of Radiology Imaging Network
-
+% Protocol Chairman --> XML = <ProtocolPersonnel><PersonRole>Protocol Chair
+%                               <PersonID>
 \item[Protocol Chairman]          Michael C. Soulen, M.D.
+% Phone --> XML = ????
 \item[Phone]  215-662-7111
+% Address --> XML = ????
 \item[Address] University of Pennsylvania Cancer Center \\
                                   3400 Spruce Street \\
                                   Philadelphia, PA  19104-4283
+% Protocol Status --> XML = <CurrentProtocolStatus><ProtocolStatusName>
 \item[Protocol Status]            Protocol Status approved
 
+% Eligibility Age Range --> XML = <Eligibility><AgeText>
 \item[Eligible Patient Age Range] Any age
+% Eligibility Age Range --> XML = <Eligibility><LowAge> 
 \item[Lower Age Limit]            0
+% Eligibility Age Range --> XML = <Eligibility><HighAge> 
 \item[Upper Age Limit]            120
 \end{entry}
 
 \setcounter{qC}{0}
+% Disease Retrieval Terms --> XML = <Eligibility><Diagnosis>
 \subsection*{Disease Retrieval Terms}
-% \begin{itemize}
-% \setlength{\itemsep}{-5pt}
 \begin{list}{$\circ$}{\setlength{\itemsep}{-5pt}}
 \item this is a long one for adenocarcinoma of the colon 
 \item adenocarcinoma of the rectum 
@@ -128,9 +150,9 @@ Last Modified 09/2001)
 \item stage IV colon cancer 
 \item stage IV rectal cancer      
 \end{list}
-% \end{itemize}
 
 \setcounter{qC}{0}
+% Protocol Objectives --> XML = <Objectives><Para>
 \subsection*{Protocol Objectives}
 I.  Determine the survival of patients with liver-dominant metastatic colorectal
 adenocarcinoma treated with irinotecan, fluorouracil, and leucovorin calcium
@@ -145,6 +167,7 @@ toxic effects of chemoembolization, toxic effects of chemotherapy, and death
 from cancer-related complications in these patients.
 
 \setcounter{qC}{0}
+% Patient Eligibility --> XML = <EntryCriteria><Para>
 \subsection*{Patient Eligibility}                
 --Disease Characteristics--
 
@@ -230,6 +253,7 @@ cell or squamous cell skin cancer or carcinoma in situ of the cervix
 Not pregnant or nursing
 Fertile patients must use effective contraception
 
+% Protocol Outline --> XML = <Outline><Para>
 \subsection*{Protocol Outline}
 This is a phase I dose-escalation study followed by a phase III randomized,
 multicenter study.
@@ -288,6 +312,7 @@ Not abstracted
 Not abstracted
 
 \setcounter{qC}{0}
+% Projected Accrual --> XML = <Accrual><Para>
 \subsection*{Projected Accrual}
 A total of 9-18 patients will be accrued for phase I of this study.
 Approximately 315 patients will be accrued for phase III of this study within
@@ -302,6 +327,7 @@ Approximately 315 patients will be accrued for phase III of this study within
     Not abstracted
 
 \setcounter{qC}{0}
+% Caveat for use of Disease --> XML = Boiler plate warning.
 \subsection*{Caveat for use of Disease}
 The purpose of most clinical trials listed in this database is to test new
 cancer treatments, or new methods of diagnosing, screening, or preventing
@@ -314,8 +340,9 @@ effective than standard treatment.  A responsible investigator associated with
 this clinical trial should be consulted before using this protocol.
 
 
+% Following Text is Boilerplate
+
 \newpage
-% \bfseries
 Please initial this page and fax or send hard copy to the address below. 
 
 If you are requesting any changes to the submitted document please include 
