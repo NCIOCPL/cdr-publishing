@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.37 2003-03-14 14:44:02 bkline Exp $
+   $Id: pdq.dtd,v 1.38 2003-03-17 15:23:10 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.37  2003/03/14 14:44:02  bkline
+   Added menu information elements for Term documents.
+
    Revision 1.36  2003/03/14 14:25:59  bkline
    Added FormerName child to OrganizationNameInformation element.
 
@@ -809,7 +812,7 @@
 <!ELEMENT OrganizationNameInformation (OfficialName,
                                        ShortName*,
                                        AlternateName*,
-                                       FormerName
+                                       FormerName*
                                       )>
 
 <!ELEMENT OfficialName (Name)>
