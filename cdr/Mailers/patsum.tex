@@ -1,0 +1,194 @@
+%% LaTeX Sample file for Patient Summaries.
+%%                                   Created: 07/31/2001, Volker Englisch
+%% ----------------------------------------------------------------------
+%% The XML2LaTeX converter has to create a file with the data structure that
+%%is presented here in order to display a properly formatted summary
+%%
+
+%% -- START -- Document Declarations and Definitions
+\documentclass[12pt]{article}
+%% Style file to format citations (exponented)
+\usepackage{overcite}
+%% Citations to be printed in bold
+\renewcommand\citeform[1]{\bfseries #1}
+
+% \usepackage{cite}
+%% Style file to create literature reference for each chapter
+\usepackage{chapterbib}
+
+% Modify the default header "References" for Citation section
+\renewcommand\refname{References:}
+
+% Package and code to set correct double-quotes
+% ---------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+  \addtocounter{qC}{1}%
+  \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+% Package Fancyhdr for Header/Footer/Reviewer Information
+% -------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% Placing title, date, and board member in header
+\fancyhead[C]{\bfseries \SummaryTitle \\}
+\fancyhead[L]{\today}
+\fancyhead[R]{\TheBoardMember}
+\fancyfoot[C]{\thepage}
+\renewcommand\headrulewidth{1pt}
+\renewcommand\footrulewidth{1pt}
+
+% Double-spacing
+% \renewcommand\baselinestretch{1.5}
+% Wider Margins
+% \setlength{\oddsidemargin}{12pt}
+% \setlength{\textwidth}{6in}
+
+% Changing Font
+% \renewcommand{\familydefault}{phv}
+
+% \TheBoardMember --> XML = <BoardMember>
+\newcommand{\TheBoardMember}{}
+\newcommand{\BoardMember}[1]{\renewcommand{\TheBoardMember}{Reviewer:  #1}}
+
+% \SummaryTitle --> XML = <SummaryTitle>
+\newcommand{\SummaryTitle}{Ovarian Epithelial Cancer}
+
+\setlength{\parskip}{1.2mm}
+\setlength{\parindent}{4mm}
+
+\renewcommand{\thesection}{\hspace{-1.0em}}
+
+% Ensure that only sections are listed in TOC
+\setcounter{tocdepth}{1}
+
+%% -- END -- Document Declarations and Definitions
+
+\begin{document}
+
+% Tell fancyhdr package to modify the plain style (plain style is 
+% default on a cover page), e.g. put header on first page as well.
+% ----------------------------------------------------------------
+\fancypagestyle{plain}{%
+    % \fancyhf{}%
+    \fancyhead[C]{\bfseries \SummaryTitle\\}
+    \fancyhead[L]{\today}
+    \fancyhead[R]{\TheBoardMember}
+    \fancyfoot[C]{Font phv \\ \thepage}
+    \renewcommand\headrulewidth{1pt}
+    \renewcommand\footrulewidth{1pt}}
+
+     \makeatletter \renewcommand\@biblabel[1]{#1.} \makeatother
+ 
+\centerline{\bfseries \Large \SummaryTitle}
+\BoardMember{V. Englisch}
+\tableofcontents
+
+\begin{cbunit}
+
+% \section --> XML = <SummarySection>
+% Paragraph --> XML = <Para>
+\section{General Information}
+
+\setcounter{qC}{0}
+Note:  Separate PDQ summaries on Screening for Ovarian Cancer and Prevention of
+Ovarian Cancer are also available.
+
+\setcounter{qC}{0}
+Note:  Some citations in the text of this section are followed by a level of
+evidence.  The PDQ editorial boards use a formal ranking system to help the
+reader judge the strength of evidence linked to the reported results of a
+therapeutic strategy.  (Refer to the PDQ summary on Levels of Evidence for more
+information.)
+
+\setcounter{qC}{0}
+% \cite + \bibitem --> <Citation>
+This guy is working on the Footnote convertion.\cite{1,2}
+The other guy is working on the CIPS project, too. \cite{2,3}
+And at the end
+we are using all three guys in one citation. \cite{2,3,1} 
+At the very end
+we need a couple couple more guys here. \cite{5,3,1,2,4} 
+
+
+\setcounter{qC}{0}
+Ovarian cancer usually spreads via local shedding into the peritoneal cavity
+followed by implantation on the peritoneum, and via local invasion of bowel and
+bladder.  The incidence of positive nodes at primary surgery has been reported
+as high as 24$\%$ in patients with stage I disease, 50$\%$ in patient with stage II
+disease, 74$\%$ in patients with stage III disease, and 73$\%$ in patients with stage
+IV disease.
+\cite{6}  In this study, the pelvic nodes were involved as often as the
+para-aortic nodes.  Tumor cells may also block diaphragmatic lymphatics.  The
+resulting impairment of lymphatic drainage of the peritoneum is thought to play
+a role in development of ascites in ovarian cancer.  Also, transdiaphragmatic
+spread to the pleura is common.
+
+\setcounter{qC}{0}
+Although the ovarian cancer-associated antigen, CA 125, has no prognostic
+significance when measured at the time of diagnosis, it has a high correlation
+with survival when measured one month after the third course of chemotherapy
+for patients with stage III or stage IV disease.
+\cite{7}
+For patients whose
+elevated CA 125 normalizes with chemotherapy, more than one subsequent elevated
+CA 125 is highly predictive of active disease, but this does not mandate
+immediate therapy.
+\cite{8, 9}
+
+% \begin{cbunit}, \end{cbunit} identify start/end of a reference section
+% created on a per section basis at the end of each section.
+% a \cite{N} refers to the bib entry \bibitem{1} within the 
+% \begin{thebibliography}, \end{thebibliography} environment
+% The text of the <Citation> tag will be the text of a \bibitem{N} 
+% 
+\begin{thebibliography}{100}
+\bibitem{1} Volker Englisch, The Art of Using \LaTeX . 2001
+\bibitem{2} Perry Gonella, Here, there and everywhere.  Proceedings, 1999.
+\bibitem{3} Parasuram Iyer, An electron in the cable.  O'Reilley, 1989.
+\bibitem{4} Alan Meyer, My life is chess.  Biography, AM Publishing, 1999.
+\bibitem{5} Bob Kline, The python and the mouse.  RK Systems's Press, 2001.
+\bibitem{6}N Wolmark, H Rockette, DL Wickerham, B Fisher, C Redmond, ER Fisher, 
+M Potvin, RJ Davies, J Jones, A Robidoux.  Adjuvant therapy of Dukes' A, B, 
+and C adenocarcinoma of the colon with portal-vein fluorouracil hepatic 
+infusion: preliminary results of National Surgical Adjuvant Breast and Bowel 
+Project Protocol C-02. J Clin Oncol 8(9): 1466-75, 1990.
+\bibitem{7}Unresolved footnote for PDQ Citation:4027.
+\bibitem{8}M Merson, S Andreola, V Galimberti, R Bufalino, S Marchini, 
+U Veronesi.  Breast carcinoma presenting as axillary metastases without 
+evidence of a primary tumor. Cancer 70(2): 504-8, 1992.
+\bibitem{9}Unresolved footnote for PDQ Citation:11622.
+\end{thebibliography}
+
+\end{cbunit}
+
+\begin{cbunit}
+
+\section{Cellular Classification}
+
+\setcounter{qC}{0}
+This guy \cite{1} (order entered: 1) is working on the Footnote convertion.
+The other guy \cite{2,3} (order entered: 2,3) is working on the CIPS project, too. 
+And at the end
+we are using all three guys in one citation \cite{2,3,1} (order entered: 2,3,1). 
+At the very end
+we need a couple couple more guys here \cite{5,3,1,2,4} (order entered: 5,3,1,2,4).
+
+\setcounter{qC}{0}
+(Refer to the PDQ summary on Ovarian Low Malignant Potential Tumor Treatment
+for more information.)
+
+% \bibliographystyle{alpha}
+\begin{thebibliography}{100}
+\bibitem{1} Hemant Virkar, The Glass is half full, Research project, 1988.   
+\bibitem{2} Kent Hevner , CIPS projects and Government games, 2001. 
+\bibitem{3} Spencer Hines, We'll get it done.  Oxford Press. 1999. 
+\bibitem{4} Micharl Arluk, The Russian Invasion, WWII Publishing, 1945.
+\bibitem{5} Albert Einstein, $E = {m \over c^2}$.  Knowledge Press, 1961.
+\end{thebibliography}
+\end{cbunit}
+
+\end{document}

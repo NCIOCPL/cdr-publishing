@@ -1,0 +1,356 @@
+%% LaTeX Sample file for Protocol Abstract Mailers
+%%                                   Created: 09/19/2001, Volker Englisch
+%% ----------------------------------------------------------------------
+%% The XML2LaTeX converter has to create a file with the data structure that
+%%is presented here in order to display a properly formatted summary
+%%
+
+%% -- START -- Document Declarations and Definitions
+\documentclass[12pt]{article}
+
+% Package and code to set correct double-quotes
+% ---------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+  \addtocounter{qC}{1}%
+  \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+\usepackage{calc}
+
+% Package Fancyhdr for Header/Footer/Reviewer Information
+% -------------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% Placing title, date, and board member in header
+\fancyhead[C]{{\bfseries Protocol ID:  \TheProtocolID} \\}
+\fancyhead[L]{\today}
+\fancyhead[R]{DocID: \TheDocID}
+\fancyfoot[C]{\thepage}
+\renewcommand\headrulewidth{1pt}
+\renewcommand\footrulewidth{1pt}
+
+% Double-spacing
+% \renewcommand\baselinestretch{1.5}
+% Wider Margins
+% \setlength{\oddsidemargin}{12pt}
+% \setlength{\textwidth}{6in}
+
+% Define list environment
+% -----------------------
+\newcommand{\entrylabel}[1]{\mbox{\bfseries{#1:}}\hfil}
+\newenvironment{entry}
+   {\begin{list}{}%
+       {\renewcommand{\makelabel}{\entrylabel}%
+        \setlength{\labelwidth}{170pt}%
+       \setlength{\itemsep}{-5pt}%
+        \setlength{\leftmargin}{\labelwidth+\labelsep}%
+       }%
+   }%
+{\end{list}}
+
+% Changing Font
+% \renewcommand{\familydefault}{phv}
+
+% \ProtocolID
+\newcommand{\TheProtocolID}{ACRIN-6655}
+
+% \DocID
+\newcommand{\TheDocID}{86539}
+%\newcommand{\DocID}[1]{\renewcommand{\TheDocID}{DocID:  #1}}
+
+\setlength{\parskip}{1.2mm}
+\setlength{\parindent}{0mm}
+\setlength{\headheight}{28pt}
+
+\renewcommand{\thesection}{\hspace{-1.0em}}
+
+% Ensure that only sections are listed in TOC
+\setcounter{tocdepth}{1}
+
+%% -- END -- Document Declarations and Definitions
+
+\begin{document}
+
+
+% Tell fancyhdr package to modify the plain style (plain style is 
+% default on a cover page), e.g. put header on first page as well.
+% ----------------------------------------------------------------
+\fancypagestyle{plain}{%
+    % \fancyhf{}%
+    \fancyhead[L]{\today}
+    \fancyfoot[C]{\thepage}
+    \renewcommand\headrulewidth{1pt}
+    \renewcommand\footrulewidth{1pt}}
+
+     \makeatletter \renewcommand\@biblabel[1]{#1.} \makeatother
+ 
+\setcounter{qC}{0}
+\subsection*{Protocol Title}
+Phase I/III Randomized Study of Irinotecan, Fluorouracil, and Leucovorin
+Calcium With or Without Hepatic Chemoembolization in Patients With
+Adenocarcinoma of the Colon or Rectum Metastatic to the Liver (Summary
+Last Modified 09/2001)
+
+\subsection*{General Protocol Information}
+\par
+\setcounter{qC}{0}
+\begin{entry}
+\item[Internal key]               16138 
+\item[Protocol ID]                \TheProtocolID
+\item[Protocol Activation Date]           
+\item[Lead Organization]          American College of Radiology Imaging Network
+
+\item[Protocol Chairman]          Michael C. Soulen, M.D.
+\item[Phone]  215-662-7111
+\item[Address] University of Pennsylvania Cancer Center \\
+                                  3400 Spruce Street \\
+                                  Philadelphia, PA  19104-4283
+\item[Protocol Status]            Protocol Status approved
+
+\item[Eligible Patient Age Range] Any age
+\item[Lower Age Limit]            0
+\item[Upper Age Limit]            120
+\end{entry}
+
+\setcounter{qC}{0}
+\subsection*{Disease Retrieval Terms}
+% \begin{itemize}
+% \setlength{\itemsep}{-5pt}
+\begin{list}{$\circ$}{\setlength{\itemsep}{-5pt}}
+\item this is a long one for adenocarcinoma of the colon 
+\item adenocarcinoma of the rectum 
+\item liver metastases            
+\item this is a long one for recurrent colon cancer 
+\item recurrent rectal cancer     
+\item stage IV colon cancer 
+\item stage IV rectal cancer      
+\end{list}
+% \end{itemize}
+
+\setcounter{qC}{0}
+\subsection*{Protocol Objectives}
+I.  Determine the survival of patients with liver-dominant metastatic colorectal
+adenocarcinoma treated with irinotecan, fluorouracil, and leucovorin calcium
+with or without hepatic chemoembolization.
+                                     
+II.  Determine response in the liver, time to hepatic tumor progression, and
+time to extrahepatic tumor progression in these patients treated with these
+regimens.
+                                     
+III.  Determine the possible treatment differences with respect to morbidity,
+toxic effects of chemoembolization, toxic effects of chemotherapy, and death
+from cancer-related complications in these patients.
+
+\setcounter{qC}{0}
+\subsection*{Patient Eligibility}                
+--Disease Characteristics--
+
+Histologically confirmed metastatic colorectal adenocarcinoma
+Measurable metastasis to liver at least 1.0 cm
+No more than 50% liver replacement by tumor
+Less than 75% of total liver volume
+Known extrahepatic disease limited to lymph nodes and less than 2 cm
+No ascites
+                                     
+
+Ineligible for surgery
+                                     
+ 
+
+
+--Prior/Concurrent Therapy--
+                                     
+Biologic therapy:
+No more than 1 prior adjuvant immunotherapy regimen for colon cancer
+                                     
+Chemotherapy:
+At least 6 months since prior adjuvant chemotherapy and recovered
+No more than 1 prior adjuvant chemotherapy regimen for colon cancer
+No prior hepatic arterial infusion chemotherapy
+                                     
+Endocrine therapy:
+Not specified
+                                     
+Radiotherapy:
+At least 1 month since prior radiotherapy
+No prior hepatic radiotherapy
+                                     
+Surgery:
+See Disease Characteristics
+At least 1 month since prior surgery
+Prior surgical resection or ablation or liver metastases allowed
+                                     
+Other:
+No other concurrent therapy
+                                     
+--Patient Characteristics--
+                                     
+Age:
+Any age
+
+Performance status:
+Zubrod 0-2
+                                     
+Life expectancy:
+Not specified
+                                     
+Hematopoietic:
+Absolute granulocyte count at least 2,000/mm3
+Platelet count at least 90,000/mm3
+No bleeding diathesis not correctable by standard therapy
+                                     
+Hepatic:
+Bilirubin no greater than 2.0 mg/dL
+SGOT no greater than 100 mU/mL
+Lactate dehydrogenase no greater than 425 mU/mL
+No hepatic encephalopathy
+                                     
+Renal:
+Creatinine no greater than 2.0 mg/dL
+                                     
+Cardiovascular:
+No myocardial infarction within the past 6 months
+No evidence of congestive heart failure
+No severe peripheral vascular disease that would preclude catheterization
+ 
+
+
+No portal vein occlusion without hepatopedal collateral flow demonstrated by
+angiography
+No portal hypertension with hepatofugal flow
+                                     
+Other:
+No severe allergy or intolerance to contrast media, narcotics, sedatives, or
+atropine
+No other malignancy within the past 5 years except adequately treated basal
+cell or squamous cell skin cancer or carcinoma in situ of the cervix
+Not pregnant or nursing
+Fertile patients must use effective contraception
+
+\subsection*{Protocol Outline}
+This is a phase I dose-escalation study followed by a phase III randomized,
+multicenter study.
+                                     
+Phase I:
+Patients in phase I are sequentially enrolled to 1 of 3 treatment regimens.
+                                     
+Regimen A:  Patients receive irinotecan IV over 60-90 minutes, leucovorin
+calcium IV, and fluorouracil IV over 10 minutes on days 1, 8, 15, and 22.
+Patients undergo hepatic embolization with embolic suspension only on day 36.
+                                     
+Regimen B:  Patients receive chemotherapy as in regimen A.  Patients undergo
+hepatic chemoembolization with lower-dose cisplatin, doxorubicin, and mitomycin
+on day 36.
+                                     
+Regimen C:  Patients receive chemotherapy as in regimen A.  Patients undergo
+hepatic chemoembolization with higher-dose cisplatin, doxorubicin, and mitomycin
+on day 36.
+                                     
+After 1 week of rest, patients in all regimens receive a second 4-week course of
+systemic chemotherapy.
+                                     
+Cohorts of 3-10 patients are sequentially enrolled until the maximum tolerated
+dose (MTD) of chemotherapy and chemoembolization is determined.  The MTD is
+defined as the dose preceding that at which at least 4 of 10 patients experience
+dose-limiting toxicity.
+                                     
+Phase III:
+Patients are stratified according to liver volume involvement (less than 25% vs
+25-50% vs greater than 50% to less than 75%) and participating center.  Patients
+are randomized to 1 of 2 treatment arms.
+                                     
+Arm I:  Patients receive irinotecan IV over 60-90 minutes, leucovorin calcium
+IV, and fluorouracil IV over 10 minutes on days 1, 8, 15, and 22.  Treatment
+repeats every 6 weeks in the absence of disease progression.
+                                     
+Arm II:  Patients receive chemotherapy as in arm I.  Patients undergo hepatic
+chemoembolization with cisplatin, doxorubicin, and mitomycin on day 36.
+Chemotherapy repeats every 6 weeks in the absence of disease progression.
+Chemoembolization may repeat every 6 weeks for 2-4 courses as necessary.
+                                     
+                                     
+Patients in phase III are followed every 3 months for 2 years, every 6 months
+for 3 years, and then annually thereafter.
+
+\setcounter{qC}{0}
+\subsection*{Stratification Parameters}
+Not abstracted
+
+\setcounter{qC}{0}
+\subsection*{Baseline and Treatment Procedures}
+Not abstracted
+
+\setcounter{qC}{0}
+\subsection*{Measure of Response}
+Not abstracted
+
+\setcounter{qC}{0}
+\subsection*{Projected Accrual}
+A total of 9-18 patients will be accrued for phase I of this study.
+Approximately 315 patients will be accrued for phase III of this study within
+2.5 years.
+
+\setcounter{qC}{0}
+\subsection*{Dosage Schedule}
+    Not abstracted
+
+\setcounter{qC}{0}
+\subsection*{Dosage Formulation}
+    Not abstracted
+
+\setcounter{qC}{0}
+\subsection*{Caveat for use of Disease}
+The purpose of most clinical trials listed in this database is to test new
+cancer treatments, or new methods of diagnosing, screening, or preventing
+cancer.  Because all potentially harmful side effects are not known before a
+trial is conducted, dose and schedule modifications may be required for
+participants if they develop side effects from the treatment or test.  The
+therapy or test described in this clinical trial is intended for use by clinical
+oncologists in carefully structured settings, and may not prove to be more
+effective than standard treatment.  A responsible investigator associated with
+this clinical trial should be consulted before using this protocol.
+
+
+\newpage
+% \bfseries
+Please initial this page and fax or send hard copy to the address below. 
+
+If you are requesting any changes to the submitted document please include 
+the edited pages of this document.
+
+You may fax the information to the PDQ Protocol Coordinator at:
+\begin{verse}
+Fax \#:  301-480-8105
+\end{verse}
+
+or send hard copy documents to:
+\begin{verse}
+PDQ Protocol Coordinator    \\
+Attn: CIAT                  \\
+Cancer Information Products and Systems, NCI, NIH   \\
+6116 Executive Blvd. Suite 3002B MSC-8321           \\
+Bethesda, MD 20892-8321
+\end{verse}
+
+Please initial here if summary is satisfactory to you. 
+\hrulefill
+
+If the study is permanently closed to patient entry, please give approximate 
+date of closure. 
+\hrulefill
+
+Reason for closure. 
+\hrulefill      \newline
+\mbox{}\hrulefill \newline
+\mbox{}\hrulefill \newline
+\mbox{}\hrulefill \newline
+\mbox{}\hrulefill
+
+Please list/attach any citations resulting from this study.
+\vfill
+
+
+\end{document}
