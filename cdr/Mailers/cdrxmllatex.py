@@ -14,7 +14,6 @@ from cdrlatexlib import XProc, ProcParms, XmlLatexException, findControls
 ####################################################################
 # Globals
 ####################################################################
-G_outString = ""        # Output string
 G_debug     = 0         # True=output debugging info
 
 
@@ -60,8 +59,7 @@ class Timer:
 # ProcNode
 #
 #   A structure relating dom nodes in the input tree to their
-#   processing instructions, and to related related nodes in the
-#   output tree.
+#   processing instructions, and to related nodes in the output tree.
 #
 #   An tree of ProcNodes is created containing references to all
 #   of the dom nodes to be output, in the order of output.
@@ -91,6 +89,7 @@ class ProcNode:
         self.ordinal = ordinal
         self.sibling = None
         self.child   = None
+        self.output  = ''
 
     #---------------------------------------------------------------
     # Sort comparison routine for sorting ProcNodes
@@ -140,8 +139,7 @@ class ProcNode:
                     break
 
             # If the entire chain produced any output, add it to the Latex
-            if pp.getOutput() != '':
-                outString (pp.getOutput())
+            self.output += pp.getOutput()
 
     #---------------------------------------------------------------
     # execute
@@ -155,9 +153,9 @@ class ProcNode:
     #     XProc was generated for a fixed routine, not associated
     #     with a particular input XML element.
     #
-    # Return:
-    #   True(1)  = Everything okay to continue.
-    #   False(0) = Abort processing of any nodes under this one.
+    # Return (XXX Current code always returns EXEC_OK):
+    #   EXEC_OK   = Everything okay to continue.
+    #   EXEC_DONE = Abort processing of any nodes under this one.
     #
     #   May raise exception if severe error.
     #---------------------------------------------------------------
@@ -171,7 +169,7 @@ class ProcNode:
 
             # If there's a prefix, send it
             if xp.prefix != None:
-                outString (xp.prefix)
+                self.output += xp.prefix
 
             # Execute any pre-processing routines
             self.execProcs (topNode, self.dom, xp.preProcs)
@@ -180,14 +178,28 @@ class ProcNode:
         #   because we're supposed to output the text
         if self.dom != None:
             if self.dom.nodeType == self.dom.TEXT_NODE:
-                outString (self.dom.nodeValue)
+                self.output += encodeString(self.dom.nodeValue)
 
         # If there are child nodes to process, do them all
         child = self.child
+        tmpString = ''
         while child != None:
             rc = child.execute (topNode)
-            if rc != EXEC_DONE:
+            tmpString += child.output
+
+            # Release memory held by child
+            child.output = ''
+
+            if rc == EXEC_OK:
                 child = child.sibling
+            else:
+                break
+
+        # Apply any filters registered to the output of the children.
+        if xp and xp.filters:
+            for filter in xp.filters:
+                tmpString = filter(tmpString)
+        self.output += tmpString
 
         if xp != None:
 
@@ -196,8 +208,9 @@ class ProcNode:
 
             # If there's a suffix, send it
             if xp.suffix != None:
-                outString (xp.suffix)
+                self.output += xp.suffix
 
+        # Done.
         return EXEC_OK
 
     #---------------------------------------------------------------
@@ -702,66 +715,32 @@ class Ctl:
 ####################################################################
 
 #-------------------------------------------------------------------
-# outString()
+# encodeString()
 #
-# Output data.
-# Use this so that we have a single place to apply something to all
-#   output data, if required.
-#
-# Uses global _outString as target for output.
+# Filtering applied to all text nodes.  Performs the following steps:
+#   * performs placeholder substitutions (if appropriate)
+#   * maps unicode to Latin1
+#   * escapes characters which would be mistaken for LaTeX delimiters
 #
 # Pass:
-#   String to output, as format string
+#   String to filter, as format string
 #   Optional additional arguments, if required for embedded %formats.
 #       Must be in proper format, i.e., tuple or single item.
 #
 # Return:
-#   None.
+#   Filtered string
 #-------------------------------------------------------------------
 
-def outString (s, args=None):
-    global G_outString
+def encodeString (s, args=None):
 
     if args==None:
         tmpStr = s
     else:
         tmpStr = s % args
 
-    if type(tmpStr) == type(u""):
-        # Map to Latin-1 and do something with characters that don't fit
-        tmpStr = UnicodeToLatex.convert (tmpStr)
+    tmpStr = UnicodeToLatex.convert (tmpStr)
 
-    G_outString = G_outString + tmpStr
-
-
-#-------------------------------------------------------------------
-# outClear()
-#
-# Initialize output data.
-#-------------------------------------------------------------------
-
-def outClear ():
-    global G_outString
-    G_outString = ""
-
-
-#-------------------------------------------------------------------
-# outLatex()
-#
-# Pre-processor for outString to escape backslashes.
-#
-# Pass:
-#   String to output, as format string
-#   Optional additional arguments, if required for embedded %formats.
-#       Must be in proper format, i.e., tuple or single item.
-#
-# Return:
-#   None.
-#-------------------------------------------------------------------
-
-def outLatex (s, args=None):
-    tmp = string.replace (s, "\\", "\\\\")
-    outString (tmp, args)
+    return tmpStr
 
 
 #-------------------------------------------------------------------
@@ -867,7 +846,7 @@ def makeLatex (Xml, docFmt, fmtType='', params=None, logFunc=None):
         fmtType = ''
 
     # Clear any previous output
-    outClear()
+    #outClear()
 
     # Save parameters in global dictionary
     G_calling_parms = params
@@ -891,6 +870,6 @@ def makeLatex (Xml, docFmt, fmtType='', params=None, logFunc=None):
     # Get the results
     Timer().stamp ("Returning results")
     log (logFunc, "--Returning results")
-    doc = LatexDoc (G_outString)
+    doc = LatexDoc (ctl.getProcTree().output)
 
     return doc
