@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.50 2003-07-03 18:11:21 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.51 2003-07-12 01:16:58 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.50  2003/07/03 18:11:21  ameyer
+# Checking Status attribute on address before printing it.
+# Modified statPersonnel() to use Location class.
+#
 # Revision 1.49  2003/07/02 22:00:56  bkline
 # Implemented request #797 (shrink margins for Summary mailers).
 #
@@ -448,6 +452,11 @@ class OrgProtStatus:
 class PersonName:
     "Object representing a person's name, including professional suffixes."
     def __init__(self, node):
+        """
+        Construct the name from a /Person/PersonNameInformation element.
+        Pass:
+            PersonNameInformation DOM node
+        """
         self.givenName    = ""
         self.surname      = ""
         self.profSuffixes = []
@@ -549,7 +558,7 @@ class Location:
         self.fax           = None
         self.email         = None
         self.web           = None
-        self.emailPublic   = 1          # True=Can publish email address
+        self.emailPublic   = ""         # "No" = Don't publish email
 
         if node:
             for child in node.childNodes:
@@ -559,14 +568,16 @@ class Location:
                     self.address = Address(child)
                 elif child.nodeName == "Phone":
                     self.phone = getText(child)
+                elif child.nodeName == "Fax":
+                    self.fax = getText(child)
                 elif child.nodeName == "TollFreePhone":
                     self.tollFreePhone = getText(child)
                 elif child.nodeName == "Email":
                     self.email = getText(child)
-                    if child.getAttribute ("Public") == "No":
-                        self.emailPublic = 0
+                    self.emailPublic = child.getAttribute ("Public")
                 elif child.nodeName == "WebSite":
                     self.web = getText(child)
+            self.id = node.getAttribute ("id")
             if node.getAttribute ("CIPSContact") == "Y":
                 self.cipsContact = 1
 
@@ -663,42 +674,13 @@ class ProtLeadOrg:
                 if child.getAttribute("MailAbstractTo") == 'Y':
                     self.sendMailerTo = person
 
-class OrgLoc:
+class OrgLoc(Location):
     """
     Represents an organization location.
-    XXXX - MUST CHANGE - INHERIT FROM Location - XXXX
+    Super class does all the work.
     """
     def __init__(self, node):
-        self.id          = None
-        self.cipsContact = ""
-        self.address     = None
-        self.phone       = None
-        self.fax         = None
-        self.email       = None
-        self.web         = None
-        self.emailPublic = ""
-        self.orgNames    = []
-        for child in node.childNodes:
-            if child.nodeName == "Location":
-                self.id = child.getAttribute("id")
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "CIPSContact":
-                        self.cipsContact = getText(grandchild)
-                    elif grandchild.nodeName == "PostalAddress":
-                        self.address = Address(grandchild)
-                    elif grandchild.nodeName == "Phone":
-                        self.phone = getText(grandchild)
-                    elif grandchild.nodeName == "Fax":
-                        self.fax = getText(grandchild)
-                    elif grandchild.nodeName == "Email":
-                        self.email = getText(grandchild)
-                        self.emailPublic = grandchild.getAttribute("Public")
-                    elif grandchild.nodeName == "WebSite":
-                        self.web = getText(grandchild)
-                    elif grandchild.nodeName == "OrganizationAddressNames":
-                        for ggc in grandchild.childNodes:
-                            if ggc.nodeName == "OrganizationName":
-                                self.orgNames.append(getText(ggc))
+        Location.__init__(self, node, "OrganizationLocation")
 
 class PersonLists:
     "Gathers lists of boards, specialties, etc., needed for Person mailers."
@@ -1250,16 +1232,21 @@ def stripEnds(str):
 def orgLocs(pp):
     "Handle organization locations."
 
-    # Gather in all the locations for the organization.
-    otherLocs = []
-    blankLine = r"\makebox[200pt]{\hrulefill}"
-    cipsContact = None
+    # If there is a particular person to contact, find him
     cipsContactName = ""
     topNode = pp.getTopNode()
     cipsContactPersons = topNode.getElementsByTagName("CIPSContactPerson")
     if cipsContactPersons:
-        cipsContactPerson = PersonName(cipsContactPersons[0])
-        cipsContactName   = "  %s \\\\\n" % cipsContactPerson.format(1)
+        contactNodes = \
+          cipsContactPersons[0].getElementsByTagName("PersonNameInformation")
+        if contactNodes:
+            cipsContactPerson = PersonName (contactNodes[0])
+            cipsContactName   = "  %s \\\\\n" % cipsContactPerson.format(1)
+
+    # Gather in all the locations for the organization.
+    otherLocs = []
+    blankLine = r"\makebox[200pt]{\hrulefill}"
+    cipsContact = None
     for child in pp.getCurNode().childNodes:
         if child.nodeName == "OrganizationLocation":
             loc = OrgLoc(child)
@@ -1275,7 +1262,7 @@ def orgLocs(pp):
     # Add the CIPS contact information.
     adminOnly = "(For administrative use only)"
     if cipsContact and cipsContact.address:
-        formattedAddress = cipsContact.address.format()
+        formattedAddress = cipsContact.format(1)
         if formattedAddress:
             output = r"""
   \OrgIntro
@@ -1295,8 +1282,7 @@ def orgLocs(pp):
       \item[Publish E-Mail to PDQ/Cancer.gov]            \yesno  \\
       \item[Website]                                     %s
    \end{entry}
-""" % (cipsContactName,
-       cipsContact.address.format(1),
+""" % (cipsContactName, formattedAddress,
        cipsContact.phone or blankLine,
        cipsContact.fax   or blankLine, adminOnly,
        cipsContact.email or blankLine,
@@ -1310,7 +1296,7 @@ def orgLocs(pp):
 """
         for loc in otherLocs:
             if loc.address:
-                formattedAddress = loc.address.format(1)
+                formattedAddress = loc.format(1)
                 if formattedAddress:
                     output += r"""
   \item
@@ -2243,6 +2229,8 @@ LATEXHEADER=r"""
   \tolerance=1000
   \emergencystretch=20pt
 
+  %% Define dummy for future use
+  \newcommand{\ewidth}{}
 % -----
 """
 
@@ -2471,7 +2459,6 @@ ENTRYBFLIST=r"""
 
   % Define list environment
   % -----------------------
-  \newcommand{\ewidth}{}
   \newcommand{\entrylabel}[1]{\mbox{\bfseries{#1:}}\hfil}
   \newenvironment{entry}
      {\begin{list}{}%
