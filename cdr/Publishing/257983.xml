@@ -152,13 +152,7 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>InScope Protocol Full QC Report</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+     </SubsetFilter>     
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -236,13 +230,7 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>InScope Protocol Administrative Report Filter</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+     </SubsetFilter>     
     </SubsetFilters>
    </SubsetSpecification>
 
