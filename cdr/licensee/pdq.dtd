@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.15 2002-05-16 01:21:38 arkd Exp $
+ $Id: pdq.dtd,v 1.16 2002-05-29 19:02:46 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -21,7 +21,7 @@
                         | SummaryRef | SummaryLink | ProtocolRef | ProtocolLink
                         | DrugName | InterventionName | GlossaryTermRef
                         | GlossaryTermLink | ExternalRef | Quote | Note
-                        | Multimedia | Comment"> 
+                        | Multimedia"> 
 
 <!ENTITY % TextElements "#PCDATA | Emphasis | Strong | Subscript
                          | Superscript | TT | GeneName | ScientificName
@@ -31,7 +31,7 @@
                          | GlossaryTermRef | GlossaryTermLink
                          | ExternalRef | Quote | Note | Para
                          | LiteralLayout | Table | ItemizedList | OrderedList | QandASet
-                         | Contact | Multimedia | Comment">
+                         | Contact | Multimedia">
 
 <!ENTITY % TextSectionElements
                          "#PCDATA | Emphasis | Strong | Subscript
@@ -44,12 +44,12 @@
                          | ExternalRef | Quote | Note | Para
                          | LiteralLayout | Table
                          | ItemizedList | OrderedList | QandASet
-                         | Contact | Multimedia | Comment | Section">
+                         | Contact | Multimedia | Section">
 
 <!ENTITY % TitleData "#PCDATA |  Emphasis | Strong | Subscript | Superscript
                               | TT | GeneName | ScientificName | ForeignWord">
                                            
-<!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Fax?, Email?, WebSite?">
+<!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
 
 <!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent)>
 
@@ -196,6 +196,7 @@
 <!ELEMENT Answer  (%TextElements;)*>
 
 <!ELEMENT Contact (ContactName?,ContactDetail)>
+<!ATTLIST Contact Status CDATA #IMPLIED>
 
 <!ELEMENT ContactDetail (%Location;)>
 <!ATTLIST ContactDetail id CDATA #IMPLIED>
@@ -232,42 +233,31 @@
 
 <!ELEMENT TollFreePhone (#PCDATA)>
 
-<!ELEMENT Fax (#PCDATA)>
-
 <!ELEMENT Email (#PCDATA)>
 
 <!ELEMENT WebSite (#PCDATA)>
 <!ATTLIST WebSite xref CDATA #REQUIRED>
 
 <!ELEMENT Emphasis (%ParaElements;)*>
-<!ATTLIST Emphasis id CDATA #IMPLIED>
 
 <!ELEMENT Strong (%ParaElements;)*>
-<!ATTLIST Strong id CDATA #IMPLIED>
 
 <!ELEMENT Subscript (%ParaElements;)*>
-<!ATTLIST Subscript id CDATA #IMPLIED>
 
 <!ELEMENT Superscript (%ParaElements;)*>
-<!ATTLIST Superscript id CDATA #IMPLIED>
 
 <!ELEMENT TT (%ParaElements;)*>
 <!ATTLIST TT id CDATA #IMPLIED>
 
 <!ELEMENT GeneName (%ParaElements;)*>
-<!ATTLIST GeneName id CDATA #IMPLIED>
 
 <!ELEMENT ScientificName (%ParaElements;)*>
-<!ATTLIST ScientificName id CDATA #IMPLIED>
 
 <!ELEMENT DrugName (%ParaElements;)*>
-<!ATTLIST DrugName id CDATA #IMPLIED>
 
 <!ELEMENT InterventionName (%ParaElements;)*>
-<!ATTLIST InterventionName id CDATA #IMPLIED>
 
 <!ELEMENT ForeignWord (%ParaElements;)*>
-<!ATTLIST ForeignWord id CDATA #IMPLIED>
 
 <!ELEMENT MainTopics (TermRef?)>
 
@@ -319,7 +309,7 @@
 <!ATTLIST SummaryLink ref CDATA #IMPLIED>
 
 <!ELEMENT Reference (#PCDATA)>
-<!ATTLIST Reference ref CDATA #REQUIRED>
+<!ATTLIST Reference ref IDREF #REQUIRED>
 
 <!ELEMENT ReferenceSection (Citation+)>
 
@@ -327,7 +317,7 @@
 <!-- A Citation includes both literature and protocol references. -->
 
 <!ELEMENT Citation (%ParaElements;)*>
-<!ATTLIST Citation id CDATA #REQUIRED
+<!ATTLIST Citation id ID #REQUIRED
                    PMID CDATA ""
                    MedlineID CDATA ""
                    CancerlitID CDATA ""
@@ -344,6 +334,7 @@
 
 <!ELEMENT PrivatePracticeLocation (%Location;)>                          
 <!ATTLIST PrivatePracticeLocation id CDATA #IMPLIED>
+<!ATTLIST PrivatePracticeLocation Status CDATA #IMPLIED>
 
 <!ELEMENT PersonRole (#PCDATA)>
 
@@ -409,7 +400,7 @@
 <!-- Types of summary audience
   Possible values are:
     Patients
-    Health Professionals -->
+    Health professionals -->
 
 <!ELEMENT SummaryAudience (#PCDATA)>                           
 
@@ -669,17 +660,14 @@
 
 <!ELEMENT ProtPerson (PersonNameInformation?, PersonRole, Contact)>
 <!ATTLIST ProtPerson ref CDATA #IMPLIED>
+<!ATTLIST ProtPerson status CDATA #IMPLIED>
 
 <!ELEMENT ProtocolSites (ProtocolSite+)>
 
-<!ELEMENT ProtocolSite (SiteName, SiteContact)>
+<!ELEMENT ProtocolSite (SiteName, ProtPerson+)>
 
 <!ELEMENT SiteName (#PCDATA)>
 <!ATTLIST SiteName ref CDATA #REQUIRED>
-
-<!ELEMENT SiteContact (ProtPerson+)>
-
-<!ELEMENT TitleRole (#PCDATA)>
 
 <!-- End Protocols -->
 
@@ -733,11 +721,13 @@
 
 <!ELEMENT Home (%Location;)>
 <!ATTLIST Home id CDATA #IMPLIED>
+<!ATTLIST Home Status CDATA #IMPLIED>
 
 <!ELEMENT OtherPracticeLocation (PersonOrganizationName,
 					   PersonTitle?,
 					   PersonOrganizationLocation)>
 <!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
+<!ATTLIST OtherPracticeLocation Status CDATA #REQUIRED>
 
 <!ELEMENT PersonOrganizationName (#PCDATA)>
 <!ATTLIST PersonOrganizationName ref CDATA #IMPLIED>
