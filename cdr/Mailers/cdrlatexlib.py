@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.31 2003-02-06 19:36:19 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.32 2003-02-06 23:00:44 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.31  2003/02/06 19:36:19  ameyer
+# Made modifications designed by Volker to significantly reduce the problem
+# of blank pages in the person directory mailers.
+#
 # Revision 1.30  2003/01/28 14:23:33  bkline
 # Added code to handle protocols with no PI for status and participant
 # check.
@@ -799,16 +803,23 @@ class ParticipatingSite:
             return 1
         return cmp(self.name, other.name)
 
-def getText(node, transformToLatex = 1):
+def getText(node, transformToLatex = 1, trimSpace = 1):
     """
     Extracts and concatenates the text nodes from an element, and
     filters the characters to make them ready for insertion into a
     LaTeX source document.
+
+    Parameters:
+       tranformToLatex - Changes the character set since Latex can't handle
+                         Unicode
+       trimSpace       - Trims whitespace from both ends of data.
     """
     result = ""
     for child in node.childNodes:
         if child.nodeType == node.TEXT_NODE:
             result = result + child.data
+    if trimSpace:
+        result = result.strip()
     if transformToLatex:
         return UnicodeToLatex.convert(result)
     else:
@@ -937,71 +948,6 @@ def protocolTitle (pp):
                 "Original Title:}"
     if macro:
         pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
-
-#def address (pp):
-#   """
-#   Retrieves multiple address lines and separate each element with
-#   a newline to be displayed properly in LaTeX.
-#   """
-
-#    # Build output string here
-#    addressString = ''
-
-#    # Get the current address node
-#    addressNode = pp.getCurNode()
-
-#    # Beginning of list of one or more address lines
-#    addressString = "  \\newcommand{\\PUPAddr}{%\n    "
-
-#    # If the current AddrLine element is a sibling to another one,
-#    # we've already processed it as part of the first address line.
-#    # Don't need to do any more and can exit here.
-#    # -------------------------------------------------------------
-#    prevNode = addressNode.previousSibling
-#    while prevNode != None:
-#       if prevNode.nodeName == 'AddrLine':
-#          return 0
-#       prevNode = prevNode.previousSibling
-
-#    # Capture the text of all contiguous address lines separating,
-#    # them with a LaTeX newline and line break
-#    # ------------------------------------------------------------
-#    addressNode = pp.getCurNode()
-#    count = 0
-#    while addressNode != None and \
-#          addressNode.nodeName == 'AddrLine':
-
-#       # Comma separator before all but the first one
-#       if count > 0:
-#           addressString += " \\newline\n    "
-
-#       # The address line text is a child of the AddrLine node
-#       # Loop through all children of the node to extract the
-#       # text
-#       # Note:  If the text nodes are parents to other children
-#       #        this part will need to be expanded to include those
-#       # ----------------------------------------------------------
-#       txtNode = addressNode.firstChild
-#       while txtNode != None:
-#          addressString += UnicodeToLatex.convert(txtNode.nodeValue)
-#          txtNode = txtNode.nextSibling
-
-
-#       # Increment count and check the next sibling
-#       # Note:  The next sibling is a text node --> need to check
-#       #        the node after the next to catch an Element node again
-#       # -------------------------------------------------------------
-#       for i in (1, 2):
-#          count += 1
-#          addressNode = addressNode.nextSibling
-
-#    # Terminate the Latex for the list of address line
-#    addressString += "\n  }\n"
-
-#    # Return info to caller, who will output it to the Latex
-#    pp.setOutput (addressString)
-
-#    return 0
 
 def street (pp):
     """
@@ -1139,6 +1085,8 @@ def yesno (pp):
         pp.setOutput (checkString)
 
         return 0
+
+    return 0
 
 def findListDepth(listType):
     global listStack
@@ -1692,7 +1640,7 @@ def personSpecialties(pp):
     otherSpecialties = {}
     profSocieties    = {}
     trialGroups      = {}
-    oncologyPrograms = {}
+    # oncologyPrograms = {}
 
     # Gather the information specific to this physician.
     node = pp.getTopNode()
@@ -3749,8 +3697,8 @@ ControlTable = {\
 def showVal (val):
     if val == None:
         return 'None'
-    if type(val) == type(''):
+    if type(val) in (type(''), type(u'')):
         return val
     if type(val) == type(1):
         return '%d' % val
-
+    raise StandardError ("showVal with unexpected type: %s" % str(type(val)))
