@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.61 2003-10-08 10:38:43 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.62 2003-10-08 15:42:10 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.61  2003/10/08 10:38:43  bkline
+# Modifications to adapt to changes in Summary filters.
+#
 # Revision 1.60  2003/09/04 21:37:26  bkline
 # Added space before itemized list following a Para element.
 #
@@ -3075,6 +3078,9 @@ CommonMarkupRules = (
           suffix    = "}"),
     XProc(element   = "DrugName"),
     XProc(element   = "ForeignWord",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "LOERef",
           prefix    = "\\emph{",
           suffix    = "}"),
     XProc(element   = "InterventionName"),
