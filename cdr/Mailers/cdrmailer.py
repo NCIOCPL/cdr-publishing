@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.5 2001-10-09 12:06:25 bkline Exp $
+# $Id: cdrmailer.py,v 1.6 2001-10-11 19:48:22 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2001/10/09 12:06:25  bkline
+# Changed __STAPLE_PROLOG to self.__STAPLE_PROLOG.
+#
 # Revision 1.4  2001/10/07 15:16:12  bkline
 # Added getDeadline().
 #
@@ -19,7 +22,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdr, cdrdb, cdrxmllatex, os, re, smtplib, sys, time, xml.dom.minidom
+import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom
 
 #----------------------------------------------------------------------
 # Object for managing mailer processing.
@@ -71,6 +74,9 @@ class MailerJob:
         getCursor()
             Returns object for executing database queries.
 
+        getSession()
+            Returns key for current CDR session.
+
         getDocIds()
             Returns the tuple of document IDs found in the 
             pub_proc_doc table.
@@ -105,7 +111,6 @@ class MailerJob:
     __LOGFILE       = "d:/cdr/log/mailer.log"
     __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode"
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
-    __ADDR_PATTERN  = re.compile("<Address>(.*)</Address>", re.DOTALL)
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
 
     #------------------------------------------------------------------
@@ -129,6 +134,7 @@ class MailerJob:
     #------------------------------------------------------------------
     def getId        (self): return self.__id
     def getCursor    (self): return self.__cursor
+    def getSession   (self): return self.__session
     def getDeadline  (self): return self.__deadline
     def getDocIds    (self): return self.__docIds
     def getRecipients(self): return self.__recipients
@@ -205,9 +211,9 @@ class MailerJob:
         """
         raise "fillQueue() must be defined by derived class"
 
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     # Generate a document for tracking a mailer.
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType):
         """
         Parameters:
@@ -220,13 +226,10 @@ class MailerJob:
             Integer ID for the newly inserted Mailer document.
         """
     
-        recipId   = "CDR%010d" % recipient.getId()
-        docId     = "CDR%010d" % doc.getId()
-        addrMatch = MailerJob.__ADDR_PATTERN.search(recipient.getAddress())
-        if not addrMatch:
-            raise "address not found for %s" % (recipId)
-        address = addrMatch.group(1)
-        xml = """\
+        recipId = "CDR%010d" % recipient.getId()
+        docId   = "CDR%010d" % doc.getId()
+        address = recipient.getAddress().getXml()
+        xml     = """\
 <CdrDoc Type="Mailer">
  <CdrDocCtl>
   <DocTitle>Mailer for document %s sent to %s</DocTitle>
@@ -236,7 +239,7 @@ class MailerJob:
    <Type>%s</Type>
    <JobId>%d</JobId>
    <Recipient cdr:ref="%s">%s</Recipient>
-   <Address>%s</Address>
+   %s
    <Document cdr:ref="%s">%s</Document>
    <Sent>%s</Sent>
    <Deadline>%s</Deadline>
@@ -274,11 +277,11 @@ class MailerJob:
             raise "failure extracting contact address for %s: %s" % (
                 docId, 
                 result)
-        return result[0]
+        return Address(result[0])
 
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     def makeLatex(self, doc, filters, mailType):
         """
         Parameters:
@@ -317,9 +320,9 @@ class MailerJob:
             eMsg = eValue and eValue or eType
             raise "failure generating LaTeX for %s: %s" % (docId, eMsg)
 
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
-    #----------------------------------------------------------------------
+    #------------------------------------------------------------------
     def makePS(self, latex, passCount, basename, jobType):
         """
         Parameters:
@@ -518,7 +521,6 @@ class MailerJob:
     def __sendMail(self):
         try:
             if self.__email:
-                server  = smtplib.SMTP(MailerJob.__SMTP_RELAY)
                 sender  = MailerJob.__CDR_EMAIL
                 subject = "CDR Mailer Job Status"
                 message = """\
@@ -532,12 +534,10 @@ Job %d has completed.  You can view a status report for this job at:
 
 Please do not reply to this message.
 """ % (sender, self.__email, subject, self.__id, self.__id)
-                server.sendmail(sender, [self.__email], message)
-                server.quit()
+                cdr.sendMail(sender, [self.__email], subject, message)
         except:
-            (eType, eValue) = sys.exc_info()[:2]
-            eMsg = eValue and eValue or eType
-            self.log("failure sending email to %s: %s" % self.__email, eMsg)
+            self.log("failure sending email to %s: %s" % (self.__email, 
+                                                          cdr.exceptionInfo()))
 
 #----------------------------------------------------------------------
 # Object to hold a document to be sent to the printer.
@@ -595,7 +595,7 @@ class PrintJob:
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
-        if 1:
+        if 0:
             prn = open(printer, "w")
             doc = open(self.__filename)
             prn.write((self.__staple and self.__STAPLE_PROLOG or "") + 
@@ -663,3 +663,127 @@ class Document:
     def getId     (self): return self.__id
     def getTitle  (self): return self.__title
     def getDocType(self): return self.__docType
+
+#----------------------------------------------------------------------
+# Object to hold information about a mailer address.
+#----------------------------------------------------------------------
+class Address:
+    """
+    Public methods:
+
+        getNumStreetLines()
+            Returns the number of strings in the street address.
+
+        getStreetLine(number)
+            Returns the string for the street address, indexed from
+            base of 0.
+
+        getCity()
+            Returns string for city of this address, if any; otherwise
+            None.
+
+        getCitySuffix()
+            Returns the string for the city suffix for this address,
+            if any; otherwise None.
+
+        getState()
+            Returns the name of the political unit for this address,
+            if any; otherwise None.
+
+        getCountry()
+            Returns the string for the country for this address, if
+            any; otherwise None.
+
+        getPostalCode()
+            Returns the postal code (ZIP code for US addresses) for
+            this address, if any; otherwise None.
+
+        getCodePosition()
+            One of:
+                "after City"
+                "after Country"
+                "after PoliticalUnit_State"
+                "before City"
+                None
+    """
+
+    #------------------------------------------------------------------
+    # Constructor for CDR mailer Address object.
+    #------------------------------------------------------------------
+    def __init__(self, xmlFragment):
+        """
+        Parameters:
+            xmlFragment    - Either DOM object for parsed address XML,
+                             or the string containing the XML for the
+                             address.
+        """
+        self.__street        = []
+        self.__city          = None
+        self.__citySuffix    = None
+        self.__state         = None
+        self.__country       = None
+        self.__postalCode    = None
+        self.__codePos       = None
+        if type(xmlFragment) == type("") or type(xmlFragment) == type(u""):
+            dom = xml.dom.minidom.parseString(xmlFragment)
+        else:
+            dom = xmlFragment
+        for node in dom.documentElement.childNodes:
+            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
+                if node.nodeName == 'PostalAddress':
+                    self.__parsePostalAddress(node)
+
+    #------------------------------------------------------------------
+    # Public access methods.
+    #------------------------------------------------------------------
+    def getNumStreetLines (self): return len(self.__street)
+    def getStreetLine(self, idx): return self.__street[idx]
+    def getCity           (self): return self.__city
+    def getCitySuffix     (self): return self.__citySuffix
+    def getState          (self): return self.__state
+    def getCountry        (self): return self.__country
+    def getPostalCode     (self): return self.__postalCode
+    def getCodePosition   (self): return self.__codePos
+
+    #------------------------------------------------------------------
+    # Create XML string from address information.
+    #------------------------------------------------------------------
+    def getXml(self):
+        xml = "<Address><PostalAddress>"
+        for line in self.__street:
+            xml += "<Street>%s</Street>" % line
+        if self.__city:
+            xml += "<City>%s</City>" % self.__city
+        if self.__citySuffix:
+            xml += "<CitySuffix>%s</CitySuffix>" % self.__citySuffix
+        if self.__state:
+            xml += "<PoliticalUnit_State>%s<SPoliticalUnit_Statetate>" \
+                % self.__state
+        if self.__country:
+            xml += "<Country>%s</Country>" % self.__country
+        if self.__postalCode:
+            xml += "<PostalCode_ZIP>%s</PostalCode_ZIP>" % self.__postalCode
+        if self.__codePos:
+            xml += "<CodePosition>%s</CodePosition>" % self.__codePos
+        return xml + "</PostalAddress></Address>"
+
+    #------------------------------------------------------------------
+    # Extract postal address element values.
+    #------------------------------------------------------------------
+    def __parsePostalAddress(self, node):
+        for child in node.childNodes:
+            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
+                if child.nodeName == "Street":
+                    self.__street.append(cdr.getTextContent(child))
+                elif child.nodeName == "City":
+                    self.__city = cdr.getTextContent(child)
+                elif child.nodeName == "CitySuffix":
+                    self.__citySuffix = cdr.getTextContent(child)
+                elif child.nodeName == "PoliticalUnit_State":
+                    self.__state = cdr.getTextContent(child)
+                elif child.nodeName == "Country":
+                    self.__country = cdr.getTextContent(child)
+                elif child.nodeName == "PostalCode_ZIP":
+                    self.__postalCode = cdr.getTextContent(child)
+                elif child.nodeName == "CodePosition":
+                    self.__codePos = cdr.getTextContent(child)
