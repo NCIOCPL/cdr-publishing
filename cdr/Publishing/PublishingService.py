@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.8 2004-07-08 18:58:48 bkline Exp $
+# $Id: PublishingService.py,v 1.9 2004-07-08 19:16:58 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2004/07/08 18:58:48  bkline
+# Cleaned up loop logging.
+#
 # Revision 1.7  2004/06/01 20:34:14  bkline
 # Added code to optionally add a line to the publication log at the top
 # of the processing loop.
@@ -166,8 +169,25 @@ while 1:
 
     except cdrdb.Error, info:
         # Log publishing job initiation errors
-        cdr.logwrite ('Database failure: %s' % info[1][0], PUBLOG)
-        conn = None
+        try:
+            conn = None
+            cdr.logwrite ('Database failure: %s' % info[1][0], PUBLOG)
+        except:
+            pass
+    except Exception, e:
+        try:
+            cdr.logwrite('Failure: %s' % str(e), logfile = PUBLOG, 
+                         tback = True)
+        except:
+            pass
+    except:
+        try:
+            cdr.logwrite('Unknown failure', logfile = PUBLOG, tback = True)
+        except:
+            pass
 
     # Do it all again after a decent interval
-    time.sleep(sleepSecs)
+    try:
+        time.sleep(sleepSecs)
+    except:
+        pass
