@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.2 2001-10-06 21:52:30 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.3 2001-10-06 23:42:08 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2001/10/06 21:52:30  bkline
+# Factored out base class MailerJob.
+#
 # Revision 1.1  2001/10/05 20:38:09  bkline
 # Initial revision
 #
@@ -100,7 +103,8 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                    'name:Summary Filter5']
         for docId in self.documents.keys():
             self.log("generating LaTeX for CDR%010d" % docId)
-            self.documents[docId].latex = self.makeLatex(docId, filters)
+            doc = self.documents[docId]
+            doc.latex = self.makeLatex(doc, filters, "initial")
 
     #----------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
