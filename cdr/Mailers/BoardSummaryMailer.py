@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.11 2004-04-19 15:54:25 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.12 2004-04-27 15:44:00 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2004/04/19 15:54:25  bkline
+# Suppressed creation of mailing labels at Lakshmi's request (#1188).
+#
 # Revision 1.10  2003/05/13 19:57:21  bkline
 # Replaced explitly enumerated filter list with named filter set invocation.
 #
@@ -72,13 +75,15 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     def __getBoardMembers(self):
         memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
         boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
+        infoPath   = '/PDQBoardMemberInfo/BoardMemberName/@cdr:ref'
         try:
             self.getCursor().execute("""\
                 SELECT DISTINCT person.id,
                                 person.title,
                                 summary.id,
                                 summary.title,
-                                pub_proc_doc.doc_version
+                                pub_proc_doc.doc_version,
+                                member_info.doc_id
                            FROM document person
                            JOIN query_term member
                              ON member.int_val = person.id
@@ -88,26 +93,32 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                              ON board.doc_id = summary.id
                            JOIN pub_proc_doc
                              ON pub_proc_doc.doc_id = summary.id
+                           JOIN query_term member_info
+                             ON member_info.int_val = person.id
                           WHERE board.int_val = ?
                             AND pub_proc_doc.pub_proc = ?
                             AND board.path = '%s'
                             AND member.path = '%s'
+                            AND member_info.path = '%s'
                             AND LEFT(board.node_loc, 8) =
                                 LEFT(member.node_loc, 8)
                        ORDER BY person.title,
                                 person.id,
                                 summary.title,
-                                summary.id""" % (memberPath, boardPath), 
+                                summary.id""" % (memberPath, boardPath,
+                                                 infoPath), 
                                                 (self.__boardId,
                                                  self.getId()))
             rows = self.getCursor().fetchall()
-            for personId, personTitle, summaryId, summaryTitle, docVer in rows:
+            for (personId, personTitle, summaryId, summaryTitle, docVer,
+                 memberInfo) in rows:
                 if summaryId in self.getDocIds():
                     recipient = self.getRecipients().get(personId)
                     doc       = self.getDocuments().get(summaryId)
                     if not recipient:
                         self.log("found board member %s" % personTitle)
-                        addr      = self.getCipsContactAddress(personId)
+                        addr      = self.getBoardMemberAddress(personId,
+                                                               memberInfo)
                         recipient = cdrmailer.Recipient(personId, personTitle,
                                                         addr)
                         self.getRecipients()[personId] = recipient

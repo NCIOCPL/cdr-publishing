@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.49 2004-01-13 21:05:56 bkline Exp $
+# $Id: cdrmailer.py,v 1.50 2004-04-27 15:44:00 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.49  2004/01/13 21:05:56  bkline
+# Added code to pack up failed mailer jobs.
+#
 # Revision 1.48  2003/08/21 22:08:57  bkline
 # Fixed bug in placement of protOrg when generating XML for
 # mailer tracking document.
@@ -513,6 +516,30 @@ class MailerJob:
                 "failure extracting contact address for %s: %s" % ( docId,
                 result))
         return Address(result[0], withPersonTitle)
+
+    #------------------------------------------------------------------
+    # Retrieve the contact address for a board member.
+    #------------------------------------------------------------------
+    def getBoardMemberAddress(self, personId, memberId):
+
+        # Find fragment ID for CIPS contact location in BoardMemberInfo doc
+        path  = '/PDQBoardMemberInfo/BoardMemberContact/PersonContactID'
+        rows  = cdr.getQueryTermValueForId(path, memberId, self.__conn)
+
+        # Filter to create AddressElement XML
+        if rows:
+            docId   = cdr.normalize(personId)
+            parms   = (('fragId', rows[0]),)
+            filters = ["name:Person Address Fragment With Name"]
+        else:
+            docId   = cdr.normalize(memberId)
+            parms   = ()
+            filters = ["name:Board Member Address Fragment With Name"]
+        result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
+        if type(result) in (type(""), type(u"")):
+            raise StandardError("failure extracting contact address "
+                                "for %s: %s" % (docId, result))
+        return Address(result[0])
 
     #------------------------------------------------------------------
     # Retrieve the CIPS contact Address object for an Organization
