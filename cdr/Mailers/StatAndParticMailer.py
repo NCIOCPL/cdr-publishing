@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.8 2003-05-05 21:08:08 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.9 2003-08-21 19:43:06 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2003/05/05 21:08:08  bkline
+# Restricted mailers to lead orgs with (sort of) active statuses.
+#
 # Revision 1.7  2003/02/07 22:36:23  bkline
 # Added call to UnicodeToLatex.convert() for title.
 #
@@ -304,7 +307,8 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
     def __makeMailer(self, recip, doc, org):
 
         # Add document to the repository for tracking replies to the mailer.
-        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
+        mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset(),
+                                             protOrgId = org.getId())
 
         # Create the LaTeX for the document.
         orgId     = org.getId()

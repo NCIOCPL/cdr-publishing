@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.46 2003-06-24 12:23:01 bkline Exp $
+# $Id: cdrmailer.py,v 1.47 2003-08-21 19:43:06 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.46  2003/06/24 12:23:01  bkline
+# Added code to use local copy of template.tex.
+#
 # Revision 1.45  2003/05/09 03:46:27  ameyer
 # Added support for PersonTitle used in physician directory mailers.
 #
@@ -400,7 +403,7 @@ class MailerJob:
     # Generate a document for tracking a mailer.
     #------------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType,
-                             remailerFor = None):
+                             remailerFor = None, protOrgId = None):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -421,6 +424,11 @@ class MailerJob:
                           cdr.normalize(remailerFor)
         else:
             remailerFor = ""
+        if protOrgId:
+            protOrg     = "\n  <ProtocolOrg cdr:ref='%s'/>" % \
+                          cdr.normalize(protOrgId)
+        else:
+            protOrg     = ""
         recipId = "CDR%010d" % recipient.getId()
         docId   = "CDR%010d" % doc.getId()
         address = recipient.getAddress().getXml()
@@ -433,7 +441,7 @@ class MailerJob:
   <Mailer xmlns:cdr="cips.nci.nih.gov/cdr">
    <Type>%s</Type>%s
    <JobId>%d</JobId>
-   <Recipient cdr:ref="%s">%s</Recipient>
+   <Recipient cdr:ref="%s">%s</Recipient>%s
    %s
    <Document cdr:ref="%s">%s</Document>
    <Sent>%s</Sent>
@@ -442,7 +450,7 @@ class MailerJob:
  </CdrDocXml>
 </CdrDoc>
 """ % (docId, recipId, mailerType, remailerFor, self.__id, recipId,
-       recipient.getName(), address, docId, doc.getTitle(),
+       protOrg, recipient.getName(), address, docId, doc.getTitle(),
        self.__now, self.__deadline)
         rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
                            checkIn = "Y", ver = "Y", val = 'Y')
