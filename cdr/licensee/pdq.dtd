@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.46 2003-10-08 12:43:25 bkline Exp $
+   $Id: pdq.dtd,v 1.47 2004-01-29 20:59:52 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.46  2003/10/08 12:43:25  bkline
+   Added definitions for new CTGovProtocol document type.
+
    Revision 1.45  2003/08/15 13:55:36  bkline
    Made ProtocolSpecialCategory multiply-occurring.
 
@@ -158,7 +161,7 @@
 
 <!ELEMENT Table (Title, TitleAbbrev?, TGroup+)>
 <!ATTLIST Table ColSep (0 | 1) #IMPLIED
-                Frame (All | Bottom | Sides | Top | TopBot) #IMPLIED
+                Frame (All | Bottom | Sides | Top | TopBot | None ) #IMPLIED
                 RowSep (0 | 1) #IMPLIED
                 TabStyle CDATA #IMPLIED
                 id CDATA #IMPLIED>
