@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.23 2002-12-26 13:53:23 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.24 2002-12-27 02:11:19 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.23  2002/12/26 13:53:23  bkline
+# Modifications made for issue #551: moved protocol information before
+# practice information.  Added a fourth question to the practice
+# information section, with additional instructions.
+#
 # Revision 1.22  2002/12/03 17:04:28  bkline
 # Fixed several bugs in list handling reported by Margaret.
 #
@@ -1954,6 +1959,32 @@ SELECT COUNT(*) FROM (
   \end{tabbing}
 """ % (activeTrials, closedTrials))
 
+def personDirectoryInclude(pp):
+    """
+    Changes the meaning of a macro to put out circles for a user to check for
+    inclusion in a person directory or not.
+    Redefines \directoryIncludeYesOrNoCircles
+    Must be called with the current element = to the Include element.
+    """
+    # Current node should be Include element
+    node = pp.getCurNode()
+    if node.nodeName != "Include":
+        raise XmlLatexException (\
+            "personDirectoryInclude() called on wrong element")
+    includeInDirectory = getText (node)
+
+    # Redefine command if we know whether to include or not
+    if includeInDirectory == "Include":
+        pp.setOutput (\
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}" + \
+            r"{$\textcircled{x}$ Yes \qquad $\bigcirc$ No}")
+    elif includeInDirectory == "Do not include":
+        pp.setOutput (\
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}" + \
+            r"{$\bigcirc$ Yes \qquad $\textcircled{x}$ No}")
+
+    # If value is anything else ("Pending"), do nothing
+
 def statPup(pp):
     "Build the address block for the protocol update person."
     name    = ""
@@ -2181,6 +2212,8 @@ ORG_HDRTEXT=r"""
 
 # Defining the document header for each page
 # Used by:  Person
+#   \directoryIncludeYesOrNoCircles defaults to two empty circles.
+#    Will be redefined later if "Include" is 'Include' or 'Do not Include'
 # ------------------------------------------
 PERSON_HDRTEXT=r"""
   %%%% PERSON_HDRTEXT %%%%
@@ -2188,6 +2221,7 @@ PERSON_HDRTEXT=r"""
   \newcommand{\LeftHdr}{PDQ/Cancer.gov Physician Update \\ %s \\}
   \newcommand{\CenterHdr}{{\bfseries \PersonNameWithSuffixes}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
+  \newcommand{\directoryIncludeYesOrNoCircles}{\yesno}
 %%
 %% -----
 """ % time.strftime("%B %Y")
@@ -2376,7 +2410,7 @@ PERSON_MISC_INFO=r"""
     If you are not retired from practice, do you want
     to be listed in the                                    \hfill \\
     PDQ/Cancer.gov Directory of Physicians?                \hfill
-        \yesno \\
+        \directoryIncludeYesOrNoCircles \\
 
     If you answered Yes to the question above, please make sure you
     complete Specialty Information and Membership Information sections.
@@ -3142,6 +3176,12 @@ DocumentPersonBody = (
           descend   = 0),
     XProc(preProcs  = [[personProtocols]],
           order     = XProc.ORDER_TOP),
+    XProc(element   = "/Person/ProfessionalInformation/PhysicianDetails" + \
+                      "/AdministrativeInformation/Directory/Include",
+          order     = XProc.ORDER_TOP,
+          preProcs  = ((personDirectoryInclude, ()), ),
+          textOut   = 0,
+          descend   = 0),
     XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
     XProc(order=XProc.ORDER_TOP,
           preProcs=((personSpecialties, ()), )),
