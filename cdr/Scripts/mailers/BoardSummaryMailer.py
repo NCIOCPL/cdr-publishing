@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.5 2001-10-07 15:16:25 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.6 2001-10-09 12:07:19 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2001/10/07 15:16:25  bkline
+# Added call to getDeadline().
+#
 # Revision 1.4  2001/10/07 12:49:12  bkline
 # Reduced use of publicly accessible members.
 #
@@ -30,12 +33,6 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     # Specific constant values for subclass.
     #----------------------------------------------------------------------
     MAILER_TYPE = "PDQ Editorial Board"
-
-    #----------------------------------------------------------------------
-    # Constructor for derived BoardSummaryMailerJob class.
-    #----------------------------------------------------------------------
-    def __init__(self, jobId):
-        cdrmailer.MailerJob.__init__(self, jobId)
 
     #----------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
@@ -125,7 +122,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                                                        recipient.getId()))
             for doc in recipient.getDocs():
                 f.write("\tSummary CDR%010d: %s\n" % (doc.getId(),
-                                                      doc.getTitle()[:50]))
+                                                      doc.getTitle()))
         f.close()
         job = cdrmailer.PrintJob(filename, cdrmailer.PrintJob.COVERPAGE)
         self.addToQueue(job)
@@ -158,7 +155,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         # Create a cover letter.
         latex    = template.replace('@@REVIEWER@@', recipient.getName())
         latex    = latex.replace('@@SUMMARY@@', doc.getTitle())
-        latex    = latex.replace('@@DEADLINE@@', this.getDeadline())
+        latex    = latex.replace('@@DEADLINE@@', self.getDeadline())
         basename = 'CoverLetter-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
