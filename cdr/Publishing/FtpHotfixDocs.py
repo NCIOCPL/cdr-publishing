@@ -16,8 +16,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.1 2004-10-06 21:48:44 bkline Exp $
+# $Id: FtpHotfixDocs.py,v 1.2 2004-10-07 23:08:08 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2004/10/06 21:48:44  bkline
+# Initial version of program to package and copy hot-fix documents to the
+# FTP server.
+#
 #----------------------------------------------------------------------
 import sys, re, string, cdr, os, shutil, time
 
@@ -49,7 +53,7 @@ try:
        oldDir = os.path.join(outDir, 'Job' + k)
        os.chdir(oldDir)
        filelist = os.listdir(oldDir)
-       print filelist
+       # print filelist
        for file in filelist:
 	  # Inspect the file to identify if document is removed or updated
 	  # --------------------------------------------------------------
@@ -81,7 +85,7 @@ try:
 	     # Create directory if it doesn't exist
 	     # -------------------------------------------
              # print 'File' + file + ' was updated'
-             destDir = os.path.join(newDir, 'update')
+             destDir = os.path.join(newDir, 'cdr')
    
 	     if not os.path.exists(destDir):
 	         os.mkdir(destDir)
@@ -106,8 +110,8 @@ try:
     ftpCmd.write('mkdir cdr\n')
     ftpCmd.write('mkdir remove\n')
     ftpCmd.write('lcd d:/cdr/Output/mid-month/' + dateStr + '\n')
-    ftpCmd.write('lcd update\n')
-    ftpCmd.write('cd update\n')
+    ftpCmd.write('lcd cdr\n')
+    ftpCmd.write('cd cdr\n')
     ftpCmd.write('mput CDR*.xml\n')
     ftpCmd.write('lcd ../remove\n')
     ftpCmd.write('cd  ../remove\n')
@@ -115,11 +119,22 @@ try:
     ftpCmd.write('bye\n')
     ftpCmd.close()
 
-    c:\Winnt\System32\ftp.exe -i -s:FtpHotfixDocs.txt
+
+    open(log, "a").write("    %d: Copy files to ftp server\n" %
+                        (jobId))
+    # FTP the Hot-fix documents to ftpserver
+    # --------------------------------------
+    mycmd = cdr.runCommand("c:/Winnt/System32/ftp.exe -i -s:FtpHotfixDocs.txt")
+
+    open(log, "a").write("    %d: FTP command return code: %s\n" %
+                        (jobId, mycmd.code))
+    if mycmd.code == 1:
+       open(log, "a").write("    %d: ---------------------------\n%s\n" %
+                        (jobId, mycmd.output))
 
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
-       
+
 except StandardError, arg:
     open(log, "a").write("    %d: Failure: %s\nJob %d: %s\n" % 
                         (jobId, arg[0], jobId, divider))
