@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.16 2002-10-31 20:00:23 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.17 2002-11-06 03:09:27 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2002/10/31 20:00:23  bkline
+# Added stripLines filter for table cells.
+#
 # Revision 1.15  2002/10/23 22:05:54  bkline
 # Added rule for StatusCheck.
 #
@@ -78,7 +81,7 @@ class XProc:
        order     - How we order an xml element during output, one of:
                     XProc.ORDER_DOCUMENT:
                       This is the default order for processing document nodes.
-                      If no other order is specified the nodes are processed 
+                      If no other order is specified the nodes are processed
                       in the order they appear in the input document.  For
                       this ordering mode, the order in which the processing
                       rules are specified is not significant.
@@ -133,8 +136,8 @@ class XProc:
        postProcs - List of routines+parms tuples to call at end
        suffix    - Latex constant string to output after processing
        filters   - Optional sequence of filters to be applied to the
-                   collected output for the children of a node; each 
-                   filter must be a function which takes a string 
+                   collected output for the children of a node; each
+                   filter must be a function which takes a string
                    and returns a string.
     """
 
@@ -294,7 +297,7 @@ class ProcParms:
                replace, or append to the current output.
            Write the last value of output to the actual Latex output string.
     """
-    
+
     def __init__(self, top, cur, args, output):
         self.topNode = top
         self.curNode = cur
@@ -335,7 +338,7 @@ class OrgProtStatus:
                         self.date = getText(grandchild)
                 return
             child = child.nextSibling
-                
+
 class PersonName:
     "Object representing a person's name, including professional suffixes."
     def __init__(self, node):
@@ -363,7 +366,7 @@ class PersonName:
                         suffix = getText(grandchild)
                         if suffix:
                             self.profSuffixes.append(suffix)
-        
+
     def format(self, full = 0):
         name = ("%s %s" % (self.givenName, self.initials)).strip()
         name = ("%s %s" % (name, self.surname)).strip()
@@ -380,17 +383,17 @@ class Address:
 
     def __init__(self, node = None):
         self.street     = []
-        self.city       = None
-        self.state      = None
-        self.country    = None
-        self.zip        = None
-        self.zipPos     = None
-        self.citySuffix = None
+        self.city       = ""
+        self.state      = ""
+        self.country    = ""
+        self.zip        = ""
+        self.zipPos     = ""
+        self.citySuffix = ""
         if node:
-            stateShortName   = None
-            stateFullName    = None
-            countryShortName = None
-            countryFullName  = None
+            stateShortName   = ""
+            stateFullName    = ""
+            countryShortName = ""
+            countryFullName  = ""
             for child in node.childNodes:
                 if child.nodeName == "Street":
                     self.street.append(getText(child))
@@ -602,7 +605,7 @@ class PersonLists:
                                    'oncology program')
               ORDER BY o.value""")
         return cursor.fetchall()
-        
+
 class PersonLocation:
     """
     Base class for a person's private practice and other practice locations.
@@ -1076,7 +1079,7 @@ def openList(pp):
     global listStack
 
     node = pp.getCurNode()
-    
+
     # Honor the kind of numbering requested in the source document.
     style = node.getAttribute("Style")
     listStyle = ""
@@ -1113,17 +1116,17 @@ def openList(pp):
     # If Compact is set to 'No' then we insert an additional blank line.
     compact = node.getAttribute("Compact")
     output = "  \\setlength{\\parskip}{0pt}\n"
-    if compact == "No": 
+    if compact == "No":
         compact = 0
         output += "  \\setlength{\\itemsep}{10pt}\n  \\vspace{6pt}\n"
-    else: 
+    else:
         compact = 1
         output += "  \\setlength{\\itemsep}{-2pt}\n"
-        
+
     # Pick up the list titles if there are any.
     for title in node.getElementsByTagName("ListTitle"):
         output += "  {\\it \\bfseries %s}\n" % getText(title)
-        
+
     # Remember the list so we know how deeply nested we are.
     listStack.append(List(compact))
 
@@ -1169,7 +1172,7 @@ def orgLocs(pp):
                 cipsContact = loc
             else:
                 otherLocs.append(loc)
-                
+
     # Start the output for the body of the mailer.
     # centerHead = "  \\afterpage{\\fancyhead[C]{{\\bfseries \\OrgName}}}"
     output = "\n  \\OrgIntro\n\n" #% centerHead
@@ -1184,7 +1187,7 @@ def orgLocs(pp):
 
 
   \subsection*{Primary Contact Location}
-        
+
 %s  \OrgName \\
 %s
 
@@ -1290,7 +1293,7 @@ def orgAffil(pp):
         for org in profOrgs:
             output += "  \\item %s\n" % org
         output += "  \\end{itemize}\n"
-    
+
     # Format the cooperative group affiliations.
     if coops:
         output += r"""
@@ -1325,7 +1328,7 @@ def protLeadOrg(pp):
     # Do nothing if this isn't the org we're sending the mailer to.
     if not leadOrg.sendMailerTo:
         return
-            
+
     # Set the values for the macros.
     if leadOrg.currentStatus and leadOrg.currentStatus.date:
         statDate = leadOrg.currentStatus.date
@@ -1467,7 +1470,7 @@ def personName(pp):
 
 def personLocs(pp):
     "Extract all of the locations from a person document."
-    
+
     # Gather all the location information together.
     cipsContact = None
     otherLocs   = []
@@ -1485,7 +1488,7 @@ def personLocs(pp):
                 cipsContact = loc
             else:
                 otherLocs.append(loc)
-        
+
     # Output the address block for the mailer.
     adminOnly = "(For administrative use only)"
     address = cipsContact and cipsContact.formatAddress() or ""
@@ -1578,7 +1581,7 @@ def personLocs(pp):
        loc.web   or blankLine)
 
         output += "  \\end{enumerate}\n"
-       
+
     else:
         output += r"""\
   \renewcommand{\ewidth}{180pt}
@@ -1649,15 +1652,15 @@ def personSpecialties(pp):
   & \multicolumn{2}{c||}{\bfseries{Specialty}}
   & \multicolumn{2}{c||}{\bfseries{Certification}} \\
     \bfseries{Specialty Name}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c||}{\bfseries{No}}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
-  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
-    \hline 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline
     \hline
   \endfirsthead
 
-    \multicolumn{5}{l}{(continued from previous page)} \\ 
+    \multicolumn{5}{l}{(continued from previous page)} \\
     \hline
   & \multicolumn{2}{c||}{\bfseries{ }}
   & \multicolumn{2}{c||}{\bfseries{Board}} \\
@@ -1666,9 +1669,9 @@ def personSpecialties(pp):
     \bfseries{Specialty Name}
   & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c||}{\bfseries{No}}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
-  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
-    \hline 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline
     \hline
   \endhead
 """
@@ -1691,21 +1694,21 @@ def personSpecialties(pp):
   \end{longtable}
 
   %\subsubsection*{Other Specialties}
-  \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||} 
+  \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||}
   \caption*{\bfseries Other Specialties} \\
     \hline
   \bfseries{Specialty Training}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
-  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
-    \hline 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline
     \hline
   \endfirsthead
-    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \multicolumn{3}{l}{(continued from previous page)} \\
     \hline
-    \bfseries{Specialty Training}  
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
-  & \multicolumn{1}{c||}{\bfseries{No}} \\ 
-    \hline 
+    \bfseries{Specialty Training}
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
+  & \multicolumn{1}{c||}{\bfseries{No}} \\
+    \hline
     \hline
   \endhead
 """
@@ -1727,18 +1730,18 @@ def personSpecialties(pp):
     \hline
   & \multicolumn{2}{c||}{\bfseries{Member of:}}  \\
     \bfseries{Society Name}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c||}{\bfseries{No}} \\
-    \hline 
+    \hline
     \hline
   \endfirsthead
-    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \multicolumn{3}{l}{(continued from previous page)} \\
     \hline
   & \multicolumn{2}{c|}{\bfseries{Member of:}}  \\
     \bfseries{Society Name}
-  & \multicolumn{1}{c|}{\bfseries{Yes}} 
+  & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c|}{\bfseries{No}} \\
-    \hline 
+    \hline
     \hline
   \endhead
 """
@@ -1754,21 +1757,21 @@ def personSpecialties(pp):
   \end{longtable}
 
   %\subsubsection*{NCI Clinical Trials Groups}
-  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} 
+  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||}
   \caption*{\bfseries NCI Clinical Trials Groups} \\
     \hline
     \bfseries{Group Name}
   & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c||}{\bfseries{No}} \\
-    \hline 
+    \hline
     \hline
   \endfirsthead
-    \multicolumn{3}{l}{(continued from previous page)} \\ 
+    \multicolumn{3}{l}{(continued from previous page)} \\
     \hline
     \bfseries{Group Name}
   & \multicolumn{1}{c|}{\bfseries{Yes}}
   & \multicolumn{1}{c||}{\bfseries{No}} \\
-    \hline 
+    \hline
     \hline
   \endhead
 """
@@ -1835,7 +1838,7 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id,
                          WHERE doc_id = lead_org_stat.doc_id)
             AND person.int_val = %d""" % (loStatPath,
                                          loPersonPath,
-                                         loPersonRolePath, 
+                                         loPersonRolePath,
                                          docId))
     cursor.execute("""\
 SELECT DISTINCT lead_org_stat.doc_id prot_id
@@ -1857,7 +1860,7 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id
                          WHERE doc_id = lead_org_stat.doc_id)
             AND person.int_val = %d""" % (loStatPath,
                                          ppSiteIdPath,
-                                         ppStatusPath, 
+                                         ppStatusPath,
                                          docId))
     cursor.execute("""\
 SELECT DISTINCT lead_org_stat.doc_id prot_id
@@ -1879,11 +1882,11 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id
                          WHERE doc_id = lead_org_stat.doc_id)
             AND person.int_val = %d""" % (loStatPath,
                                          spPath,
-                                         orgSiteStatus, 
+                                         orgSiteStatus,
                                          docId))
     cursor.execute("""\
 SELECT COUNT(*) FROM (
-         SELECT prot_id 
+         SELECT prot_id
            FROM #lead_org_person
           WHERE lead_org_status IN ('Approved-not yet active', 'Active')
           UNION
@@ -1911,7 +1914,7 @@ SELECT COUNT(*) FROM (
     Closed Protocols: \> %d
   \end{tabbing}
 """ % (activeTrials, closedTrials))
-    
+
 def statPup(pp):
     "Build the address block for the protocol update person."
     name    = ""
@@ -1937,7 +1940,7 @@ def statPup(pp):
   %s%s \\
 """ % (name, name, title)
 
-    # This is all we do now.    
+    # This is all we do now.
     pp.setOutput("  \\newcommand{\\PUP}{%s}\n" % name.format())
     """
     if org:
@@ -1948,7 +1951,7 @@ def statPup(pp):
         output += "  Ph.: %s \\\\\n" % phone
     pp.setOutput(output)
     """
-    
+
 def statPersonnel(pp):
     "Generate macros for the other lead org's personnel."
     name = ""
@@ -1994,7 +1997,7 @@ def statProtSites(pp):
             site.name, site.pi.format(), site.phone,
             site.status == 'Active' and 'Y' or 'N')
     pp.setOutput(output)
-    
+
 def statSiteStatus(pp):
     "Add the status for a protocol participating organization."
     status = getText(pp.getCurNode())
@@ -2005,7 +2008,7 @@ def piName(pp):
     "Add name of principal investigator to table."
     name = PersonName(pp.getCurNode())
     pp.setOutput(name.format() + "& ")
-    
+
 ####################################################################
 # Constants
 ####################################################################
@@ -2168,7 +2171,7 @@ FANCYHDR=r"""
           \includegraphics[width=75pt]{/cdr/mailers/include/nciLogo.eps} \\
           \vspace{40pt}
           {\bfseries \CenterHdr }}}
-      
+
   \pagestyle{fancy}
 
   % Placing information in header
@@ -2550,7 +2553,7 @@ ENDPROTOCOLPREAMBLE=r"""
   \setlength{\textwidth}{6.5in}
   \setlength{\textheight}{8.0in}
   \setlength{\oddsidemargin}{0in}
-  
+
   \renewcommand{\thesection}{\hspace{-1.0em}}
   \renewcommand{\theenumii}{\Roman{enumii}}
   \renewcommand{\labelenumii}{\theenumii.}
@@ -2675,7 +2678,7 @@ PROTOCOLBOILER=r"""
   If the status of this protocol has changed, please indicate
   the current status:
   \vspace{6pt}
-  
+
   \begin{tabular}{llp{4in}}
   \chkbox & Approved-not yet active & Approved by NCI, but not yet
                                       accepting patients for \mbox{accrual} \\
@@ -2688,17 +2691,17 @@ PROTOCOLBOILER=r"""
   \chkbox & Withdrawn & Study discontinued, and to be removed from the
                         PDQ/Cancer.gov database
   \end{tabular}
-  
+
   \vspace{20pt}
-  
+
   Please list/attach any citations resulting from this study.
   \vspace{6pt} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
-  
+
   \vspace{20pt}
-  
+
   Please initial here if the abstract is satisfactory to you.
   \hrulefill
 
@@ -2980,26 +2983,26 @@ ProtAbstInfo = (
           preProcs  = ((optProtSect, ("subsection*", "End Points")), )),
 #    XProc(order     = XProc.ORDER_TOP,
 #          textOut   = 0,
-#          postProcs = ((checkNotAbstracted, 
+#          postProcs = ((checkNotAbstracted,
 #                       ("EndPoints", "End Points")), )),
     XProc(element   = "Stratification",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          preProcs  = ((optProtSect, ("subsection*", 
+          preProcs  = ((optProtSect, ("subsection*",
                                       "Stratification Parameters")), )),
 #    XProc(order     = XProc.ORDER_TOP,
 #          textOut   = 0,
-#          postProcs = ((checkNotAbstracted, 
+#          postProcs = ((checkNotAbstracted,
 #                       ("Stratification", "Stratification Parameters")), )),
     XProc(element   = "SpecialStudyParameters",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          preProcs  = ((optProtSect, ("subsection*", 
+          preProcs  = ((optProtSect, ("subsection*",
                                       "Special Study Parameters")), )),
 #    XProc(order     = XProc.ORDER_TOP,
 #          textOut   = 0,
-#          postProcs = ((checkNotAbstracted, 
-#                       ("SpecialStudyParameters", 
+#          postProcs = ((checkNotAbstracted,
+#                       ("SpecialStudyParameters",
 #                        "Special Study Parameters")), )),
     XProc(element   = "DoseSchedule",
           textOut   = 0,
@@ -3007,7 +3010,7 @@ ProtAbstInfo = (
           preProcs  = ((optProtSect, ("subsection*", "Dose Schedule")), )),
 #    XProc(order     = XProc.ORDER_TOP,
 #          textOut   = 0,
-#          postProcs = ((checkNotAbstracted, 
+#          postProcs = ((checkNotAbstracted,
 #                       ("DoseSchedule", "Dose Schedule")), )),
     XProc(element   = "DosageForm",
           textOut   = 0,
@@ -3015,7 +3018,7 @@ ProtAbstInfo = (
           preProcs  = ((optProtSect, ("subsection*", "Dosage Form")), )),
 #    XProc(order     = XProc.ORDER_TOP,
 #          textOut   = 0,
-#          postProcs = ((checkNotAbstracted, 
+#          postProcs = ((checkNotAbstracted,
 #                       ("DosageForm", "Dosage Form")), )),
 #    XProc(element   = "Rationale",
 #          textOut   = 0,
@@ -3053,7 +3056,7 @@ ProtAbstInfo = (
     XProc(element   = "ProfessionalDisclaimer",
           textOut   = 0,
           descend   = 0),
-    ) 
+    )
 
 #------------------------------------------------------------------
 # Organization Mailer Instructions (Body)
@@ -3184,23 +3187,23 @@ DocumentStatusCheckBody = (
           prefix    = "  \\newcommand{\\LeadOrg}{",
           suffix    = "}\n"),
     XProc(element   = "/SPSCheck/Protocol/LeadOrgRole",
-          textOut   = 0, 
+          textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = [[leadOrgRole]]),
     XProc(element   = "/SPSCheck/PUP",
-          textOut   = 0, 
+          textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = [[statPup]]),
     XProc(element   = "/SPSCheck/Protocol/Personnel",
           order     = XProc.ORDER_TOP,
           preProcs  = [[statPersonnel]],
           textOut   = 0,
-          suffix    = STATUSPROTINFO + STATUSCHAIRINFO + 
+          suffix    = STATUSPROTINFO + STATUSCHAIRINFO +
                       STATUS_TAB_INTRO + STATUS_TAB),
     XProc(element   = "/SPSCheck/Protocol/ProtocolSites",
           textOut   = 0,
           preProcs  = [[statProtSites]],
-          suffix    = END_TABLE, 
+          suffix    = END_TABLE,
           order     = XProc.ORDER_TOP),
 #    XProc(element   = "ParticipatingSite",
 #          order     = XProc.ORDER_PARENT,
@@ -3270,7 +3273,7 @@ DocumentStatusCheckCCOPBody = (
     XProc(element="Personnel",
           order=XProc.ORDER_PARENT,
           textOut=0,
-          suffix=STATUSPROTINFO + STATUSCHAIRINFO + 
+          suffix=STATUSPROTINFO + STATUSCHAIRINFO +
                  STATUS_TAB_CCOPINTRO + STATUS_CCOPMAIN_TAB),
     XProc(element="/SPSCheck/Protocol/Personnel/Name",
           order=XProc.ORDER_PARENT,
@@ -3459,8 +3462,8 @@ DOCFTR=r"""
 # Putting together static footer sections for each mailer
 # -------------------------------------------------------
 DocumentProtocolFooter =(
-    XProc(element='InScopeProtocol', 
-          suffix=DOCFTR, 
+    XProc(element='InScopeProtocol',
+          suffix=DOCFTR,
           order=XProc.ORDER_TOP,
           textOut = 0),
     )
