@@ -69,20 +69,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -116,20 +104,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -161,32 +137,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -218,7 +170,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -251,11 +203,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -290,11 +239,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -327,7 +273,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -373,14 +319,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
      </SubsetFilter>     
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
-     </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -425,14 +365,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Person Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -564,20 +498,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -611,20 +533,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -656,35 +566,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -716,7 +599,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -749,11 +632,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -788,11 +668,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -825,7 +702,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -871,14 +748,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -923,14 +794,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Person Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1049,7 +914,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -1070,11 +935,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1094,11 +956,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1118,7 +977,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -1139,14 +998,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1166,14 +1019,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Person Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1193,20 +1040,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1226,35 +1061,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1455,20 +1263,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1502,20 +1298,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -1641,37 +1425,10 @@
     GROUP BY d.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
+    <SubsetFilters>     
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
