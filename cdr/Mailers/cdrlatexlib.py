@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.32 2003-02-06 23:00:44 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.33 2003-02-10 17:23:07 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.32  2003/02/06 23:00:44  ameyer
+# Trimmed whitespace from text retrieved via getText function.
+# Resolved some pychecker warnings.
+#
 # Revision 1.31  2003/02/06 19:36:19  ameyer
 # Made modifications designed by Volker to significantly reduce the problem
 # of blank pages in the person directory mailers.
@@ -2788,7 +2792,7 @@ PROTOCOLBOILER=r"""
 
   \renewcommand{\ewidth}{80pt}
   \begin{entry}
-     \item[Fax]          301-480-8105
+     \item[Fax]          301-402-6728
      \item[Address]      PDQ Cancer.gov Protocol Coordinator \\
                          Attn: CIAT \\
                          Cancer Information Products and Systems, NCI, NIH \\
