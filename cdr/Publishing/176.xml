@@ -1,0 +1,223 @@
+<CdrDoc Type='PublishingSystem' Id='CDR0000000176'>
+<CdrDocCtl>
+<DocValStatus readonly="yes">V</DocValStatus>
+<DocActiveStatus readonly="yes">A</DocActiveStatus>
+<DocTitle readonly="yes">Mailers</DocTitle>
+</CdrDocCtl>
+<CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8" ?>
+<PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
+ <SystemName>Mailers</SystemName>
+ <SystemDescription>Reports, questionnaires, etc., mailed to PDQ board
+  members, physicians, protocol institutions, other organizations, etc.
+ </SystemDescription>
+ <SystemSubset>
+  <SubsetName>PDQ Editorial Board Members Mailing</SubsetName>
+  <SubsetDescription>The most recent published version of each summary
+    linked to the Board is generated for each Editorial Board Member
+    linked to each specific summary. (A summary may be generated multiple
+    times if it is reviewed by multiple Board members.) The summary must
+    be formatted "similar" to the formatting on CancerNet, with
+    references. Pages in the summary must be numbered. The name of the
+    Board Member, the date the summary was generated, and the page number
+    must be in the upper right hand corner. The date last modified should
+    be printed at the bottom.  Each summary must be stapled separately.
+    Summaries must be sorted by Board Member, i.e., all summaries reviewed
+    by a specific Board Member must be generated in order. A separator
+    sheet with the name of the Board Member and titles of the summaries
+    printed for them must also be generated. A standard review sheet must
+    be generated before each summary. The review sheet may be maintained
+    as part of the "miscellaneous" document set. A packet for a specific
+    Board member would have following elements: (1) separator sheet with
+    Board Member Name and Titles of the Summaries printed for them; (2) a
+    review sheet followed by Summary Number 1; pages of the summary need
+    to be stapled; (3) a review sheet followed by Summary Number 2.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>Board</ParmName>
+    <ParmValue />
+   </SubsetParameter>
+  </SubsetParameters>
+   <SubsetActionName>SUMMARY MAILERS</SubsetActionName>
+   <ProcessScript>mailers/BoardSummaryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Initial Protocol Abstract Verification Mailers</SubsetName>
+  <SubsetDescription>These are mailers that contain all of the
+   scientific, and some administrative information of the protocol (not
+   including participants), along with a list of index terms used for
+   retrieval. They are sent out prior to publication for every new
+   protocol as verification of the abstracting process. A response from
+   the recipient will not be required for publication except for
+   Pharmaceutical trials.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>CoverLetter</ParmName>
+    <ParmValue>ProtInitAbstCoverLetter.tex</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetActionName>PROTOCOL MAILERS</SubsetActionName>
+  <ProcessScript>mailers/ProtAbstractMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+  </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Update Protocol Abstract Verification Mailers</SubsetName>
+  <SubsetDescription>These are followups for mailers that contain all
+   of the scientific, and some administrative information of the
+   protocol (not including participants), along with a list of index
+   terms used for retrieval. They are sent out prior to publication for
+   every new protocol as verification of the abstracting process. A
+   response from the recipient will not be required for publication
+   except for Pharmaceutical trials.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>CoverLetter</ParmName>
+    <ParmValue>ProtUpdateAbstCoverLetter.tex</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+   <SubsetActionName>PROTOCOL MAILERS</SubsetActionName>
+   <ProcessScript>mailers/ProtAbstractMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+   /SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Remail Protocol Abstract Verification Mailers</SubsetName>
+  <SubsetDescription>These are remails for update protocol abstract
+   mailers sent out at least sixty days earlier for which no reply has
+   yet been received.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>CoverLetter</ParmName>
+    <ParmValue>ProtRemailAbstCoverLetter.tex</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetActionName>PROTOCOL MAILERS</SubsetActionName>
+  <ProcessScript>mailers/ProtAbstractMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Initial Protocol Status and Participant Verification Mailers
+  </SubsetName>
+  <SubsetDescription>Status and participant mailers are sent to the
+   designated Protocol Update Person (PUP) for a Cooperative Group
+   (this may change) or for an individual protocol. These are used to
+   update the Status (i.e. Active, Approved, etc.) of the protocol, and
+   the list of participating sites.
+  </SubsetDescription>
+  <SubsetActionName>PROTOCOL MAILERS</SubsetActionName>
+  <ProcessScript>mailers/StatAndParticMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Physician-Initial</SubsetName>
+  <SubsetDescription>Sent out to physicians represented by Person
+   documents, for which no mailers have yet been sent before.
+  </SubsetDescription>
+  <SubsetActionName>PHYSICIAN MAILERS</SubsetActionName>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Physician-Annual update</SubsetName>
+  <SubsetDescription>Sent to physicians at regular intervals to enable
+   them to review the information we have for them in our database.
+  </SubsetDescription>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Physician-Initial remail</SubsetName>
+  <SubsetDescription>Sent to physicians who have not responded to a
+   previous initial mailer to try to elicit a response.
+  </SubsetDescription>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Physician-Annual remail</SubsetName>
+  <SubsetDescription>Sent to physicians who have not responded to an
+   annual update mailer.
+  </SubsetDescription>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Organization-Annual update</SubsetName>
+  <SubsetDescription>Sent to organizations each year to enable them to
+   review the information we have for them in our database.
+  </SubsetDescription>
+  <SubsetActionName>ORGANIZATION MAILERS</SubsetActionName>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ <SystemSubset>
+  <SubsetName>Organization-Annual remail</SubsetName>
+  <SubsetDescription>Sent to organizations that have not responded to
+   a previousupdatemailer to try to elicit a response.
+  </SubsetDescription>
+  <SubsetActionName>ORGANIZATION MAILERS</SubsetActionName>
+  <ProcessScript>Mailers/DirectoryMailer.py</ProcessScript>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/mailers/output/</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+</PublishingSystem>
+]]>
+</CdrDocXml>
+</CdrDoc>
