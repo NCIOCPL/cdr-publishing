@@ -1,0 +1,141 @@
+%----------------------------------------------------------------------
+%
+% $Id: StatPartCoverLetterNonCoop.tex,v 1.1 2002-10-12 16:35:13 bkline Exp $
+%
+% Template for the cover letter for a set of status and participant 
+% site check mailers for lead orgs which are not cooperative groups.
+%
+% $Log: not supported by cvs2svn $
+%----------------------------------------------------------------------
+\documentclass[letterpaper,12pt]{letter}
+
+\usepackage{graphicx}
+\usepackage{longtable}
+
+%----------------------------------------------------------------------
+% Common definitions.
+%----------------------------------------------------------------------
+\include{d:/cdr/mailers/include/template}
+
+%----------------------------------------------------------------------
+% Package and macro used for special symbols, such as \texteuro.
+%----------------------------------------------------------------------
+\usepackage{textcomp}
+\newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
+
+%----------------------------------------------------------------------
+% Eliminate warnings on overfull hbox by adjusting the stretch parameters
+%----------------------------------------------------------------------
+\tolerance=1000
+\emergencystretch=20pt
+
+%----------------------------------------------------------------------
+% Customization of the list environment.
+%----------------------------------------------------------------------
+\newcommand{\ewidth}{}
+\newcommand{\entrylabel}[1]{\mbox{\bfseries{#1:}}\hfil}
+\newenvironment{entry}{%
+    \begin{list}{}{%
+        \renewcommand{\makelabel}{\entrylabel}%
+        \setlength{\labelwidth}{\ewidth}%
+        \setlength{\itemsep}{-2pt}%
+        \setlength{\leftmargin}{\labelwidth+\labelsep}%
+    }%
+}%
+{\end{list}}
+
+%----------------------------------------------------------------------
+% Package and code to set double-quotes correctly.
+%----------------------------------------------------------------------
+\usepackage{ifthen}
+\newcounter{qC}
+\newcommand{\tQ}{%
+    \addtocounter{qC}{1}%
+    \ifthenelse{\isodd{\value{qC}}}{``}{''}%
+}
+
+%----------------------------------------------------------------------
+% Set up the margins.
+%----------------------------------------------------------------------
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{8.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\parskip}{12pt}
+\setlength{\parindent}{0mm}
+\setlength{\headheight}{-.5in}
+
+%----------------------------------------------------------------------
+% Start the document.
+%----------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------
+% Don't put a page number on this page.
+%----------------------------------------------------------------------
+\thispagestyle{empty}
+
+%----------------------------------------------------------------------
+% Lay out the letterhead.
+%----------------------------------------------------------------------
+\LetterheadWithLogo
+  
+\vspace{36pt}
+
+%----------------------------------------------------------------------
+% Print the address for the PUP.
+%----------------------------------------------------------------------
+@@PUPADDRESS@@
+
+%----------------------------------------------------------------------
+% Body of the letter.
+%----------------------------------------------------------------------
+Subject:\ \ Review of status and participating sites for PDQ/Cancer.gov NCI
+Cooperative Group clinical trials
+
+Thank you for listing the following trials conducted by your organization in
+the National Cancer Institute's PDQ/Cancer.gov clinical trials database.  We
+will contact you four times a year to verify status and participating site
+information to ensure that your listings are current and accurate.
+
+Please review the current status and participating site information for each
+of the trials listed in this packet.  Mark any changes directly on the form.
+If there are any participating sites missing from the list, please include the
+following information for each institution:
+
+\begin{itemize}
+ \item Institution name, address, phone, fax, and e-mail.
+ \item Principal Investigator name, address, phone, fax, and e-mail.
+ site. 
+\end{itemize}
+
+\textbf{Please return this packet in the enclosed envelope even if you have
+    made no changes.}
+
+\textbf{PDQ/Cancer.gov defines protocol statuses as:}
+
+\begin{longtable}{p{2in}p{4in}}
+Approved-not yet active & Approved by NCI, but not yet accepting
+                          patients for accrual \\
+Active                  & Accepting patients for accrual \\
+Temporarily closed      & Patient accrual on hold, pending study evaluation \\
+Closed                  & No longer accepting patients; previously entered
+                          patients will continue treatment \\
+Completed               & Study closed, data collection completed \\
+Withdrawn               & Study discontinued, and to be removed from
+                          the PDQ/Cancer.gov database
+\end{longtable}
+
+Thank you for your assistance in keeping PQ/Cancer.gov up-to-date.  If you
+have any questions, please feel free to contact the PDQ/Cancer.gov Protocol
+Coordinator at ***REMOVED*** or send e-mail to pdqprot@cips.nci.nih.gov.
+
+\vspace{12pt}
+
+PDQ/Cancer.gov Protocol Coordinator \\
+Cancer Information Products and Systems
+
+%----------------------------------------------------------------------
+% Done; wrap it up.
+%----------------------------------------------------------------------
+\vfill
+\end{document}
