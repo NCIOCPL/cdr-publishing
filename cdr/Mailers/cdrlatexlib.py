@@ -1,45 +1,17 @@
-"""CdrXmlLatexSummaryInst: Processing instructions for generating a summary"""
-
+#----------------------------------------------------------------------
+# $Id: cdrlatexlib.py,v 1.7 2002-09-17 22:10:23 bkline Exp $
+#
+# Rules for generating CDR mailer LaTeX.
+#
+# $Log: not supported by cvs2svn $
+#----------------------------------------------------------------------
 import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 
+#----------------------------------------------------------------------
+# Module-level variables.
+#----------------------------------------------------------------------
 personLists = None
-
-#-------------------------------------------------------------------
-# getAttribute
-#   Find an attribute in a DOM node by its name.
-#
-# Pass:
-#   Reference to DOM node.
-#   Name of the attribute to find.
-#
-# Return:
-#   Value of the attribute, converted from Unicode to Latex/Latin 1.
-#   None if the attribute is not found.
-#-------------------------------------------------------------------
-def getAttribute (domNode, attrName):
-    # Get a list of all attributes in this node
-    attrs = domNode.attributes
-    i = 0
-    while i < attrs.length:
-        # Is this the one we want
-        if attrs.item(i).nodeName == attrName:
-            # Yes - Convert Unicode to Latin1
-            return UnicodeToLatex.convert (attrs.item(i).nodeValue)
-        i += 1
-
-    # Attribute not found
-    return None
-
-#----------------------------------------------------------------------
-# getText
-#   Extracts and concatenates the text nodes from an element.
-#----------------------------------------------------------------------
-def getText(node):
-    result = ""
-    for child in node.childNodes:
-        if child.nodeType == node.TEXT_NODE:
-            result = result + child.data
-    return result
+listStack   = []
 
 #-------------------------------------------------------------------
 # XProc
@@ -144,7 +116,7 @@ class XProc:
     ORDER_DOCUMENT = 3  # Process in order found in the document
 
     def __init__(self,
-		         element = None,         # No element involved unless specified
+                 element = None,         # No element involved unless specified
                  attr = None,            # Attribute specification for element
                  occs = 0,               # Default= all occurrences
                  order = ORDER_DOCUMENT, # Assume element ordered same as list
@@ -302,16 +274,16 @@ class ProcParms:
         self.output  = output
 
     def getTopNode(self):
-	return self.topNode
+        return self.topNode
 
     def getCurNode(self):
-	return self.curNode
+        return self.curNode
 
     def getArgs(self):
-	return self.args
+        return self.args
 
     def getOutput(self):
-	return self.output
+        return self.output
 
     def setOutput(self, output):
         self.output = output
@@ -324,6 +296,367 @@ class ProcParms:
 #-------------------------------------------------------------------
 class XmlLatexException(Exception):
     pass
+
+#----------------------------------------------------------------------
+# Object representing an organization's protocol status.
+#----------------------------------------------------------------------
+class OrgProtStatus:
+    def __init__(self, statuses):
+        self.value = None
+        self.date  = None
+        child      = statuses.firstChild
+        while child:
+            if child.nodeName == "CurrentOrgStatus":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "StatusName":
+                        self.value = getText(grandchild)
+                    elif grandchild.nodeName == "StatusDate":
+                        self.date = getText(grandchild)
+                return
+            child = child.nextSibling
+                
+#----------------------------------------------------------------------
+# Object representing a person's name.
+#----------------------------------------------------------------------
+class PersonName:
+    def __init__(self, node):
+        self.givenName    = None
+        self.surname      = None
+        self.profSuffixes = []
+        self.genSuffix    = None
+        self.prefix       = None
+        for child in node.childNodes:
+            if child.nodeName == "GivenName":
+                self.givenName = getText(child)
+            elif child.nodeName == "SurName":
+                self.surname = getText(child)
+            elif child.nodeName == "GenerationSuffix":
+                self.genSuffix = getText(child)
+            elif child.nodeName == "Prefix":
+                self.prefix = getText(child)
+            elif child.nodeName == "ProfessionalSuffix":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName in ("StandardProfessionalSuffix",
+                                               "CustomProfessionalSuffix"):
+                        suffix = getText(grandchild)
+                        if suffix:
+                            self.profSuffixes.append(suffix)
+        
+    def format(self):
+        return ("%s %s" % (self.givenName, self.surname)).strip()
+    def getSuffixes(self):
+        return " ".join([self.genSuffix or ''] + self.profSuffixes).strip()
+
+#----------------------------------------------------------------------
+# Object representing an address.
+#----------------------------------------------------------------------
+class Address:
+
+    def __init__(self, node = None):
+        self.street     = []
+        self.city       = None
+        self.state      = None
+        self.country    = None
+        self.zip        = None
+        self.zipPos     = None
+        self.citySuffix = None
+        if node:
+            stateShortName   = None
+            stateFullName    = None
+            countryShortName = None
+            countryFullName  = None
+            for child in node.childNodes:
+                if child.nodeName == "Street":
+                    self.street.append(getText(child))
+                elif child.nodeName == "City":
+                    self.city = getText(child)
+                elif child.nodeName == "CitySuffix":
+                    self.citySuffix = getText(child)
+                elif child.nodeName == "PoliticalSubUnitShortName":
+                    stateShortName = getText(child)
+                elif child.nodeName == "PoliticalSubUnitFullName":
+                    stateFullName = getText(child)
+                elif child.nodeName == "CountryShortName":
+                    countryShortName = getText(child)
+                elif child.nodeName == "CountryFullName":
+                    countryFullName = getText(child)
+                elif child.nodeName == "PostalCodePosition":
+                    self.zipPos = getText(child)
+                elif child.nodeName == "PostalCode_ZIP":
+                    self.zip = getText(child)
+            self.state = stateShortName or stateFullName
+            self.country = countryShortName or countryFullName
+
+    def format(self, includeCountry = 0):
+        output = ""
+        for street in self.street:
+            output += "  %s \\\\\n" % street
+        statePlusZip = "%s %s" % (self.state or "", self.zip or "")
+        statePlusZip = statePlusZip.strip()
+        city = self.city.strip() or ""
+        comma = city and statePlusZip and ", " or ""
+        lastLine = "%s%s%s" % (city, comma, statePlusZip)
+        if lastLine:
+            output += "  %s \\\\\n" % lastLine
+        if self.country and includeCountry:
+            output += "  %s \\\\\n" % self.country
+        return output
+
+#----------------------------------------------------------------------
+# Remember list style.
+#----------------------------------------------------------------------
+class List:
+    def __init__(self, compact):
+        self.compact = compact
+
+
+#----------------------------------------------------------------------
+# Object representing a Protocol Lead Organization person.
+#----------------------------------------------------------------------
+class LeadOrgPerson:
+    def __init__(self, node):
+        self.name    = None
+        self.phone   = None
+        self.role    = None
+        self.address = Address()
+        self.id      = node.getAttribute("id")
+        for child in node.childNodes:
+            if child.nodeName == "Person":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "PersonNameInformation":
+                        self.name = PersonName(grandchild)
+                    elif grandchild.nodeName == "Phone":
+                        self.phone = getText(grandchild)
+                    elif grandchild.nodeName == "Street":
+                        self.address.street.append(
+                                getText(grandchild))
+                    elif grandchild.nodeName == "City":
+                        self.address.city = getText(grandchild)
+                    elif grandchild.nodeName == "PoliticalSubUnit_State":
+                        self.address.state = getState(grandchild)
+                    elif grandchild.nodeName == "PostalCode_ZIP":
+                        self.zip = getText(grandchild)
+            elif child.nodeName == "PersonRole":
+                self.role = getText(child)
+
+#----------------------------------------------------------------------
+# Object representing a Protocol Lead Organization.
+#----------------------------------------------------------------------
+class ProtLeadOrg:
+    def __init__(self, orgNode):
+        sendMailerTo       = ""
+        self.personnel     = {}
+        self.sendMailerTo  = None
+        self.officialName  = None
+        self.orgRoles      = {}
+        self.protChair     = None
+        self.currentStatus = None
+        for child in orgNode.childNodes:
+            if child.nodeName == "MailAbstractTo":
+                sendMailerTo = getText(child)
+            elif child.nodeName == "LeadOrgProtocolStatuses":
+                self.currentStatus = OrgProtStatus(child)
+            elif child.nodeName == "OfficialName":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "Name":
+                        self.officialName = getText(grandchild)
+            elif child.nodeName == "LeadOrgPersonnel":
+                person = LeadOrgPerson(child)
+                self.personnel[person.id] = person
+                if person.role.upper() == "PROTOCOL CHAIR":
+                    self.protChair = person
+        if sendMailerTo and self.personnel.has_key(sendMailerTo):
+            self.sendMailerTo = self.personnel[sendMailerTo]
+                
+#----------------------------------------------------------------------
+# Object representing an organization location.
+#----------------------------------------------------------------------
+class OrgLoc:
+    def __init__(self, node):
+        self.id          = None
+        self.cipsContact = ""
+        self.address     = None
+        self.phone       = None
+        self.fax         = None
+        self.email       = None
+        self.web         = None
+        self.emailPublic = ""
+        self.orgNames    = []
+        for child in node.childNodes:
+            if child.nodeName == "Location":
+                self.id = child.getAttribute("id")
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "CIPSContact":
+                        self.cipsContact = getText(grandchild)
+                    elif grandchild.nodeName == "PostalAddress":
+                        self.address = Address(grandchild)
+                    elif grandchild.nodeName == "Phone":
+                        self.phone = getText(grandchild)
+                    elif grandchild.nodeName == "Fax":
+                        self.fax = getText(grandchild)
+                    elif grandchild.nodeName == "Email":
+                        self.email = getText(grandchild)
+                        self.emailPublic = grandchild.getAttribute("Public")
+                    elif grandchild.nodeName == "WebSite":
+                        self.web = getText(grandchild)
+                    elif grandchild.nodeName == "OrganizationAddressNames":
+                        for ggc in grandchild.childNodes:
+                            if ggc.nodeName == "OrganizationName":
+                                self.orgNames.append(getText(ggc))
+
+#----------------------------------------------------------------------
+# Gather lists of boards, specialties, etc., needed for Person mailers.
+#----------------------------------------------------------------------
+class PersonLists:
+    def __init__(self):
+        import cdr, cdrdb
+        personType = cdr.getDoctype('guest', 'Person')
+        if personType.error:
+            raise XmlLatexException(
+                "getDoctype(Person): %s" % personType.error)
+        if not personType.vvLists:
+            raise XmlLatexException(
+                "No valid value lists found for Person type")
+        conn = cdrdb.connect('CdrGuest')
+        self.boardSpecialties = self.__getBoardSpecialties(personType)
+        self.otherSpecialties = self.__getOtherSpecialties(personType)
+        self.profSocieties    = self.__getProfSocieties(personType)
+        self.trialGroups      = self.__getTrialGroups(conn)
+        self.oncologyPrograms = self.__getOncologyPrograms(conn)
+    def __getBoardSpecialties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "BoardCertifiedSpecialtyName":
+                return vvList[1]
+        raise XmlLatexException("Unable to find valid board specialties")
+    def __getOtherSpecialties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "OtherSpecialty":
+                return vvList[1]
+        raise XmlLatexException("Unable to find list of non-board specialties")
+    def __getProfSocieties(self, personType):
+        for vvList in personType.vvLists:
+            if vvList[0] == "MemberOfMedicalSociety":
+                return vvList[1]
+        raise XmlLatexException("Unable to find list of medical societies")
+    def __getTrialGroups(self, conn):
+        cursor = conn.cursor()
+        cursor.execute("""\
+       SELECT DISTINCT d.id,
+                       o.value
+                  FROM document d
+                  JOIN query_term o
+                    ON o.doc_id = d.id
+                  JOIN query_term t
+                    ON t.doc_id = d.id
+                 WHERE o.path = '/Organization/OrganizationNameInformation'
+                              + '/OfficialName/Name'
+                   AND t.path = '/Organization/OrganizationType'
+                   AND t.value IN ('Non-US clinical trials group',
+                                   'Non-US clinical trials group')
+              ORDER BY o.value""")
+        return cursor.fetchall()
+    def __getOncologyPrograms(self, conn):
+        cursor = conn.cursor()
+        cursor.execute("""\
+       SELECT DISTINCT d.id,
+                       o.value
+                  FROM document d
+                  JOIN query_term o
+                    ON o.doc_id = d.id
+                  JOIN query_term t
+                    ON t.doc_id = d.id
+                 WHERE o.path = '/Organization/OrganizationNameInformation'
+                              + '/OfficialName/Name'
+                   AND t.path = '/Organization/OrganizationType'
+                   AND t.value IN ('NCI-funded community clinical ' +
+                                   'oncology program',
+                                   'NCI-funded minority community clinical ' +
+                                   'oncology program')
+              ORDER BY o.value""")
+        return cursor.fetchall()
+        
+#----------------------------------------------------------------------
+# Base class for a person's private practice and other practice locations.
+#----------------------------------------------------------------------
+class PersonLocation:
+    def __init__(self):
+        self.id             = None
+        self.cipsContact    = ""
+        self.address        = None
+        self.phone          = None
+        self.tollFreePhone  = None
+        self.fax            = None
+        self.email          = None
+        self.web            = None
+        self.orgNames       = []
+        self.emailPublic    = ""
+    def formatAddress(self, includeCountry = 0):
+        result = self.address.format(includeCountry)
+        for orgName in self.orgNames:
+            result = "  %s \\\\\n%s" % (orgName, result)
+        return result
+
+#----------------------------------------------------------------------
+# Derived class for a physician's private practice location.
+#----------------------------------------------------------------------
+class PrivatePracticeLocation(PersonLocation):
+    def __init__(self, node):
+        PersonLocation.__init__(self)
+        for child in node.childNodes:
+            if child.nodeName == "PrivatePracticeLocation":
+                self.id = child.getAttribute("id")
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "PostalAddress":
+                        self.address = Address(grandchild)
+                    elif grandchild.nodeName == "CIPSContact":
+                        self.cipsContact = getText(grandchild)
+            elif child.nodeName == "Phone":
+                self.phone = getText(child)
+            elif child.nodeName == "TollFreePhone":
+                self.tollFreePhone = getText(child)
+            elif child.nodeName == "Fax":
+                self.fax = getText(child)
+            elif child.nodeName == "Email":
+                self.email = getText(child)
+                self.emailPublic = child.getAttribute("Public")
+
+#----------------------------------------------------------------------
+# Derived class for an other practice location for a person.
+#----------------------------------------------------------------------
+class OtherPracticeLocation(PersonLocation):
+    def __init__(self, node):
+        PersonLocation.__init__(self)
+        self.id = node.getAttribute("id")
+        for child in node.childNodes:
+            if child.nodeName == "SpecificPostalAddress":
+                self.address = Address(child)
+            elif child.nodeName in ("Phone", "SpecificPhone"):
+                self.phone = getText(child)
+            elif child.nodeName in ("TollFreePhone", "SpecificTollFreePhone"):
+                self.tollFreePhone = getText(child)
+            elif child.nodeName in ("Fax", "SpecificFax"):
+                self.fax = getText(child)
+            elif child.nodeName in ("Email", "SpecificEmail"):
+                self.email = getText(child)
+                self.emailPublic = child.getAttribute("Public")
+            elif child.nodeName == "CIPSContact":
+                self.cipsContact = getText(child)
+            elif child.nodeName == "OrganizationAddressNames":
+                for grandchild in child.childNodes:
+                    if grandchild.nodeName == "OrganizationName":
+                        name = getText(grandchild)
+                        if name: self.orgNames.append(name)
+
+#----------------------------------------------------------------------
+# getText
+#   Extracts and concatenates the text nodes from an element.
+#----------------------------------------------------------------------
+def getText(node):
+    result = ""
+    for child in node.childNodes:
+        if child.nodeType == node.TEXT_NODE:
+            result = result + child.data
+    return result
 
 #------------------------------------------------------------------
 # findControls
@@ -373,7 +706,7 @@ def cite (pp):
         # Extract the attribute value from the Citation
         # tag
         # ------------------------------------------------------
-        attrValue = getAttribute (citeNode, 'refidx')
+        attrValue = citeNode.getAttribute ('refidx')
         if (attrValue != None):
             citeString += attrValue
 
@@ -411,7 +744,7 @@ def bibitem (pp):
      # Extract the attribute value from the Citation
      # tag
      # ------------------------------------------------------
-     attrValue = getAttribute (refNode, 'refidx')
+     attrValue = refNode.getAttribute ('refidx')
      if (attrValue != None):
        refString += attrValue
        ## refString += refNode.nextSibling
@@ -444,7 +777,7 @@ def protocolTitle (pp):
      # Extract the attribute value from the Citation
      # tag
      # ------------------------------------------------------
-     attrValue = getAttribute (refNode, 'Type')
+     attrValue = refNode.getAttribute ('Type')
      if (attrValue == 'Professional'):
        # Beginning of the ProtocolTitle element
        refString = r"\newcommand\ProtocolTitle{"
@@ -667,15 +1000,15 @@ def yesno (pp):
         return 0
 
 #----------------------------------------------------------------------
-# Remember list style.
+# Processes the start of a list element.
 #----------------------------------------------------------------------
-class List:
-    def __init__(self, compact):
-        self.compact = compact
-
-listStack = []
 def openList(pp):
+
+    global listStack
+
     node = pp.getCurNode()
+    
+    # Honor the kind of numbering requested in the source document.
     style = node.getAttribute("Style")
     listStyle = ""
     if node.nodeName == "ItemizedList":
@@ -700,6 +1033,7 @@ def openList(pp):
   \renewcommand{\labelenum%s}{\theenum%s.}
 """ % (listLevel, listLevel, listLevel, listLevel)
 
+    # If Compact is set to 'No' then we insert an additional blank line.
     compact = node.getAttribute("Compact")
     output = "  \\setlength{\\parskip}{0pt}\n"
     if compact == "No": 
@@ -708,15 +1042,22 @@ def openList(pp):
     else: 
         compact = 1
         output += "  \\setlength{\\itemsep}{-2pt}\n"
+        
+    # Pick up the list titles if there are any.
     for title in node.getElementsByTagName("ListTitle"):
         output += "  {\\bfseries %s}\n" % getText(title)
+        
+    # Remember the list so we know how deeply nested we are.
     listStack.append(List(compact))
+
+    # Start the list.
     pp.setOutput(output + listStyle + "  \\begin{%s}\n" % command)
 
 #----------------------------------------------------------------------
 # Forget list style.
 #----------------------------------------------------------------------
 def closeList(pp):
+    global listStack
     listStack.pop()
     if not listStack:
         pp.setOutput("  \\setlength{\\parskip}{1.2mm}\n")
@@ -739,131 +1080,11 @@ def stripLines(str):
 def stripEnds(str): return str.strip()
 
 #----------------------------------------------------------------------
-# Object representing an organization's protocol status.
-#----------------------------------------------------------------------
-class OrgProtStatus:
-    def __init__(self, statuses):
-        self.value = None
-        self.date  = None
-        child      = statuses.firstChild
-        while child:
-            if child.nodeName == "CurrentOrgStatus":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "StatusName":
-                        self.value = getText(grandchild)
-                    elif grandchild.nodeName == "StatusDate":
-                        self.date = getText(grandchild)
-                return
-            child = child.nextSibling
-                
-#----------------------------------------------------------------------
-# Object representing a person's name.
-#----------------------------------------------------------------------
-class PersonalName:
-    def __init__(self, node):
-        self.surname = None
-        self.givenName = None
-        for child in node.childNodes:
-            if child.nodeName == "SurName":
-                self.surname = getText(child)
-            elif child.nodeName == "GivenName":
-                self.givenName = getText(child)
-
-#----------------------------------------------------------------------
-# Object representing an address.
-#----------------------------------------------------------------------
-class Address:
-
-    def __init__(self, node = None):
-        self.street     = []
-        self.city       = None
-        self.state      = None
-        self.country    = None
-        self.zip        = None
-        self.zipPos     = None
-        self.citySuffix = None
-        if node:
-            stateShortName   = None
-            stateFullName    = None
-            countryShortName = None
-            countryFullName  = None
-            for child in node.childNodes:
-                if child.nodeName == "Street":
-                    self.street.append(getText(child))
-                elif child.nodeName == "City":
-                    self.city = getText(child)
-                elif child.nodeName == "CitySuffix":
-                    self.citySuffix = getText(child)
-                elif child.nodeName == "PoliticalSubUnitShortName":
-                    stateShortName = getText(child)
-                elif child.nodeName == "PoliticalSubUnitFullName":
-                    stateFullName = getText(child)
-                elif child.nodeName == "CountryShortName":
-                    countryShortName = getText(child)
-                elif child.nodeName == "CountryFullName":
-                    countryFullName = getText(child)
-                elif child.nodeName == "PostalCodePosition":
-                    self.zipPos = getText(child)
-                elif child.nodeName == "PostalCode_ZIP":
-                    self.zip = getText(child)
-            self.state = stateShortName or stateFullName
-            self.country = countryShortName or countryFullName
-
-    def format(self, includeCountry = 0):
-        output = ""
-        for street in self.street:
-            output += "  %s \\\\\n" % street
-        statePlusZip = "%s %s" % (self.state or "", self.zip or "")
-        statePlusZip = statePlusZip.strip()
-        city = self.city.strip() or ""
-        comma = city and statePlusZip and ", " or ""
-        lastLine = "%s%s%s" % (city, comma, statePlusZip)
-        if lastLine:
-            output += "  %s \\\\\n" % lastLine
-        if self.country and includeCountry:
-            output += "  %s \\\\\n" % self.country
-        return output
-
-#----------------------------------------------------------------------
-# Object representing an organization location.
-#----------------------------------------------------------------------
-class OrgLoc:
-    def __init__(self, node):
-        self.id          = None
-        self.cipsContact = ""
-        self.address     = None
-        self.phone       = None
-        self.fax         = None
-        self.email       = None
-        self.web         = None
-        self.emailPublic = ""
-        self.orgNames    = []
-        for child in node.childNodes:
-            if child.nodeName == "Location":
-                self.id = child.getAttribute("id")
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "CIPSContact":
-                        self.cipsContact = getText(grandchild)
-                    elif grandchild.nodeName == "PostalAddress":
-                        self.address = Address(grandchild)
-                    elif grandchild.nodeName == "Phone":
-                        self.phone = getText(grandchild)
-                    elif grandchild.nodeName == "Fax":
-                        self.fax = getText(grandchild)
-                    elif grandchild.nodeName == "Email":
-                        self.email = getText(grandchild)
-                        self.emailPublic = grandchild.getAttribute("Public")
-                    elif grandchild.nodeName == "WebSite":
-                        self.web = getText(grandchild)
-                    elif grandchild.nodeName == "OrganizationAddressNames":
-                        for ggc in grandchild.childNodes:
-                            if ggc.nodeName == "OrganizationName":
-                                self.orgNames.append(getText(ggc))
-
-#----------------------------------------------------------------------
 # Handle organization locations.
 #----------------------------------------------------------------------
 def orgLocs(pp):
+
+    # Gather in all the locations for the organization.
     otherLocs = []
     cipsContact = None
     for child in pp.getCurNode().childNodes:
@@ -873,7 +1094,11 @@ def orgLocs(pp):
                 cipsContact = loc
             else:
                 otherLocs.append(loc)
+                
+    # Start the output for the body of the mailer.
     output = "\n  \\OrgName \\\\\n\n  \\OrgIntro\n\n"
+
+    # Add the CIPS contact information.
     if cipsContact and cipsContact.address:
         formattedAddress = cipsContact.address.format()
         if formattedAddress:
@@ -902,6 +1127,8 @@ def orgLocs(pp):
        cipsContact.fax   or "Not specified",
        cipsContact.email or "Not specified",
        cipsContact.web   or "Not specified")
+
+    # Add the other locations for the organization.
     if otherLocs:
         output += r"""
   \subsection*{Other Locations}
@@ -932,6 +1159,8 @@ def orgLocs(pp):
         output += """
   \end{enumerate}
 """
+
+    # Pump out the location information for the organization.
     pp.setOutput(output)
 
 #----------------------------------------------------------------------
@@ -949,9 +1178,11 @@ def getCoopMemberships(node):
     return coops
                         
 #----------------------------------------------------------------------
-# Handle organization locations.
+# Handle the organization's affiliations.
 #----------------------------------------------------------------------
 def orgAffil(pp):
+
+    # Gather up the affiliation information.
     profOrgs = []
     coops    = []
     for child in pp.getCurNode().childNodes:
@@ -959,6 +1190,8 @@ def orgAffil(pp):
             profOrgs.append(getText(child))
         elif child.nodeName == "MemberOfCooperativeGroups":
             coops = getCoopMemberships(child)
+
+    # Format the professional organization affiliations.
     output = r"""
   \subsection*{Affiliations}
   \subsubsection*{Professional Organizations}
@@ -971,6 +1204,7 @@ def orgAffil(pp):
     else:
         output += "  None\n"
     
+    # Format the cooperative group affiliations.
     output += "  \\subsubsection*{Cooperative Groups}\n"
     if coops:
         output += "  \\begin{itemize}\n"
@@ -983,6 +1217,7 @@ def orgAffil(pp):
         
 #----------------------------------------------------------------------
 # Extract the state name from a PoliticalSubUnit_State element.
+# Use the short name if there is one; otherwise take the long one.
 #----------------------------------------------------------------------
 def getState(node):
     shortName = None
@@ -994,64 +1229,6 @@ def getState(node):
             fullName = getText(child)
     return shortName or fullName
 
-#----------------------------------------------------------------------
-# Object representing a Protocol Lead Organization person.
-#----------------------------------------------------------------------
-class LeadOrgPerson:
-    def __init__(self, node):
-        self.name    = None
-        self.phone   = None
-        self.role    = None
-        self.address = Address()
-        self.id      = node.getAttribute("id")
-        for child in node.childNodes:
-            if child.nodeName == "Person":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "PersonNameInformation":
-                        self.name = PersonalName(grandchild)
-                    elif grandchild.nodeName == "Phone":
-                        self.phone = getText(grandchild)
-                    elif grandchild.nodeName == "Street":
-                        self.address.street.append(
-                                getText(grandchild))
-                    elif grandchild.nodeName == "City":
-                        self.address.city = getText(grandchild)
-                    elif grandchild.nodeName == "PoliticalSubUnit_State":
-                        self.address.state = getState(grandchild)
-                    elif grandchild.nodeName == "PostalCode_ZIP":
-                        self.zip = getText(grandchild)
-            elif child.nodeName == "PersonRole":
-                self.role = getText(child)
-
-#----------------------------------------------------------------------
-# Object representing a Protocol Lead Organization.
-#----------------------------------------------------------------------
-class ProtLeadOrg:
-    def __init__(self, orgNode):
-        sendMailerTo       = ""
-        self.personnel     = {}
-        self.sendMailerTo  = None
-        self.officialName  = None
-        self.orgRoles      = {}
-        self.protChair     = None
-        self.currentStatus = None
-        for child in orgNode.childNodes:
-            if child.nodeName == "MailAbstractTo":
-                sendMailerTo = getText(child)
-            elif child.nodeName == "LeadOrgProtocolStatuses":
-                self.currentStatus = OrgProtStatus(child)
-            elif child.nodeName == "OfficialName":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "Name":
-                        self.officialName = getText(grandchild)
-            elif child.nodeName == "LeadOrgPersonnel":
-                person = LeadOrgPerson(child)
-                self.personnel[person.id] = person
-                if person.role.upper() == "PROTOCOL CHAIR":
-                    self.protChair = person
-        if sendMailerTo and self.personnel.has_key(sendMailerTo):
-            self.sendMailerTo = self.personnel[sendMailerTo]
-                
 #----------------------------------------------------------------------
 # Extract everything we need from the ProtocolLeadOrg element into macros.
 #----------------------------------------------------------------------
@@ -1099,12 +1276,18 @@ def protLeadOrg(pp):
 %s}
 """ % (statDate, orgName, protChair, phone, address))
 
-def makePrefix(level, name):
+#----------------------------------------------------------------------
+# Create the prefix for a protocol (sub)section.
+#----------------------------------------------------------------------
+def sectPrefix(level, name):
     return r"""
   \setcounter{qC}{0}
   \%s{%s}
 """ % (level, name)
 
+#----------------------------------------------------------------------
+# Create prefix for a protocol (sub)section if it's not empty.
+#----------------------------------------------------------------------
 def optProtSect(pp):
     if pp.getCurNode().hasChildNodes():
         pp.setOutput(r"""
@@ -1128,6 +1311,9 @@ def checkNotAbstracted(pp):
   Not abstracted.
 """ % section)
     
+#----------------------------------------------------------------------
+# Create the string format for a deadline 60 days from now.
+#----------------------------------------------------------------------
 def getDeadline():
     now = list(time.localtime())
     now[2] += 60
@@ -1135,103 +1321,8 @@ def getDeadline():
     return time.strftime("%b. %d, %Y", time.localtime(then))
     
 #----------------------------------------------------------------------
-# Gather lists of boards, specialties, etc., needed for Person mailers.
+# Extract everything we need from the PersonNameInformation element.
 #----------------------------------------------------------------------
-class PersonLists:
-    def __init__(self):
-        import cdr, cdrdb
-        personType = cdr.getDoctype('guest', 'Person')
-        if personType.error:
-            raise StandardError("getDoctype(Person): %s" % personType.error)
-        if not personType.vvLists:
-            raise StandardError("No valid value lists found for Person type")
-        conn = cdrdb.connect('CdrGuest')
-        self.boardSpecialties = self.__getBoardSpecialties(personType)
-        self.otherSpecialties = self.__getOtherSpecialties(personType)
-        self.profSocieties    = self.__getProfSocieties(personType)
-        self.trialGroups      = self.__getTrialGroups(conn)
-        self.oncologyPrograms = self.__getOncologyPrograms(conn)
-    def __getBoardSpecialties(self, personType):
-        for vvList in personType.vvLists:
-            if vvList[0] == "BoardCertifiedSpecialtyName":
-                return vvList[1]
-        raise StandardError("Unable to find valid board specialties")
-    def __getOtherSpecialties(self, personType):
-        for vvList in personType.vvLists:
-            if vvList[0] == "OtherSpecialty":
-                return vvList[1]
-        raise StandardError("Unable to find list of non-board specialties")
-    def __getProfSocieties(self, personType):
-        for vvList in personType.vvLists:
-            if vvList[0] == "MemberOfMedicalSociety":
-                return vvList[1]
-        raise StandardError("Unable to find list of medical societies")
-    def __getTrialGroups(self, conn):
-        cursor = conn.cursor()
-        cursor.execute("""\
-       SELECT DISTINCT d.id,
-                       o.value
-                  FROM document d
-                  JOIN query_term o
-                    ON o.doc_id = d.id
-                  JOIN query_term t
-                    ON t.doc_id = d.id
-                 WHERE o.path = '/Organization/OrganizationNameInformation'
-                              + '/OfficialName/Name'
-                   AND t.path = '/Organization/OrganizationType'
-                   AND t.value IN ('Non-US clinical trials group',
-                                   'Non-US clinical trials group')
-              ORDER BY o.value""")
-        return cursor.fetchall()
-    def __getOncologyPrograms(self, conn):
-        cursor = conn.cursor()
-        cursor.execute("""\
-       SELECT DISTINCT d.id,
-                       o.value
-                  FROM document d
-                  JOIN query_term o
-                    ON o.doc_id = d.id
-                  JOIN query_term t
-                    ON t.doc_id = d.id
-                 WHERE o.path = '/Organization/OrganizationNameInformation'
-                              + '/OfficialName/Name'
-                   AND t.path = '/Organization/OrganizationType'
-                   AND t.value IN ('NCI-funded community clinical ' +
-                                   'oncology program',
-                                   'NCI-funded minority community clinical ' +
-                                   'oncology program')
-              ORDER BY o.value""")
-        return cursor.fetchall()
-        
-class PersonName:
-    def __init__(self, node):
-        self.givenName    = None
-        self.surname      = None
-        self.profSuffixes = []
-        self.genSuffix    = None
-        self.prefix       = None
-        for child in node.childNodes:
-            if child.nodeName == "GivenName":
-                self.givenName = getText(child)
-            elif child.nodeName == "SurName":
-                self.surname = getText(child)
-            elif child.nodeName == "GenerationSuffix":
-                self.genSuffix = getText(child)
-            elif child.nodeName == "Prefix":
-                self.prefix = getText(child)
-            elif child.nodeName == "ProfessionalSuffix":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName in ("StandardProfessionalSuffix",
-                                               "CustomProfessionalSuffix"):
-                        suffix = getText(grandchild)
-                        if suffix:
-                            self.profSuffixes.append(suffix)
-        
-    def format(self):
-        return ("%s %s" % (self.givenName, self.surname)).strip()
-    def getSuffixes(self):
-        return " ".join([self.genSuffix or ''] + self.profSuffixes).strip()
-
 def personName(pp):
     name = PersonName(pp.getCurNode())
     formattedName = nameWithSuffixes = name.format()
@@ -1242,70 +1333,12 @@ def personName(pp):
   \newcommand{\PersonNameWithSuffixes}{%s}
 """ % (formattedName, nameWithSuffixes))
     
-class PersonLocation:
-    def __init__(self):
-        self.id             = None
-        self.cipsContact    = ""
-        self.address        = None
-        self.phone          = None
-        self.tollFreePhone  = None
-        self.fax            = None
-        self.email          = None
-        self.web            = None
-        self.orgNames       = []
-        self.emailPublic    = ""
-    def formatAddress(self, includeCountry = 0):
-        result = self.address.format(includeCountry)
-        for orgName in self.orgNames:
-            result = "  %s \\\\\n%s" % (orgName, result)
-        return result
-
-class OtherPracticeLocation(PersonLocation):
-    def __init__(self, node):
-        PersonLocation.__init__(self)
-        self.id = node.getAttribute("id")
-        for child in node.childNodes:
-            if child.nodeName == "SpecificPostalAddress":
-                self.address = Address(child)
-            elif child.nodeName in ("Phone", "SpecificPhone"):
-                self.phone = getText(child)
-            elif child.nodeName in ("TollFreePhone", "SpecificTollFreePhone"):
-                self.tollFreePhone = getText(child)
-            elif child.nodeName in ("Fax", "SpecificFax"):
-                self.fax = getText(child)
-            elif child.nodeName in ("Email", "SpecificEmail"):
-                self.email = getText(child)
-                self.emailPublic = child.getAttribute("Public")
-            elif child.nodeName == "CIPSContact":
-                self.cipsContact = getText(child)
-            elif child.nodeName == "OrganizationAddressNames":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "OrganizationName":
-                        name = getText(grandchild)
-                        if name: self.orgNames.append(name)
-
-class PrivatePracticeLocation(PersonLocation):
-    def __init__(self, node):
-        PersonLocation.__init__(self)
-        for child in node.childNodes:
-            if child.nodeName == "PrivatePracticeLocation":
-                self.id = child.getAttribute("id")
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName == "PostalAddress":
-                        self.address = Address(grandchild)
-                    elif grandchild.nodeName == "CIPSContact":
-                        self.cipsContact = getText(grandchild)
-            elif child.nodeName == "Phone":
-                self.phone = getText(child)
-            elif child.nodeName == "TollFreePhone":
-                self.tollFreePhone = getText(child)
-            elif child.nodeName == "Fax":
-                self.fax = getText(child)
-            elif child.nodeName == "Email":
-                self.email = getText(child)
-                self.emailPublic = child.getAttribute("Public")
-
+#----------------------------------------------------------------------
+# Extract all of the locations from a person document.
+#----------------------------------------------------------------------
 def personLocs(pp):
+    
+    # Gather all the location information together.
     cipsContact = None
     otherLocs = []
     blankLine = r"\makebox[200pt]{\hrulefill}"
@@ -1319,6 +1352,7 @@ def personLocs(pp):
         if loc.cipsContact: cipsContact = loc
         else: otherLocs.append(loc)
         
+    # Output the address block for the mailer.
     address = cipsContact and cipsContact.formatAddress() or ""
     cipsContactInfo = "  None provided."
     if cipsContact:
@@ -1340,6 +1374,7 @@ def personLocs(pp):
        cipsContact.email or blankLine,
        cipsContact.web   or blankLine)
 
+    # Output the CIPS contact location's information.
     output = r"""
   \newcommand{\ewidth}{180pt}
   \PersonNameWithSuffixes \\
@@ -1355,6 +1390,7 @@ def personLocs(pp):
 
 """ % (address, cipsContactInfo)
 
+    # Add any other locations.
     if otherLocs:
         output += "  \\begin{enumerate}\n"
         for loc in otherLocs:
@@ -1382,20 +1418,28 @@ def personLocs(pp):
     else:
         output += "  None.\n"
 
+    # Pump out the results.
     pp.setOutput(output)
 
-
+#----------------------------------------------------------------------
+# Build tables showing a person's specialties and memberships.
+#----------------------------------------------------------------------
 def personSpecialties(pp):
+
+    # Lists of standard specialties and groups are cached.
     global personLists
     if not personLists:
         personLists = PersonLists()
-    node = pp.getTopNode()
+
+    # Start with a clean slate.
     boardSpecialties = {}
     otherSpecialties = {}
     profSocieties    = {}
     trialGroups      = {}
     oncologyPrograms = {}
 
+    # Gather the information specific to this physician.
+    node = pp.getTopNode()
     for elem in node.getElementsByTagName("BoardCertifiedSpecialty"):
         name = ""
         certified = 0
@@ -1427,6 +1471,7 @@ def personSpecialties(pp):
     # Don't yet know how to find out what oncology programs they're members of.
     # Find out from Lakshmi. XXX
 
+    # Start the table for the specialties.
     output = r"""
   \subsection*{Specialty Information}
   
@@ -1463,6 +1508,8 @@ def personSpecialties(pp):
     \hline
   \endhead
 """
+
+    # Populate the table.
     personLists.boardSpecialties.sort()
     for specialty in personLists.boardSpecialties:
         if boardSpecialties.has_key(specialty):
@@ -1475,6 +1522,7 @@ def personSpecialties(pp):
             hasSpecialty = isCertified = "\\Check{N}"
         output += "  %s %s %s \\\\ \\hline\n" % (specialty, hasSpecialty,
                                                             isCertified)
+    # Start the table for non-board-certified specialties.
     output += r"""
   \end{longtable}
 
@@ -1497,11 +1545,14 @@ def personSpecialties(pp):
     \hline
   \endhead
 """
+
+    # Populate the table.
     personLists.otherSpecialties.sort()
     for specialty in personLists.otherSpecialties:
         flag = otherSpecialties.has_key(specialty) and "Y" or "N"
         output += "  %s \\Check{%s} \\\\ \\hline\n" % (specialty, flag)
 
+    # Start the table for membership in professional medical societies.
     output += r"""
   \end{longtable}
 
@@ -1527,10 +1578,13 @@ def personSpecialties(pp):
   \endhead
 """
 
+    # Populate the table.
     personLists.profSocieties.sort()
     for society in personLists.profSocieties:
         flag = profSocieties.has_key(society) and "Y" or "N"
         output += "  %s \\Check{%s} \\\\ \\hline\n" % (society, flag)
+
+    # Start the table for affiliation with trial groups.
     output += r"""
   \end{longtable}
 
@@ -1552,9 +1606,13 @@ def personSpecialties(pp):
     \hline
   \endhead
 """
+
+    # Populate the table.
     for group in personLists.trialGroups:
         flag = trialGroups.has_key(group[0]) and "Y" or "N"
         output += "  %s \\Check{%s} \\\\ \\hline\n" % (group[1], flag)
+
+    # Start the table for affiliation with oncology programs.
     output += r"""
   \end{longtable}
 
@@ -1577,12 +1635,16 @@ def personSpecialties(pp):
     \hline
   \endhead
 """
+
+    # Populate the table.
     for program in personLists.oncologyPrograms:
         flag = oncologyPrograms.has_key(program[0]) and "Y" or "N"
         output += "  %s \\Check{%s} \\\\ \\hline\n" % (program[1], flag)
     output += r"""
   \end{longtable}
 """
+
+    # Pump it out.
     pp.setOutput(output)
     
 
@@ -1705,7 +1767,6 @@ STATPART_HDRTEXT=r"""
 ORG_HDRTEXT=r"""
   %% ORG_HDRTEXT %%
   %% ----------- %%
-  %\newcommand{\CenterHdr}{Organization ID: @@ORGID@@ \\ {\bfseries XX \OrgName}}
   \newcommand{\CenterHdr}{{\bfseries \OrgName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\LeftHdr}{PDQ Organization Update \\ \today \\}
@@ -1720,7 +1781,6 @@ PERSON_HDRTEXT=r"""
   %% PERSON_HDRTEXT %%
   %% -------------- %%
   \newcommand{\LeftHdr}{PDQ Physician Update \\ \today \\}
-  %\newcommand{\CenterHdr}{Physician ID: @@PERID@@ \\ {\bfseries \PersonName}}
   \newcommand{\CenterHdr}{{\bfseries \PersonName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Physician ID: @@DOCID@@ \\}
 %
@@ -1803,19 +1863,6 @@ QUOTES=r"""
 % -----
 """
 
-SPACING=r"""
-  %% SPACING %%
-  %% ------- %%
-  % Double-spacing
-  % \renewcommand\baselinestretch{1.5}
-  % Wider Margins
-  % \setlength{\oddsidemargin}{12pt}
-  % \setlength{\textwidth}{6in}
-%
-% -----
-"""
-
-
 STYLES=r"""
   %% Styles %%
   %% ------ %%
@@ -1828,7 +1875,6 @@ STYLES=r"""
 %
 % -----
 """
-
 
 ENTRYBFLIST=r"""
   %% ENTRYBFLIST %%
@@ -1887,26 +1933,6 @@ PHONE_RULER=r"""
       \ifthenelse{\equal{#1}{Y}}{$\bigotimes$}{$\bigcirc$}}
   \newcommand{\yesno}{$\bigcirc$ Yes \qquad $\bigcirc$ No}
 
-  % If phone number is missing provide a marker to enter here
-  % ---------------------------------------------------------
-  \newcommand{\ThePhone}[1]{%
-      \ifthenelse{\equal{#1}{}}{ \makebox[200pt]{\hrulefill }} {#1}}
-
-  % Enter either Fax number or ruler
-  % --------------------------------
-  \newcommand{\TheFax}[1]{%
-      \ifthenelse{\equal{#1}{}}{ \makebox[200pt]{\hrulefill }}{#1}}
-
-  % Enter either E-mail or ruler
-  % ----------------------------
-  \newcommand{\TheEmail}[1]{%
-      \ifthenelse{\equal{#1}{}}{ \makebox[200pt]{\hrulefill }}{#1}}
-
-  % Enter either Web address or ruler
-  % ---------------------------------
-  \newcommand{\TheWeb}[1]{%
-      \ifthenelse{\equal{#1}{}}{ \makebox[200pt]{\hrulefill }}{#1}}
-
   % Define the check marks for the 3 column tables
   % enter \Check{Y} or \Check{N} to set the mark
   % in either the left or right column
@@ -1916,129 +1942,6 @@ PHONE_RULER=r"""
 %
 % -----
 """
-
-
-ORG_DEFS=r"""
-  %% ORG_DEFS %%
-  %% -------- %%
-  % Variable Definitions
-  % --------------------
-  \newcommand{\Phone}{oPhone}
-  \newcommand{\Fax}{oFax}
-  \newcommand{\Email}{oEmail}
-  \newcommand{\Web}{oWeb}
-  \newcommand{\Street}{oStreet}
-  \newcommand{\City}{oCity}
-  \newcommand{\PoliticalUnitState}{oState}
-  \newcommand{\Country}{oCountry}
-  \newcommand{\PostalCodeZIP}{oZip}
-%
-% -----
-"""
-
-PERSON_DEFS=r"""
-  %% PERSON_DEFS %%
-  %% -------- %%
-  % Variable Definitions
-  % --------------------
-  \newcommand{\OrgName}{pOrg}
-  \newcommand{\Phone}{}
-  \newcommand{\Fax}{}
-  \newcommand{\Email}{}
-  \newcommand{\Web}{}
-  \newcommand{\Street}{pStreet}
-  \newcommand{\City}{pCity}
-  \newcommand{\PoliticalUnitState}{pState}
-  \newcommand{\Country}{pCountry}
-  \newcommand{\PostalCodeZIP}{pZip}
-%
-% -----
-"""
-
-ORG_PRINT_CONTACT=r"""
-   %% ORG_PRINT_CONTACT %%
-   %% ----------------- %%
-   \Person  \\
-   \OrgName \\
-   \Street  \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-
-   \OrgIntro
-
-   \subsection*{CIPS Contact Information}
-
-   \OrgName     \\
-   \Street   \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-   \Country  \\
-
-   \newcommand{\ewidth}{180pt}
-   \begin{entry}
-      \item[Main Organization Phone]    \ThePhone{\Phone}     \\
-      \item[Main Organization Fax\footnotemark]
-                                         \TheFax{\Fax}         \\
-      \item[Main Organization E-Mail]    \TheEmail{\Email}    \\
-      \item[Publish E-Mail in PDQ Directory]    \yesno        \\
-      \item[Website]                     \TheWeb{\Web}
-   \end{entry}
-   \footnotetext{For administrative use only}
-
-
-   \subsection*{Other Locations}
-
-   \begin{enumerate}
-%
-% -----
-"""
-
-PERSON_PRINT_CONTACT=r"""
-   %% PERSON_PRINT_CONTACT %%
-   %% -------------------- %%
-   \Person, \GenSuffix \PerSuffix  \\
-   \OrgName    \\
-   \Street   \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-
-   \PersonIntro
-
-   \subsection*{CIPS Contact Information}
-
-   \Org     \\
-   \Street   \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-   \Country  \\
-
-   \newcommand{\ewidth}{180pt}
-   \begin{entry}
-      \item[Phone]    \ThePhone{\Phone}     \\
-      \item[Fax\footnotemark]
-                                         \TheFax{\Fax}         \\
-      \item[E-Mail]    \TheEmail{\Email}    \\
-      \item[Publish E-Mail in PDQ Directory]    \yesno        \\
-      \item[Website]                     \TheWeb{\Web}
-   \end{entry}
-   \footnotetext{For administrative use only}
-
-
-   \subsection*{Other Practice Locations}
-
-   \begin{enumerate}
-%
-% -----
-"""
-
-
-
-ORG_AFFILIATIONS=r"""
-   %% ORG_AFFILIATIONS %%
-   %% ---------------- %%
-
-   \subsection*{Affiliations}
-   \subsubsection*{Professional Organizations}
-%
-% -----
-"""
-
 
 PERSON_MISC_INFO=r"""
    %% PERSON_MISC_INFO %%
@@ -2055,98 +1958,6 @@ PERSON_MISC_INFO=r"""
     Are you retired from practice?                         \hfill
         \yesno
 
-%
-% -----
-"""
-
-
-PERSON_SPECIALTY_TAB=r"""
-   %% PERSON_SPECIALTY_TAB %%
-   %% --------------------- %%
-    \setlength{\doublerulesep}{0.5pt}
- \begin{longtable}[l]{||p{250pt}||p{35pt}|p{35pt}||p{35pt}|p{35pt}||} \hline
-     &\multicolumn{2}{c||}{\bfseries{ }}&\multicolumn{2}{c||}{\bfseries{Board}} \\
-     &\multicolumn{2}{c||}{\bfseries{Specialty}}&\multicolumn{2}{c||}{\bfseries{Certification}} \\
-      \bfseries{Specialty Name}
-     &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}}
-     &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}}
-            \\ \hline \hline
-  \endfirsthead
-        \multicolumn{5}{l}{(continued from previous page)} \\ \hline
-     &\multicolumn{2}{c||}{\bfseries{ }}&\multicolumn{2}{c||}{\bfseries{Board}} \\
-     &\multicolumn{2}{c||}{\bfseries{Specialty}}&\multicolumn{2}{c||}{\bfseries{Certification}} \\
-      \bfseries{Specialty Name}
-     &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}}
-     &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}}
-            \\ \hline \hline
-  \endhead
-%
-% -----
-"""
-
-
-PERSON_TRAINING_TAB=r"""
-   %% PERSON_TRAINING_TAB %%
-   %% ------------------- %%
-   \begin{longtable}[l]{||p{344pt}||p{35pt}|p{35pt}||} \hline
-        \bfseries{Specialty Training}   &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}} \\ \hline \hline
-  \endfirsthead
-        \multicolumn{3}{l}{(continued from previous page)} \\ \hline
-        \bfseries{Specialty Training}   &\multicolumn{1}{c|}{\bfseries{Yes}} &\multicolumn{1}{c||}{\bfseries{No}} \\ \hline \hline
-  \endhead
-%
-% -----
-"""
-
-
-PERSON_SOCIETY_TAB=r"""
-   %% PERSON_SOCIETY_TAB %%
-   %% ------------------ %%
- \subsection*{Membership Information}
-
- \subsubsection*{Professional Societies}
-
-  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} \hline
-        & \multicolumn{2}{c||}{\bfseries{Member of:}}  \\
-          \bfseries{Society Name}
-        & \multicolumn{1}{c|}{\bfseries{Yes}} & \multicolumn{1}{c||}{\bfseries{No}} \\
-        \hline \hline
-  \endfirsthead
-        \multicolumn{3}{l}{(continued from previous page)} \\ \hline
-        & \multicolumn{2}{c|}{\bfseries{Member of:}}  \\
-          \bfseries{Society Name}
-        & \multicolumn{1}{c|}{\bfseries{Yes}} & \multicolumn{1}{c|}{\bfseries{No}} \\
-        \hline \hline
-  \endhead
-%
-% -----
-"""
-
-
-PERSON_CLINGRP_TAB=r"""
-   %% PERSON_CLINGRP_TAB %%
-   %% ------------------ %%
-\subsubsection*{Clinical Trials Groups}
-  \begin{longtable}[l]{|p{344pt}||p{35pt}|p{35pt}||} \hline
-       \bfseries{Group Name}
-     &\multicolumn{1}{c|}{\bfseries{Yes}}&\multicolumn{1}{c||}{\bfseries{No}}\\
-                                        \hline \hline
-  \endfirsthead
-   \multicolumn{3}{l}{(continued from previous page)} \\ \hline
-     \bfseries{Group Name}
-     &\multicolumn{1}{c|}{\bfseries{Yes}}&\multicolumn{1}{c||}{\bfseries{No}}\\
-                                        \hline \hline
-  \endhead
-%
-% -----
-"""
-
-
-PERSON_CCOP_TAB=r"""
-   %% PERSON_CCOP_TAB %%
-   %% --------------- %%
-\subsubsection*{Clinical Cancer Oncology Programs}
-   \CCOPIntro
 %
 % -----
 """
@@ -2252,78 +2063,6 @@ END_TABLE=r"""
 %
 % -----
 """
-
-
-ORG_RESET_OTHER=r"""
-   %% ORG_RESET_OTHER %%
-   %% --------------- %%
-   \renewcommand{\Phone}{}
-   \renewcommand{\Fax}{}
-   \renewcommand{\Email}{}
-   \renewcommand{\Web}{}
-   \renewcommand{\OrgName}{}
-   \renewcommand{\Street}{}
-   \renewcommand{\City}{}
-   \renewcommand{\PoliticalUnitState}{}
-   \renewcommand{\Country}{}
-   \renewcommand{\PostalCodeZIP}{}
-%
-% -----
-"""
-
-PERSON_RESET_OTHER=r"""
-   %% PERSON_RESET_OTHER %%
-   %% --------------- %%
-   \renewcommand{\Org}{}
-   \renewcommand{\Phone}{}
-   \renewcommand{\Fax}{}
-   \renewcommand{\Email}{}
-   \renewcommand{\Web}{}
-   \renewcommand{\Org}{}
-   \renewcommand{\Street}{}
-   \renewcommand{\City}{}
-   \renewcommand{\PoliticalUnitState}{}
-   \renewcommand{\Country}{}
-   \renewcommand{\PostalCodeZIP}{}
-%
-% -----
-"""
-
-ORG_PRINT_OTHER=r"""
-   %% ORG_PRINT_OTHER %%
-   %% --------------- %%
-   \item
-   \OrgName     \\
-   \Street  \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-   \Country  \\
-
-     \renewcommand{\ewidth}{180pt}
-     \begin{entry}
-        \item[Phone] \ThePhone{\Phone}           \\
-        \item[Fax]  \TheFax{\Fax}           \\
-        \item[E-Mail]  \TheWeb{\Web}        \\
-        \item[Publish E-Mail in PDQ Directory] \yesno   \\
-        \item[Website]  \TheWeb{\Web}
-     \end{entry}
-  \vspace{15pt}
-%
-% -----
-"""
-
-
-PERSON_PRINT_OTHER=r"""
-   %% PERSON_PRINT_OTHER %%
-   %% --------------- %%
-   \item
-   \Org     \\
-   \Street  \\
-   \City, \PoliticalUnitState\  \PostalCodeZIP \\
-   \Country  \\
-
-% -----
-"""
-
 
 ENDSUMMARYPREAMBLE=r"""
   %% ENDSUMMARYPREAMBLE %%
@@ -2601,14 +2340,14 @@ CommonMarkupRules = (
           textOut   = 0,
           preProcs  = ((openList, ()), ),
           postProcs = ((closeList, ()), ),
-	      suffix    = "\n  \\end{itemize}\n"),
+          suffix    = "\n  \\end{itemize}\n"),
     XProc(element   = "OrderedList",
           textOut   = 0,
           preProcs  = ((openList, ()), ),
           postProcs = ((closeList, ()), ),
-	      suffix    = "\n  \\end{enumerate}\n"),
+          suffix    = "\n  \\end{enumerate}\n"),
     XProc(element   = "ListItem",
-	      prefix    = "  \\item ",
+          prefix    = "  \\item ",
           suffix    = "\n",
           filters   = [stripEnds]),
     XProc(element   = "Para",
@@ -2700,18 +2439,18 @@ DocumentSummaryBody = (
     XProc(element   = "/Summary/SummarySection/Title",
           order     = XProc.ORDER_PARENT,
           prefix    = "  \\section{",
-	      suffix    = "}\n\n",
+          suffix    = "}\n\n",
           filters   = [stripEnds]),
     XProc(element   = "/Summary/SummarySection/SummarySection/Title",
           order     = XProc.ORDER_PARENT,
           prefix    = "  \\subsection{",
-	      suffix    = "}\n",
+          suffix    = "}\n",
           filters   = [stripEnds]),
     XProc(element   = "/Summary/SummarySection/SummarySection/"
                       "SummarySection/Title",
           order     = XProc.ORDER_PARENT,
           prefix    = "  \\subsubsection{",
-	      suffix    = "}\n",
+          suffix    = "}\n",
           filters   = [stripEnds]),
     XProc(element   = "Title",
           prefix    = "\n\n  \\vspace{10pt}\n  \\textbf{",
@@ -2797,7 +2536,7 @@ ProtAbstInfo = (
     XProc(prefix=PROTOCOLINFO, order=XProc.ORDER_TOP),
     XProc(element   = "/InScopeProtocol/Eligibility",
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Disease Retrieval Terms")
+          prefix    = sectPrefix("subsection*", "Disease Retrieval Terms")
                     + "  \\begin{itemize}{\\setlength{\\itemsep}{-5pt}}\n"
                       "  \\setlength{\\parskip}{0mm}\n",
           suffix    = "  \\end{itemize}\n  \\setlength{\\parskip}{1.2mm}\n"),
@@ -2808,35 +2547,35 @@ ProtAbstInfo = (
     XProc(element   = "Objectives",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Protocol Objectives")),
+          prefix    = sectPrefix("subsection*", "Protocol Objectives")),
     XProc(element   = "Outline",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Protocol Outline")),
+          prefix    = sectPrefix("subsection*", "Protocol Outline")),
     XProc(element   = "EntryCriteria",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Patient Eligibility")),
+          prefix    = sectPrefix("subsection*", "Patient Eligibility")),
     XProc(element   = "DiseaseCharacteristics",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsubsection", "Disease Characteristics")),
+          prefix    = sectPrefix("subsubsection", "Disease Characteristics")),
     XProc(element   = "PatientCharacteristics",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsubsection", "Patient Characteristics")),
+          prefix    = sectPrefix("subsubsection", "Patient Characteristics")),
     XProc(element   = "PriorConcurrentTherapy",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsubsection", "Prior/Concurrent Therapy")),
+          prefix    = sectPrefix("subsubsection", "Prior/Concurrent Therapy")),
     XProc(element   = "GeneralEligibilityCriteria",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsubsection", "General Criteria")),
+          prefix    = sectPrefix("subsubsection", "General Criteria")),
     XProc(element   = "ProjectedAccrual",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Projected Accrual")),
+          prefix    = sectPrefix("subsection*", "Projected Accrual")),
     XProc(element   = "EndPoints",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
@@ -2883,27 +2622,27 @@ ProtAbstInfo = (
     XProc(element   = "Rationale",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Protocol Rationale")),
+          prefix    = sectPrefix("subsection*", "Protocol Rationale")),
     XProc(element   = "Purpose",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Protocol Purpose")),
+          prefix    = sectPrefix("subsection*", "Protocol Purpose")),
     XProc(element   = "EligibilityText",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Eligibility Text")),
+          prefix    = sectPrefix("subsection*", "Eligibility Text")),
     XProc(element   = "TreatmentIntervention",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Treatment/Intervention")),
+          prefix    = sectPrefix("subsection*", "Treatment/Intervention")),
     XProc(element   = "ProfessionalDisclaimer",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Professional Disclaimer")),
+          prefix    = sectPrefix("subsection*", "Professional Disclaimer")),
     XProc(element   = "PatientDisclaimer",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
-          prefix    = makePrefix("subsection*", "Patient Disclaimer")),
+          prefix    = sectPrefix("subsection*", "Patient Disclaimer")),
     XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
 
     # Mask these out.
@@ -3062,7 +2801,7 @@ DocumentStatusCheckBody = (
     XProc(element="Title",
           order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\PUPTitle}{",
-	      suffix="}\n"),
+          suffix="}\n"),
     XProc(element="Org",
           prefix="  \\newcommand{\PUPOrg}{",
           suffix="}\n", order=XProc.ORDER_TOP),
@@ -3154,7 +2893,7 @@ DocumentStatusCheckCCOPBody = (
     XProc(element="Title",
           order=XProc.ORDER_PARENT,
           prefix="  \\newcommand{\PUPTitle}{",
-	      suffix="}\n"),
+          suffix="}\n"),
     XProc(element="Org",
           prefix="  \\newcommand{\PUPOrg}{",
           suffix="}\n", order=XProc.ORDER_TOP),
@@ -3272,7 +3011,7 @@ DocumentSummaryHeader =(
     XProc(prefix=CITATION, order=XProc.ORDER_TOP),
     XProc(element="SummaryTitle",
           prefix=r"  \newcommand{\SummaryTitle}{",
-	  suffix="}", order=XProc.ORDER_TOP),
+          suffix="}", order=XProc.ORDER_TOP),
     XProc(prefix=SUMMARY_HDRTEXT, order=XProc.ORDER_TOP),
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
     XProc(prefix=ENDSUMMARYPREAMBLE, order=XProc.ORDER_TOP)
@@ -3289,7 +3028,6 @@ DocumentOrgHeader =(
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
     XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
-    XProc(prefix=ORG_DEFS, order=XProc.ORDER_TOP),
     XProc(prefix=ORG_TITLE, order=XProc.ORDER_TOP),
     XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP),
     )
@@ -3305,7 +3043,6 @@ DocumentPersonHeader =(
     XProc(prefix=FANCYHDR, order=XProc.ORDER_TOP),
     XProc(prefix=TEXT_BOX, order=XProc.ORDER_TOP),
     XProc(prefix=PHONE_RULER, order=XProc.ORDER_TOP),
-    XProc(prefix=PERSON_DEFS, order=XProc.ORDER_TOP),
     XProc(prefix=PERSON_TITLE, order=XProc.ORDER_TOP),
     XProc(prefix=ENDPREAMBLE, order=XProc.ORDER_TOP)
     )
