@@ -1,10 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.9 2002-10-23 22:04:11 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.10 2002-10-24 17:17:16 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2002/10/23 22:04:11  bkline
+# Minor adjustments to mailer indexing code.  Switched to using base class
+# method for locating mailer include path.  Cosmetic adjustments to cover
+# page.
+#
 # Revision 1.8  2002/10/23 11:44:08  bkline
 # Fixed access to base class's __index member.
 #
@@ -106,7 +111,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                     recipient = cdrmailer.Recipient(row[0], row[1], addr)
                     self.getRecipients()[row[0]] = recipient
                 if not document:
-                    document = cdrmailer.Document(row[2], row[3], docType)
+                    document = cdrmailer.Document(row[2], row[3], docType,
+                                                  row[4])
                     self.getDocuments()[row[2]] = document
                 recipient.getDocs().append(document)
         except cdrdb.Error, info:
