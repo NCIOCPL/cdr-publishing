@@ -110,17 +110,17 @@ class ProcNode:
     # Pass:
     #   Reference to top node of the document, in case access to
     #     other parts of the record are needed.
-    #   Reference to a dom node to process.  May be None if this
-    #     XProc was generated for a fixed routine, not associated
-    #     with a particular input XML element.
     #   Reference to list of procs - may be pre or post.
+    #
+    #   Other important information, such as the current node, are
+    #   members of self.
     #
     # Return:
     #   Void.
     #
     #   May raise exception if severe error.
     #---------------------------------------------------------------
-    def execProcs (self, topNode, curNode, procList):
+    def execProcs (self, topNode, procList):
 
         # If no proc list to process, we're done
         if procList != None:
@@ -164,9 +164,6 @@ class ProcNode:
     # Pass:
     #   Reference to top node of the document, in case access to
     #     other parts of the record are needed.
-    #   Reference to a dom node to process.  May be None if this
-    #     XProc was generated for a fixed routine, not associated
-    #     with a particular input XML element.
     #
     # Return (XXX Current code always returns EXEC_OK):
     #   EXEC_OK   = Everything okay to continue.
@@ -187,7 +184,7 @@ class ProcNode:
                 self.output += xp.prefix
 
             # Execute any pre-processing routines
-            self.execProcs (topNode, self.dom, xp.preProcs)
+            self.execProcs (topNode, xp.preProcs)
 
         # If this is a text node, it's here in the output tree
         #   because we're supposed to output the text
@@ -219,7 +216,7 @@ class ProcNode:
         if xp != None:
 
             # Execute any post-processing routines
-            self.execProcs (topNode, self.dom, xp.postProcs)
+            self.execProcs (topNode, xp.postProcs)
 
             # If there's a suffix, send it
             if xp.suffix != None:
