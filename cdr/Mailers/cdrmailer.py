@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.32 2002-10-24 17:51:35 bkline Exp $
+# $Id: cdrmailer.py,v 1.33 2002-10-24 21:34:15 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.32  2002/10/24 17:51:35  bkline
+# Adjustment to remailerFor parameter.
+#
 # Revision 1.31  2002/10/24 17:18:44  bkline
 # Added remailerFor to addMailerTrackingDoc().
 #
@@ -187,16 +190,6 @@ class MailerJob:
             Returns the tuple of document IDs found in the
             pub_proc_doc table.
 
-        getMaxDocs()
-            Returns the cap on the number of documents which
-            will be processed.
-
-        setMaxDocs(maxDocs)
-            Overrides the default for the cap on the number of
-            documents which will be processed.  The default is
-            sys.maxint, which will result in all documents in
-            the queue being published.
-
         getRecipients()
             Returns the dictionary containing the Recipient
             objects associated with this job.  Populated by
@@ -256,7 +249,6 @@ class MailerJob:
         self.__parms            = {}
         self.__printer          = MailerJob.__DEF_PRINTER
         self.__batchPrinting    = batchPrinting
-        self.__maxDocs          = sys.maxint
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -270,8 +262,6 @@ class MailerJob:
     def getRecipients(self): return self.__recipients
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
-    def getMaxDocs   (self): return self.__maxDocs
-    def setMaxDocs   (self, maxDocs): self.__maxDocs = maxDocs
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
     def printDirect  (self): self.__batchPrinting = 0
     def addToQueue   (self, job):   self.__queue.append(job)
@@ -706,9 +696,8 @@ class MailerJob:
         try:
             # Find id, version, title, document type name
             #   for each document previously selected for mailing
-            # XXXX FOR DEBUG - top 2
             self.__cursor.execute("""\
-                SELECT top 2 pub.doc_id, pub.doc_version,
+                SELECT pub.doc_id, pub.doc_version,
                        doc.title, type.name
                   FROM pub_proc_doc pub
                   JOIN document doc
