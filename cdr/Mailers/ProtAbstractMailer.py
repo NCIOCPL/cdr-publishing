@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.5 2002-10-10 17:45:16 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.6 2002-10-22 20:22:19 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2002/10/10 17:45:16  bkline
+# Mods to cover letters.
+#
 # Revision 1.4  2002/10/10 13:44:25  bkline
 # Ready for testing.
 #
@@ -30,17 +33,12 @@ import cdr, cdrdb, cdrmailer, re, sys
 class ProtocolAbstractMailer(cdrmailer.MailerJob):
 
     #------------------------------------------------------------------
-    # Specific constant values for subclass.
-    #------------------------------------------------------------------
-    MAILER_TYPE = "Protocol Abstract"
-
-    #------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
     #------------------------------------------------------------------
     def fillQueue(self):
         self.__getRecipients()
         self.__getDocuments()
-        self.__makeIndex()
+        self.makeIndex()
         self.__makeCoverSheet()
         self.__makeMailers()
 
@@ -131,22 +129,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
-            doc.latex = self.makeLatex(doc, filters, "initial")
-
-    #------------------------------------------------------------------
-    # Generate an index of the mailers in order of postal codes.
-    #------------------------------------------------------------------
-    def __makeIndex(self):
-        self.__index   = []
-        recipients     = self.getRecipients()
-        for recipKey in recipients.keys():
-            recip      = recipients[recipKey]
-            address    = recip.getAddress()
-            country    = address.getCountry()
-            postalCode = address.getPostalCode()
-            for doc in recip.getDocs():
-                self.__index.append((country, postalCode, recip, doc))
-        self.__index.sort()
+            doc.latex = self.makeLatex(doc, filters)
 
     #------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
