@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.22 2002-12-03 17:04:28 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.23 2002-12-26 13:53:23 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.22  2002/12/03 17:04:28  bkline
+# Fixed several bugs in list handling reported by Margaret.
+#
 # Revision 1.21  2002/11/14 21:42:40  ameyer
 # Added number of latex passes to ControlTable.
 # Cleaned up some errors revealed by pychecker.
@@ -2040,10 +2043,6 @@ def statSiteStatus(pp):
     flag = (status == 'Active') and 'Y' or 'N'
     pp.setOutput("  \\Check{%s} \\\\ \\hline \n" % flag)
 
-def piName(pp):
-    "Add name of principal investigator to table."
-    name = PersonName(pp.getCurNode())
-    pp.setOutput(name.format() + "& ")
 
 ####################################################################
 # Constants
@@ -2368,12 +2367,20 @@ PERSON_MISC_INFO=r"""
    $\bigcirc$ E-mail at primary contact \qquad $\bigcirc$ Mail
 
    \subsection*{Practice Information}
-    Are you a physician (MD, DO, or foreign equivalent)?    \hfill
+    Are you a physician (MD, DO, or foreign equivalent)?   \hfill
         \yesno \\
     Do you currently treat cancer patients?                \hfill
         \yesno  \\
     Are you retired from practice?                         \hfill
-        \yesno
+        \yesno  \\
+    If you are not retired from practice, do you want
+    to be listed in the                                    \hfill \\
+    PDQ/Cancer.gov Directory of Physicians?                \hfill
+        \yesno \\
+
+    If you answered Yes to the question above, please make sure you
+    complete Specialty Information and Membership Information sections.
+    This information is required for inclusion in the Directory.
 
 %
 % -----
@@ -3133,9 +3140,9 @@ DocumentPersonBody = (
           preProcs  = ((personLocs, ()), ),
           textOut   = 0,
           descend   = 0),
-    XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
     XProc(preProcs  = [[personProtocols]],
           order     = XProc.ORDER_TOP),
+    XProc(prefix=PERSON_MISC_INFO, order=XProc.ORDER_TOP),
     XProc(order=XProc.ORDER_TOP,
           preProcs=((personSpecialties, ()), )),
 
@@ -3241,22 +3248,6 @@ DocumentStatusCheckBody = (
           preProcs  = [[statProtSites]],
           suffix    = END_TABLE,
           order     = XProc.ORDER_TOP),
-#    XProc(element   = "ParticipatingSite",
-#          order     = XProc.ORDER_PARENT,
-#          textOut   = 0),
-#    XProc(element   = "Site",
-#          order     = XProc.ORDER_PARENT,
-#          suffix    = " & "),
-#    XProc(element   = "PI",
-#          textOut   = 0,
-#          preProcs  = [[piName]],
-#          order     = XProc.ORDER_PARENT),
-#    XProc(element   = "/SPSCheck/Protocol/ProtocolSites/ParticipatingSite/Phone",
-#          order     = XProc.ORDER_PARENT),
-#    XProc(element   = "SiteStatus",
-#          preProcs  = [[statSiteStatus]],
-#          textOut   = 0,
-#          order     = XProc.ORDER_PARENT)
     )
 
 
@@ -3280,7 +3271,6 @@ DocumentStatusCheckCCOPBody = (
     XProc(element="/SPSCheck/PUP/Phone",
           prefix="  \\newcommand{\PUPPhone}{",
           suffix="}\n"),
-#    XProc(prefix=STATUSPUPADDRESS, order=XProc.ORDER_TOP),
     XProc(prefix=STATUSDEFCCOP,
           suffix="  \\begin{enumerate}\n", order=XProc.ORDER_TOP),
 # --------- END: First section Contact Information ---------
