@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.24 2002-12-27 02:11:19 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.25 2002-12-30 19:55:47 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.24  2002/12/27 02:11:19  ameyer
+# Added ability to output an 'x' in the directory include circle.
+#
 # Revision 1.23  2002/12/26 13:53:23  bkline
 # Modifications made for issue #551: moved protocol information before
 # practice information.  Added a fourth question to the practice
@@ -3387,7 +3390,7 @@ DocumentTestBody =(
 
 DocumentProtocolHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
     XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
@@ -3408,7 +3411,7 @@ DocumentProtocolHeader =(
 
 DocumentSummaryHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=TOCHEADER, order=XProc.ORDER_TOP),
     XProc(prefix=QUOTES, order=XProc.ORDER_TOP),
@@ -3423,7 +3426,7 @@ DocumentSummaryHeader =(
 
 DocumentOrgHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=STYLES, order=XProc.ORDER_TOP),
     XProc(prefix=ENTRYLIST, order=XProc.ORDER_TOP),
@@ -3442,7 +3445,7 @@ DocumentOrgHeader =(
 
 DocumentPersonHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=STYLES, order=XProc.ORDER_TOP),
     XProc(prefix=ENTRYLIST, order=XProc.ORDER_TOP),
@@ -3461,7 +3464,7 @@ DocumentPersonHeader =(
 
 DocumentStatusCheckHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=STYLES, order=XProc.ORDER_TOP),
     XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
@@ -3477,7 +3480,7 @@ DocumentStatusCheckHeader =(
 
 DocumentTestHeader =(
     XProc(prefix=LATEXHEADER, order=XProc.ORDER_TOP),
-    XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
+    #XProc(prefix=DRAFT, order=XProc.ORDER_TOP),
     XProc(prefix=FONT, order=XProc.ORDER_TOP),
     XProc(prefix=STYLES, order=XProc.ORDER_TOP),
     XProc(prefix=ENTRYBFLIST, order=XProc.ORDER_TOP),
