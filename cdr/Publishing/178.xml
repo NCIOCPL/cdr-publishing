@@ -6,12 +6,12 @@
 </CdrDocCtl>
 <CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
  <SystemName>Primary</SystemName>
- <SystemDescription>Used for exporting documents to and removing documents from Cancer.gov.</SystemDescription>
+ <SystemDescription>Used for producing documents for licensees and Cancer.gov.</SystemDescription>
  
 <SystemSubset>
   <SubsetName>Full-Load</SubsetName>
   <SubsetDescription>Filter and validate all publishable documents to produce
-        vendor documents and push them to Cancer.gov.</SubsetDescription>
+        licensee documents and push them to Cancer.gov.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -34,7 +34,7 @@
     <ParmValue>100</ParmValue>
    </SubsetParameter> 
    <SubsetParameter>
-    <ParmName>NumDocsPerType</ParmName>
+    <ParmName>NumDocsPerDocType</ParmName>
     <ParmValue>50000</ParmValue>
    </SubsetParameter>  
   </SubsetParameters>
@@ -47,7 +47,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -76,7 +76,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -108,7 +108,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -143,7 +143,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -173,7 +173,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT  TOP ?NumDocsPerType? d.id,
+      SELECT  TOP ?NumDocsPerDocType? d.id,
               MAX(v.num)
         FROM  doc_version v
         JOIN  document d
@@ -221,7 +221,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT  TOP ?NumDocsPerType? d.id,
+      SELECT  TOP ?NumDocsPerDocType? d.id,
               MAX(v.num)
         FROM  doc_version v
         JOIN  document d
@@ -269,7 +269,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -306,7 +306,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -343,7 +343,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -406,7 +406,7 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
-  <SubsetDescription>Push filtered/validated Full-Load vendor documents to 
+  <SubsetDescription>Push filtered/validated Full-Load licensee documents to 
      Cancer.gov.
   </SubsetDescription>
   <SubsetParameters> 
@@ -453,7 +453,7 @@
  
  <SystemSubset>
   <SubsetName>Export</SubsetName>
-  <SubsetDescription>Produce monthly/weekly vendor documents and push them 
+  <SubsetDescription>Produce monthly/weekly licensee documents and push them 
     to Cancer.gov.</SubsetDescription>
   <SubsetParameters>    
    <SubsetParameter>
@@ -477,7 +477,7 @@
     <ParmValue>20</ParmValue>
    </SubsetParameter> 
    <SubsetParameter>
-    <ParmName>NumDocsPerType</ParmName>
+    <ParmName>NumDocsPerDocType</ParmName>
     <ParmValue>50000</ParmValue>
    </SubsetParameter>  
   </SubsetParameters>
@@ -490,7 +490,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -519,7 +519,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -551,7 +551,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -586,7 +586,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -616,7 +616,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT  TOP ?NumDocsPerType? d.id,
+      SELECT  TOP ?NumDocsPerDocType? d.id,
               MAX(v.num)
         FROM  doc_version v
         JOIN  document d
@@ -664,7 +664,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT  TOP ?NumDocsPerType? d.id,
+      SELECT  TOP ?NumDocsPerDocType? d.id,
               MAX(v.num)
         FROM  doc_version v
         JOIN  document d
@@ -712,7 +712,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -749,7 +749,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -786,7 +786,7 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocsPerType? d.id,
+      SELECT TOP ?NumDocsPerDocType? d.id,
              MAX(v.num)
         FROM doc_version v
         JOIN document d
@@ -851,7 +851,7 @@
 
 <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export</SubsetName>
-  <SubsetDescription>Push filtered/validated monthly/weekly Export vendor 
+  <SubsetDescription>Push filtered/validated monthly/weekly Export licensee 
     documents to Cancer.gov.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -898,7 +898,8 @@
 <SystemSubset>
  <SubsetName>Hotfix-Export</SubsetName>
   <SubsetDescription>Filter and validate specified documents together with 
-    their recursively linked documents and push them to Cancer.gov.</SubsetDescription>
+    their recursively linked documents and push them to Cancer.gov for
+    immediate action.</SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1232,7 +1233,7 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
-  <SubsetDescription>Push filtered/validated Hotfix-Export vendor documents 
+  <SubsetDescription>Push filtered/validated Hotfix-Export licensee documents 
     to Cancer.gov for immediate action.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -1359,7 +1360,7 @@
 <SystemSubset>
   <SubsetName>Export-Protocol</SubsetName>
   <SubsetDescription>Filter and validate publishable protocol documents for
-    vendors and push them to Cancer.gov.</SubsetDescription>
+    licensees and push them to Cancer.gov.</SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1525,7 +1526,7 @@
 <SystemSubset>
   <SubsetName>Export-Summary</SubsetName>
   <SubsetDescription>Filter and validate publishable summary documents for 
-    vendors and push them to Cancer.gov.</SubsetDescription>
+    licensees and push them to Cancer.gov.</SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1625,8 +1626,8 @@
 
 <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Summary</SubsetName>
-  <SubsetDescription>Push filtered/validated summary documents to 
-    Cancer.gov.</SubsetDescription>
+  <SubsetDescription>Push filtered/validated Export-Summary summary 
+    documents to Cancer.gov.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
