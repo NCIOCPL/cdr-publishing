@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.50 2004-04-27 15:44:00 bkline Exp $
+# $Id: cdrmailer.py,v 1.51 2004-05-11 20:52:10 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.50  2004/04/27 15:44:00  bkline
+# Added support for use of PDQBoardMemberInfo documents.
+#
 # Revision 1.49  2004/01/13 21:05:56  bkline
 # Added code to pack up failed mailer jobs.
 #
@@ -427,6 +430,12 @@ class MailerJob:
                           an earlier mailer that was sent out and
                           never responded to, and for which this
                           is a followup remailer.
+            protOrgId   - string form of CDR ID for a protocol's
+                          lead organization (the one to which
+                          this mailer is being sent); used to
+                          distinguish between Status and Participant
+                          mailers for the same protocol in the
+                          same job.
         Return value:
             Integer ID for the newly inserted Mailer document.
         """
