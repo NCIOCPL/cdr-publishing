@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.52 2004-05-18 13:04:30 bkline Exp $
+# $Id: cdrmailer.py,v 1.53 2004-05-18 18:00:18 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.52  2004/05/18 13:04:30  bkline
+# Added support for electronic mailers.
+#
 # Revision 1.51  2004/05/11 20:52:10  bkline
 # Added comment for protOrgId parameter for addMailerTrackingDoc().
 #
@@ -1051,23 +1054,18 @@ class MailerJob:
         self.log("~~In packageFiles")
         workExt   = ('xml', 'tex', 'log', 'aux', 'dvi', 'toc')
         dir       = "Job%d" % self.getId()
-        workName  = "SupportFilesForJob%d.tar" % self.getId()
-        printName = "PrintFilesForJob%d.tar" % self.getId()
+        workName  = "SupportFilesForJob%d.tar.bz2" % self.getId()
+        printName = "PrintFilesForJob%d.tar.bz2" % self.getId()
         os.chdir("..")
         if not os.path.isdir(dir):
             raise StandardError("INTERNAL ERROR: cannot find directory %s"
                     % dir)
         try:
-            workFile = tarfile.TarFile(workName, 'w')
+            workFile = tarfile.open(workName, 'w:bz2')
             for ext in workExt:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
-                    workFile.write(file)
+                    workFile.add(file)
             workFile.close()
-            p = os.popen('bzip2 %s' % workName)
-            output = p.read()
-            if p.close():
-                raise StandardError("failure packing working files for job: %s"
-                                    % output)
             for ext in workExt:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
                     os.unlink(file)
@@ -1075,15 +1073,10 @@ class MailerJob:
             raise StandardError("failure packing working files for job")
 
         try:
-            printFile = tarfile.TarFile(printName, 'w')
+            printFile = tarfile.open(printName, 'w:bz2')
             for file in os.listdir(dir):
-                printFile.write("%s/%s" % (dir, file))
+                printFile.add("%s/%s" % (dir, file))
             printFile.close()
-            p = os.popen('bzip2 %s' % printName)
-            output = p.read()
-            if p.close():
-                raise StandardError("failure creating print job package: %s"
-                                    % output)
             for file in os.listdir(dir):
                 os.unlink("%s/%s" % (dir, file))
         except:
@@ -1096,7 +1089,7 @@ class MailerJob:
     def __packageFailureFiles(self):
         self.log("~~In packageFailureFiles")
         dir  = "Job%d" % self.getId()
-        name = "FailedJob%d.tar" % self.getId()
+        name = "FailedJob%d.tar.bz2" % self.getId()
         try:
             os.chdir(self.__outputDir)
             os.chdir("..")
@@ -1106,15 +1099,10 @@ class MailerJob:
             self.log("Cannot find directory %s" % dir)
             return
         try:
-            file = tarfile.TarFile(name, 'w')
+            file = tarfile.open(name, 'w:bz2')
             for fName in glob.glob('%s/*' % dir):
-                file.write(fName)
+                file.add(fName)
             file.close()
-            p = os.popen('bzip2 %s' % name)
-            output = p.read()
-            if p.close():
-                self.log("Failure packing files for failed job: %s" % output)
-                return
             for file in glob.glob('%s/*' % dir):
                 os.unlink(file)
         except Exception, e:
