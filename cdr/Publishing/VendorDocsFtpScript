@@ -1,0 +1,8 @@
+open cipsftp.nci.nih.gov
+cdrdev
+***REMOVED***
+binary
+cd  /u/ftp/qa/pdq/pdq_xml/incoming
+mdel *.tar.bz2
+mput *.tar.bz2
+bye
