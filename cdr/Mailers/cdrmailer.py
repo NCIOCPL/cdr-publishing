@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.26 2002-10-22 18:10:22 bkline Exp $
+# $Id: cdrmailer.py,v 1.27 2002-10-23 03:33:14 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.26  2002/10/22 18:10:22  bkline
+# Changed mailing label to use fixed-pitch font and to word-wrap long lines.
+#
 # Revision 1.25  2002/10/18 11:46:08  bkline
 # Moved address formatting to Address object.
 #
@@ -132,9 +135,8 @@ class MailerJob:
             strings are uppercased before being marked up for LaTeX.
 
         getCipsContactAddress(id)
-            Returns an XML string containing an Address element
-            for the ContactDetail information in a Person document
-            identified as the CIPS contact address.
+            Returns an Address object for the ContactDetail information
+            in a Person document identified as the CIPS contact address.
 
         makeIndex()
             Builds an index list of recipients from the dictionary
@@ -374,33 +376,28 @@ class MailerJob:
         return unicodeString.encode('latin-1')
 
     #------------------------------------------------------------------
-    # Retrieve the CIPS contact address for a mailer recipient.
+    # Retrieve the CIPS contact Address for a mailer recipient.
     #------------------------------------------------------------------
-    def getCipsContactAddress(self, id, docType = 'Person'):
+    def getCipsContactAddress(self, id):
         """
         Parameters:
             id          - Integer ID for CDR Person document.
             docType     - 'Person' (default) or 'Organization'
         Return value:
-            Returns an XML string containing an Address element
-            for the ContactDetail information in a Person document
-            identified as the CIPS contact address.
+            Returns an Address object for the CIPS contact.
         """
-        docId   = cdr.normalize(id)
-        # XXXX - MODIFY TO PASS A docType PARM
-        fragId  = self.__lookupCipsContactFragId(id)
-        if not fragId:
+        # Make string version of id
+        docId  = cdr.normalize(id)
+
+        # Find fragment ID for CIPS contact location in Person doc
+        rows = cdr.getQueryTermValueForId (
+                '/Person/PersonLocations/CIPSContact', id, self.__conn)
+        if not rows:
             raise StandardError("no CIPSContact for %s" % docId)
+        fragId = rows[0]
 
-        # Filter for person or organization
-        if docType == 'Person':
-            filters = ["name:Person Address Fragment With Name"]
-        elif docType == 'Organization':
-            filters = ["name:Organization Address Fragment"]
-        else:
-            raise StandardError (
-                "Invalid docType '%s' in getCipsContactAddress" % docType)
-
+        # Filter to create AddressElement XML
+        filters = ["name:Person Address Fragment With Name"]
         result  = cdr.filterDoc(self.__session, filters, docId,
                                 parm = (('fragId', fragId),))
 
@@ -412,23 +409,54 @@ class MailerJob:
         return Address(result[0])
 
     #------------------------------------------------------------------
-    # Find the fragment ID for the CIPS contact location in a Person
-    # or organization document.
+    # Retrieve the CIPS contact Address object for an Organization
     #------------------------------------------------------------------
-    # XXXX - MODIFY THIS TO ACCEPT A docType PARM
-    def __lookupCipsContactFragId(self, id):
-        try:
-            self.__cursor.execute("""\
-                SELECT value
-                  FROM query_term
-                 WHERE path = '/Person/PersonLocations/CIPSContact'
-                   AND doc_id = ?""", id)
-            row = self.__cursor.fetchone()
-            if not row:
-                return None
-            return row[0]
-        except cdrdb.Error, info:
-            raise "database error retrieving contact FragId: %s" % info[1][0]
+    def __getOrganizationAddress (self, id):
+        """
+        Parameters:
+            id - Integer ID of the organization document.
+        Return value:
+            Address object for organization.
+        """
+        # Default 'name' of the recipient
+        nameStr = 'Administrator'
+
+        # See if we have a CIPS contact person whose real name we can use
+        rows = cdr.getQueryTermValueForId (
+             '/Organization/OrganizationDetails/CIPSContactPerson/@cdr:ref',
+             id, self.__conn)
+        if rows:
+            # Construct and Address object for person, to get real name
+            # Fatal error if we can't find one
+            personAddr = self.getCipsContactAddress (rows[0])
+            nameStr = personAddr.getAddressee()
+
+        # Find the fragment id in the Organization doc for
+        #   the address we need to send to
+        # Filter the organization to construct an address
+        rows = cdr.getQueryTermValueForId (
+             '/Organization/OrganizationLocations/CIPSContact',
+             id, self.__conn)
+        if not rows:
+            raise StandardError (
+                "No CIPSContact element found for Organization %d" % id)
+
+        filters = ["name:Organization Address Fragment"]
+        parms   = (("fragId", rows[0]),)
+        result  = cdr.filterDoc(self.__session, filters, id, parms)
+
+        # Expecting tuple of xml fragment, messages.  Single string is error.
+        if type(result) == type(""):
+            raise StandardError ( \
+                "failure extracting contact address for %d: %s" % (id, result))
+
+        # Construct an address from returned XML
+        orgAddr = Address(result[0])
+
+        # Add or replace the name string with the one we constructed above
+        orgAddr.setAddressee (nameStr)
+
+        return orgAddr
 
     #------------------------------------------------------------------
     # Generate an index of the mailers in order of country + postal code.
@@ -498,7 +526,7 @@ class MailerJob:
     #------------------------------------------------------------------
     def formatAddress(self, addr):
         return addr.format().getBlock()
-    
+
     #------------------------------------------------------------------
     # Create LaTeX for a sheet containing just an address label.
     #------------------------------------------------------------------
@@ -518,7 +546,7 @@ class MailerJob:
         formattedAddress = addr.format(upperCase = upperCase, dropUS = 1,
                                        wrapAt = 63)
         return cdrxmllatex.createAddressLabelPage(formattedAddress)
-    
+
     #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
     #------------------------------------------------------------------
@@ -546,7 +574,7 @@ class MailerJob:
             open(filename, "w").write(latex)
 
             # Convert it to PostScript.
-            for i in range(passCount):
+            for unused in range(passCount):
                 rc = os.system("latex %s %s" % (self.__LATEX_OPTS, filename))
                 if rc:
                     raise StandardError ( \
@@ -1115,6 +1143,9 @@ class Address:
     def getCodePosition   (self): return self.__codePos
     def getAddressee      (self): return self.__addressee
 
+    # Caller may need to manipulate the name line of the address
+    def setAddressee (self, nameStr): self.__addressee = nameStr
+
 
     #------------------------------------------------------------------
     # Calculate the number of lines in a formatted address block.
@@ -1185,7 +1216,7 @@ class Address:
             if line:
                 newLines.append(' ' * indent + line)
         return newLines
-                
+
     #------------------------------------------------------------------
     # Extract postal address element values.
     #------------------------------------------------------------------
@@ -1242,6 +1273,14 @@ class Address:
     # Construct name string from components.
     #------------------------------------------------------------------
     def __buildName(self, node):
+        """
+        Parameters:
+            node - PersonName subelement DOM node from an
+                   AddressElements node.
+        Return value:
+            String containing formatted name, e.g.:
+                "Dr. John Q. Kildare, Jr."
+        """
         givenName = ""
         surname   = ""
         prefix    = ""
@@ -1287,7 +1326,7 @@ class Address:
         for line in lines:
             block += "%s \\\\\n" % UnicodeToLatex.convert(line)
         return FormattedAddress(block, len(lines))
-    
+
     #------------------------------------------------------------------
     # Construct a list of strings representing the lines of a
     # formatted address.  This part of address formatting is broken
