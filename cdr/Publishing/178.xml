@@ -1289,6 +1289,10 @@
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
