@@ -4,12 +4,23 @@
 %% ----------------------------------- %%
   % Selecting date to return mailer as 60 from today
   % ------------------------------------------------
-  \setdatetoday
-  \addtocounter{datenumber}{60}%
-  \setdatebynumber{\thedatenumber}%
-  \newcommand{\deadline}{%
-  \datedate
-  }
+  % Removed because \setdatetoday blows up with an obscure error message:
+  % ! Extra \or.
+  % ->\errmessage  Package calc Error: `\or
+  %                                        ' invalid at this point.
+  %
+  % Se...
+  % l.7   \setdatetoday
+  % ---------------------------------------------------------------------
+  % It can't possibly be worth tracking this down rather than just
+  % implementing \newcommand directly in Python code.  RMK 2002-09-14.
+  % ---------------------------------------------------------------------
+  % \setdatetoday
+  % \addtocounter{datenumber}{60}%
+  % \setdatebynumber{\thedatenumber}%
+  % \newcommand{\deadline}{%
+  % \datedate
+  % }
 
   % PDQ Directory Phone/PDQ Directory Fax
   % -------------------------------------
