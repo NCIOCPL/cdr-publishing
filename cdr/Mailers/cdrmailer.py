@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.36 2002-10-31 19:59:09 bkline Exp $
+# $Id: cdrmailer.py,v 1.37 2002-11-05 16:46:40 ameyer Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.36  2002/10/31 19:59:09  bkline
+# Fixed AddressLine bug.
+#
 # Revision 1.35  2002/10/25 14:21:53  bkline
 # Fixed typo in method to generate address XML.
 #
@@ -1221,7 +1224,6 @@ class Address:
     # Create XML string from address information.
     #------------------------------------------------------------------
     def getXml(self):
-        lines = self.__getAddressLines()
         xml = "<MailerAddress>"
         if self.__country:
             xml += "<Country>%s</Country>" % self.__country
@@ -1389,8 +1391,6 @@ class Address:
                     org = self.getOrg(i)
                     if org:
                         orgLines.append(self.getOrg(i))
-            elif org:
-                orgLines.append(org)
             addressee = self.getAddressee()
             if addressee:
                 lines.append(addressee)
