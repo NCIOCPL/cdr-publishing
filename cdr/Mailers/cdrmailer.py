@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.42 2003-02-11 21:29:26 bkline Exp $
+# $Id: cdrmailer.py,v 1.43 2003-02-14 14:31:24 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.42  2003/02/11 21:29:26  bkline
+# Added code to pick up CitySuffix; added mailerCleanup().
+#
 # Revision 1.41  2003/01/28 16:15:33  bkline
 # Replaced gzip and zip with tar/bzip2.
 #
@@ -863,7 +866,7 @@ class MailerJob:
     #------------------------------------------------------------------
     def __packageFiles(self):
         self.log("~~In packageFiles")
-        workExt   = ('xml', 'tex', 'log', 'aux', 'dvi')
+        workExt   = ('xml', 'tex', 'log', 'aux', 'dvi', 'toc')
         dir       = "Job%d" % self.getId()
         workName  = "SupportFilesForJob%d.tar" % self.getId()
         printName = "PrintFilesForJob%d.tar" % self.getId()
