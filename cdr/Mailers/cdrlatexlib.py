@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.17 2002-11-06 03:09:27 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.18 2002-11-07 21:21:20 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.17  2002/11/06 03:09:27  ameyer
+# Changed initial values of address lines from None to "", to avoid
+# rare cases where xxx.strip() would fail because address line named xxx
+# didn't exist.
+#
 # Revision 1.16  2002/10/31 20:00:23  bkline
 # Added stripLines filter for table cells.
 #
@@ -787,7 +792,7 @@ def cite (pp):
     # If it's a sibling to another one, we've already processed it
     # Don't neeed to do any more
     prevNode = citeNode.previousSibling
-    if prevNode.nodeName == 'CitationLink':
+    if prevNode and prevNode.nodeName == 'CitationLink':
         return 0
 
     # Beginning of list of one or more citation numbers
@@ -1089,6 +1094,7 @@ def openList(pp):
     elif len(listStack) == 1: listLevel = "ii"
     elif len(listStack) == 2: listLevel = "iii"
     elif len(listStack) == 3: listLevel = "iv"
+    elif len(listStack) == 4: listLevel = "v"
     if node.nodeName == "ItemizedList":
         command = "itemize"
         if listLevel:
@@ -2027,8 +2033,10 @@ LATEXHEADER=r"""
   %% -- START -- Document Declarations and Definitions
   \documentclass[letterpaper,12pt]{article}
   \usepackage{textcomp}
-  \usepackage{multirow}
-  \usepackage{supertabular}
+  \usepackage{array}
+  \usepackage{longtable}
+  \usepackage{longerlists}
+  %\usepackage{supertabular}
   \usepackage{graphicx}
   %\usepackage{afterpage}
   \newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
@@ -2755,11 +2763,11 @@ CommonMarkupRules = (
     XProc(element   = "ListItem",
           prefix    = "  \\item ",
           suffix    = "\n",
-          filters   = [stripEnds]),
+          filters   = [stripEnds, stripLines]),
     XProc(element   = "Para",
           filters   = [stripLines],
-          prefix    = "\n  \\setcounter{qC}{0}\n",
-          suffix    = "\n\n"),
+          prefix    = "  \\setcounter{qC}{0}\n",
+          suffix    = "  \\par\n"),
     XProc(element   = "Table",
           textOut   = 0,
           preProcs  = ((cdrlatextables.openTable, ()), ),
