@@ -18,6 +18,10 @@
     <ParmValue>Full Load</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>GroupEmailAddrs</ParmName>
+    <ParmValue>operator@cips.nci.nih.gov;test</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
@@ -295,6 +299,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -332,6 +342,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
@@ -738,6 +754,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -775,6 +797,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
@@ -1159,6 +1187,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1414,6 +1448,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -1451,6 +1491,12 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+     </SubsetFilter> 
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
