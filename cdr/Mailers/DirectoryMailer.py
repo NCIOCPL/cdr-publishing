@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.2 2002-09-17 18:19:57 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.3 2002-10-09 02:00:01 ameyer Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/09/17 18:19:57  ameyer
+# Last version from mmdb2.  Still not working yet.
+#
 #
 #----------------------------------------------------------------------
 
@@ -19,9 +22,9 @@ class DirectoryMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     # Add some information to the subclass not needed in the superclass
     #------------------------------------------------------------------
-    def __init__(self, jobId):
+    def __init__(self, jobId, suppressPrinting = 0):
         # Super class constructor
-        cdrmailer.MailerJob.__init__(self, jobId)
+        cdrmailer.MailerJob.__init__(self, jobId, suppressPrinting)
 
         # Add a protocol count.  See __addProtocolInfo() and __makeMailer()
         self.__protocolCount = 0
@@ -40,6 +43,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
     #    Retrieved job info from pub_proc and pub_proc_parm
     #    Created an output directory and cd'd to it
     # Now we just have to do directory specific stuff.
+    # This should be the first routine invoked (other than init) in
+    #   this subclass.
     #------------------------------------------------------------------
     def fillQueue(self):
 
@@ -56,22 +61,27 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
         # Get all the recipients corresponding to the docIds in
         #   the pub_proc_doc table
+        self.log("~~About to __getRecipients");
         self.__getRecipients()
 
         # Retrieve the actual documents themselves, performing
         #   any necessary filtering and LaTeX generation, and
         #   writing the generated print images to disk
+        self.log("~~About to __createMailerDocs");
         self.__createMailerDocs()
 
         # Create an index of the documents
+        self.log("~~About to __makeIndex");
         self.makeIndex()
 
         # Generate a cover sheet for the job a whole, listing
         #   each individual mailer recipient
+        self.log("~~About to __makeCoverSheet");
         self.__makeCoverSheet()
 
         # Fill the print queue with recipient+document object pairs
         #   telling the later print steps the order of printing
+        self.log("~~About to __makeMailers");
         self.__makeMailers()
 
     #------------------------------------------------------------------
@@ -88,11 +98,14 @@ class DirectoryMailer(cdrmailer.MailerJob):
             # Document object for the id
             doc = self.getDocuments()[docId]
 
-            # For directories, the document of the recipient is usually
-            #   same as the document itself (but not always).
-            # Assume they're the same for now.
-            # Assume no remail tracker for now.
+            # For person directories, the document of the recipient is
+            #   same as the document itself.
+            # For organizations it's more complicated.  But the recipient
+            #   is generated from the organization, so it is effectively
+            #   still the same.
             recipId = docId
+
+            # Assume no remail tracker for now.
             trackId = None
 
             # For remailers, get id of recipient and tracking doc
@@ -111,25 +124,14 @@ class DirectoryMailer(cdrmailer.MailerJob):
                     "Should be exactly one directory remailer recipient. " \
                     "Found %d recipients for document id=%d" % \
                      (len(tempList), docId)
-                # XXXX THIS ASSERTION MAY BE FALSE - CHECK - XXXX
                 assert tempList[0][0] == docId, \
                     "Directory remailer should have recipient=doc id, but " \
                     "recipient=%d, document=%d" % (tempList[0][0], docId)
 
             # Filters are different for physicians and organizations
-            # XXXX - These filters are certainly wrong
-            #        I'll need to do more, possibly including
-            #        writing custom filters for this purpose, though
-            #        it seems like I shouldn't have to.
-            if self.getParm ('docType')[0] == 'Person':
-                addrFilters = ['name:Person Address Fragment With Name']
-                addrFilterParms = []
-            else:
-                # XXXX - This one has to be changed to address to
-                #        name = 'Administrator' if no CIPS contact
-                #        Other changes may also be required
-                addrFilters = ['name:Org Locations for Linking Persons']
-                addrFilterParms = []
+            docType = self.getParm("docType")[0]
+            if not docType:
+                raise StandardError ("docType parameter missing")
 
             # Find or create a recipient object for this doc
             # It may be rare to find one person as the contact for
@@ -138,27 +140,17 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
             # If not found (the normal case), create recipient
             if not recip:
-                # Use the filter module to generate an address
-                resp = cdr.filterDoc(self.getSession(), addrFilters,
-                                     recipId, addrFilterParms)
+                address = self.getCipsContactAddress (recipId, docType)
 
                 # Response should be list of filtered doc + messages
                 # If it's a single string, it's an error message
-                if type(resp)==type("") or type(resp)==type(u""):
-                    # XXXX DO WE HAVE A MORE FAIL-SOFT WAY TO HANDLE
-                    #      THIS PROBLEM?
-                    raise "Unable to find address for %d: %s" % (recipId, resp)
+                if type(address)==type("") or type(address)==type(u""):
+                    raise StandardError (
+                        "Unable to find address for %d: %s" % (recipId, resp))
 
-                # XXXX - May require post-processing here, depending on
-                #   filters
-                # I'll use the one Bob did - but may not need it in future
-                addrXml = resp[0].replace("<ReportBody", "<Address")
-                addrXml = addrXml.replace("</ReportBody>", "</Address>")
-
-                # Create address and recipient object
-                address = cdrmailer.Address (addrXml)
-                recip   = cdrmailer.Recipient (recipId, address.getAddressee(),
-                                               address)
+                # Construct a recipient with this address
+                recip = cdrmailer.Recipient (recipId, address.getAddressee(),
+                                             address)
 
                 # Add the recipient to the dictionary
                 recipients[recipId] = recip
@@ -169,7 +161,7 @@ class DirectoryMailer(cdrmailer.MailerJob):
 
             # Append the current document to the list of those that
             #   this recipient will receive
-            recip.getDocs().append (docId)
+            recip.getDocs().append (doc)
 
     #------------------------------------------------------------------
     # Generate each document to a file
@@ -238,7 +230,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
         coverLetterParm     = self.getParm("CoverLetter")
         if not coverLetterParm:
             raise StandardError ("CoverLetter parameter missing")
-        coverLetterName     = "../%s" % coverLetterParm[0]
+        coverLetterName     = "%s/%s" % (self.getMailerIncludePath(),
+                                         coverLetterParm[0])
         coverLetterTemplate = open(coverLetterName).read()
         for elem in self.getIndex():
             recip, doc = elem[2:]
@@ -345,8 +338,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
         addressee = "Dear %s:" % recip.getAddress().getAddressee()
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
         latex     = template.replace('@@ADDRESS@@', address)
-        latex     = latex.replace('@@SALUTATION@@', addressee)
-        latex     = latex.replace('@@DOCID@@', docId)
+        #latex     = latex.replace('@@SALUTATION@@', addressee)
+        #latex     = latex.replace('@@DOCID@@', docId)
         basename  = 'CoverLetter-%d-%d' % (recip.getId(), doc.getId())
         jobType   = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
@@ -354,8 +347,8 @@ class DirectoryMailer(cdrmailer.MailerJob):
         # Customize the LaTeX for this copy of the protocol.
         nPasses   = doc.latex.getLatexPassCount()
         latex     = doc.latex.getLatex()
-        latex     = latex.replace('@@Recipient@@', recip.getName())
-        latex     = latex.replace('@@MailerDocId@@', str(mailerId))
+        latex     = latex.replace('@@DOCID@@', str(doc.getId()))
+        latex     = latex.replace('@@MAILERID@@', str(mailerId))
 
         # Physicians may have protocol info to add
         if doc.__protocolCount > 0:
@@ -366,4 +359,5 @@ class DirectoryMailer(cdrmailer.MailerJob):
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
 
 if __name__ == "__main__":
-    sys.exit(DirectoryMailer(int(sys.argv[1])).run())
+    suppressPrinting = 0    # For DEBUG, change to 1
+    sys.exit(DirectoryMailer(int(sys.argv[1]), suppressPrinting).run())
