@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.48 2003-07-02 02:02:07 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.49 2003-07-02 22:00:56 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.48  2003/07/02 02:02:07  ameyer
+# Various fixes based on further testing of the new code.
+# Removed more of the old, now redundant, location and formatting code.
+#
 # Revision 1.47  2003/07/01 21:58:19  ameyer
 # Modifications to Person mailers for new denormalization/mailer filters.
 # All address handling was revised plus other minor changes.
@@ -886,6 +890,8 @@ def findControls (docFmt, fmtType):
         sys.stderr.write (
           "No control information stored for '%s':'%s'" % (docFmt, fmtType))
         sys.exit()
+    if docFmt == "Summary":
+        cdrlatextables.TEXT_WIDTH = 6.5 # See request #797.
     return ctl
 
 def cite (pp):
@@ -2653,6 +2659,10 @@ ENDSUMMARYPREAMBLE=r"""
   \setlength{\parskip}{1.2mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{28pt}
+  \setlength{\headwidth}{6.5in}
+  \setlength{\textwidth}{6.5in}
+  \setlength{\textheight}{8.0in}
+  \setlength{\oddsidemargin}{0in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
