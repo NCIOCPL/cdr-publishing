@@ -756,7 +756,7 @@ def encodeString (s, args=None):
 # Return
 #   String containing LaTeX for mailing label sheet.
 #-------------------------------------------------------------------
-def createAddressLabelPage(block, numLines):
+def createAddressLabelPage(formattedAddress):
     return r"""\documentclass{article}
 \usepackage{textcomp}
 \newcommand{\Special}[1]{{\fontencoding{T1}\selectfont\symbol{#1}}}
@@ -773,10 +773,10 @@ def createAddressLabelPage(block, numLines):
 \setlength\voffset{%d\baselineskip}
 \setlength\oddsidemargin{10em}
 
-%s
+\texttt{%s}
 
 \end{document}
-""" % (31 - numLines, block)
+""" % (31 - formattedAddress.getNumLines(), formattedAddress.getBlock())
 
 #-------------------------------------------------------------------
 # log()

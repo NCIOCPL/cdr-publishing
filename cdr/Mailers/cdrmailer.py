@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.25 2002-10-18 11:46:08 bkline Exp $
+# $Id: cdrmailer.py,v 1.26 2002-10-22 18:10:22 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.25  2002/10/18 11:46:08  bkline
+# Moved address formatting to Address object.
+#
 # Revision 1.24  2002/10/16 18:07:36  bkline
 # Fixed typo in tags for state name in XML for address.
 #
@@ -494,7 +497,7 @@ class MailerJob:
     # Create a formatted address block from an Address object.
     #------------------------------------------------------------------
     def formatAddress(self, addr):
-        return addr.format()
+        return addr.format().getBlock()
     
     #------------------------------------------------------------------
     # Create LaTeX for a sheet containing just an address label.
@@ -512,10 +515,9 @@ class MailerJob:
         Return value:
             String containing LaTeX for address label sheet.
         """
-
-        addressBlock = addr.format(upperCase = upperCase, dropUS = 1)
-        numLines = addr.getNumAddressLines(dropUS = 1)
-        return cdrxmllatex.createAddressLabelPage(addressBlock, numLines)
+        formattedAddress = addr.format(upperCase = upperCase, dropUS = 1,
+                                       wrapAt = 63)
+        return cdrxmllatex.createAddressLabelPage(formattedAddress)
     
     #------------------------------------------------------------------
     # Convert LaTeX to PostScript.
@@ -870,6 +872,8 @@ class PrintJob:
 
     #------------------------------------------------------------------
     # Send the current print job to the specified printer.
+    # Have to use Print instead of print to avoid conflict with the
+    # keyword.
     #------------------------------------------------------------------
     def Print(self, outFile, logFunc, batch = 1):
         logFunc("printing %s %s" % (
@@ -882,7 +886,7 @@ class PrintJob:
             else                              : prolog = self.__PLAIN_NAME
             outFile.write("copy %s+%s %%1\n" % (prolog, self.__filename))
         else:
-            prn = open(printer, "w")
+            prn = open(self.__printer, "w")
             doc = open(self.__filename).read()
             if self.__staple:
                 prn.write(self.__STAPLE_PROLOG + doc)
@@ -979,6 +983,16 @@ class Document:
     def getTitle  (self): return self.__title
     def getDocType(self): return self.__docType
     def getVersion(self): return self.__version
+
+#----------------------------------------------------------------------
+# Object to hold a formatted address.
+#----------------------------------------------------------------------
+class FormattedAddress:
+    def __init__(self, block, numLines):
+        self.__block = block
+        self.__numLines = numLines
+    def getBlock(self):     return self.__block
+    def getNumLines(self):  return self.__numLines
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer address.
@@ -1114,7 +1128,7 @@ class Address:
     #------------------------------------------------------------------
     # Create a LaTeX-ready string representing this address.
     #------------------------------------------------------------------
-    def format(self, upperCase = 0, dropUS = 0):
+    def format(self, upperCase = 0, dropUS = 0, wrapAt = sys.maxint):
         lines = self.__getAddressLines()
         if upperCase:
             upperLines = []
@@ -1123,6 +1137,7 @@ class Address:
             lines = upperLines
         if dropUS and len(lines) and self.__lineIsUS(lines[-1]):
             lines = lines[:-1]
+        lines = self.__wrapLines(lines, wrapAt)
         return self.__formatAddressFromLines(lines)
 
     #------------------------------------------------------------------
@@ -1140,6 +1155,37 @@ class Address:
                 xml += "<AddressLines>%s</AddressLines>" % line
         return xml + "</MailerAddress>"
 
+    #------------------------------------------------------------------
+    # Perform word wrap if needed.
+    #------------------------------------------------------------------
+    def __wrapLines(self, lines, wrapAt):
+        needWrap = 0
+        for line in lines:
+            if len(line) > wrapAt:
+                needWrap = 1
+                break
+        if not needWrap:
+            return lines
+        newLines = []
+        for line in lines:
+            indent = 0
+            while len(line) > wrapAt - indent:
+                partLen = wrapAt - indent
+                while partLen > 0:
+                    if line[partLen] == ' ':
+                        break
+                    partLen -= 1
+                if partLen == 0:
+                    partLen = wrapAt - indent
+                firstPart = line[:partLen].strip()
+                line = line[partLen:].strip()
+                if firstPart:
+                    newLines.append(' ' * indent + firstPart)
+                    indent = 2
+            if line:
+                newLines.append(' ' * indent + line)
+        return newLines
+                
     #------------------------------------------------------------------
     # Extract postal address element values.
     #------------------------------------------------------------------
@@ -1240,7 +1286,7 @@ class Address:
         block = ""
         for line in lines:
             block += "%s \\\\\n" % UnicodeToLatex.convert(line)
-        return block
+        return FormattedAddress(block, len(lines))
     
     #------------------------------------------------------------------
     # Construct a list of strings representing the lines of a
