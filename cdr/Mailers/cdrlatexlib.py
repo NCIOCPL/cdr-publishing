@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.71 2004-11-12 15:45:56 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.72 2004-11-18 21:22:47 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.71  2004/11/12 15:45:56  bkline
+# Extended code for stripping trailing space from protocol IDs to
+# handle primary IDs as well.
+#
 # Revision 1.70  2004/11/12 15:44:30  bkline
 # Added code to strip trailing space for other protocol IDs.
 #
@@ -1423,7 +1427,9 @@ def orgLocs(pp):
     if cipsContact and cipsContact.address:
         formattedAddress = cipsContact.format(1)
         if formattedAddress:
-            output = r"""
+            output = personEmailPublic(cipsContact.email,
+                                       cipsContact.emailPublic)
+            output += r"""
   \OrgIntro
 
 
@@ -1438,7 +1444,8 @@ def orgLocs(pp):
       \item[Main Organization Fax]                       %s      \\
                                                          %s      \\
       \item[Main Organization E-Mail]                    %s      \\
-      \item[Publish E-Mail to PDQ/Cancer.gov]            \yesno  \\
+      \item[Publish E-Mail to PDQ/Cancer.gov]
+      \emailPublicYesOrNoCircles  \\
       \item[Website]                                     %s
    \end{entry}
 """ % (cipsContactName, formattedAddress,
@@ -1457,6 +1464,7 @@ def orgLocs(pp):
             if loc.address:
                 formattedAddress = loc.format(1)
                 if formattedAddress:
+                    output += personEmailPublic(loc.email, loc.emailPublic)
                     output += r"""
   \item
   %%%% \OrgName \\ %%%% <- Duplicates OrgName in formattedAddress
@@ -1467,7 +1475,8 @@ def orgLocs(pp):
     \item[Fax]                                        %s       \\
                                                       %s       \\
     \item[E-Mail]                                     %s       \\
-    \item[Publish E-Mail to PDQ/Cancer.gov]           \yesno   \\
+    \item[Publish E-Mail to PDQ/Cancer.gov]
+    \emailPublicYesOrNoCircles  \\
     \item[Website]                                    %s
   \end{entry}
   \vspace{15pt}
@@ -2505,6 +2514,7 @@ ORG_HDRTEXT=r"""
   %%            /cdr/mailers/include/ncilogo.eps}} \\ {\bfseries \OrgName}}
   \newcommand{\RightHdr}{Mailer ID: @@MAILERID@@ \\ Doc ID: @@DOCID@@ \\}
   \newcommand{\LeftHdr}{PDQ/Cancer.gov Organization Update \\ %s \\}
+  \newcommand{\emailPublicYesOrNoCircles}{\yesno}
 %%
 %% -----
 """ % time.strftime("%B %Y")
