@@ -1,9 +1,16 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.66 2004-04-15 20:04:58 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.67 2004-08-02 17:32:39 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.66  2004/04/15 20:04:58  ameyer
+# Added support for marking the "Email" vs. "Mail" circles under "how
+# would you prefer to be contactd?"
+# Removed math symbol bracketing ($...$) from textcircled macro - it
+# worked but was incorrect and generated warnings that I hadn't
+# noticed before.
+#
 # Revision 1.65  2004/03/03 22:06:47  bkline
 # Modified display of Protocol Personnel section of abstract mailer to
 # use the person pointed to by the MailAbstractTo element (request
@@ -833,7 +840,7 @@ class PersonLists:
                                 + '/OfficialName/Name'
                    AND t.path   = '/Organization/OrganizationType'
                    AND t.value  = 'NCI-supported clinical trials group'
-              ORDER BY o.value""")
+              ORDER BY o.value""", timeout = 300)
         rows = cursor.fetchall()
         groups = []
         for row in rows:
@@ -857,7 +864,7 @@ class PersonLists:
                                    'oncology program',
                                    'NCI-funded minority community clinical ' +
                                    'oncology program')
-              ORDER BY o.value""")
+              ORDER BY o.value""", timeout = 300)
         return cursor.fetchall()
 
 class PrivatePracticeLocation(Location):
@@ -2068,7 +2075,7 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id,
             AND person.int_val = %d""" % (loStatPath,
                                          loPersonPath,
                                          loPersonRolePath,
-                                         docId))
+                                         docId), timeout = 300)
     cursor.execute("""\
 SELECT DISTINCT lead_org_stat.doc_id prot_id
            INTO #private_practice_person
@@ -2090,7 +2097,7 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id
             AND person.int_val = %d""" % (loStatPath,
                                          ppSiteIdPath,
                                          ppStatusPath,
-                                         docId))
+                                         docId), timeout = 300)
     cursor.execute("""\
 SELECT DISTINCT lead_org_stat.doc_id prot_id
            INTO #org_site_person
@@ -2112,7 +2119,7 @@ SELECT DISTINCT lead_org_stat.doc_id prot_id
             AND person.int_val = %d""" % (loStatPath,
                                          spPath,
                                          orgSiteStatus,
-                                         docId))
+                                         docId), timeout = 300)
     cursor.execute("""\
 SELECT COUNT(*) FROM (
          SELECT prot_id
@@ -2124,7 +2131,7 @@ SELECT COUNT(*) FROM (
           UNION
          SELECT prot_id
            FROM #org_site_person
-) AS all_three_temp_tables""")
+) AS all_three_temp_tables""", timeout = 300)
     row = cursor.fetchone()
     activeTrials = row[0]
     cursor.execute("""\
@@ -2132,7 +2139,7 @@ SELECT COUNT(*) FROM (
            FROM #lead_org_person
           WHERE lead_org_status IN ('Closed',
                                     'Completed',
-                                    'Temporarily Closed')""")
+                                    'Temporarily Closed')""", timeout = 300)
     row = cursor.fetchone()
     closedTrials = row[0]
     pp.setOutput(r"""
