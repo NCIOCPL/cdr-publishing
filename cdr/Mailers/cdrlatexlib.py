@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.52 2003-07-15 12:46:31 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.53 2003-07-15 15:53:35 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.52  2003/07/15 12:46:31  bkline
+# Adjusted status & participant mailer to handle multiple non-PUP
+# lead org persons (issue #815).
+#
 # Revision 1.51  2003/07/12 01:16:58  ameyer
 # Numerous changes for new denormalization filters, and for consolidation
 # of name/address XML parsing.
@@ -1254,7 +1258,7 @@ def orgLocs(pp):
           cipsContactPersons[0].getElementsByTagName("PersonNameInformation")
         if contactNodes:
             cipsContactPerson = PersonName (contactNodes[0])
-            cipsContactName   = "  %s \\\\\n" % cipsContactPerson.format(1)
+            cipsContactName   = "  %s \\\\" % cipsContactPerson.format(1)
 
     # Gather in all the locations for the organization.
     otherLocs = []
@@ -1283,10 +1287,10 @@ def orgLocs(pp):
 
   \subsection*{Primary Contact Location}
 
-%s  \OrgName \\
+%s
 %s
 
-   \newcommand{\ewidth}{180pt}
+   \renewcommand{\ewidth}{180pt}
    \begin{entry}
       \item[Main Organization Phone]                     %s      \\
       \item[Main Organization Fax]                       %s      \\
@@ -1620,7 +1624,7 @@ def personLocs(pp):
        blankLine)
     if not cipsContact and not otherLocs:
         pp.setOutput(r"""
-  \newcommand{\ewidth}{180pt}
+  \renewcommand{\ewidth}{180pt}
   \PersonNameWithSuffixes
 """ + blankTemplate)
         return
