@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.9 2002-04-03 16:14:26 arkd Exp $
+ $Id: pdq.dtd,v 1.10 2002-04-03 18:35:44 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -751,7 +751,7 @@
 
 <!ELEMENT Organization (OrganizationNameInformation,
                         OrganizationParent?,
-                        IncludeInDirectory',
+                        IncludeInDirectory*,
                         OrganizationLocations,
                         OrganizationAffiliations?,
                         OrganizationType+,
