@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.22 2002-10-10 17:44:44 bkline Exp $
+# $Id: cdrmailer.py,v 1.23 2002-10-14 12:47:23 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.22  2002/10/10 17:44:44  bkline
+# Added PrintJob.PLAIN.
+#
 # Revision 1.21  2002/10/10 13:43:41  bkline
 # Added __NONSTAPLE_PROLOG.
 #
@@ -198,7 +201,7 @@ class MailerJob:
     #------------------------------------------------------------------
     # Constructor for base class.
     #------------------------------------------------------------------
-    def __init__(self, jobId, suppressPrinting = 0):
+    def __init__(self, jobId, batchPrinting = 1):
         """
         Parameters:
             jobId               - Integer for publication job number.
@@ -211,7 +214,7 @@ class MailerJob:
         self.__documents        = {}
         self.__parms            = {}
         self.__printer          = MailerJob.__DEF_PRINTER
-        self.__suppressPrinting = suppressPrinting
+        self.__batchPrinting    = batchPrinting
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -226,11 +229,11 @@ class MailerJob:
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
+    def printDirect  (self): self.__batchPrinting = 0
     def addToQueue   (self, job):   self.__queue.append(job)
     def getParm      (self, name):
         v = self.__parms.get(name)
         return v and tuple(v) or ()
-    def suppressPrint(self): self.__suppressPrinting = 1
 
     #------------------------------------------------------------------
     # Driver for mailer job processing.
@@ -247,7 +250,7 @@ class MailerJob:
             self.__createQueue()
             self.log("~~Finished __createQueue")
             self.fillQueue()
-            self.__printQueue(self.__suppressPrinting)
+            self.__printQueue(self.__batchPrinting)
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
             self.log("******** finished mailer job ********")
             return 0
@@ -781,9 +784,22 @@ class MailerJob:
     #------------------------------------------------------------------
     # Print the jobs in the queue.
     #------------------------------------------------------------------
-    def __printQueue(self, justTesting = 0):
+    def __printQueue(self, batchPrint = 1):
+        if batchPrint:
+            PrintJob(0, PrintJob.DUMMY).writePrologFiles()
+            outputFile = open("PrintJob.cmd", "w")
+            outputFile.write("@if %1. ==. goto usage\n")
+        else:
+            outputFile = self.__printer
         for job in self.__queue:
-            job.Print(self.__printer, self.log, justTesting)
+            job.Print(outputFile, self.log, batchPrint)
+        if batchPrint:
+            outputFile.write("goto done\n")
+            outputFile.write(":usage\n")
+            outputFile.write("@echo usage: PrintJob path-to-printer\n")
+            outputFile.write("@echo  e.g.: PrintJob \\\\CIPSFS1\\HP8100\n")
+            outputFile.write(":done\n")
+            outputFile.close()
 
     #------------------------------------------------------------------
     # Clean up.
@@ -858,15 +874,22 @@ class PrintJob:
         PLAIN
             Used for non-PostScript which should not be stapled.
 
+        DUMMY
+            Used to make a dummy object for writing prolog PCL files.
+
         Print()
             Writes the current print job to the specified printer.
     """
-    MAINDOC       = 1
-    COVERPAGE     = 2
-    PLAIN         = 3
-    __PAGES_PATTERN = re.compile("%%Pages: (\\d+)")
-    __MAX_STAPLED   = 25
-    __STAPLE_PROLOG = """\
+    DUMMY            = 0
+    MAINDOC          = 1
+    COVERPAGE        = 2
+    PLAIN            = 3
+    __STAPLE_NAME    = "StapleProlog.pcl"
+    __NONSTAPLE_NAME = "NonStapleProlog.pcl"
+    __PLAIN_NAME     = "PlainProlog.pcl"
+    __PAGES_PATTERN  = re.compile("%%Pages: (\\d+)")
+    __MAX_STAPLED    = 25
+    __STAPLE_PROLOG  = """\
 \033%-12345X@PJL
 @PJL SET FINISH=STAPLE
 @PJL SET STAPLEOPTION=ONE
@@ -902,14 +925,27 @@ class PrintJob:
             ps.close()
 
     #------------------------------------------------------------------
+    # Create copies of the prolog PCL files in the job directory.
+    #------------------------------------------------------------------
+    def writePrologFiles(self):
+        open(self.__STAPLE_NAME,    "w").write(self.__STAPLE_PROLOG)
+        open(self.__NONSTAPLE_NAME, "w").write(self.__NONSTAPLE_PROLOG)
+        open(self.__PLAIN_NAME,     "w").write(self.__PLAIN_PROLOG)
+
+    #------------------------------------------------------------------
     # Send the current print job to the specified printer.
     #------------------------------------------------------------------
-    def Print(self, printer, logFunc, justTesting = 0):
+    def Print(self, outFile, logFunc, batch = 1):
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
 
-        if not justTesting:
+        if batch:
+            if self.__staple                  : prolog = self.__STAPLE_NAME
+            elif self.__filetype != self.PLAIN: prolog = self.__NONSTAPLE_NAME
+            else                              : prolog = self.__PLAIN_NAME
+            outFile.write("copy %s+%s %%1\n" % (prolog, self.__filename))
+        else:
             prn = open(printer, "w")
             doc = open(self.__filename).read()
             if self.__staple:
