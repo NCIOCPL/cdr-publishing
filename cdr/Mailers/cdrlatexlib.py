@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.12 2002-10-07 21:33:51 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.13 2002-10-10 13:44:43 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2002/10/07 21:33:51  bkline
+# Added aliases for protocol abstract mailer.
+#
 # Revision 1.11  2002/10/02 20:51:03  bkline
 # Added code to find the counts of active and closed protocols with
 # which a physician is involved.  Cleaned up the indentenation in the
@@ -2637,42 +2640,57 @@ PROTOCOLBOILER=r"""
   % Following Text is Boilerplate
 
   \newpage
-  Please initial this page and fax or send hard copy to the address below.
+  If there are no changes to the abstract, please initial this page and
+  fax or mail hard copy in the enclosed envelope to the PDQ/Cancer.gov
+  Protocol Coordinator at the fax number/address below.  If you are
+  requesting any changes to the abstract, please initial this page
+  and return it with the revised abstract by fax or mail using the
+  enclosed envelope.
 
-  If you are requesting any changes to the submitted document please
-  return the document in the enclosed envelope.
+  \vspace{24pt}
 
-  You may also fax the information to the PDQ Protocol Coordinator at:
-  \begin{verse}
-      Fax \#:  301-480-8105
-  \end{verse}
+  \renewcommand{\ewidth}{80pt}
+  \begin{entry}
+     \item[Fax]          301-480-8105
+     \item[Address]      PDQ Cancer.gov Protocol Coordinator \\
+                         Attn: CIAT \\
+                         Cancer Information Products and Systems, NCI, NIH \\
+                         6116, Executive Blvd., Suite 3002B MSC-8321 \\
+                         Bethesda MD 20892-8321
+  \end{entry}
 
-  \begin{verse}
-      PDQ/Cancer.gov Protocol Coordinator    \\
-      Attn: CIAT                  \\
-      Cancer Information Products and Systems, NCI, NIH   \\
-      6116 Executive Blvd. Suite 3002B MSC-8321           \\
-      Bethesda, MD 20892-8321
-  \end{verse}
+  \vspace{12pt}
+
+  \newcommand\chkbox{\makebox[20pt]{\hrulefill}\ \ \ }
 
   If the status of this protocol has changed, please indicate
   the current status:
-  \begin{verse}
-      Approved \\
-      Active \\
-      Temporarily Closed \\
-      Closed \\
-      Completed \\
-      Withdrawn
-  \end{verse}
-
-  \StatusDefinition
-
-  Please list/attach any citations resulting from this study.
+  \vspace{6pt}
+  
+  \begin{tabular}{llp{4in}}
+  \chkbox & Approved-not yet active & Approved by NCI, but not yet
+                                      accepting patients for \mbox{accrual} \\
+  \chkbox & Active & Accepting patients for accrual \\
+  \chkbox & Temporarily closed & Patient accrual on hold, pending
+                                 evaluation \\
+  \chkbox & Closed & No longer accepting patients; previously entered
+                     patients will continue treatment \\
+  \chkbox & Completed & Study closed, data collection completed \\
+  \chkbox & Withdrawn & Study discontinued, and to be removed from the
+                        PDQ/Cancer.gov database
+  \end{tabular}
   
   \vspace{20pt}
   
-  Please initial here if summary is satisfactory to you.
+  Please list/attach any citations resulting from this study.
+  \vspace{6pt} \\
+  \makebox[6.5in]{\hrulefill} \\
+  \makebox[6.5in]{\hrulefill} \\
+  \makebox[6.5in]{\hrulefill} \\
+  
+  \vspace{20pt}
+  
+  Please initial here if the abstract is satisfactory to you.
   \hrulefill
 
 %
@@ -2796,8 +2814,8 @@ CommonMarkupRules = (
           prefix    = "$_{",
           suffix    = "}$"),
     XProc(element   = "TT",
-          prefix    = "\\texttt{",
-          suffix    = "}",
+          prefix    = "\\texttt{\\small{",
+          suffix    = "}}",
           filters   = [preserveLines])
     )
 
