@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.2 2001-10-06 23:43:12 bkline Exp $
+# $Id: cdrmailer.py,v 1.3 2001-10-07 12:49:44 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2001/10/06 23:43:12  bkline
+# Changed parameters to makeLatex() method.  Added docs for fillQueue().
+#
 # Revision 1.1  2001/10/06 21:50:15  bkline
 # Initial revision
 #
@@ -16,169 +19,154 @@ import cdr, cdrdb, cdrxmllatex, os, re, smtplib, sys, time, xml.dom.minidom
 # Object for managing mailer processing.
 #----------------------------------------------------------------------
 class MailerJob:
+    """
+    Base class for mailer job processing.  Cannot be used directly.
+    Public methods include:
+
+        run()
+            Top-level method to invoke job processing.
+
+        log(message)
+            Appends progress or error information to logfile.
+
+        fillQueue()
+            Overridden by derived classes to define processing
+            appropriate to each mailer type.  See documentation
+            for this method below.
+
+        addToQueue(job)
+            Called by the derived classes' implementations of
+            fillQueue() to add a PrintJob object to the print
+            queue for the mailer job.
+
+        addMailerTrackingDoc(doc, recipient, mailerType)
+            Invoked by the derived classes' imlementations of
+            fillQueue() to insert a Mailer document into the CDR.
+
+        getCipsContactAddress(id)
+            Returns an XML string containing an Address element
+            for the ContactDetail information in a Person document
+            identified as the CIPS contact address.
+
+        makeLatex(doc, filters, mailType)
+            Obtains a document from the repository, applies the 
+            caller's filters to it, and uses the cdrxmllatex
+            module to generate the appropriate LaTeX source for
+            the specified mailer type.  
+
+        makePS(latex, passCount, jobName, jobType)
+            Takes the LaTeX source from an in-memory string and
+            writes it out as converted PostScript, returning the
+            new PrintJob object corresponding to the file.
+
+        getId()
+            Returns the ID for the publishing job.
+
+        getCursor()
+            Returns object for executing database queries.
+
+        getDocIds()
+            Returns the tuple of document IDs found in the 
+            pub_proc_doc table.
+
+        getRecipients()
+            Returns the dictionary containing the Recipient
+            objects associated with this job.  Populated by
+            the derived classes during the process of filling
+            the print queue.
+
+        getDocuments()
+            Returns the dictionary containing the Document objects 
+            for the documents which will be mailed out for this job.  
+            Populated by the derived classes during the process 
+            of filling the print queue.
+        
+        getParm(name)
+            Returns a possibly empty tuple of values stored in
+            the pub_proc_parm table for this job.  Filled
+            by the base class.
+    """
 
     #------------------------------------------------------------------
     # Class-level values.
     #------------------------------------------------------------------
-    CDR_EMAIL     = "cdr@mmdb2.nci.nih.gov"
-    SMTP_RELAY    = "MAILFWD.NIH.GOV"
-    LOGFILE       = "d:/cdr/log/mailer.log"
-    LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode"
-    DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
-    ADDR_PATTERN  = re.compile("<Address>(.*)</Address>", re.DOTALL)
-    ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
+    __CDR_EMAIL     = "cdr@mmdb2.nci.nih.gov"
+    __SMTP_RELAY    = "MAILFWD.NIH.GOV"
+    __LOGFILE       = "d:/cdr/log/mailer.log"
+    __LATEX_OPTS    = "-halt-on-error -quiet -interaction batchmode"
+    __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
+    __ADDR_PATTERN  = re.compile("<Address>(.*)</Address>", re.DOTALL)
+    __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
 
     #------------------------------------------------------------------
     # Constructor for base class.
     #------------------------------------------------------------------
     def __init__(self, jobId):
-        self.id          = jobId
-        self.nMailers    = 0
-        self.docIds      = []
-        self.recipients  = {}
-        self.documents   = {}
-        self.parms       = {}
-        self.printer     = MailerJob.DEF_PRINTER
+        """
+        Parameters:
+            jobId          - Integer for publication job number.
+        """
+        self.__id          = jobId
+        self.__nMailers    = 0
+        self.__docIds      = []
+        self.__recipients  = {}
+        self.__documents   = {}
+        self.__parms       = {}
+        self.__printer     = MailerJob.__DEF_PRINTER
         
+    #------------------------------------------------------------------
+    # Public access methods.
+    #------------------------------------------------------------------
+    def getId        (self): return self.__id
+    def getCursor    (self): return self.__cursor
+    def getDocIds    (self): return self.__docIds
+    def getRecipients(self): return self.__recipients
+    def getDocuments (self): return self.__documents
+    def addToQueue   (self, job):   self.__queue.append(job)
+    def getParm      (self, name):
+        v = self.__parms.get(name)
+        return v and tuple(v) or ()
+
     #------------------------------------------------------------------
     # Driver for mailer job processing.
     #------------------------------------------------------------------
     def run(self):
+        """
+        Invokes the processing for a CDR mailer job.  Catches and
+        logs all exceptions.  Returns 0 for success and 1 for failure.
+        """
         try:
-            self.log("starting mailer job")
-            self.loadSettings()
-            self.createQueue()
+            self.log("******** starting mailer job ********")
+            self.__loadSettings()
+            self.__createQueue()
             self.fillQueue()
-            self.printQueue()
-            self.cleanup("Success", "Processed %d mailers" % self.nMailers)
-            self.log("finished mailer job")
+            self.__printQueue()
+            self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
+            self.log("******** finished mailer job ********")
+            return 0
         except:
             (eType, eValue) = sys.exc_info()[:2]
             errMessage = eValue and eValue or eType 
             self.log("ERROR: %s" % errMessage)
-            self.cleanup("Failure", errMessage)
+            self.__cleanup("Failure", errMessage)
+            return 1
 
     #------------------------------------------------------------------
     # Append message to logfile.
     #------------------------------------------------------------------
     def log(self, message):
+        """
+        Appends progress or error information to a log file.  Each
+        entry is stamped with the current date and time and the
+        number of the current publication job.  No return value.
+        No exceptions raised.
+        """
         try:
             now = time.ctime(time.time())
-            msg = "[%s] Job %d: %s" % (now, self.id, message)
-            open(MailerJob.LOGFILE, "a").write(msg + "\n")
+            msg = "[%s] Job %d: %s" % (now, self.__id, message)
+            open(MailerJob.__LOGFILE, "a").write(msg + "\n")
         except:
             pass
-
-    #------------------------------------------------------------------
-    # Prepare initial settings for job.
-    #------------------------------------------------------------------
-    def loadSettings(self):
-        self.getDates()
-        self.getCdrSession()
-        self.getDbConnection()
-        self.loadDbInfo()
-
-    #------------------------------------------------------------------
-    # Calculate needed dates (now and two months from now).
-    #------------------------------------------------------------------
-    def getDates(self):
-        now           = time.localtime(time.time())
-        deadline      = (now[0], now[1] + 2, now[2], 0, 0, 0, 0, 0, -1)
-        deadline      = time.localtime(time.mktime(deadline))
-        self.now      = time.strftime("%Y-%m-%dT%H:%M:%S", now)
-        self.deadline = time.strftime("%Y-%m-%d", deadline)
-    
-    #------------------------------------------------------------------
-    # Log into the CDR server.
-    #------------------------------------------------------------------
-    def getCdrSession(self):
-        rsp          = cdr.login("cdrmailers", "cdrmailers")
-        match        = self.ERR_PATTERN.search(rsp)
-        if match:
-            raise "CDR login failure: %s" % match.group(1)
-        self.session = rsp
-
-    #------------------------------------------------------------------
-    # Log into the CDR database.
-    #------------------------------------------------------------------
-    def getDbConnection(self):
-        try:
-            self.conn   = cdrdb.connect("CdrPublishing")
-            self.cursor = self.conn.cursor()
-        except cdrdb.Error, info:
-            raise "database connection failure: %s" % info[1][0]
-
-    #------------------------------------------------------------------
-    # Load the settings for this job from the database.
-    #------------------------------------------------------------------
-    def loadDbInfo(self):
-        self.getPubProcRow()
-        self.getPubProcDocRows()
-        self.getPubProcParmRows()
-
-    #------------------------------------------------------------------
-    # Load the row which matches this job from the pub_proc table.
-    #------------------------------------------------------------------
-    def getPubProcRow(self):
-        try:
-            self.cursor.execute("""\
-                SELECT output_dir, email
-                  FROM pub_proc
-                 WHERE id = ?""", (self.id,))
-            row = self.cursor.fetchone()
-            if not row:
-                raise "unable to find job %d" % self.id
-            (self.outputDir, self.email) = row
-        except cdrdb.Error, info:
-            raise "database error retrieving pub_proc row: %s" % info[1][0]
-
-    #------------------------------------------------------------------
-    # Load the list of document IDs (with version numbers) for this job.
-    #------------------------------------------------------------------
-    def getPubProcDocRows(self):
-        try:
-            self.cursor.execute("""\
-                SELECT doc_id, doc_version
-                  FROM pub_proc_doc
-                 WHERE pub_proc = ?""", (self.id,))
-            self.docList = self.cursor.fetchall()
-            if not self.docList:
-                raise "no documents found for job %d" % self.id
-            for doc in self.docList: 
-                self.docIds.append(doc[0])
-        except cdrdb.Error, err:
-            raise "database error retrieving pub_proc_doc rows: %s" % err[1][0]
-
-    #------------------------------------------------------------------
-    # Load the parameters stored in the pub_proc_parm table for this job.
-    #------------------------------------------------------------------
-    def getPubProcParmRows(self):
-        try:
-            self.cursor.execute("""\
-                SELECT parm_name, parm_value
-                  FROM pub_proc_parm
-                 WHERE pub_proc = ?
-              ORDER BY id""", (self.id))
-            rows = self.cursor.fetchall()
-            if rows:
-                for row in rows:
-                    if not self.parms.has_key(row[0]):
-                        self.parms[row[0]] = []
-                    self.parms[row[0]].append(row[1])
-                    if row[0] == "Printer":
-                        self.printer = row[1]
-        except cdrdb.Error, info:
-            raise "database error retrieving job parms: %s" % info[1][0]
-
-    #------------------------------------------------------------------
-    # Create and populate the print queue.
-    #------------------------------------------------------------------
-    def createQueue(self):
-        self.queue = []
-        try:
-            os.chdir(self.outputDir)
-        except:
-            raise "failure setting working directory to %s" % self.outputDir
 
     #------------------------------------------------------------------
     # Placeholder for method to populate the print queue for the job.
@@ -187,67 +175,43 @@ class MailerJob:
         """
         The primary responsibility of the classes derived from MailerJob
         is to provide a definition of this method.  This method must
-        populate the queue member of the object by appending instances
-        of the PrintJob class, defined below.  Each PrintJob object must
-        represent a file which is ready to be written directly to the
-        printer (for example, PostScript, or plain text, but not RTF
-        files or Microsoft Word documents).  Furthermore, for each
-        copy of each document added to the print queue, the implementation
-        of fillQueue() must invoke the addMailerTrackingDoc() method
-        to add a new document to the repository for tracking the responses
-        to the mailer.  The mailerType argument passed to that method
-        must be a string which matches one of the valid values for
+        populate the object's print queue by invoking addToQueue() with
+        instances of the PrintJob class, defined below.  Each PrintJob 
+        object must represent a file which is ready to be written 
+        directly to the printer (for example, PostScript, or plain text, 
+        but not RTF files or Microsoft Word documents).  Furthermore, 
+        for each copy of each document added to the print queue, the 
+        implementation of fillQueue() must invoke the addMailerTrackingDoc() 
+        method to add a new document to the repository for tracking the 
+        responses to the mailer.  The mailerType argument passed to that 
+        method must be a string which matches one of the valid values for
         MailerType enumerated in the schema for Mailer documents.
 
         The files created for the queue should be written to the 
         current working directory (as should any intermediate working
         files), and the filenames provided to the constructor for the
         PrintJob objects should not include any path information.
-
-        In addition to the addMailerTrackingDoc() method, the base
-        class also provides a number of common utility methods.
-
-        The getCipsContactAddress() method returns an XML string 
-        containing an Address element for the ContactDetail information 
-        in a Person document identified as the CIPS contact address.
-
-        The makeLatex() method obtains a document from the repository,
-        applies the caller's filters to it, and uses the cdrxmllatex
-        module to generate the appropriate LaTeX source for the 
-        specified mailer type.
-
-        The makePS() method takes the LaTeX source from an in-memory
-        string and writes it out as converted PostScript, returning
-        the a new PrintJob object corresponding to the file.
         """
         raise "fillQueue() must be defined by derived class"
 
-    #------------------------------------------------------------------
-    # Print the jobs in the queue.
-    #------------------------------------------------------------------
-    def printQueue(self):
-        for job in self.queue:
-            job.Print(self.printer, self.log)
-
-    #------------------------------------------------------------------
-    # Clean up.
-    #------------------------------------------------------------------
-    def cleanup(self, status, message):
-        try:
-            self.updateStatus(status, message)
-            self.sendMail()
-            if self.session: cdr.logout(self.session)
-        except:
-            pass
-            
     #----------------------------------------------------------------------
     # Generate a document for tracking a mailer.
     #----------------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType):
+        """
+        Parameters:
+            doc         - Object of type Document, defined below
+            recipient   - Object of type Recipient, defined below
+            mailerType  - String containing a values matching the
+                          list of valid values for MailerType 
+                          enumerated in the schema for Mailer docs.
+        Return value:
+            Integer ID for the newly inserted Mailer document.
+        """
     
-        recipId   = "CDR%010d" % recipient.id
-        docId     = "CDR%010d" % doc.id
-        addrMatch = MailerJob.ADDR_PATTERN.search(recipient.address)
+        recipId   = "CDR%010d" % recipient.getId()
+        docId     = "CDR%010d" % doc.getId()
+        addrMatch = MailerJob.__ADDR_PATTERN.search(recipient.getAddress())
         if not addrMatch:
             raise "address not found for %s" % (recipId)
         address = addrMatch.group(1)
@@ -268,73 +232,33 @@ class MailerJob:
   </Mailer>]]>
  </CdrDocXml>
 </CdrDoc>
-""" % (docId, recipId, mailerType, self.id, recipId, recipient.name, 
-       address, docId, doc.title, self.now, self.deadline)
-        rsp   = cdr.addDoc(self.session, doc = xml, checkIn = "Y", ver = "Y")
-        match = self.ERR_PATTERN.search(rsp)
+""" % (docId, recipId, mailerType, self.__id, recipId, recipient.getName(), 
+       address, docId, doc.getTitle(), self.__now, self.__deadline)
+        rsp   = cdr.addDoc(self.__session, doc = xml, checkIn = "Y", ver = "Y")
+        match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
             raise "failure adding tracking document for %s: %s" % (docId, err)
-        self.nMailers += 1
+        self.__nMailers += 1
         digits = re.sub("[^\d]", "", rsp)
         return int(digits)
-
-    #------------------------------------------------------------------
-    # Update the pub_proc table's status.
-    #------------------------------------------------------------------
-    def updateStatus(self, status, message = None):
-        try:
-            if message:
-                self.cursor.execute("""\
-                    UPDATE pub_proc
-                       SET status = ?,
-                           messages = ?,
-                           completed = GETDATE()
-                     WHERE id = ?""", (status, message, self.id))
-            else:
-                self.cursor.execute("""\
-                    UPDATE pub_proc
-                       SET status = ?,
-                           completed = GETDATE()
-                     WHERE id = ?""", (status, self.id))
-            self.conn.commit()
-        except:
-            pass
-
-    #------------------------------------------------------------------
-    # Inform the user that the job has completed.
-    #------------------------------------------------------------------
-    def sendMail(self):
-        try:
-            if self.email:
-                server  = smtplib.SMTP(MailerJob.SMTP_RELAY)
-                sender  = MailerJob.CDR_EMAIL
-                subject = "CDR Mailer Job Status"
-                message = """\
-From: %s
-To: %s
-Subject: %s
-
-Job %d has completed.  You can view a status report for this job at:
-
-    http://mmdb2.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
-
-Please do not reply to this message.
-""" % (sender, self.email, subject, self.id, self.id)
-                server.sendmail(sender, [self.email], message)
-                server.quit()
-        except:
-            (eType, eValue) = sys.exc_info()[:2]
-            eMessage = eValue and eValue or eType
-            self.log("failure sending email to %s: %s" % self.email, eMessage)
 
     #------------------------------------------------------------------
     # Retrieve the CIPS contact address for a mailer recipient.
     #------------------------------------------------------------------
     def getCipsContactAddress(self, id):
+        """
+        Parameters:
+            doc         - Object of type Document, defined below
+            id          - Integer ID for CDR Person document.
+        Return value:
+            Returns an XML string containing an Address element
+            for the ContactDetail information in a Person document
+            identified as the CIPS contact address.
+        """
         docId   = cdr.normalize(id)
         filters = ["name:CIPS Contact Address"]
-        result  = cdr.filterDoc(self.session, filters, docId)
+        result  = cdr.filterDoc(self.__session, filters, docId)
         if type(result) == type(""):
             raise "failure extracting contact address for %s: %s" % (
                 docId, 
@@ -344,16 +268,39 @@ Please do not reply to this message.
     #----------------------------------------------------------------------
     # Generate LaTeX source for a mailer document.
     #----------------------------------------------------------------------
-    def makeLatex(self, doc, filters, mailTypeName):
+    def makeLatex(self, doc, filters, mailType):
+        """
+        Parameters:
+            doc         - Object of type Document, defined below
+            filters     - List of names of filters to be applied
+                          to the document's XML.
+            mailType    - String used by the makeLatex() function
+                          of the cdrxmllatex module to distinguish
+                          between different mailer types produced
+                          for this document's type; one of:
+                                "initial"
+                                "update"
+                                "reminder"
+        Return value:
+            Returns an object with the following methods:
+                getLatex()          - reference to string with
+                                      LaTeX source
+                getLatexPassCount() - number of times to run
+                                      the LaTeX processor on the 
+                                      source
+                getStatus()         - 0 for success
+                getMessages()       - tuple of informational or
+                                      warning messages
+        """
 
         # XXX Specify version when Mike's ready.
-        docId = cdr.normalize(doc.id)
-        result = cdr.filterDoc(self.session, filters, docId)
+        docId = cdr.normalize(doc.getId())
+        result = cdr.filterDoc(self.__session, filters, docId)
         if type(result) == type(""):
             raise "failure filtering Summary document %s: %s" % (docId, result)
         try:
             docDom = xml.dom.minidom.parseString(result[0])
-            return cdrxmllatex.makeLatex(docDom, doc.docType, mailTypeName)
+            return cdrxmllatex.makeLatex(docDom, doc.getDocType(), mailType)
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue and eValue or eType
@@ -363,6 +310,21 @@ Please do not reply to this message.
     # Convert LaTeX to PostScript.
     #----------------------------------------------------------------------
     def makePS(self, latex, passCount, basename, jobType):
+        """
+        Parameters:
+            latex       - In-memory string containing LaTex source
+                          for the current document.
+            passCount   - Number of times the LaTeX processor must
+                          be invoked for the document in order to
+                          resolve such things as bibliographic 
+                          references.
+            jobType     - Passed to the constructor for the new
+                          PrintJob object.  Must be one of:
+                                PrintJob.MAINDOC
+                                PrintJob.COVERPAGE
+        Return value:
+            New PrintJob object representing the converted document.
+        """
 
         try:
 
@@ -372,7 +334,7 @@ Please do not reply to this message.
 
             # Convert it to PostScript.
             for i in range(passCount):
-                rc = os.system("latex %s %s" % (self.LATEX_OPTS, filename))
+                rc = os.system("latex %s %s" % (self.__LATEX_OPTS, filename))
                 if rc:
                     raise "failure running LaTeX processor on %s" % filename
             rc = os.system("dvips -q %s" % basename)
@@ -387,38 +349,232 @@ Please do not reply to this message.
                                                               basename, 
                                                               eMsg)
 
+    #------------------------------------------------------------------
+    # Prepare initial settings for job.
+    #------------------------------------------------------------------
+    def __loadSettings(self):
+        self.__getDates()
+        self.__getCdrSession()
+        self.__getDbConnection()
+        self.__loadDbInfo()
+
+    #------------------------------------------------------------------
+    # Calculate needed dates (now and two months from now).
+    #------------------------------------------------------------------
+    def __getDates(self):
+        now             = time.localtime(time.time())
+        deadline        = (now[0], now[1] + 2, now[2], 0, 0, 0, 0, 0, -1)
+        deadline        = time.localtime(time.mktime(deadline))
+        self.__now      = time.strftime("%Y-%m-%dT%H:%M:%S", now)
+        self.__deadline = time.strftime("%Y-%m-%d", deadline)
+    
+    #------------------------------------------------------------------
+    # Log into the CDR server.
+    #------------------------------------------------------------------
+    def __getCdrSession(self):
+        rsp          = cdr.login("cdrmailers", "cdrmailers")
+        match        = self.__ERR_PATTERN.search(rsp)
+        if match:
+            raise "CDR login failure: %s" % match.group(1)
+        self.__session = rsp
+
+    #------------------------------------------------------------------
+    # Log into the CDR database.
+    #------------------------------------------------------------------
+    def __getDbConnection(self):
+        try:
+            self.__conn   = cdrdb.connect("CdrPublishing")
+            self.__cursor = self.__conn.cursor()
+        except cdrdb.Error, info:
+            raise "database connection failure: %s" % info[1][0]
+
+    #------------------------------------------------------------------
+    # Load the settings for this job from the database.
+    #------------------------------------------------------------------
+    def __loadDbInfo(self):
+        self.__getPubProcRow()
+        self.__getPubProcDocRows()
+        self.__getPubProcParmRows()
+
+    #------------------------------------------------------------------
+    # Load the row which matches this job from the pub_proc table.
+    #------------------------------------------------------------------
+    def __getPubProcRow(self):
+        try:
+            self.__cursor.execute("""\
+                SELECT output_dir, email
+                  FROM pub_proc
+                 WHERE id = ?""", (self.__id,))
+            row = self.__cursor.fetchone()
+            if not row:
+                raise "unable to find job %d" % self.__id
+            (self.__outputDir, self.__email) = row
+        except cdrdb.Error, info:
+            raise "database error retrieving pub_proc row: %s" % info[1][0]
+
+    #------------------------------------------------------------------
+    # Load the list of document IDs (with version numbers) for this job.
+    #------------------------------------------------------------------
+    def __getPubProcDocRows(self):
+        try:
+            self.__cursor.execute("""\
+                SELECT doc_id, doc_version
+                  FROM pub_proc_doc
+                 WHERE pub_proc = ?""", (self.__id,))
+            self.__docList = self.__cursor.fetchall()
+            if not self.__docList:
+                raise "no documents found for job %d" % self.__id
+            for doc in self.__docList: 
+                self.__docIds.append(doc[0])
+            self.__docIds = tuple(self.__docIds)
+        except cdrdb.Error, err:
+            raise "database error retrieving pub_proc_doc rows: %s" % err[1][0]
+
+    #------------------------------------------------------------------
+    # Load the parameters stored in the pub_proc_parm table for this job.
+    #------------------------------------------------------------------
+    def __getPubProcParmRows(self):
+        try:
+            self.__cursor.execute("""\
+                SELECT parm_name, parm_value
+                  FROM pub_proc_parm
+                 WHERE pub_proc = ?
+              ORDER BY id""", (self.__id))
+            rows = self.__cursor.fetchall()
+            if rows:
+                for row in rows:
+                    if not self.__parms.has_key(row[0]):
+                        self.__parms[row[0]] = []
+                    self.__parms[row[0]].append(row[1])
+                    if row[0] == "Printer":
+                        self.__printer = row[1]
+        except cdrdb.Error, info:
+            raise "database error retrieving job parms: %s" % info[1][0]
+
+    #------------------------------------------------------------------
+    # Create and populate the print queue.
+    #------------------------------------------------------------------
+    def __createQueue(self):
+        self.__queue = []
+        try:
+            os.chdir(self.__outputDir)
+        except:
+            raise "failure setting working directory to %s" % self.__outputDir
+
+    #------------------------------------------------------------------
+    # Print the jobs in the queue.
+    #------------------------------------------------------------------
+    def __printQueue(self):
+        for job in self.__queue:
+            job.Print(self.__printer, self.log)
+
+    #------------------------------------------------------------------
+    # Clean up.
+    #------------------------------------------------------------------
+    def __cleanup(self, status, message):
+        try:
+            self.__updateStatus(status, message)
+            self.__sendMail()
+            if self.__session: cdr.logout(self.__session)
+        except:
+            pass
+            
+    #------------------------------------------------------------------
+    # Update the pub_proc table's status.
+    #------------------------------------------------------------------
+    def __updateStatus(self, status, message = None):
+        try:
+            if message:
+                self.__cursor.execute("""\
+                    UPDATE pub_proc
+                       SET status = ?,
+                           messages = ?,
+                           completed = GETDATE()
+                     WHERE id = ?""", (status, message, self.__id))
+            else:
+                self.__cursor.execute("""\
+                    UPDATE pub_proc
+                       SET status = ?,
+                           completed = GETDATE()
+                     WHERE id = ?""", (status, self.__id))
+            self.__conn.commit()
+        except:
+            pass
+
+    #------------------------------------------------------------------
+    # Inform the user that the job has completed.
+    #------------------------------------------------------------------
+    def __sendMail(self):
+        try:
+            if self.__email:
+                server  = smtplib.SMTP(MailerJob.__SMTP_RELAY)
+                sender  = MailerJob.__CDR_EMAIL
+                subject = "CDR Mailer Job Status"
+                message = """\
+From: %s
+To: %s
+Subject: %s
+
+Job %d has completed.  You can view a status report for this job at:
+
+    http://mmdb2.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
+
+Please do not reply to this message.
+""" % (sender, self.__email, subject, self.__id, self.__id)
+                server.sendmail(sender, [self.__email], message)
+                server.quit()
+        except:
+            (eType, eValue) = sys.exc_info()[:2]
+            eMsg = eValue and eValue or eType
+            self.log("failure sending email to %s: %s" % self.__email, eMsg)
+
 #----------------------------------------------------------------------
 # Object to hold a document to be sent to the printer.
 #----------------------------------------------------------------------
 class PrintJob:
+    """
+    Public members:
+
+        MAINDOC
+            Used for constructor's filetype parameter to identify
+            a primary document which should be stapled if it is
+            not too large.
+
+        COVERPAGE
+            Used for constructor's filetype parameter to identify
+            an ancillary document which should not be stapled.
+
+        Print()
+            Writes the current print job to the specified printer.
+    """
     MAINDOC       = 1
     COVERPAGE     = 2
-    PAGES_PATTERN = re.compile("%%Pages: (\\d+)")
-    MAX_STAPLED   = 25
-    STAPLE_PROLOG = """\
+    __PAGES_PATTERN = re.compile("%%Pages: (\\d+)")
+    __MAX_STAPLED   = 25
+    __STAPLE_PROLOG = """\
 \033%-12345X@PJL
 @PJL SET FINISH=STAPLE
 @PJL SET STAPLEOPTION=ONE
 @PJL SET OUTBIN=OPTIONALOUTBIN2
 @PJL ENTER LANGUAGE=POSTSCRIPT
 """
-    def __init__(self, filename, type):
-        self.filename = filename
-        self.type     = type
-        self.staple   = 0
-        if type == PrintJob.MAINDOC:
+    def __init__(self, filename, filetype):
+        self.__filename = filename
+        self.__filetype = filetype
+        self.__staple   = 0
+        if self.__filetype == PrintJob.MAINDOC:
             pages = None
-            ps = open(filename)
+            ps = open(self.__filename)
             while 1:
                 line = ps.readline()
-                match = PrintJob.PAGES_PATTERN.match(line)
+                match = PrintJob.__PAGES_PATTERN.match(line)
                 if match:
                     pages = int(match.group(1))
                     break
             if not pages:
-                raise "can't find page count in %s" % filename
-            if pages <= PrintJob.MAX_STAPLED:
-                self.staple = 1
+                raise "can't find page count in %s" % self.__filename
+            if pages <= PrintJob.__MAX_STAPLED:
+                self.__staple = 1
             ps.close()
 
     #------------------------------------------------------------------
@@ -426,12 +582,12 @@ class PrintJob:
     #------------------------------------------------------------------
     def Print(self, printer, logFunc):
         logFunc("printing %s %s" % (
-            self.filename,
-            self.staple and "(stapled)" or ""))
+            self.__filename,
+            self.__staple and "(stapled)" or ""))
         if 0:
             prn = open(printer, "w")
-            doc = open(self.filename)
-            prn.write((self.staple and STAPLE_PROLOG or "") + doc.read())
+            doc = open(self.__filename)
+            prn.write((self.__staple and __STAPLE_PROLOG or "") + doc.read())
             doc.close()
             prn.close()
 
@@ -439,17 +595,59 @@ class PrintJob:
 # Object to hold information about a mailer recipient.
 #----------------------------------------------------------------------
 class Recipient:
+    """
+    Public members:
+
+        getId()
+            Returns the integer for the primary key of the CDR document
+            for a recipient of this mailer.
+
+        getName()
+            Returns the value of the title column of the document table
+            in the CDR database for a recipient of this mailer.
+
+        getAddress()
+            Returns the string containing the XML for the ContactDetail
+            used for addressing the mailer to this recipient.
+
+        getDocs()
+            Returns the list of Document objects representing documents
+            sent to this recipient.
+
+    """
     def __init__(self, id, name, address = None):
-        self.id      = id
-        self.name    = name
-        self.address = address
-        self.docs    = []
+        self.__id      = id
+        self.__name    = name
+        self.__address = address
+        self.__docs    = []
+    def getId     (self): return self.__id
+    def getName   (self): return self.__name
+    def getAddress(self): return self.__address
+    def getDocs   (self): return self.__docs
 
 #----------------------------------------------------------------------
 # Object to hold information about a mailer document.
 #----------------------------------------------------------------------
 class Document:
+    """
+    Public members:
+
+        getId()
+            Returns the integer for the primary key of the CDR document.
+
+        getTitle()
+            Returns the value of the title column of the document table
+            in the CDR database.
+
+        getDocType()
+            Returns the name of this document's CDR document type (e.g.,
+            "Summary").
+
+    """
     def __init__(self, id, title, docType):
-        self.id         = id
-        self.title      = title
-        self.docType    = docType
+        self.__id         = id
+        self.__title      = title
+        self.__docType    = docType
+    def getId     (self): return self.__id
+    def getTitle  (self): return self.__title
+    def getDocType(self): return self.__docType
