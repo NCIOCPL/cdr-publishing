@@ -374,6 +374,15 @@
       <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
@@ -808,6 +817,18 @@
       <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
@@ -1179,6 +1200,18 @@
       <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
@@ -1341,7 +1374,7 @@
    </SubsetParameter>   
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>100</ParmValue>
+    <ParmValue>50000</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -1471,7 +1504,7 @@
    </SubsetParameter>   
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>100</ParmValue>
+    <ParmValue>1000</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -1516,6 +1549,18 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
