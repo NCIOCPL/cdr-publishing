@@ -956,40 +956,16 @@
   </SubsetParameters>
   
   <SubsetSpecifications>
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect/>    
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>  
-
-   <!-- DONT'T CHANGE THE FOLLOWING SubsetSpecifications. 
-        IT DEPENDS ON THE IMPLEMENTATION IN cdrpub.py. -->
-
+  
    <!--
    ========================================================================
    Country documents. 
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version          
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'Country'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>Country</UserSelectDoctype>
+     </UserSelect>  
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1004,20 +980,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version                 
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'PoliticalSubUnit'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>PoliticalSubUnit</UserSelectDoctype>
+     </UserSelect>  
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1035,20 +1000,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version               
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'Term'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>Term</UserSelectDoctype>
+     </UserSelect> 
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1066,20 +1020,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version                
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'GlossaryTerm'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>GlossaryTerm</UserSelectDoctype>
+     </UserSelect> 
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1094,20 +1037,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version                 
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'Organization'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>Organization</UserSelectDoctype>
+     </UserSelect>
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1128,20 +1060,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version                 
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'Person'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>Person</UserSelectDoctype>
+     </UserSelect>
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1162,20 +1083,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version                
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'InScopeProtocol'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>InScopeProtocol</UserSelectDoctype>
+     </UserSelect>
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
@@ -1202,20 +1112,9 @@
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
-     <SubsetSQL>
-      SELECT ppd.doc_id,
-             ppd.doc_version             
-        FROM pub_proc_doc ppd
-        JOIN document d
-          ON d.id = ppd.doc_id
-        JOIN doc_type t
-          ON t.id = d.doc_type
-        JOIN pub_proc pp
-          ON pp.id = ppd.pub_proc
-       WHERE t.name = 'Summary'       
-         AND pp.pub_subset = 'Hotfix-Export'
-         AND pp.status NOT IN ('Success', 'Failure')  
-     </SubsetSQL>
+     <UserSelect>
+      <UserSelectDoctype>Summary</UserSelectDoctype>
+     </UserSelect>
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
