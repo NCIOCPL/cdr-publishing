@@ -1,31 +1,36 @@
 #----------------------------------------------------------------------
 #
-# $Id: MakeLatex.py,v 1.2 2001-07-09 18:30:12 bkline Exp $
+# $Id: MakeLatex.py,v 1.3 2001-07-09 21:38:02 bkline Exp $
 #
 # Create Summary mailer.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2001/07/09 18:30:12  bkline
+# Added Unicode support; temporary suppression of lists.
+#
 # Revision 1.1  2001/07/09 14:53:30  bkline
 # Initial revision
 #
 #----------------------------------------------------------------------
-import sys, xml.dom.minidom, re
+import sys, xml.dom.minidom, re, time
 
 #----------------------------------------------------------------------
 # Global variables.
 #----------------------------------------------------------------------
+footnotes  = []
 funnyChars = re.compile(u"([\"%<>_])")
 sectNames  = [u'section',u'subsection',u'subsubsection',
               u'paragraph',u'subparagraph']
-def addBackslash(match): 
+
+def cleanup(match): 
     char = match.group(0)
     if char == u'%': return u"$\\%$"
-    if char == u'"': return u"\\tQ "
+    if char == u'"': return u"\\tQ{}"
     if char == u'_': return u"\\_"
     return u"$" + char + u"$"
 
 def cleanupText(s):
-    return re.sub(funnyChars, addBackslash, s)
+    return re.sub(funnyChars, cleanup, s)
 
 #----------------------------------------------------------------------
 # Extract the text content of a DOM element.
@@ -37,10 +42,27 @@ def getTextContent(node):
             text = text + n.nodeValue
     return cleanupText(text)
 
+# XXX Add footnote handling to titles.
 def handleFootnote(footnote):
     text = getTextContent(footnote)
-    sys.stdout.write("\\footnote{%s}" % text.encode('latin-1'))
+    footnotes.append(text)
 
+def flushFootnotes():
+    global footnotes
+    if footnotes:
+        n = len(footnotes)
+        sys.stdout.write("\\footnote{%s}" % footnotes[0].encode('latin-1'))
+        if n > 1:
+            sys.stdout.write("%s" % (n == 2 and "$^,$" or "\\raisebox{.8ex}{-}"))
+            if n > 2:
+                for fn in footnotes[1:-1]:
+                    sys.stdout.write("\\addtocounter{footnote}{1}")
+                    sys.stdout.write("\\footnotetext{%s}" % 
+                                     fn.encode('latin-1'))
+            sys.stdout.write("\\footnote{%s}" % 
+                                footnotes[-1].encode('latin-1'))
+        footnotes = []
+            
 def handleListItems(list):
     for node in list.childNodes:
         if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
@@ -65,18 +87,23 @@ def handleMarkedUpText(node):
     for node in node.childNodes:
         if node.nodeType == xml.dom.minidom.Node.TEXT_NODE:
             text = cleanupText(node.nodeValue).encode('latin-1')
-            if text: sys.stdout.write(text)
+            if text: 
+                flushFootnotes()
+                sys.stdout.write(text)
         elif node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
             if node.nodeName == "Footnote":
                 handleFootnote(node)
-            elif node.nodeName == "ZLNK":
-                sys.stdout.write(getTextContent(node))
-            elif node.nodeName == "OrderedList":
-                print ""
-                handleOrderedList(node)
-            elif node.nodeName == "ItemizedList":
-                print ""
-                handleItemizedList(node)
+            else:
+                flushFootnotes()
+                if node.nodeName == "ZLNK":
+                    sys.stdout.write(getTextContent(node))
+                elif node.nodeName == "OrderedList":
+                    print ""
+                    handleOrderedList(node)
+                elif node.nodeName == "ItemizedList":
+                    print ""
+                    handleItemizedList(node)
+    flushFootnotes()
                 
 def handlePara(para):
     print "\\setcounter{qC}{0}"
@@ -105,17 +132,37 @@ title   = getTextContent(docElem.getElementsByTagName("SummaryTitle")[0])
 print """\
 \\documentclass{article}
 \\usepackage{ifthen}
+\\usepackage{fancyheadings}
+
 \\newcounter{qC}
 \\newcommand{\\tQ}{%%
   \\addtocounter{qC}{1}%%
   \\ifthenelse{\\isodd{\\value{qC}}}{``}{\'\'}%%
 }
+
+\\setlength{\\parskip}{1.2mm}
+\\setlength{\\parindent}{4mm}
+\\setlength{\\oddsidemargin}{12pt}
+\\setlength{\\textwidth}{6in}
+
+\\pagestyle{fancyplain}
+%%\\lhead{\\fancyplain{}{Summary Mailer}}
+%%\\chead{CDR0000085163}
+%%\\lfoot{%s}
+%%\\rfoot{Page \\thepage}
+
 \\begin{document}
-\\begin{center}
-{\\Large %s }
-\\end{center}
-\\raggedright
-""" % cleanupText(title).encode('latin-1')
+\\title{%s}
+\\maketitle
+
+%%\\begin{center}
+%%{\\Large %s }
+%%\\end{center}
+
+%% \\raggedright
+""" % (time.strftime("%d-%b-%Y", time.localtime()),
+       cleanupText(title).encode('latin-1'),
+       cleanupText(title).encode('latin-1'))
 for node in docElem.childNodes:
     if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
         if node.nodeName == "SummarySection":
