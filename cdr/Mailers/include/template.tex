@@ -1,0 +1,193 @@
+%% Include file for Boilerplate Mailer definitions
+%% ===============================================
+%% General Definitions for all Mailers %%
+%% ----------------------------------- %%
+  % Selecting date to return mailer as 60 from today
+  % ------------------------------------------------
+  \setdatetoday
+  \addtocounter{datenumber}{60}%
+  \setdatebynumber{\thedatenumber}%
+  \newcommand{\deadline}{%
+  \datedate
+  }
+
+  % PDQ Directory Phone/PDQ Directory Fax
+  % -------------------------------------
+  \newcommand{\pdqdirphone}{(301) 402-6722} 
+  \newcommand{\pdqdirfax}{(301) 402-6728} 
+
+  % PDQ Directory Address
+  % ---------------------
+  \newcommand\pdqdiraddress{%
+      \begin{minipage}{\linewidth}
+         \vspace{12pt}
+         Cancer Information Products and Systems, NCI  \\
+         Attn: CIAT  \\
+         PDQ Directory Coordinator  \\
+         6116 Executive Blvd, Suite 300  \\
+         Bethesda, MD 20892-8321  \\
+      \end{minipage}
+  }
+
+  % Approval Section for Mailers
+  % ----------------------------
+  \newcommand{\approval}{%
+  \begin{minipage}{\linewidth}
+     Please sign and date below:
+  
+     \renewcommand{\ewidth}{120pt}
+     \begin{entry}
+        \item[Date]             \makebox[8cm]{\hrulefill} \\
+        \item[Signature]        \makebox[8cm]{\hrulefill} \\
+        \item[Name (printed)]   \makebox[8cm]{\hrulefill} \\
+        \item[Title]            \makebox[8cm]{\hrulefill} \\
+     \end{entry}
+  \end{minipage}
+
+  We thank you for your cooperation in updating this information 
+  so that your organization's listing in PDQ is accurate.
+  
+  Please return this mailer no later than {\bfseries \deadline} by Fax
+  \pdqdirfax\ or mail to: \newline 
+  \pdqdiraddress
+}
+
+
+
+%% --------------------------------------------------------------- %%
+%% Person Mailer
+%% -------------
+\newcommand{\PersonIntro}{%
+  The information on this form reflects your current listing in
+  the National Cancer Institute's PDQ database.  Please review all 
+  information listed, and mark changes directly on the form.  
+  Please fax the form to the PDQ Directory Coordinator at \pdqdirfax, 
+  or send back in the enclosed return envelope.  If you have any 
+  questions, call the PDQ Directory Desk at \pdqdirphone. 
+}
+
+\newcommand{\CCOPIntro}{%
+  Please indicate which CCOPs you are affiliated with.
+  }
+
+%% --------------------------------------------------------------- %%
+%% Organization Mailer
+%% -------------------
+\newcommand{\OrgIntro}{%
+  The information on this form reflects your organization's current 
+  listing in the National Cancer Institute's PDQ database.  Please 
+  review all information listed, and mark changes directly on the form.
+  Please fax the form to the PDQ Directory Coordinator at \pdqdirfax, 
+  or send back in the enclosed return envelope.  If you have any 
+  questions, call the PDQ Directory Desk at \pdqdirphone.
+}
+
+
+%% --------------------------------------------------------------- %%
+%% Status and Participant Site Section
+%% -----------------------------------
+\newcommand{\StatusIntro}{%
+  Thank you for listing trial(s) conducted by your organization 
+  in the PDQ/CancerNet database.  We contact you four times a year 
+  to verify status and participating site information to ensure 
+  that your listing(s) are current and accurate.
+
+  Please review and update current status and participating site 
+  information for each of the trials listed in this packet.  Also 
+  indicate if any changes need to be made to the contact information. 
+  \newline
+  {\bfseries 
+  Please return the status and participant check, even if there are no
+  changes.
+  }
+}
+
+
+\newcommand\StatusTableIntro{%
+  The following table lists institutions and their current status on this
+  protocol.  Please indicate changes in participation status in the Yes/No
+  columns.
+}
+
+
+\newcommand\StatusTableCCOPMainIntro{%
+  The following table lists main member institutions and their current 
+  participant status on this protocol.  Please indicate changes in 
+  participation status in the Yes/No columns.
+}
+
+
+\newcommand\StatusTableCCOPAfflIntro{%
+  The following table lists affiliate member institutions and their current 
+  participant status on this protocol.  Please indicate changes in 
+  participation status in the Yes/No columns.
+}
+
+
+\newcommand\StatusDefText{%
+   \item  {\bfseries Protocol status for PDQ}
+   \renewcommand{\ewidth}{120pt}
+   \begin{entry}
+      \item[Approved] approved by NCI, but not yet ready for patient accrual
+      \item[Active]     ready for patient accrual
+      \item[Temporarily Closed] patient entry stopped pending study evaluation
+      \item[Closed]     closed to all new patient entries; previously 
+                        entered patients will continue treatment
+      \item[Completed]  study is closed and no patients are being treated or
+      followed for data collection
+      \item[Withdrawn]  study has been discontinued and withdrawn from the
+      data\-base
+   \end{entry}
+}
+
+\newcommand\CCOPDefText{%
+  \item {\bfseries NCI Cooperative Group Protocols} \newline
+        If cooperative group protocols received from CTEP indicate that they 
+        are open group-wide, all main/full member institutions (and affiliates 
+        for some groups) are listed as participating sites with the designated 
+        Principal Investigator as the contact person. Please indicate which of 
+        these institutions are currently accruing patients for the study along 
+        with the appropriate contact person for the study. Also, included is a 
+        list of member institutions that are not listed as participants on the 
+        study. Please indicate if any of these should be added. 
+
+        If there are new (main or affiliate) group members and/or CCOPs,  
+        please provide the following information on a separate sheet of paper:
+        \begin{enumerate}
+            \item  Organization name and address
+            \item  Principal investigator/contact's name
+            \item  Principal investigator/contact's phone number
+        \end{enumerate}
+
+   \item {\bfseries Inter-Group Protocols} \newline
+        For protocols conducted by more than one NCI funded cooperative group 
+        (inter-group trials), we will contact each cooperative group separately 
+        to verify participating site information. 
+}
+
+\newcommand\StatusDefinition{%
+  \subsection*{Definitions}
+  \begin{itemize}
+     \StatusDefText
+  \end{itemize}
+}
+
+\newcommand\StatusCCOPDefinition{%
+  \subsection*{Definitions}
+  \begin{itemize}
+     \StatusDefText
+     \CCOPDefText
+  \end{itemize}
+}
+
+\newcommand\ProtStatDefinition{%
+   \begin{tabbing}
+       XXX Temporarily Closed        \= Date: \makebox[4cm]{\hrulefill} \kill
+       $\bigcirc$ Approved           \> Date: \makebox[4cm]{\hrulefill} \\
+       $\bigcirc$ Active             \> Date: \makebox[4cm]{\hrulefill} \\
+       $\bigcirc$ Temporarily Closed \> Date: \makebox[4cm]{\hrulefill} \\
+       $\bigcirc$ Closed             \> Date: \makebox[4cm]{\hrulefill} \\
+       $\bigcirc$ Completed          \> Date: \makebox[4cm]{\hrulefill} \\
+       $\bigcirc$ Withdrawn          \> Date: \makebox[4cm]{\hrulefill} \\
+   \end{tabbing}
+}
