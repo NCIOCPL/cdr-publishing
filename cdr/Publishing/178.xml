@@ -82,7 +82,11 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -125,7 +129,11 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
@@ -179,6 +187,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
@@ -208,6 +220,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>   
     </SubsetFilters>
     <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
@@ -240,6 +256,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
@@ -275,6 +295,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Terminology</Subdirectory>
    </SubsetSpecification>
@@ -305,6 +329,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>GlossaryTerm</Subdirectory>
    </SubsetSpecification>
@@ -353,6 +381,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
@@ -401,6 +433,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Person</Subdirectory>
    </SubsetSpecification>
@@ -537,7 +573,11 @@
      </SubsetFilter>
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
-     </SubsetFilter> 
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>  
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -581,6 +621,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
      </SubsetFilter> 
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
@@ -637,6 +681,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
@@ -666,6 +714,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
@@ -698,6 +750,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
@@ -733,6 +789,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Terminology</Subdirectory>
    </SubsetSpecification>
@@ -763,6 +823,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>GlossaryTerm</Subdirectory>
    </SubsetSpecification>
@@ -811,6 +875,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
@@ -859,6 +927,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>Person</Subdirectory>
    </SubsetSpecification>
@@ -971,6 +1043,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>   
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -991,6 +1067,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1011,6 +1091,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1028,6 +1112,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1051,6 +1139,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1074,6 +1166,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1103,6 +1199,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1147,6 +1247,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -1353,6 +1457,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
      </SubsetFilter> 
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
@@ -1396,6 +1504,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
      </SubsetFilter> 
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
@@ -1544,6 +1656,10 @@
      <SubsetFilter>
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
     </SubsetFilters>
    </SubsetSpecification>
 
