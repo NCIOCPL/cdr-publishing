@@ -1,9 +1,17 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.63 2003-10-14 21:53:21 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.64 2003-12-10 19:55:53 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.63  2003/10/14 21:53:21  ameyer
+# Added ORDER_TOP_FRONT/BACK, ORDER_PARENT_FRONT/BACK.  Plain old ORDER_TOP
+# and ORDER_PARENT will continue to work as before, but are deprecated.
+# All future modifications should use FRONT or BACK qualifiers to guarantee
+# that the expected placement of data is what is actually seen.
+# Modified all Summary XProcs and some Protocol XProcs to use the new
+# ordering specifiers.
+#
 # Revision 1.62  2003/10/08 15:42:10  bkline
 # Added support for LOERef elements.
 #
@@ -1993,12 +2001,18 @@ def personProtocols(pp):
                        '/SpecificPerson/Person/@cdr:ref'
     orgSiteStatus    = '/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg' \
                        '/ProtocolSites/OrgSite/OrgSiteStatus'
-    docId = None
-    for child in pp.getTopNode().childNodes:
-        if child.nodeName == "DocId":
-            docId = int(re.sub(r"[^\d]+", "", getText(child)))
-            break
+    #docId = None
+    #for child in pp.getTopNode().childNodes:
+    #    if child.nodeName == "DocId":
+    #        docId = int(re.sub(r"[^\d]+", "", getText(child)))
+    #        break
+    docId = pp.getTopNode().getAttribute("id")
     if not docId: return
+    digits = re.sub(r"[^\d]+", "", docId)
+    try:
+        docId = int(digits)
+    except:
+        return
     conn   = cdrdb.connect('CdrGuest')
     cursor = conn.cursor()
     conn.setAutoCommit(1)
