@@ -386,7 +386,7 @@
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
   <SubsetDescription>Push Full-Load filtered vendor documents to Cancer.gov. 
-     Filtering and validating part will be skipped.
+     Skip filtering and validating.
   </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -806,8 +806,8 @@
 
 <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export</SubsetName>
-  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
-                     Cancer.gov. Filtering and validating will be skipped.
+  <SubsetDescription>Push Export filtered vendor documents to 
+                     Cancer.gov. Skip filtering and validating.
   </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -853,8 +853,8 @@
 
 <SystemSubset>
  <SubsetName>Hotfix-Export</SubsetName>
-  <SubsetDescription>Export the documents together with their linked documents
-    recursively.</SubsetDescription>
+  <SubsetDescription>Export documents together with their recursively linked 
+    documents.</SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1167,7 +1167,7 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
-  <SubsetDescription>Tell Cancer.gov to publish the Hotfix-Export vendor documents.</SubsetDescription>
+  <SubsetDescription>Tell Cancer.gov to publish the Hotfix-Export documents.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1212,7 +1212,7 @@
 
 <SystemSubset>
  <SubsetName>Hotfix-Remove</SubsetName>
-  <SubsetDescription>Produce the document IDs to be removed and tell vendor 
+  <SubsetDescription>Produce document IDs to be removed and tell 
     Cancer.gov to remove these documents immediately.</SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
@@ -1246,7 +1246,7 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Remove</SubsetName>
-  <SubsetDescription>Tell Cancer.gov to removed the Hotfix-Remove vendor documents.</SubsetDescription>
+  <SubsetDescription>Tell Cancer.gov to remov the Hotfix-Remove documents.</SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1287,8 +1287,8 @@
 
 <SystemSubset>
   <SubsetName>Export-Protocol</SubsetName>
-  <SubsetDescription>Produce monthly (weekly or daily) publishable vendor documents and 
-                     push these vendor documents Cancer.gov.</SubsetDescription>
+  <SubsetDescription>Produce monthly (weekly or daily) publishable protocol documents and 
+                     push these vendor documents to Cancer.gov.</SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1367,8 +1367,8 @@
 
 <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Protocol</SubsetName>
-  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
-                     Cancer.gov. Filtering and validating will be skipped.
+  <SubsetDescription>Push monthly (weekly or daily) filtered protocol documents to 
+                     Cancer.gov. Skip filtering and validating.
   </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -1414,8 +1414,8 @@
 
 <SystemSubset>
   <SubsetName>Export-Summary</SubsetName>
-  <SubsetDescription>Produce monthly (weekly or daily) publishable vendor documents and 
-                     push these vendor documents Cancer.gov.</SubsetDescription>
+  <SubsetDescription>Produce monthly (weekly or daily) publishable summary documents and 
+                     push these vendor documents to Cancer.gov.</SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1503,8 +1503,8 @@
 
 <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Summary</SubsetName>
-  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
-                     Cancer.gov. Filtering and validating will be skipped.
+  <SubsetDescription>Push monthly (weekly or daily) filtered summary documents to 
+                     Cancer.gov. Skip filtering and validating.
   </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
