@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.24 2002-07-19 15:22:47 arkd Exp $
+ $Id: pdq.dtd,v 1.25 2002-07-19 19:32:05 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -382,8 +382,8 @@
                    SummarySection+,
                    TranslationOf?,
                    PatientVersionOf?,
-                   DateLastModified?,
                    DateFirstPublished?,
+                   DateLastModified?,
                    ProfessionalDisclaimer?
                   )>
 <!ATTLIST Summary id CDATA #REQUIRED>
@@ -928,6 +928,8 @@
 				MEMBERSHIP*,
 				NOTES?
 			       )>
+
+<!ELEMENT ID (#PCDATA)>
 
 <!ELEMENT NAME (SNAME,
 		FIRSTNAME,
