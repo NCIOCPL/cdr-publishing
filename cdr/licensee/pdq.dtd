@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.49 2005-03-23 19:53:16 bkline Exp $
+   $Id: pdq.dtd,v 1.50 2005-03-24 13:49:26 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.49  2005/03/23 19:53:16  bkline
+   Added new NCIThesaurusConceptID attribute to Term element.  Added new
+   elements SummaryDescription and SummaryURL to SummaryMetadata element.
+
    Revision 1.48  2004/10/14 17:56:35  ameyer
    Replace placeholder Multimedia element with new MediaLink.
    Added definitions and positioning for MediaLink.
@@ -472,9 +476,9 @@
 
 <!ELEMENT SummaryMetaData (SummaryType,
                            SummaryAudience,
+                           SummaryLanguage,
                            SummaryDescription,
                            SummaryURL,
-                           SummaryLanguage,
                            MainTopics+,
                            SecondaryTopics*
                           )>
