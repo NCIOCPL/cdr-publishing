@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.12 2002-04-05 16:32:27 arkd Exp $
+ $Id: pdq.dtd,v 1.13 2002-04-05 16:42:39 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -721,6 +721,7 @@
 
 <!ELEMENT MemberOfCooperativeGroup (#PCDATA)>
 <!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
+<!ATTLIST MemberOfCooperativeGroup  MemberType (Main|Affiliate) #IMPLIED>
 
 <!ELEMENT MemberOfMedicalSociety (#PCDATA)>
 
