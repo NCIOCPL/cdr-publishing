@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.7 2002-10-22 20:23:29 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.8 2002-10-23 11:44:08 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2002/10/22 20:23:29  bkline
+# *Really* fixed subset name.
+#
 # Revision 1.6  2002/10/22 20:22:19  bkline
 # Switch to use of makeIndex() from the base class.  Fixed subset name.
 #
@@ -132,7 +135,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
-            doc.latex = self.makeLatex(doc, filters)
+            doc.latex = self.makeLatex(doc, filters, '')
 
     #------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
@@ -142,7 +145,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         f = open(filename, "w")
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
-        for country, zip, recip, doc in self.__index:
+        for country, zip, recip, doc in self.getIndex():
             title = doc.getTitle()
             if len(title) > 60: title = "%s ..." % title[:60]
             f.write("  Recipient: %010d\n" % recip.getId())
@@ -165,7 +168,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
             raise "CoverLetter parameter missing"
         coverLetterName     = 'd:/cdr/mailers/include/' + coverLetterParm[0]
         coverLetterTemplate = open(coverLetterName).read()
-        for elem in self.__index:
+        for elem in self.getIndex():
             recip, doc = elem[2:]
             self.__makeMailer(recip, doc, coverLetterTemplate)
 
