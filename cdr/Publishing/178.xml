@@ -66,7 +66,7 @@
       <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Countries</Subdirectory>
+    <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -98,7 +98,7 @@
       <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>PoliticalSubUnits</Subdirectory>
+    <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -133,7 +133,7 @@
       <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Terms</Subdirectory>
+    <Subdirectory>Terminology</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -163,7 +163,7 @@
       <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>GlossaryTerms</Subdirectory>
+    <Subdirectory>GlossaryTerm</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -211,7 +211,7 @@
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Organizations</Subdirectory>
+    <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -259,7 +259,7 @@
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Persons</Subdirectory>
+    <Subdirectory>Person</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -296,7 +296,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>OpenProtocols</Subdirectory>
+    <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -333,7 +333,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>ClosedProtocols</Subdirectory>
+    <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -386,7 +386,7 @@
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Summaries</Subdirectory>
+    <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
@@ -509,7 +509,7 @@
       <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Countries</Subdirectory>
+    <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -541,7 +541,7 @@
       <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>PoliticalSubUnits</Subdirectory>
+    <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -576,7 +576,7 @@
       <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Terms</Subdirectory>
+    <Subdirectory>Terminology</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -606,7 +606,7 @@
       <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>GlossaryTerms</Subdirectory>
+    <Subdirectory>GlossaryTerm</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -654,7 +654,7 @@
       <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Organizations</Subdirectory>
+    <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -702,7 +702,7 @@
       <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Persons</Subdirectory>
+    <Subdirectory>Person</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -739,7 +739,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>OpenProtocols</Subdirectory>
+    <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -776,7 +776,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>ClosedProtocols</Subdirectory>
+    <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -832,7 +832,7 @@
       <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>Summaries</Subdirectory>
+    <Subdirectory>Summary</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
@@ -1421,7 +1421,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>OpenProtocols</Subdirectory>
+    <Subdirectory>ProtocolActive</Subdirectory>
    </SubsetSpecification>
 
    <!--
@@ -1458,7 +1458,7 @@
       <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
-    <Subdirectory>ClosedProtocols</Subdirectory>
+    <Subdirectory>ProtocolClosed</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
