@@ -1,15 +1,18 @@
 #
 # This script starts the publishing service.
 #
-# $Id: StartPubJobs.py,v 1.3 2002-02-06 17:09:43 pzhang Exp $
+# $Id: StartPubJobs.py,v 1.4 2002-02-19 23:14:18 ameyer Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2002/02/06 17:09:43  pzhang
+# This is an obsolete version. Use PublishingService.py instead.
+#
 # Revision 1.2  2002/02/06 16:14:34  pzhang
 # Updated SCRIPT definition.
 #
 
-import cdrdb, os
+import cdr, cdrdb, os
 PYTHON = "d:\\python\\python.exe"
-SCRIPT = "d:\\cdr\\scripts\\publish.py"
+SCRIPT = cdr.BASEDIR + "/publishing/publish.py"
 query  = """\
 SELECT id
   FROM pub_proc
