@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.5 2003-07-02 21:22:53 bkline Exp $
+# $Id: cdrlatextables.py,v 1.6 2003-12-16 20:31:11 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2003/07/02 21:22:53  bkline
+# Added code to add running head for tables which span multiple pages.
+#
 # Revision 1.4  2003/05/19 18:41:57  bkline
 # Modified handling of citations in table cells to allow line breaking
 # after a comma in a series of citation numbers (request #735)
@@ -31,6 +34,7 @@ IN_THEAD    = 2
 IN_TFOOT    = 3
 WIDTH_EXPR  = re.compile(r"(\d*\.?\d*)([^\d.]+)")
 
+TABLE_DEBUG = 0
 tableStack = []
 tableCellDepth = 0
 
@@ -78,7 +82,9 @@ class Group:
     # Recursively assemble the LaTeX for a block of cells.
     #def assembleRows(self, startRow, startCol, numRows, numCols, outer = 0):
     def assembleRows(self, block, outer = 0, endOfParent = 0):
-        #sys.stderr.write("outer=%d endOfParent=%d\n" % (outer, endOfParent))
+        if TABLE_DEBUG:
+            sys.stderr.write("outer=%d endOfParent=%d\n" % (outer,
+                                                            endOfParent))
         if not block: return ""
         output      = ""
         curRow      = 0
@@ -86,20 +92,24 @@ class Group:
         rowsLeft    = len(block)
         while rowsLeft > 0:
             row = block[curRow]
-            #sys.stderr.write("curRow=%d rowsLeft = %d numCols=%d\n" % 
-            #       (curRow, rowsLeft, len(row)))
+            if TABLE_DEBUG:
+                sys.stderr.write("curRow=%d rowsLeft = %d numCols=%d\n" % 
+                                 (curRow, rowsLeft, len(row)))
             if not row:
                 raise StandardError(
                         "Internal Error: empty row in assembleRows()")
             maxCellHeight = 1
             minCellHeight = sys.maxint
             for cell in row:
-                #sys.stderr.write("cell.numRows=%d\n" % cell.numRows)
+                if TABLE_DEBUG:
+                    sys.stderr.write("cell.numRows=%d\n" % cell.numRows)
                 if maxCellHeight < cell.numRows:
                     maxCellHeight = cell.numRows
                 if minCellHeight > cell.numRows:
                     minCellHeight = cell.numRows
             if maxCellHeight > rowsLeft:
+                if TABLE_DEBUG:
+                    sys.stderr.write("cell content: %s\n" % cell.content)
                 raise StandardError(
                         "Row ranges for spanning cells cannot overlap")
             if maxCellHeight == rowsLeft:
@@ -117,8 +127,9 @@ class Group:
                     # new page.  LaTeX does the right thing if no page break
                     # occurs; that is, the extra \hline does not cause a
                     # doubly-thick line to appear.
-                    #sys.stderr.write("lastRow=%d allHline=%d\n" % (lastRow, 
-                    #                                               allHline))
+                    if TABLE_DEBUG:
+                        sys.stderr.write("lastRow=%d allHline=%d\n" %
+                                         (lastRow, allHline))
                     if allHline and (not lastRow or not endOfParent):
                         output += "\\hline\n"
             else:
@@ -140,7 +151,8 @@ class Group:
         topRow      = rows[0]
         numCells    = len(topRow)
         i           = 0
-        #sys.stderr.write("setMixedRow: %d rows\n" % len(topRow))
+        if TABLE_DEBUG:
+            sys.stderr.write("setMixedRow: %d rows\n" % len(topRow))
         while i < numCells:
             cell = topRow[i]
             if cell.numRows == len(rows):
@@ -284,12 +296,14 @@ class Cell:
         col = group.cols[i]
 
         # Skip past any columns spanning additional rows.
-        #sys.stderr.write("i=%d len(group.cols)=%d col.moreRows=%d\n" %
-        #       (i, len(group.cols), col.moreRows))
+        if TABLE_DEBUG:
+            sys.stderr.write("i=%d len(group.cols)=%d col.moreRows=%d\n" %
+                             (i, len(group.cols), col.moreRows))
         while i < len(group.cols) and col.moreRows > 0:
             col.moreRows -= 1
             i += col.colSpan
-            #sys.stderr.write("i is now %d\n" % i)
+            if TABLE_DEBUG:
+                sys.stderr.write("i is now %d\n" % i)
             if i >= len(group.cols):
                 raise StandardError("Too many table cells, Herr Mozart!")
             col = group.cols[i]
@@ -444,7 +458,8 @@ def openGroup(pp):
                 cols.append(Column("_col%d" % (i + 1), i + 1, "1*",
                                    colSep, rowSep))
     nCols = len(cols)
-    #sys.stderr.write("nCols=%d\n" % nCols)
+    if TABLE_DEBUG:
+        sys.stderr.write("nCols=%d\n" % nCols)
 
     # Parse the width specifications for each column.
     widthSpecs = []
@@ -476,13 +491,16 @@ def openGroup(pp):
             amount = 1
             widthType = "*"
         widthSpecs.append(WidthSpec(widthType, amount))
-        #sys.stderr.write("widthType: %s; amount: %f\n" % (widthType, amount))
+        if TABLE_DEBUG:
+            sys.stderr.write("widthType: %s; amount: %f\n" % (widthType,
+                                                              amount))
 
     # Determine how much space is used by the explicitly specified widths.
     # During this pass we also total up the proportional units.
     usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP + 
                                (nCols + 1) * RULE_WIDTH)
-    #sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
+    if TABLE_DEBUG:
+        sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
     propTotal = 0
     propCols  = 0
     for spec in widthSpecs:
@@ -524,8 +542,9 @@ def openGroup(pp):
   \\begin{%s}[t]{%s@{}l@{}%s}%s
 """ % (tableType, sideFrame, sideFrame, hline))
 
-    #for col in cols:
-    #   sys.stderr.write("%s\n" % col.toString())
+    if TABLE_DEBUG:
+        for col in cols:
+            sys.stderr.write("%s\n" % col.toString())
 
     # Push this group onto the stack.
     table.groupStack.append(Group(cols, framing, colSep, rowSep, outer))
@@ -545,9 +564,10 @@ def closeGroup(pp):
     headEnds = 1
     bodyEnds = 1
     footEnds = 1
-    #sys.stderr.write("len(group.head)=%d\n" % len(group.head))
-    #sys.stderr.write("len(group.body)=%d\n" % len(group.body))
-    #sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
+    if TABLE_DEBUG:
+        sys.stderr.write("len(group.head)=%d\n" % len(group.head))
+        sys.stderr.write("len(group.body)=%d\n" % len(group.body))
+        sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
     if group.body: 
         headEnds = 0
     if group.foot:
@@ -562,9 +582,10 @@ def closeGroup(pp):
         hline    = group.framing.bottom and "\\hline\n" or ""
         tabEnd   = "  \\end{longtable}}\n"
         vspace   = "  \\vspace{6pt}\n"
-    #sys.stderr.write("headEnds=%d bodyEnds=%d footEnds=%d\n" % (headEnds,
-    #                                                            bodyEnds,
-    #                                                            footEnds))
+    if TABLE_DEBUG:
+        sys.stderr.write("headEnds=%d bodyEnds=%d footEnds=%d\n" % (headEnds,
+                                                                    bodyEnds,
+                                                                    footEnds))
     endHead = group.head and "  \\endhead\n" or ""       
     body = (group.assembleRows(group.head, group.outer, headEnds) + endHead +
             group.assembleRows(group.body, group.outer, bodyEnds) +
@@ -648,10 +669,11 @@ def openRow(pp):
     except: rowSep = group.rowSep
     group.row = Row(rowSep)
     group.currentCellRow = []
-    #sys.stderr.write("where? %d\n" % group.where)
-    #sys.stderr.write("len(group.head)=%d\n" % len(group.head))
-    #sys.stderr.write("len(group.body)=%d\n" % len(group.body))
-    #sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
+    if TABLE_DEBUG:
+        sys.stderr.write("where? %d\n" % group.where)
+        sys.stderr.write("len(group.head)=%d\n" % len(group.head))
+        sys.stderr.write("len(group.body)=%d\n" % len(group.body))
+        sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
     if   group.where == IN_THEAD: group.head.append(group.currentCellRow)
     elif group.where == IN_TBODY: group.body.append(group.currentCellRow)
     elif group.where == IN_TFOOT: group.foot.append(group.currentCellRow)
@@ -906,5 +928,6 @@ def closeCell(pp):
     group.currentCellRow[-1].content = pp.procNode.releaseOutput().strip()
     global tableCellDepth
     tableCellDepth -= 1
-    #sys.stderr.write("CONTENT: %s\n" % group.currentCellRow[-1].content)
+    if TABLE_DEBUG:
+        sys.stderr.write("CONTENT: %s\n" % group.currentCellRow[-1].content)
     #pp.setOutput("%s\n" % group.tail)
