@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.55 2003-08-06 18:17:32 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.56 2003-08-07 20:54:27 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.55  2003/08/06 18:17:32  bkline
+# Changed \newcommand(\ewidth ... to \renewcommand ... (because Alan added
+# another \newcommand for this variable last month).
+#
 # Revision 1.54  2003/07/15 20:55:14  bkline
 # Fixed bug in state-plus-zipcode formatting.  Adjusted to accomodate
 # changes in vendor representation of lead org personnel in protocols.
@@ -540,7 +544,7 @@ class Address:
                     self.zipPos = getText(child)
                 elif child.nodeName == "PostalCode_ZIP":
                     self.zip = getText(child)
-                    
+
     def format(self, includeCountry = 0):
         """
         Basic address formatter.  May be embellished by calling routine.
@@ -1353,26 +1357,6 @@ def orgLocs(pp):
     # Pump out the location information for the organization.
     pp.setOutput(output)
 
-def getCoopMemberships(node):
-    "Extract an organization's memberships in cooperative groups."
-    coops = []
-    pathToCoopName = "CooperativeGroup/OfficialName/Name"
-    for child in node.childNodes:
-        if child.nodeName in ("AffiliateMemberOf", "MainMemberOf"):
-            coopName = getTextByPath(pathToCoopName, child)
-            if coopName:
-                coops.append(coopName)
-            #for grandchild in child.childNodes:
-            #    if grandchild.nodeName == "CooperativeGroup":
-            #        for greatgrandchild in grandchild.childNodes:
-            #            if greatgrandchild.nodeName == "OfficialName":
-            #                for greatgreatgrandchild in \
-            #                        greatgrandchild.childNode:
-            #                    if greatgreatgrandchild.nodeName == "Name":
-            #                        coops.append(getText(
-            #                            greatgreatgrandchild))
-    return coops
-
 def orgAffil(pp):
     "Handle the organization's affiliations."
 
@@ -1382,8 +1366,8 @@ def orgAffil(pp):
     for child in pp.getCurNode().childNodes:
         if child.nodeName == "MemberOfProfessionalOrganization":
             profOrgs.append(getText(child))
-        elif child.nodeName == "MemberOfCooperativeGroups":
-            coops = getCoopMemberships(child)
+        elif child.nodeName == "MemberOfCooperativeGroup":
+            coops.append(getText(child))
 
     # Do nothing if there are no affiliations.
     if not profOrgs and not coops:
@@ -1414,20 +1398,6 @@ def orgAffil(pp):
             output += "  \\item %s\n" % org
         output += "  \\end{itemize}\n"
     pp.setOutput(output)
-
-def getState(node):
-    """
-    Extract the state name from a PoliticalSubUnit_State element.
-    Use the short name if there is one; otherwise take the long one.
-    """
-    shortName = None
-    fullName  = None
-    for child in node.childNodes:
-        if child.nodeName == "PoliticalSubUnitShortName":
-            shortName = getText(child)
-        elif child.nodeName == "PoliticalSubUnitFullName":
-            fullName = getText(child)
-    return shortName or fullName
 
 def protLeadOrg(pp):
     "Extract everything we need from the ProtocolLeadOrg element into macros."
@@ -2183,7 +2153,7 @@ def getChairInfo(personnelNode):
      \\item[Address]                  %s
      \\item[Phone]                    %s
 """ % (name, role, address, phone)
-    
+
 def statPersonnel(pp):
     "Generate macros for the lead org's other personnel."
 
