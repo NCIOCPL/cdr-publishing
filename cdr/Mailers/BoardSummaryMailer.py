@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.7 2002-11-08 21:46:08 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.8 2003-01-28 15:20:52 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2002/11/08 21:46:08  bkline
+# Ready for user testing.
+#
 # Revision 1.6  2001/10/09 12:07:19  bkline
 # Removed superfluous constructor override.  Removed title truncation
 # from top cover page.  Fixed typo (this -> self).
@@ -26,7 +29,7 @@
 #
 #----------------------------------------------------------------------
 
-import cdrdb, cdrmailer, re, sys, UnicodeToLatex
+import cdrdb, cdrmailer, re, sys, UnicodeToLatex, time
 
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
@@ -207,6 +210,8 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         name     = recipient.getAddress().getAddressee()
         latex    = template.replace('@@REVIEWER@@', name)
         latex    = latex.replace('@@SUMMARYTITLE@@', docTitle)
+        latex    = latex.replace('@@MAILERID@@', 'CDR%010d' % mailerId)
+        latex    = latex.replace('@@DATE@@', time.strftime("%B %d, %Y"))
         basename = 'CoverLetter-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.COVERPAGE
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
