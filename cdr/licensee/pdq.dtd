@@ -190,8 +190,7 @@
 <!ELEMENT Question (%TextElements;)*>
 <!ELEMENT Answer  (%TextElements;)*>
 
-<!ELEMENT Contact (ContactName*, ContactDetail)>
-<!ELEMENT ContactName (#PCDATA)>
+<!ELEMENT Contact (#PCDATA)>
 
 <!ELEMENT ContactDetail (%Location;)
 ><!ATTLIST ContactDetail id CDATA #IMPLIED>
@@ -434,7 +433,7 @@
 <!-- The Diagnosis elements are links to Terminology with contents the
      preferred name.
 -->     
-<!ELEMENT SectMetaData (Diagnosis*,
+<!ELEMENT SectMetaData (SpecificDiagnosis*,
                         SectionType*
                        )
 >
@@ -456,7 +455,7 @@
 
 <!ELEMENT Protocol (ProtocolIDs,
                     FundingInfo?,
-                    ProtocolSponsors?,
+                    ReimbursementApproval*,
                     ProtocolTitle+,
                     ProtocolAbstract,
                     ProtocolDetail+,
@@ -482,6 +481,8 @@
 <!ELEMENT GrantContractNo (#PCDATA)>
 <!ELEMENT OtherGrantContractInfo (GrantContractNo)>
 
+<!ELEMENT ReimbursementApproval (#PCDATA)>
+                    
 <!ELEMENT ProtocolSponsors (SponsorName+)>
 <!ELEMENT SponsorName (#PCDATA)>
 
@@ -649,7 +650,7 @@
 <!ATTLIST SiteName ref CDATA #REQUIRED>
 <!ELEMENT SiteContact (ProtPerson?,
                        TitleRole,
-                       ContactDetail
+                       Contact
                       )
 >
 
@@ -663,16 +664,17 @@
 
 -->
 
+<!-- ProfessionalInformation only when IncludeInDirectory has value Include -->
 <!ELEMENT Person (PersonNameInformation,
-                  ProfessionalInformation?,
-                  PersonLocations
+                  ProfessionalInformation?, 
+                  PersonLocations,
+                  DateFirstPublished,
+                  DateLastModified
                  )
                 >
 <!ATTLIST Person id CDATA #REQUIRED>
 
-<!ELEMENT ProfessionalInformation (PhysicianDetails?,
-                                   GeneticsProfessionalDetails?
-                                  )
+<!ELEMENT ProfessionalInformation (PhysicianDetails?)
 >
 <!ELEMENT PhysicianDetails (PhysicianSpecialtyInformation*,
                             PhysicianMembershipInformation?
@@ -682,6 +684,9 @@
                                          | OtherSpecialty
                                         )+
 >
+
+
+<!-- These are board certified specialties that PDQ verifies -->
 <!ELEMENT BoardCertifiedSpecialty (BoardCertifiedSpecialtyName,
                                    Certified, Verified?
                                   )
@@ -698,39 +703,7 @@
 <!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
 <!ELEMENT MemberOfMedicalSociety (#PCDATA)>
 
-<!ELEMENT GeneticsProfessionalDetails (GeneticsSpecialtyInformation+,
-                                       InterdisciplinaryTeamMember,
-                                       GeneticsTeamServices+,
-                                       ProvidesServices,
-                                       AcceptsCalls,
-                                       ServiceLimitations?,
-                                       FamilialCancerSyndromes+,
-                                       MemberOfGeneticsSociety
-                                      )
->                                      
-<!ELEMENT GeneticsSpecialtyInformation (GeneticsSpecialtyName,
-                                        GeneticsBoardCertification*)>
-<!ELEMENT GeneticsSpecialtyName (#PCDATA)>
-<!ELEMENT GeneticsBoardCertification (GeneticsBoardName,
-                                      CertificationVerification?,
-                                      CertificationStatus,
-                                      EligibilityYear?
-                                     )
->
-<!ELEMENT GeneticsBoardName (#PCDATA)>
-<!ELEMENT CertificationVerification (#PCDATA)>
-<!ELEMENT CertificationStatus (#PCDATA)>
-<!ELEMENT EligibilityYear (#PCDATA)>
-<!ELEMENT InterdisciplinaryTeamMember (#PCDATA)>
-<!ELEMENT GeneticsTeamServices (#PCDATA)>
-<!ELEMENT ProvidesServices (#PCDATA)>
-<!ELEMENT AcceptsCalls (#PCDATA)>
-<!ELEMENT ServiceLimitations (#PCDATA)>
-
-<!ELEMENT FamilialCancerSyndromes (#PCDATA)>
-<!ATTLIST FamilialCancerSyndromes ref CDATA #IMPLIED>
-
-<!ELEMENT MemberOfGeneticsSociety (#PCDATA)>
+<!-- Insert DTD for the Genetics Professionals Directory -->
 
 <!ELEMENT PersonLocations (Home?,
                            PrivatePracticeLocation*,
@@ -744,23 +717,12 @@
 <!ELEMENT OtherPracticeLocation (PersonOrganizationLocation,
                                  PersonTitle?,
                                  PersonRole*,
-                                 SpecificContact?,
-                                 ComplexAffiliation*
+                                 Contact?
                                 )
 ><!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
 
 <!ELEMENT PersonOrganizationLocation (%Location;)>
 <!ATTLIST PersonOrganizationLocation ref CDATA #IMPLIED>
-
-<!ELEMENT SpecificContact (%Location;)>
-<!ATTLIST SpecificContact ref CDATA #IMPLIED>
-
-<!ELEMENT ComplexAffiliation (OrganizationRef, RoleAtAffiliatedOrganization)>
-
-<!ELEMENT OrganizationRef (#PCDATA)>
-<!ATTLIST OrganizationRef ref CDATA #IMPLIED>
-
-<!ELEMENT RoleAtAffiliatedOrganization (#PCDATA)>
 
 <!-- End Persons -->
 
