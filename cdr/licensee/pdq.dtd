@@ -1,12 +1,23 @@
 <!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.31 2002-08-22 21:25:34 arkd Exp $
+   $Id: pdq.dtd,v 1.32 2002-09-04 12:33:39 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
-   Revision 1.5    2001/12/17  Michael M Rubenstein
+   Original version  2001/12/17  Michael M Rubenstein
   
    Preliminary version 
+   
+   $Log: not supported by cvs2svn $
+   Revision 1.31  2002/08/22 21:25:34  arkd 
+   Common Elements:
+   OrganizationName (optional, multiple, PCDATA) added to Entity.
+
+   Summary:
+   In SummarySection:
+   (%ParaLevelElements;)*,SummarySection*
+     changed to:
+   ((%ParaLevelElements;)*|SummarySection*)*
    
 -->
 
