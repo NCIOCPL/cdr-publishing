@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.38 2003-03-17 15:23:10 bkline Exp $
+   $Id: pdq.dtd,v 1.39 2003-04-01 19:12:39 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -950,10 +950,10 @@
 
 <!ELEMENT RelationshipType (#PCDATA)>
 
-<!ELEMENT MenuInformation (MenuTerm+)>
+<!ELEMENT MenuInformation (MenuItem+)>
 
-<!ELEMENT MenuTerm (MenuType, MenuParent*, DisplayName?)>
-<!ATTLIST MenuTerm SortOrder CDATA #IMPLIED>
+<!ELEMENT MenuItem (MenuType, MenuParent*, DisplayName?)>
+<!ATTLIST MenuItem SortOrder CDATA #IMPLIED>
 
 <!ELEMENT MenuType (#PCDATA)>
 
