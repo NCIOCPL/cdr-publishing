@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.44 2003-08-12 18:18:23 bkline Exp $
+   $Id: pdq.dtd,v 1.45 2003-08-15 13:55:36 bkline Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.44  2003/08/12 18:18:23  bkline
+   Added definitions for Audience and Dictionary (GlossaryTerm section).
+
    Revision 1.43  2003/07/15 20:11:05  bkline
    Removed duplicate declaration for DefinitionText.
 
@@ -513,7 +516,7 @@
                     ProtocolRelatedLinks?,
                     PublishedResults*,
                     ProtocolPhase+,
-                    ProtocolSpecialCategory?,
+                    ProtocolSpecialCategory*,
 		    ProtocolAdminInfo,
 		    DateFirstPublished?,
 		    DateLastModified?
