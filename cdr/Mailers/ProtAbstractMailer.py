@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.18 2003-06-24 12:24:11 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.19 2003-06-27 14:03:33 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.18  2003/06/24 12:24:11  bkline
+# Added code to support inline markup in protocol title.
+#
 # Revision 1.17  2003/01/22 15:04:25  bkline
 # Fixed the fix for Unicode titles in cover letters (converted title
 # from utf-8 encoding before applying UnicodeToLatex.convert()).
@@ -161,8 +164,9 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __getDocuments(self):
         filters = [
-            "name:Denormalization Filter (1/1): InScope Protocol",
-            "name:Denormalization: sort OrganizationName for Postal Address"
+            "set:Mailer InScopeProtocol Set"
+            #"name:Denormalization Filter (1/1): InScope Protocol",
+            #"name:Denormalization: sort OrganizationName for Postal Address"
         ]
         for docId in self.getDocuments().keys():
             self.log("generating LaTeX for CDR%010d" % docId)
