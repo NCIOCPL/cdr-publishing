@@ -1,9 +1,15 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.68 2004-11-03 17:11:48 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.69 2004-11-12 15:28:37 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.68  2004/11/03 17:11:48  bkline
+# Added \par instruction to ensure break between paragraphs; increased
+# paragraph spacing from 1.2mm to 3.0mm; fixed problem with list spacing
+# (code wasn't restoring spacing when leaving a nested list).  See
+# issue #1364.
+#
 # Revision 1.67  2004/08/02 17:32:39  bkline
 # Extended timeouts on SQL queries to 5 minutes (request #1286).
 #
@@ -2820,12 +2826,16 @@ ENDSUMMARYPREAMBLE=r"""
   \setlength{\headheight}{28pt}
   \setlength{\headwidth}{6.5in}
   \setlength{\textwidth}{6.5in}
-  \setlength{\textheight}{8.0in}
+  \setlength{\textheight}{8.5in}
   \setlength{\oddsidemargin}{0in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
-  \renewcommand{\footskip}{70pt}
+  %----------------------------------------------------------------------
+  % Example of how to get debugging output to the console.
+  %----------------------------------------------------------------------
+  \typeout{footskip is \footskip}
+  \renewcommand{\footskip}{40pt}
 
   %% -- END -- Document Declarations and Definitions
 
