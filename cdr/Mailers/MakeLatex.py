@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: MakeLatex.py,v 1.3 2001-07-09 21:38:02 bkline Exp $
+# $Id: MakeLatex.py,v 1.4 2002-01-22 22:30:12 bkline Exp $
 #
 # Create Summary mailer.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2001/07/09 21:38:02  bkline
+# Added custom footnote marker output.  Adjusted page layout dimensions.
+#
 # Revision 1.2  2001/07/09 18:30:12  bkline
 # Added Unicode support; temporary suppression of lists.
 #
@@ -130,7 +133,7 @@ docXml = sys.stdin.read()
 docElem = xml.dom.minidom.parseString(docXml).documentElement
 title   = getTextContent(docElem.getElementsByTagName("SummaryTitle")[0])
 print """\
-\\documentclass{article}
+\\documentclass[letterpaper|11pt]{article}
 \\usepackage{ifthen}
 \\usepackage{fancyheadings}
 
@@ -142,13 +145,14 @@ print """\
 
 \\setlength{\\parskip}{1.2mm}
 \\setlength{\\parindent}{4mm}
-\\setlength{\\oddsidemargin}{12pt}
-\\setlength{\\textwidth}{6in}
+%%\\setlength{\\oddsidemargin}{12pt}
+%%\\setlength{\\textwidth}{6in}
+%%\\setlength{\\topmargin}{40pt}
 
-\\pagestyle{fancyplain}
+\\pagestyle{fancy}
 %%\\lhead{\\fancyplain{}{Summary Mailer}}
 %%\\chead{CDR0000085163}
-%%\\lfoot{%s}
+%%\\lfoot{%%s}
 %%\\rfoot{Page \\thepage}
 
 \\begin{document}
@@ -160,9 +164,9 @@ print """\
 %%\\end{center}
 
 %% \\raggedright
-""" % (time.strftime("%d-%b-%Y", time.localtime()),
-       cleanupText(title).encode('latin-1'),
+""" % (cleanupText(title).encode('latin-1'),
        cleanupText(title).encode('latin-1'))
+#time.strftime("%d-%b-%Y", time.localtime()),
 for node in docElem.childNodes:
     if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
         if node.nodeName == "SummarySection":
