@@ -1,6 +1,6 @@
-<!-- CDR DTD
+<!-- PDQ DTD
 
- $Id: pdq.dtd,v 1.8 2002-03-20 16:51:54 arkd Exp $
+ $Id: pdq.dtd,v 1.9 2002-04-03 16:14:26 arkd Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -210,6 +210,7 @@
                         )>
 
 <!ELEMENT ContactName (#PCDATA)>
+<!ATTLIST ContactName ref CDATA #IMPLIED>
 
 <!ELEMENT Street (#PCDATA)>
 
@@ -664,8 +665,7 @@
 
 <!ELEMENT StatusDate (#PCDATA)>
 
-<!ELEMENT LeadOrgPersonnel (ProtPerson, PersonRole+)>
-<!ATTLIST LeadOrgPersonnel  id CDATA #REQUIRED>
+<!ELEMENT LeadOrgPersonnel (ProtPerson, PersonRole)>
 
 <!ELEMENT ProtPerson (PersonNameInformation, Contact)>
 <!ATTLIST ProtPerson ref CDATA #IMPLIED>
@@ -735,10 +735,8 @@
 <!ATTLIST Home id CDATA #IMPLIED>
 
 <!ELEMENT OtherPracticeLocation (PersonOrganizationName,
-				 PersonOrganizationLocation,
-                                 PersonTitle?,
-                                 PersonRole*,
-                                 Contact?)>
+					   PersonTitle?,
+					   PersonOrganizationLocation)>
 <!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
 
 <!ELEMENT PersonOrganizationName (#PCDATA)>
@@ -753,7 +751,7 @@
 
 <!ELEMENT Organization (OrganizationNameInformation,
                         OrganizationParent?,
-                        OrganizationDetails,
+                        IncludeInDirectory',
                         OrganizationLocations,
                         OrganizationAffiliations?,
                         OrganizationType+,
@@ -781,19 +779,20 @@
 <!ELEMENT OrganizationParent (#PCDATA)>
 <!ATTLIST OrganizationParent ref CDATA #IMPLIED>
 
-<!ELEMENT OrganizationDetails (IncludeInDirectory+)>
-
 <!ELEMENT IncludeInDirectory EMPTY>
 <!ATTLIST IncludeInDirectory Directory (Genetics | Treatment) #REQUIRED>
+
+<!--At present there will be no genetics directory-->
 
 <!ELEMENT PreferredProtocolContactMode (#PCDATA)>
 
 <!ELEMENT OrganizationLocations (OrganizationLocation+)>
-<!ATTLIST OrganizationLocations id CDATA #IMPLIED>
+
 
 <!ELEMENT OrganizationLocation (%Location;)>
 <!ATTLIST OrganizationLocation IncludeParentName (Yes) #IMPLIED
                                OrderParentNameFirst (Yes) #IMPLIED>
+<!ATTLIST OrganizationLocation id CDATA #IMPLIED>
 
 <!ELEMENT OrganizationAffiliations (ResearchBaseFor*,
                                     MemberOfProfessionalOrganization*,
@@ -839,14 +838,12 @@
 <!ELEMENT TermPronunciation (#PCDATA)>
 
 <!ELEMENT TermDefinition (%TextSectionElements;)*>
-<!ATTLIST TermDefinition id CDATA #IMPLIED>
 
 <!ELEMENT SpanishTermName (#PCDATA)>
 
 <!ELEMENT SpanishTermPronunciation (#PCDATA)>
 
 <!ELEMENT SpanishTermDefinition (%TextSectionElements;)*>
-<!ATTLIST SpanishTermDefinition id CDATA #IMPLIED>
 
 <!-- End Glossary -->
 
@@ -878,7 +875,6 @@
                      )>
 
 <!ELEMENT DefinitionText (%TextSectionElements;)*>
-<!ATTLIST DefinitionText id CDATA #IMPLIED>
 
 <!ELEMENT DefinitionType (#PCDATA)>
 
