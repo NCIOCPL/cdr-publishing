@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.23 2002-10-14 12:47:23 bkline Exp $
+# $Id: cdrmailer.py,v 1.24 2002-10-16 18:07:36 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.23  2002/10/14 12:47:23  bkline
+# Made actual mailer printing a separate batch job.
+#
 # Revision 1.22  2002/10/10 17:44:44  bkline
 # Added PrintJob.PLAIN.
 #
@@ -1161,7 +1164,7 @@ class Address:
         if self.__citySuffix:
             xml += "<CitySuffix>%s</CitySuffix>" % self.__citySuffix
         if self.__state:
-            xml += "<PoliticalUnit_State>%s<SPoliticalUnit_Statetate>" \
+            xml += "<PoliticalSubUnit_State>%s<PoliticalSubUnit_State>" \
                 % self.__state
         if self.__country:
             xml += "<Country>%s</Country>" % self.__country
