@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.5 2002-10-23 22:05:17 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.6 2002-10-24 02:39:39 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2002/10/23 22:05:17  bkline
+# Updated ancient code to prepare for final testing.
+#
 # Revision 1.4  2002/10/23 11:44:08  bkline
 # Removed obsolete code.
 #
@@ -26,7 +29,7 @@ import cdr, cdrdb, cdrmailer, re, sys
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
 #----------------------------------------------------------------------
-class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
+class StatusAndParticipantMailer(cdrmailer.MailerJob):
 
     #------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
@@ -57,6 +60,13 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         varies based on the lead org whose PUP is getting the mailer!
         This means that we can't take advantage of our usual optimization
         of filtering each document only once.
+
+        To top it all off, I just discovered that we can have the same
+        receipient for the *same* protocol with more than one lead
+        organization!  Aargh!
+
+        But wait, it gets even worse!  Organizations can now have more
+        than one OrganizationType element!
         """
         docType  = "InScopeProtocol"
         orgPath  = "/InScopeProtocol/ProtocolAdminInfo/ProtocolLeadOrg"\
@@ -115,12 +125,15 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
                                 (orgPath, pupPath, rolePath, otPath, modePath),
                                 (self.getId(),))
             rows = self.getCursor().fetchall()
-            self.__orgMap = {}
-            orgs          = {}
+            self.__combos   = {}
+            self.__orgTypes = {}
+            orgs            = {}
             for row in rows:
                 (recipId, recipName, orgId, orgName, docId, docTitle,
                  docVersion, addrLink, orgType) = row
-                #print recipId, orgId, docId, docVersion, addrLink
+                key = (addrLink, docId, orgId)
+                #print "recipId=%d recipName=%s orgId=%d orgName=%s docId=%d docTitle=%s docVersion=%d addrLink=%s orgType=%s" % (
+                #    recipId, recipName, orgId, orgName, docId, docTitle, docVersion, addrLink, orgType)
                 recipient = self.getRecipients().get(addrLink)
                 document  = self.getDocuments().get(docId)
                 org       = orgs.get(orgId)
@@ -130,13 +143,18 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
                     recipient = cdrmailer.Recipient(recipId, recipName, addr)
                     self.getRecipients()[addrLink] = recipient
                 if not document:
-                    document = cdrmailer.Document(docId, docTitle, docType)
+                    document = cdrmailer.Document(docId, docTitle, docType,
+                                                  docVersion)
                     self.getDocuments()[docId] = document
                 if not org:
-                    org = cdrmailer.Org(orgId, orgName, orgType)
+                    org = cdrmailer.Org(orgId, orgName)
                     orgs[orgId] = org
-                recipient.getDocs().append(document)
-                self.__orgMap[(recipient, document)] = org
+                    self.__orgTypes[orgId] = [orgType]
+                else:
+                    if not orgType in self.__orgTypes[orgId]:
+                        self.__orgTypes[orgId].append(orgType)
+                if not self.__combos.has_key(key):
+                    self.__combos[key] = (recipient, document, org)
         except cdrdb.Error, info:
             raise "database error finding recipients: %s" % str(info[1][0])
 
@@ -162,18 +180,16 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
     #------------------------------------------------------------------
     def __makeIndex(self):
         self.__index     = []
-        recipients       = self.getRecipients()
-        for recipKey in recipients.keys():
-            recip        = recipients[recipKey]
-            address      = recip.getAddress()
-            country      = address.getCountry()
-            postalCode   = address.getPostalCode()
-            for doc in recip.getDocs():
-                org      = self.__orgMap[recip, doc]
-                coopName = "NCI-supported clinical trials group"
-                isCoop   = org.getType() == coopName and 1 or 0
-                key      = (country, postalCode, recip, isCoop, doc)
-                self.__index.append(key)
+        coopType         = "NCI-supported clinical trials group"
+        for key in self.__combos.keys():
+            recip, doc, org = self.__combos[key]
+            address         = recip.getAddress()
+            country         = address.getCountry()
+            postalCode      = address.getPostalCode()
+            orgTypes        = self.__orgTypes[org.getId()]
+            isCoop          = coopType in orgTypes and 1 or 0
+            sortKey         = (country, postalCode, recip, isCoop, doc, org)
+            self.__index.append(sortKey)
         self.__index.sort()
 
     #------------------------------------------------------------------
@@ -184,9 +200,8 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         f = open(filename, "w")
         f.write("\n\n%s\n\n" % self.getSubset())
         f.write("Job Number: %d\n\n" % self.getId())
-        for country, zip, recip, doc in self.__index:
+        for country, zip, recip, isCoop, doc, org in self.__index:
             title = doc.getTitle()
-            org = self.__orgMap[recip, doc]
             f.write("  Recipient: %d\n" % recip.getId())
             f.write("       Name: %s\n" % recip.getName())
             f.write("    Country: %s\n" % country)
@@ -206,11 +221,11 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
     def __makeMailers(self):
 
         # Get the templates for the cover letters.        
-        baseDir                = self.getMailerIncludePath()
+        baseDir                = self.getMailerIncludePath() + "/"
         coverLetterParmCoop    = self.getParm("CoverLetterCoop")
         coverLetterParmNonCoop = self.getParm("CoverLetterNonCoop")
-        coverLetterNameCoop    = baseDir + coverLetterParmCoop
-        coverLetterNameNonCoop = baseDir + coverLetterParmNonCoop
+        coverLetterNameCoop    = baseDir + coverLetterParmCoop[0]
+        coverLetterNameNonCoop = baseDir + coverLetterParmNonCoop[0]
         coverLetterCoopFile    = open(coverLetterNameCoop)
         coverLetterNonCoopFile = open(coverLetterNameNonCoop)
         coverLetterCoop        = coverLetterCoopFile.read()
@@ -218,23 +233,35 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         coverLetterCoopFile.close()
         coverLetterNonCoopFile.close()
 
-        # Gather the mailers into sets.
-        lastCombo              = None
-        sets                   = []
+        # Gather the mailers into sets.  Everything going to the same
+        # recipient address is collected, and then separated (if needed)
+        # between the mailers for lead orgs which are cooperative groups
+        # and for those which are not cooperative groups (because coops
+        # and non-coops get different cover letters).  The recipFlagCombo
+        # variable is a tuple representing a recipient address and the
+        # flag for cooperative versus non-cooperative groups.  For each
+        # of these recipient-flag combinations we collect all of the
+        # combinations of protocol+lead org combinations which will be
+        # sent to this recipient with the appropriate cover letter.
+        # These sub-combinations (protocol doc + lead org) are represented
+        # by the docOrgCombo(s) variables.
+        lastRecipFlagCombo = None
+        sets               = []
         for elem in self.__index:
-            recip, isCoop, doc  = elem[2:]
-            thisCombo           = (recip, isCoop)
-            if thisCombo != lastCombo:
-                lastCombo  = thisCombo
-                docs       = []
-                currentSet = (thisCombo, docs)
+            recip, isCoop, doc, org = elem[2:]
+            recipFlagCombo = (recip, isCoop)
+            docOrgCombo    = (doc, org)
+            if lastRecipFlagCombo != recipFlagCombo:
+                lastRecipFlagCombo = recipFlagCombo
+                docOrgCombos       = []
+                currentSet         = (recipFlagCombo, docOrgCombos)
                 sets.append(currentSet)
-            docs.append(doc)
-        setNumber = 0
+            docOrgCombos.append(docOrgCombo)
 
         # Pump out each set of mailers.
-        for combo, docs in sets:
-            recip, isCoop = combo
+        setNumber = 0
+        for recipFlagCombo, docOrgCombos in sets:
+            recip, isCoop = recipFlagCombo
             setNumber += 1
 
             # Create a mailing label.
@@ -253,20 +280,19 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
             self.addToQueue(self.makePS(latex, 1, basename, jobType))
 
             # Append each mailer to the set.
-            for doc in docs:
-                self.__makeMailer(recip, doc)
+            for doc, org in docOrgCombos:
+                self.__makeMailer(recip, doc, org)
         
 
     #------------------------------------------------------------------
     # Create a protocol abstract mailer.
     #------------------------------------------------------------------
-    def __makeMailer(self, recip, doc):
+    def __makeMailer(self, recip, doc, org):
 
         # Add document to the repository for tracking replies to the mailer.
         mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset())
 
         # Create the LaTeX for the document.
-        org       = self.__orgMap[recip, doc]
         orgId     = org.getId()
         docId     = doc.getId()
         self.log("generating LaTeX for CDR%010d" % docId)
@@ -280,9 +306,9 @@ class InitialStatusAndParticipantMailer(cdrmailer.MailerJob):
         latex     = doc.latex.getLatex()
         latex     = latex.replace('@@MAILERID@@', str(mailerId))
         latex     = latex.replace('@@DOCID@@', str(docId))
-        basename  = 'Mailer-%d-%d' % (recip.getId(), docId)
+        basename  = 'Mailer-%d-%d-%d' % (recip.getId(), docId, orgId)
         jobType   = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))
 
 if __name__ == "__main__":
-    sys.exit(InitialStatusAndParticipantMailer(int(sys.argv[1])).run())
+    sys.exit(StatusAndParticipantMailer(int(sys.argv[1])).run())
