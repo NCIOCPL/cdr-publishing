@@ -1,8 +1,10 @@
 #
 # This script starts the publishing service.
 #
-# $Id: StartPubJobs.py,v 1.2 2002-02-06 16:14:34 pzhang Exp $
+# $Id: StartPubJobs.py,v 1.3 2002-02-06 17:09:43 pzhang Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2002/02/06 16:14:34  pzhang
+# Updated SCRIPT definition.
 #
 
 import cdrdb, os
