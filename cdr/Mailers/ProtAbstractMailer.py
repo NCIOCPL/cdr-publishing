@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.16 2003-01-22 14:32:55 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.17 2003-01-22 15:04:25 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2003/01/22 14:32:55  bkline
+# Added calls to UnicodeToLatex.convert() for cover letter.
+#
 # Revision 1.15  2003/01/15 03:34:52  bkline
 # Fixed problem with Unicode in title for cover letter.
 #
@@ -176,7 +179,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
             raise StandardError (\
                 "failure filtering document %s: %s" % (docId, result))
         if result[0]:
-            return UnicodeToLatex.convert(result[0])
+            return UnicodeToLatex.convert(unicode(result[0], "utf-8"))
         return "[No Protocol Professional Title found]"
 
     #------------------------------------------------------------------
@@ -268,8 +271,6 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         protId    = pieces[0]
         protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
-        address   = UnicodeToLatex.convert(address)
-        protTitle = UnicodeToLatex.convert(address)
 
         # Replace placeholders:
         latex     = template.replace('@@ADDRESS@@', address)
