@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.19 2002-10-09 19:41:46 bkline Exp $
+# $Id: cdrmailer.py,v 1.20 2002-10-09 20:40:09 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.19  2002/10/09 19:41:46  bkline
+# Added code to drop country line for domestic address labels.
+#
 # Revision 1.18  2002/10/09 18:09:15  bkline
 # Added new code for generating LaTeX for address label sheet.
 #
@@ -475,7 +478,7 @@ class MailerJob:
     # be included in the Address object.
     #------------------------------------------------------------------
     def formatAddress(self, addr, org = None):
-        lines = self.__assembleAddressLines(addr, org, includeCountry)
+        lines = self.__assembleAddressLines(addr, org)
         return self.__formatAddressFromLines(lines)
     
     #------------------------------------------------------------------
