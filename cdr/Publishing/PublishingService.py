@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.7 2004-06-01 20:34:14 bkline Exp $
+# $Id: PublishingService.py,v 1.8 2004-07-08 18:58:48 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2004/06/01 20:34:14  bkline
+# Added code to optionally add a line to the publication log at the top
+# of the processing loop.
+#
 # Revision 1.6  2002/08/02 03:45:29  ameyer
 # Added batch job initiation and logging.
 #
@@ -49,16 +53,30 @@ batchQry = "SELECT id, command FROM batch_job WHERE status='%s'" %\
 
 # Logfile for publishing
 PUBLOG = cdr.DEFAULT_LOGDIR + "/publish.log"
+LOGFLAG = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
+LogDelay = 0
 
 def logLoop():
 
+    global LogDelay
     # If the flag file exists, add a line to the publication log.
     try:
-        if os.path.isfile('d:/cdr/log/LogLoop.on'):
-            cdr.logwrite('CDR Publishing Service: Top of processing loop',
-                         PUBLOG)
+        if os.path.isfile(LOGFLAG):
+            if not LogDelay:
+                cdr.logwrite('CDR Publishing Service: Top of processing loop',
+                             PUBLOG)
+                file = open(LOGFLAG)
+                try:
+                    LogDelay = int(file.readline().strip())
+                except:
+                    LogDelay = 0
+                file.close()
+            else:
+                LogDelay -= 1
+        else:
+            LogDelay = 0
     except:
-        pass
+        LogDelay = 0
         
 conn = None
 while 1:
@@ -81,7 +99,7 @@ while 1:
         cursor.close()
         cursor = None
         for row in rows:
-            #print "publishing job %d" % row[0]
+            print "publishing job %d" % row[0]
             os.spawnv(os.P_NOWAIT, cdr.PYTHON, ("CdrPublish", PUBSCRIPT,
                                                 str(row[0])))
 
