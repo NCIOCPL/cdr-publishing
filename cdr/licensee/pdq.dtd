@@ -1,0 +1,966 @@
+<!-- CDR DTD
+
+  This DTD defines the external structure of the NCI PDQ XML data
+
+  Revision 0    2001/12/17  Michael M Rubenstein
+                            Preliminary version
+                            
+-->
+
+<!-- Common Elements -->
+
+<!ENTITY % ParaLevelElements "Para | LiteralLayout | Table | ItemizedList
+                             | OrderedList | QandASet | Contact">
+<!ENTITY % ParaElements "#PCDATA | Emphasis | Strong | Subscript
+                        | Superscript | TT | GeneName | ScientificName
+                        | ForeignWord | LOERef 
+                        | LOELink 
+                        | Reference
+                        | SummaryRef 
+                        | SummaryLink 
+                        | ProtocolRef | ProtocolLink
+                        | DrugName | InterventionName | GlossaryTermRef
+                        | GlossaryTermLink | ExternalRef | Quote | Note
+                        | Multimedia | Comment"> 
+<!ENTITY % TextElements "#PCDATA | Emphasis | Strong | Subscript
+                         | Superscript | TT | GeneName | ScientificName
+                         | ForeignWord | LOERef | LOELink
+                         | Reference
+                         | SummaryRef 
+                         | SummaryLink 
+                         | ProtocolRef | ProtocolLink
+                         | DrugName | InterventionName
+                         | GlossaryTermRef | GlossaryTermLink
+                         | ExternalRef | Quote | Note | Para
+                         | LiteralLayout | Table
+                         | ItemizedList | OrderedList | QandASet
+                         | Contact | Multimedia | Comment">
+<!ENTITY % TextSectionElements
+                         "#PCDATA | Emphasis | Strong | Subscript
+                         | Superscript | TT | GeneName | ScientificName
+                         | ForeignWord | LOERef | LOELink
+                         | Reference
+                         | SummaryRef 
+                         | SummaryLink 
+                         | ProtocolRef | ProtocolLink
+                         | DrugName | InterventionName
+                         | GlossaryTermRef | GlossaryTermLink
+                         | ExternalRef | Quote | Note | Para
+                         | LiteralLayout | Table
+                         | ItemizedList | OrderedList | QandASet
+                         | Contact | Multimedia | Comment | Section">
+
+<!ENTITY % TitleData "#PCDATA |  Emphasis | Strong | Subscript | Superscript
+                              | TT | GeneName | ScientificName
+                              | ForeignWord">
+                                              
+<!ENTITY % Location "PostalAddress?, Phone?, TollFreePhone?, Fax?,
+                          Email?, WebSite?">
+
+<!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent)>
+<!ELEMENT SpecificDiagnosis (#PCDATA)>
+<!ATTLIST SpecificDiagnosis ref CDATA #IMPLIED>
+<!ELEMENT DiagnosisParent (#PCDATA)>
+<!ATTLIST DiagnosisParent ref CDATA #IMPLIED>
+
+<!ELEMENT Title (%TitleData;)*>
+<!ELEMENT TitleAbbrev (%TitleData;)*>
+<!ELEMENT AltTitle (%TitleData;)*>
+
+<!ELEMENT Para (%ParaElements;)*>
+<!ATTLIST Para id CDATA #IMPLIED>
+
+<!ELEMENT LiteralLayout (%ParaElements;)*>
+<!ATTLIST LiteralLayout id CDATA #IMPLIED>
+
+<!ELEMENT Section (Title?,
+                   AltTitle*,
+                   KeyPoint*,
+                   (Para
+                   | LiteralLayout
+                   | Table
+                   | ItemizedList
+                   | OrderedList
+                   | QandASet
+                   | Contact
+                   )*,
+                   Section*
+                  )
+>
+<!ATTLIST Section id CDATA #IMPLIED>
+
+<!-- Table
+
+  Tables are based on the CALS model.  See MIL-HDBK-28001 or the DocBook
+  specification.
+
+-->
+
+<!ELEMENT Table (Title, TitleAbbrev?, TGroup+)>
+<!ATTLIST Table ColSep (0 | 1) #IMPLIED
+                Frame (All | Bottom | Sides | Top | TopBot) #IMPLIED
+                RowSep (0 | 1) #IMPLIED
+                TabStyle CDATA #IMPLIED
+                id CDATA #IMPLIED>
+          
+<!ELEMENT TGroup (ColSpec*,SpanSpec*,THead?,TFoot?,TBody)>
+<!ATTLIST TGroup Align (Center | Char | Justify | Left | Right) #IMPLIED
+                 Char CDATA #IMPLIED
+                 Charoff CDATA #IMPLIED
+                 ColSep (0 | 1) #IMPLIED
+                 Cols CDATA #REQUIRED
+                 RowSep (0 | 1) #IMPLIED
+                 TGroupStyle CDATA #IMPLIED>
+
+<!ELEMENT ColSpec EMPTY>
+<!ATTLIST ColSpec Align (Center | Char | Justify | Left | Right) #IMPLIED
+                  Char CDATA #IMPLIED
+                  Charoff CDATA #IMPLIED
+                  ColName CDATA #IMPLIED
+                  ColNum CDATA #IMPLIED
+                  ColSep (0 | 1) #IMPLIED
+                  ColWidth CDATA #IMPLIED
+                  RowSep (0 | 1) #IMPLIED>
+
+<!ELEMENT SpanSpec EMPTY>
+<!ATTLIST SpanSpec Align (Center | Char | Justify | Left | Right) #IMPLIED
+                   Char CDATA #IMPLIED
+                   Charoff CDATA #IMPLIED
+                   ColSep (0 | 1) #IMPLIED
+                   NameEnd CDATA #IMPLIED
+                   NameSt CDATA #IMPLIED
+                   RowSep (0 | 1) #IMPLIED
+                   SpanName CDATA #IMPLIED>
+
+<!ELEMENT THead (ColSpec*,Row+)>
+<!ATTLIST THead Valign (Bottom | Middle | Top) #IMPLIED>
+
+<!ELEMENT Row (Entry+)>
+<!ATTLIST Row RowSep (0 | 1) #IMPLIED Valign (Bottom | Middle | Top) #IMPLIED>
+
+<!ELEMENT Entry (%ParaElements;)*>
+<!ATTLIST Entry Align (Center | Char | Justify | Left | Right) #IMPLIED
+                Char CDATA #IMPLIED
+                Charoff CDATA #IMPLIED
+                ColSep (0 | 1) #IMPLIED
+                Cols CDATA #IMPLIED
+                MoreRows CDATA #IMPLIED
+                NameEnd CDATA #IMPLIED
+                NameSt CDATA #IMPLIED
+                RowSep (0 | 1) #IMPLIED
+                SpanName CDATA #IMPLIED
+                Valign (Bottom | Middle | Top) #IMPLIED>
+
+<!ELEMENT TFoot (ColSpec*,Row+)>
+<!ATTLIST TFoot Valign (Bottom | Middle | Top) #IMPLIED>
+
+<!ELEMENT TBody (Row+)>
+<!ATTLIST TBody Valign (Bottom | Middle | Top) #IMPLIED>
+
+<!-- end table elements -->
+
+<!ELEMENT ItemizedList (ListTitle?,ListItem+)>
+<!ATTLIST ItemizedList Compact (No) #IMPLIED
+                       Style (bullet | dash | simple) #IMPLIED
+                       id CDATA #IMPLIED>
+                       
+<!ELEMENT ListTitle (%TitleData;)*>
+<!ELEMENT ListItem (%TextElements;)*>
+
+<!ELEMENT OrderedList (ListTitle?,ListItem+)>
+<!ATTLIST OrderedList Style
+    (Arabic | LAlpha | LRoman | UAlpha | URoman) #IMPLIED
+                      id CDATA #IMPLIED>
+
+<!ELEMENT QandASet (MarkedUpTitle?,
+                    (QandADiv+ | QandAEntry+)
+                   )
+>
+<!ATTLIST QandASet id CDATA #IMPLIED>
+
+<!ELEMENT MarkedUpTitle (%TitleData;)*>
+
+<!ELEMENT QandADiv (MarkedUpTitle?,
+                    (QandADiv+ | QandAEntry+)
+                   )
+>
+<!ATTLIST QandADiv id CDATA #IMPLIED>
+
+<!ELEMENT QandAEntry (Question, Answer*)>
+<!ELEMENT Question (%TextElements;)*>
+<!ELEMENT Answer  (%TextElements;)*>
+
+<!ELEMENT Contact (ContactName*, ContactDetail)>
+<!ELEMENT ContactName (#PCDATA)>
+
+<!ELEMENT ContactDetail (%Location;)
+><!ATTLIST ContactDetail id CDATA #IMPLIED>
+
+<!ELEMENT PostalAddress (Street*,
+                         City,
+                         CitySuffix?,
+                         PoliticalSubUnit_State?,
+                         Country?,
+                         PostalCode_ZIP?,
+                         PostalCodePosition
+                        )
+>
+                        
+<!ELEMENT Street (#PCDATA)>
+<!ELEMENT City (#PCDATA)>
+<!ELEMENT CitySuffix (#PCDATA)>
+<!ELEMENT PoliticalSubUnit_State (#PCDATA)>
+<!ATTLIST PoliticalSubUnit_State ref CDATA #IMPLIED>
+
+<!ELEMENT Country (#PCDATA)>
+<!ATTLIST Country ref CDATA #IMPLIED>
+
+<!ELEMENT PostalCode_ZIP (#PCDATA)>
+<!ELEMENT PostalCodePosition (#PCDATA)>
+
+<!ELEMENT Phone (#PCDATA)>
+
+<!ELEMENT TollFreePhone (#PCDATA)>
+<!ELEMENT Fax (#PCDATA)>
+
+<!ELEMENT Email (#PCDATA)>
+
+<!ELEMENT WebSite (#PCDATA)>
+<!ATTLIST WebSite xref CDATA #REQUIRED>
+
+<!ELEMENT Emphasis (%ParaElements;)*>
+<!ATTLIST Emphasis id CDATA #IMPLIED>
+
+<!ELEMENT Strong (%ParaElements;)*>
+<!ATTLIST Strong id CDATA #IMPLIED>
+
+<!ELEMENT Subscript (%ParaElements;)*>
+<!ATTLIST Subscript id CDATA #IMPLIED>
+
+<!ELEMENT Superscript (%ParaElements;)*>
+<!ATTLIST Superscript id CDATA #IMPLIED>
+
+<!ELEMENT TT (%ParaElements;)*>
+<!ATTLIST TT id CDATA #IMPLIED>
+
+<!ELEMENT GeneName (%ParaElements;)*>
+<!ATTLIST GeneName id CDATA #IMPLIED>
+
+<!ELEMENT ScientificName (%ParaElements;)*>
+<!ATTLIST ScientificName id CDATA #IMPLIED>
+
+<!ELEMENT DrugName (%ParaElements;)*>
+<!ATTLIST DrugName id CDATA #IMPLIED>
+
+<!ELEMENT InterventionName (%ParaElements;)*>
+<!ATTLIST InterventionName id CDATA #IMPLIED>
+
+<!ELEMENT ForeignWord (%ParaElements;)*>
+<!ATTLIST ForeignWord id CDATA #IMPLIED>
+
+<!ELEMENT Comment (#PCDATA)>
+
+<!ELEMENT MainTopics (TermRef?)>
+
+<!ELEMENT TermRef (#PCDATA)>
+<!ATTLIST TermRef ref CDATA #IMPLIED>
+
+<!ELEMENT SecondaryTopics (TermRef?)>
+
+<!ELEMENT KeyPoint (%ParaElements;)*>
+<!ATTLIST KeyPoint id CDATA #IMPLIED>
+
+<!ELEMENT ProtocolRef (#PCDATA)>
+<!ATTLIST ProtocolRef href CDATA #REQUIRED>
+
+<!ELEMENT ProtocolLink (#PCDATA)>
+<!ATTLIST ProtocolLink ref CDATA #REQUIRED>
+
+<!ELEMENT LOERef (#PCDATA)>
+<!ATTLIST LOERef href CDATA #REQUIRED>
+
+<!ELEMENT LOELink (#PCDATA)>
+<!ATTLIST LOELink ref CDATA #REQUIRED>
+
+<!ELEMENT GlossaryTermRef (#PCDATA)>
+<!ATTLIST GlossaryTermRef href CDATA #REQUIRED>
+
+<!ELEMENT GlossaryTermLink (#PCDATA)>
+<!ATTLIST GlossaryTermLink ref CDATA #REQUIRED>
+
+<!ELEMENT ExternalRef (#PCDATA)>
+<!ATTLIST ExternalRef xref CDATA #REQUIRED>
+
+<!ELEMENT Quote (QuotedText,Source?,QuoteAuthor?)>
+<!ELEMENT QuotedText (%TextElements;)*>
+
+<!ELEMENT Note (%TextElements;)*>
+<!ELEMENT Multimedia (#PCDATA)>
+
+<!ELEMENT Source (#PCDATA)>
+<!ELEMENT QuoteAuthor (#PCDATA)>
+
+<!ELEMENT SummaryRef (#PCDATA)>
+<!ATTLIST SummaryRef href CDATA #IMPLIED>
+
+<!ELEMENT SummaryLink (#PCDATA)>
+<!ATTLIST SummaryLink ref CDATA #IMPLIED>
+
+<!ELEMENT Reference (#PCDATA)>
+<!ATTLIST Reference ref CDATA #REQUIRED>
+
+<!ELEMENT ReferenceSection (Citation+)>
+
+<!-- A Citation contains formatted text to be printed for the citation -->
+<!ELEMENT Citation (%ParaElements;)*>
+<!ATTLIST Citation id CDATA #REQUIRED
+                   PMID CDATA ""
+                   MedlineID CDATA ""
+                   CancerlitID CDATA ""
+                   ProtocolID CDATA ""
+>
+
+<!ELEMENT PersonNameInformation (GivenName?,
+                                 MiddleInitial?,
+                                 SurName,
+                                 Prefix?,
+                                 GenerationSuffix?,
+                                 ProfessionalSuffix?,
+                                 NameFormat?
+                                )
+>
+
+<!ELEMENT PrivatePracticeLocation (%Location;)>                          
+<!ATTLIST PrivatePracticeLocation id CDATA #IMPLIED>
+
+<!ELEMENT PersonRole (#PCDATA)>
+<!ELEMENT PersonTitle (#PCDATA)>
+
+<!ELEMENT DateLastModified (#PCDATA)>
+<!ELEMENT DateFirstPublished (#PCDATA)>
+
+<!ELEMENT GivenName (#PCDATA)>
+<!ELEMENT MiddleInitial (#PCDATA)>
+<!ELEMENT SurName (#PCDATA)>
+<!ELEMENT Prefix (#PCDATA)>
+<!ELEMENT GenerationSuffix (#PCDATA)>
+<!ELEMENT ProfessionalSuffix (#PCDATA)>
+<!ELEMENT NameFormat (#PCDATA)>
+
+
+<!-- End Common Elements -->
+
+<!-- Summaries
+
+  PDQ Summaries on Treatment, Prevention, Screening, Supportive Care,
+  Genetics, and Complementary/Alternative Medicine.
+
+  Start element Summary.
+
+-->
+
+<!ELEMENT Summary (SummaryMetaData,
+                   SummaryTitle,
+                   SummarySection+,
+                   TranslationOf?,
+                   DateLastModified?,
+                   DateFirstPublished?
+                  )
+>
+<!ATTLIST Summary id CDATA #REQUIRED>
+
+<!ELEMENT SummaryMetaData (SummaryType,
+                           SummaryAudience,
+                           SummaryLanguage,
+                           MainTopics+,
+                           SecondaryTopics*
+                          )
+>
+
+<!-- Types of summary
+
+  Possible values are:
+
+    Treatment
+    Supportive Care
+    Screening
+    Prevention
+    Genetics
+    Complementary and Alternative Medicine
+  
+-->
+<!ELEMENT SummaryType (#PCDATA)>                           
+
+<!-- Types of summary audience
+
+  Possible values are:
+
+    Patients
+    Health Professionals
+  
+-->
+<!ELEMENT SummaryAudience (#PCDATA)>                           
+
+
+<!-- Summary languages
+
+  Possible values are:
+
+    English
+    Spanish
+  
+-->
+<!ELEMENT SummaryLanguage (#PCDATA)>                           
+
+<!-- Link to original version of translation
+
+  The id of the original version of a translated summary
+
+-->
+<!ELEMENT TranslationOf EMPTY>
+<!ATTLIST TranslationOf ref CDATA #REQUIRED>
+
+<!ELEMENT SummarySection (SectMetaData?,
+                          Title?,
+                          AltTitle*,
+                          KeyPoint*,
+                          (%ParaLevelElements;)*,
+                          SummarySection*,
+                          ReferenceSection?
+                         )
+>
+<!ATTLIST SummarySection id CDATA #IMPLIED>
+
+<!-- The Diagnosis elements are links to Terminology with contents the
+     preferred name.
+-->     
+<!ELEMENT SectMetaData (Diagnosis*,
+                        SectionType*
+                       )
+>
+<!ELEMENT SectionType (#PCDATA)>
+
+<!ELEMENT SummaryTitle (#PCDATA | Emphasis | Strong | Subscript
+                        | Superscript | TT | GeneName | ScientificName
+                        | ForeignWord
+                       )*
+>
+
+<!-- End Summaries -->
+
+<!-- Protocols
+
+  Start element Protocol.
+
+-->
+
+<!ELEMENT Protocol (ProtocolIDs,
+                    FundingInfo?,
+                    ProtocolSponsors?,
+                    ProtocolTitle+,
+                    ProtocolAbstract,
+                    ProtocolDetail+,
+                    Eligibility,
+                    ProtocolRelatedLinks?,
+                    PublishedResults*,
+                    ProtocolPhase+,
+                    ProtocolSpecialCategory?,
+                    ProtocolAdminInfo
+                   )
+>
+<!ATTLIST Protocol id CDATA #REQUIRED>
+
+<!ELEMENT ProtocolIDs (PrimaryID,OtherID*)>
+<!ELEMENT PrimaryID (IDString)>
+<!ELEMENT IDString (#PCDATA)>
+<!ELEMENT OtherID (IDType,IDString)>
+<!ELEMENT IDType (#PCDATA)>
+
+<!ELEMENT FundingInfo (NIHGrantContract* | OtherGrantContractInfo*)>
+<!ELEMENT NIHGrantContract (NIHGrantContractType?, GrantContractNo)>
+<!ELEMENT NIHGrantContractType (#PCDATA)>
+<!ELEMENT GrantContractNo (#PCDATA)>
+<!ELEMENT OtherGrantContractInfo (GrantContractNo)>
+
+<!ELEMENT ProtocolSponsors (SponsorName+)>
+<!ELEMENT SponsorName (#PCDATA)>
+
+<!ELEMENT ProtocolTitle (%TitleData;)*>
+<!ATTLIST ProtocolTitle Group (Professional | Patient) #REQUIRED>
+
+<!ELEMENT ProtocolAbstract (Professional, Patient)>
+<!ELEMENT Professional (Objectives,
+                        Outline,
+                        EntryCriteria,
+                        ProjectedAccrual,
+                        EndPoints?,
+                        Stratification?,
+                        SpecialStudyParameters?,
+                        DoseSchedule?,
+                        DosageForm?,
+                        ProfessionalDisclaimer
+                       )
+>
+<!ELEMENT Objectives (%TextSectionElements;)*>
+<!ELEMENT Outline (%TextSectionElements;)*>
+<!ELEMENT EntryCriteria (DiseaseCharacteristics,
+                         PatientCharacteristics,
+                         PriorConcurrentTherapy?,
+                         GeneralEligibilityCriteria?)>
+<!ELEMENT DiseaseCharacteristics (%TextSectionElements;)*>
+<!ELEMENT PatientCharacteristics (%TextSectionElements;)*>
+<!ELEMENT PriorConcurrentTherapy (%TextSectionElements;)*>
+<!ELEMENT GeneralEligibilityCriteria (%TextSectionElements;)*>
+<!ELEMENT ProjectedAccrual (%TextSectionElements;)*>
+<!ELEMENT EndPoints (%TextSectionElements;)*>
+<!ELEMENT Stratification (%TextSectionElements;)*>
+<!ELEMENT SpecialStudyParameters (%TextSectionElements;)*>
+<!ELEMENT DoseSchedule (%TextSectionElements;)*>
+<!ELEMENT DosageForm (%TextSectionElements;)*>
+<!ELEMENT Patient (Rationale,
+                   Purpose,
+                   EligibilityText,
+                   TreatmentIntervention,
+                   PatientDisclaimer
+                  )
+>
+<!ELEMENT Rationale (%TextSectionElements;)*>
+<!ELEMENT Purpose (%TextSectionElements;)*>
+<!ELEMENT EligibilityText (%TextSectionElements;)*>
+<!ELEMENT TreatmentIntervention (%TextSectionElements;)*>
+<!ELEMENT ProfessionalDisclaimer (%TextSectionElements;)*>
+<!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
+
+<!ELEMENT ProtocolDetail (StudyType,
+                          StudyCategory+,
+                          StudyCondition*,
+                          Gene*
+                         )
+>
+<!ELEMENT StudyType (#PCDATA)>
+<!ELEMENT StudyCategory (StudyCategoryName,
+                         Intervention*
+                        )
+>
+<!ELEMENT StudyCategoryName (#PCDATA)>
+
+<!ELEMENT Intervention (InterventionType,
+                        InterventionTypeParent,
+                        InterventionNameLink*
+                       )
+>
+
+<!ELEMENT InterventionType (#PCDATA)>
+<!ATTLIST InterventionType ref CDATA #IMPLIED>
+
+<!ELEMENT InterventionTypeParent (#PCDATA)>
+<!ATTLIST InterventionTypeParent ref CDATA #IMPLIED>
+
+<!ELEMENT InterventionNameLink (#PCDATA)>
+<!ATTLIST InterventionNameLink ref CDATA #IMPLIED>
+
+<!ELEMENT StudyCondition (SpecificCondition, ConditionParent)>
+
+<!ELEMENT SpecificCondition (#PCDATA)>
+<!ATTLIST SpecificCondition ref CDATA #IMPLIED>
+
+<!ELEMENT ConditionParent (#PCDATA)>
+<!ATTLIST ConditionParent ref CDATA #IMPLIED>
+
+<!ELEMENT Gene (SpecificGene, GeneParent)>
+
+<!ELEMENT SpecificGene (#PCDATA)>
+<!ATTLIST SpecificGene ref CDATA #IMPLIED>
+
+<!ELEMENT GeneParent (#PCDATA)>
+<!ATTLIST GeneParent ref CDATA #IMPLIED>
+
+<!ELEMENT Eligibility (HealthyVolunteers?,
+                       LowAge,
+                       HighAge,
+                       AgeText,
+                       Diagnosis*,
+                       ExclusionCriteria*
+                      )
+>
+<!ELEMENT HealthyVolunteers (#PCDATA)>
+<!ELEMENT LowAge (#PCDATA)>
+<!ELEMENT HighAge (#PCDATA)>
+<!ELEMENT AgeText (#PCDATA)>
+
+<!ELEMENT ExclusionCriteria (#PCDATA)>
+<!ATTLIST ExclusionCriteria ref CDATA #IMPLIED>
+
+<!ELEMENT ProtocolRelatedLinks (RelatedProtocols | RelatedWebsites)+>
+
+<!ELEMENT RelatedProtocols (#PCDATA)>
+<!ATTLIST RelatedProtocols ref CDATA #IMPLIED>
+
+<!ELEMENT RelatedWebsites (#PCDATA)>
+<!ATTLIST RelatedWebsites xref CDATA #REQUIRED>
+
+<!ELEMENT PublishedResults (#PCDATA)>
+<!ATTLIST PublishedResults PMID CDATA ""
+                           MedlineID CDATA ""
+                           CancerlitID CDATA "">
+
+<!ELEMENT ProtocolPhase (#PCDATA)>
+<!ELEMENT ProtocolSpecialCategory (#PCDATA)>
+
+<!ELEMENT ProtocolAdminInfo (CurrentProtocolStatus,
+                             ProtocolLeadOrg+,
+                             ProtocolSites?
+                            )
+>                            
+
+<!ELEMENT CurrentProtocolStatus (#PCDATA)>
+
+<!ELEMENT ProtocolLeadOrg (LeadOrgData,
+                           LeadOrgRole,
+                           LeadOrgProtocolID+,
+                           LeadOrgProtocolStatus,
+                           LeadOrgPersonnel+
+                          )
+>
+
+<!ELEMENT LeadOrgData (OrgName)>
+
+<!-- OrgName is the name as it should appear (including parent org name if
+     appropriate
+-->     
+<!ELEMENT OrgName (#PCDATA)>
+<!ATTLIST OrgName ref CDATA #REQUIRED>
+
+<!ELEMENT LeadOrgRole (#PCDATA)>
+<!ELEMENT LeadOrgProtocolID (#PCDATA)>
+
+<!ELEMENT LeadOrgProtocolStatus (StatusName, StatusDate)>
+<!ELEMENT StatusName (#PCDATA)>
+<!ELEMENT StatusDate (#PCDATA)>
+
+<!ELEMENT LeadOrgPersonnel (ProtPerson, PersonRole+)>
+<!ATTLIST LeadOrgPersonnel  id CDATA #REQUIRED>
+
+<!ELEMENT ProtPerson (PersonNameInformation, Contact)>
+<!ATTLIST ProtPerson ref CDATA #IMPLIED>
+
+<!ELEMENT ProtocolSites (SiteName, SiteContact)>
+<!ELEMENT SiteName (#PCDATA)>
+<!ATTLIST SiteName ref CDATA #REQUIRED>
+<!ELEMENT SiteContact (ProtPerson?,
+                       TitleRole,
+                       ContactDetail
+                      )
+>
+
+<!ELEMENT TitleRole (#PCDATA)>
+
+<!-- End Protocols -->
+
+<!-- Persons
+
+  Start element Person.
+
+-->
+
+<!ELEMENT Person (PersonNameInformation,
+                  ProfessionalInformation?,
+                  PersonLocations
+                 )
+                >
+<!ATTLIST Person id CDATA #REQUIRED>
+
+<!ELEMENT ProfessionalInformation (PhysicianDetails?,
+                                   GeneticsProfessionalDetails?
+                                  )
+>
+<!ELEMENT PhysicianDetails (PhysicianSpecialtyInformation*,
+                            PhysicianMembershipInformation?
+                           )
+>
+<!ELEMENT PhysicianSpecialtyInformation (BoardCertifiedSpecialty
+                                         | OtherSpecialty
+                                        )+
+>
+<!ELEMENT BoardCertifiedSpecialty (BoardCertifiedSpecialtyName,
+                                   Certified, Verified?
+                                  )
+>
+<!ELEMENT BoardCertifiedSpecialtyName (#PCDATA)>
+<!ELEMENT Certified (#PCDATA)>
+<!ELEMENT Verified (#PCDATA)>
+<!ELEMENT OtherSpecialty (#PCDATA)>
+<!ELEMENT PhysicianMembershipInformation (MemberOfCooperativeGroup
+                                          | MemberOfMedicalSociety
+                                         )*
+>
+<!ELEMENT MemberOfCooperativeGroup (#PCDATA)>
+<!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
+<!ELEMENT MemberOfMedicalSociety (#PCDATA)>
+
+<!ELEMENT GeneticsProfessionalDetails (GeneticsSpecialtyInformation+,
+                                       InterdisciplinaryTeamMember,
+                                       GeneticsTeamServices+,
+                                       ProvidesServices,
+                                       AcceptsCalls,
+                                       ServiceLimitations?,
+                                       FamilialCancerSyndromes+,
+                                       MemberOfGeneticsSociety
+                                      )
+>                                      
+<!ELEMENT GeneticsSpecialtyInformation (GeneticsSpecialtyName,
+                                        GeneticsBoardCertification*)>
+<!ELEMENT GeneticsSpecialtyName (#PCDATA)>
+<!ELEMENT GeneticsBoardCertification (GeneticsBoardName,
+                                      CertificationVerification?,
+                                      CertificationStatus,
+                                      EligibilityYear?
+                                     )
+>
+<!ELEMENT GeneticsBoardName (#PCDATA)>
+<!ELEMENT CertificationVerification (#PCDATA)>
+<!ELEMENT CertificationStatus (#PCDATA)>
+<!ELEMENT EligibilityYear (#PCDATA)>
+<!ELEMENT InterdisciplinaryTeamMember (#PCDATA)>
+<!ELEMENT GeneticsTeamServices (#PCDATA)>
+<!ELEMENT ProvidesServices (#PCDATA)>
+<!ELEMENT AcceptsCalls (#PCDATA)>
+<!ELEMENT ServiceLimitations (#PCDATA)>
+
+<!ELEMENT FamilialCancerSyndromes (#PCDATA)>
+<!ATTLIST FamilialCancerSyndromes ref CDATA #IMPLIED>
+
+<!ELEMENT MemberOfGeneticsSociety (#PCDATA)>
+
+<!ELEMENT PersonLocations (Home?,
+                           PrivatePracticeLocation*,
+                           OtherPracticeLocation*
+                          )
+>
+
+<!ELEMENT Home (%Location;)>
+<!ATTLIST Home id CDATA #IMPLIED>
+
+<!ELEMENT OtherPracticeLocation (PersonOrganizationLocation,
+                                 PersonTitle?,
+                                 PersonRole*,
+                                 SpecificContact?,
+                                 ComplexAffiliation*
+                                )
+><!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
+
+<!ELEMENT PersonOrganizationLocation (%Location;)>
+<!ATTLIST PersonOrganizationLocation ref CDATA #IMPLIED>
+
+<!ELEMENT SpecificContact (%Location;)>
+<!ATTLIST SpecificContact ref CDATA #IMPLIED>
+
+<!ELEMENT ComplexAffiliation (OrganizationRef, RoleAtAffiliatedOrganization)>
+
+<!ELEMENT OrganizationRef (#PCDATA)>
+<!ATTLIST OrganizationRef ref CDATA #IMPLIED>
+
+<!ELEMENT RoleAtAffiliatedOrganization (#PCDATA)>
+
+<!-- End Persons -->
+
+<!-- Organizations
+
+  Start element Organization.
+
+-->
+
+<!ELEMENT Organization (OrganizationNameInformation,
+                        OrganizationParent?,
+                        OrganizationDetails,
+                        OrganizationLocations,
+                        OrganizationAffiliations?,
+                        OrganizationType+,
+                        ProtocolIDAcronym*,
+                        PreferredProtocolOrganization?
+                       )
+>
+<!ATTLIST Organization id CDATA #REQUIRED>
+                       
+<!ELEMENT OrganizationNameInformation (OfficialName,
+                                       ShortName*,
+                                       AlternateName*
+                                      )
+>
+<!ELEMENT OfficialName (Name)>
+<!ATTLIST OfficialName id CDATA #IMPLIED>
+
+<!ELEMENT Name (#PCDATA)>
+
+<!ELEMENT ShortName (Name)>
+<!ATTLIST ShortName id CDATA #IMPLIED>
+
+<!ELEMENT AlternateName (#PCDATA)>
+
+<!ELEMENT OrganizationParent (ParentOrganization)>
+<!ELEMENT ParentOrganization (#PCDATA)>
+<!ATTLIST ParentOrganization ref CDATA #IMPLIED>
+
+<!ELEMENT OrganizationDetails (IncludeInDirectory+,
+                               PreferredProtocolContactMode?
+                              )
+>
+
+<!ELEMENT IncludeInDirectory EMPTY>
+<!ATTLIST IncludeInDirectory Directory (Genetics | Treatment) #REQUIRED>
+
+<!ELEMENT PreferredProtocolContactMode (#PCDATA)>
+
+<!ELEMENT OrganizationLocations (OrganizationLocation+)>
+
+<!ELEMENT OrganizationLocation (Location)>
+<!ATTLIST OrganizationLocation IncludeParentName (Yes) #IMPLIED
+                               OrderParentNameFirst (Yes) #IMPLIED>
+<!ELEMENT Location (%Location;)>
+<!ATTLIST Location id CDATA #IMPLIED>
+
+<!ELEMENT OrganizationAffiliations (ResearchBaseFor*,
+                                    MemberOfProfessionalOrganization*,
+                                    MemberOfCooperativeGroups*,
+                                    MemberOfCCOP?,
+                                    MemberOfAdHocGroup*
+                                   )
+>
+
+<!ELEMENT ResearchBaseFor (#PCDATA)>
+<!ATTLIST ResearchBaseFor ref CDATA #IMPLIED>
+
+<!ELEMENT MemberOfProfessionalOrganization (#PCDATA)>
+<!ELEMENT MemberOfCooperativeGroups (MainMemberOf*,
+                                     AffiliateMemberOf*
+                                    )
+>
+<!ELEMENT MainMemberOf (CooperativeGroup, ProtocolParticipation)>
+
+<!ELEMENT CooperativeGroup (#PCDATA)>
+<!ATTLIST CooperativeGroup ref CDATA #IMPLIED>
+
+<!ELEMENT ProtocolParticipation (#PCDATA)>
+<!ELEMENT AffiliateMemberOf (CooperativeGroup,
+                             MainMember?,
+                             ProtocolParticipation
+                            )
+>
+
+<!ELEMENT MainMember (#PCDATA)>
+<!ATTLIST MainMember ref CDATA #IMPLIED>
+
+<!ELEMENT MemberOfCCOP (CCOP)>
+<!ATTLIST MemberOfCCOP CCOPMemberType (Affiliate | Component) #REQUIRED>
+
+<!ELEMENT CCOP (#PCDATA)>
+<!ATTLIST CCOP ref CDATA #IMPLIED>
+
+<!ELEMENT MemberOfAdHocGroup (#PCDATA)>
+<!ATTLIST MemberOfAdHocGroup ref CDATA #IMPLIED>
+
+<!ELEMENT OrganizationType (#PCDATA)>
+<!ELEMENT ProtocolIDAcronym (#PCDATA)>
+
+<!ELEMENT PreferredProtocolOrganization (#PCDATA)>
+<!ATTLIST PreferredProtocolOrganization ref CDATA #IMPLIED>
+
+<!-- End Organizations -->
+
+<!-- Glossary
+
+  Start element GlossaryTerm.
+
+-->
+
+<!ELEMENT GlossaryTerm (TermName,
+                        TermPronunciation?,
+                        TermDefinition,
+                        SpanishTermName?,
+                        SpanishTermDefinition?,
+                        TermSource,
+                        TermTypeRef+
+                       )
+>
+<!ATTLIST GlossaryTerm id CDATA #REQUIRED>
+
+<!ELEMENT TermName (#PCDATA)>
+<!ELEMENT TermPronunciation (#PCDATA)>
+
+<!ELEMENT TermDefinition (%TextSectionElements;)*>
+<!ATTLIST TermDefinition id CDATA #IMPLIED>
+
+<!ELEMENT SpanishTermName (#PCDATA)>
+<!ELEMENT SpanishTermPronunciation (#PCDATA)>
+
+<!ELEMENT SpanishTermDefinition (%TextSectionElements;)*>
+<!ATTLIST SpanishTermDefinition id CDATA #IMPLIED>
+
+<!ELEMENT TermSource (#PCDATA)>
+<!ELEMENT TermTypeRef (#PCDATA)>
+
+<!-- End Glossary -->
+
+<!-- Terminology
+
+  Start element Term.
+
+-->
+
+<!ELEMENT Term (PreferredName,
+                OtherName*,
+                Definition*,
+                TermType,
+                SemanticType*,
+                SemanticTypeText+,
+                TermRelationship?
+               )
+>
+<!ATTLIST Term id CDATA #REQUIRED>
+
+<!ELEMENT PreferredName (#PCDATA)>
+<!ELEMENT OtherName (OtherTermName,
+                     OtherNameType+,
+                     SourceInformation?
+                    )
+>
+<!ELEMENT OtherTermName (#PCDATA)>
+<!ELEMENT OtherNameType (#PCDATA)>
+<!ELEMENT SourceInformation (ReferenceSource | VocabularySource+)>
+<!ELEMENT ReferenceSource (#PCDATA)>
+<!ELEMENT VocabularySource (SourceCode, SourceTermType, SourceTermId)>
+<!ELEMENT SourceCode (#PCDATA)>
+<!ELEMENT SourceTermType (#PCDATA)>
+<!ELEMENT SourceTermId (#PCDATA)>
+
+<!ELEMENT Definition (DefinitionText,
+                      DefinitionType,
+                      DefinitionSource+
+                     )
+>
+
+<!ELEMENT DefinitionText (%TextSectionElements;)*>
+<!ATTLIST DefinitionText id CDATA #IMPLIED>
+
+<!ELEMENT DefinitionType (#PCDATA)>
+<!ELEMENT DefinitionSource (DefinitionSourceName, DefinedTermId?)>
+<!ELEMENT DefinitionSourceName (#PCDATA)>
+<!ELEMENT DefinedTermId (#PCDATA)>
+<!ELEMENT TermType (TermTypeName+)>
+<!ELEMENT TermTypeName (#PCDATA)>
+
+<!ELEMENT SemanticType (#PCDATA)>
+<!ATTLIST SemanticType ref CDATA #IMPLIED>
+
+<!ELEMENT SemanticTypeText (#PCDATA)>
+<!ELEMENT TermRelationship (ParentTerm | RelatedTerm)+>
+<!ELEMENT ParentTerm (TermId, ParentType)>
+
+<!ELEMENT TermId (#PCDATA)>
+<!ATTLIST TermId ref CDATA #IMPLIED>
+
+<!ELEMENT ParentType (#PCDATA)>
+<!ELEMENT RelatedTerm (TermId, RelationshipType)>
+<!ELEMENT RelationshipType (#PCDATA)>
+
+<!-- End Terminology -->
