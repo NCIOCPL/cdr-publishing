@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.55 2004-11-03 17:03:46 bkline Exp $
+# $Id: cdrmailer.py,v 1.56 2004-11-24 05:50:09 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.55  2004/11/03 17:03:46  bkline
+# Added code to strip trailing and leading whitespace from address
+# strings (to avoid confusing LaTeX processor; see issue #1381).
+#
 # Revision 1.54  2004/11/02 19:50:35  bkline
 # Enhancements to support RTF mailers.
 #
@@ -185,6 +189,7 @@ import UnicodeToLatex, tarfile, glob, shutil
 debugCtr = 1
 
 _LOGFILE = "d:/cdr/log/mailer.log"
+_DEVELOPER = "***REMOVED***"
 
 #------------------------------------------------------------------
 # Constants for adding a person's title to his address
@@ -794,6 +799,28 @@ class MailerJob:
     # the derived class where appropriate.
     #------------------------------------------------------------------
     def initEmailers(self):
+
+        # Load a fresh copy of the emailer lookup tables.
+        try:
+            import EmailerLookupTables
+            EmailerLookupTables.loadTables()
+        except Exception, e:
+            try:
+                self.log("unable to build emailer lookup tables: %s" % str(e))
+                sender  = MailerJob.__CDR_EMAIL
+                subject = "Emailer lookup table failure"
+                message = """\
+Unable to generate a fresh set of lookup values for the electronic
+mailer system (mailer job %s):
+
+%s
+
+Please do not reply to this message.
+""" % (self.__id, str(e))
+                recip = self.__email and [self.__email] or [_DEVELOPER]
+                cdr.sendMail(sender, recip, subject, message)
+            except:
+                pass
 
         # Does the output directory already exist
         try:
