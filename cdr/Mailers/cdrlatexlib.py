@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.11 2002-10-02 20:51:03 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.12 2002-10-07 21:33:51 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2002/10/02 20:51:03  bkline
+# Added code to find the counts of active and closed protocols with
+# which a physician is involved.  Cleaned up the indentenation in the
+# older code.
+#
 # Revision 1.10  2002/09/30 14:25:25  bkline
 # Second draft for protocol summary and status mailers.
 #
@@ -3519,6 +3524,9 @@ TestInstructions = \
 #------------------------------------------------------------------
 ControlTable = {\
     ("Protocol",         ""):ProtocolInstructions,\
+    ("Protocol",         "initial"):ProtocolInstructions,\
+    ("InScopeProtocol",         ""):ProtocolInstructions,\
+    ("InScopeProtocol",         "initial"):ProtocolInstructions,\
     ("Summary",          ""):SummaryInstructions,\
     ("Summary",      "initial"):SummaryInstructions,\
     ("Organization",     ""):OrgInstructions,\
