@@ -6,7 +6,7 @@
 </CdrDocCtl>
 <CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
  <SystemName>Primary</SystemName>
- <SystemDescription>Used for test producing documents for licensees and Cancer.gov.</SystemDescription>
+ <SystemDescription>Used for producing documents for licensees and Cancer.gov.</SystemDescription>
  
 <SystemSubset>
   <SubsetName>Full-Load</SubsetName>
@@ -1292,7 +1292,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>   
   </SubsetParameters>
   <SubsetSpecifications>
