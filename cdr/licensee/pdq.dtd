@@ -1,7 +1,14 @@
 <!-- CDR DTD
-This DTD defines the external structure of the NCI PDQ XML data
-Revision 1.5    2001/12/17  Michael M Rubenstein
-Preliminary version -->
+
+ $Id: pdq.dtd,v 1.7 2002-02-28 19:32:50 bkline Exp $
+
+   This DTD defines the external structure of the NCI PDQ XML data
+
+   Revision 1.5    2001/12/17  Michael M Rubenstein
+  
+   Preliminary version 
+   
+-->
 
 <!-- Common Elements -->
 
