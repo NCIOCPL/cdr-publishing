@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.39 2003-04-09 14:33:21 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.40 2003-05-09 03:44:06 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.39  2003/04/09 14:33:21  bkline
+# Fixed problem with trial group membership (mismatch between integer and
+# string version of document ID).
+#
 # Revision 1.38  2003/03/18 16:37:00  bkline
 # Added support for multiple site contacts on S&P mailers (Request #591).
 #
@@ -706,6 +710,7 @@ class PersonLocation:
     def __init__(self):
         self.id             = None
         self.cipsContact    = ""
+        self.personTitle    = None
         self.address        = None
         self.phone          = None
         self.tollFreePhone  = None
@@ -716,9 +721,15 @@ class PersonLocation:
         self.emailPublic    = ""
     def formatAddress(self, includeCountry = 0):
         result = self.address.format(includeCountry)
+        isContact = self.cipsContact and len(self.cipsContact) > 0
+        # Create person title followed by orgname, or vice versa
         orgNames = ""
+        if isContact and self.personTitle:
+            orgNames += "  %s \\\\\n" % self.personTitle
         for orgName in self.orgNames:
             orgNames += "  %s \\\\\n" % orgName
+        if not isContact and self.personTitle:
+            orgNames += "  %s \\\\\n" % self.personTitle
         return orgNames + result
 
 class PrivatePracticeLocation(PersonLocation):
@@ -771,6 +782,8 @@ class OtherPracticeLocation(PersonLocation):
             elif child.nodeName == "OrganizationLocation":
                 if child.getAttribute("OrderParentNameFirst") == "Yes":
                     orderParentNameFirst = 1
+            elif child.nodeName == "PersonTitle":
+                self.personTitle = getText(child)
         if orderParentNameFirst and len(self.orgNames) > 1:
             self.orgNames.reverse()
 
@@ -1560,6 +1573,7 @@ def personLocs(pp):
                                                          %s      \\
                                                          %s      \\
                                                          %s      \\
+    \item[Title]                                         %s      \\
     \item[Phone]                                         %s      \\
     \item[Fax]                                           %s      \\
                                                          %s      \\
@@ -1568,6 +1582,7 @@ def personLocs(pp):
     \item[Website]                                       %s      \\
   \end{entry}
 """ % (blankLine,
+       blankLine,
        blankLine,
        blankLine,
        blankLine,
@@ -2691,7 +2706,7 @@ ALTENDPREAMBLE=r"""
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
   \setlength{\footskip}{60pt}
-  
+
   \renewcommand{\thesection}{\hspace{-1.0em}}
   %\newcommand{\deadline}{""" + getDeadline() + r"""}
 
