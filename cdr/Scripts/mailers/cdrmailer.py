@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.4 2001-10-07 15:16:12 bkline Exp $
+# $Id: cdrmailer.py,v 1.5 2001-10-09 12:06:25 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2001/10/07 15:16:12  bkline
+# Added getDeadline().
+#
 # Revision 1.3  2001/10/07 12:49:44  bkline
 # Reduced use of publicly accessible members.  Enhanced docs.
 #
@@ -592,10 +595,11 @@ class PrintJob:
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
-        if 0:
+        if 1:
             prn = open(printer, "w")
             doc = open(self.__filename)
-            prn.write((self.__staple and __STAPLE_PROLOG or "") + doc.read())
+            prn.write((self.__staple and self.__STAPLE_PROLOG or "") + 
+                       doc.read())
             doc.close()
             prn.close()
 
