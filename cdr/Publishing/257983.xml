@@ -89,6 +89,84 @@
   </SubsetOptions>
  </SystemSubset>
 
+<SystemSubset>
+  <SubsetName>GlossaryTerm Vendor Filters</SubsetName>
+  <SubsetDescription>Filter set for GlossaryTerm vendor documents.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+<!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/GlossaryTerm/TermStatus'
+         AND q.value = 'Approved'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>GlossaryTerm</Subdirectory>
+   </SubsetSpecification>
+   
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/filters/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
 
 <SystemSubset>
   <SubsetName>Protocol Vendor Filters</SubsetName>
