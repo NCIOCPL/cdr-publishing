@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.38 2003-03-18 16:37:00 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.39 2003-04-09 14:33:21 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.38  2003/03/18 16:37:00  bkline
+# Added support for multiple site contacts on S&P mailers (Request #591).
+#
 # Revision 1.37  2003/03/14 01:32:28  bkline
 # Added an extra line for the Physician mailer so the Organization name
 # can be provided for new OtherPracticeLocation information.
@@ -1698,7 +1701,10 @@ def personSpecialties(pp):
             if tail != -1:
                 link = link[:tail]
             link = re.sub(r"[^\d]", "", link)
-            trialGroups[link] = 1
+            try:
+                trialGroups[int(link)] = 1
+            except:
+                pass
 
     # Don't yet know how to find out what oncology programs they're members of.
     # Find out from Lakshmi. XXX
