@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.60 2003-09-04 21:37:26 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.61 2003-10-08 10:38:43 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.60  2003/09/04 21:37:26  bkline
+# Added space before itemized list following a Para element.
+#
 # Revision 1.59  2003/08/21 18:08:50  ameyer
 # Fixed mistaken deletion of a \item command in the enumerated list of
 # other organization addresses.
@@ -955,7 +958,11 @@ def cite (pp):
     # If it's a sibling to another one, we've already processed it
     # Don't neeed to do any more
     prevNode = citeNode.previousSibling
-    if prevNode and prevNode.nodeName == 'CitationLink':
+    while prevNode and prevNode.nodeType == prevNode.TEXT_NODE:
+        if prevNode.data.strip():
+            break
+        prevNode = prevNode.previousSibling
+    if prevNode and prevNode.nodeName == 'Reference':
         return 0
 
     # Beginning of list of one or more citation numbers
@@ -968,7 +975,7 @@ def cite (pp):
     #   separating them with commas
     count = 0
     while citeNode != None and \
-        citeNode.nodeName == 'CitationLink':
+        citeNode.nodeName == 'Reference':
 
         # Comma separator before all but the first one
         if count > 0:
@@ -988,6 +995,11 @@ def cite (pp):
         # Increment count and check the next sibling
         count += 1
         citeNode = citeNode.nextSibling
+        while citeNode and citeNode.nodeType == citeNode.TEXT_NODE:
+            if citeNode.data.strip():
+                citeNode = None
+                break
+            citeNode = citeNode.nextSibling
 
     # Terminate the Latex for the list of citation
     if not cdrlatextables.tableCellDepth:
@@ -1020,7 +1032,7 @@ def bibitem (pp):
     # Extract the attribute value from the Citation
     # tag
     # ------------------------------------------------------
-    attrValue = refNode.getAttribute ('refidx')
+    attrValue = refNode.getAttribute ('idx')
     if (attrValue != None):
         refString += attrValue
         ## refString += refNode.nextSibling
@@ -3093,6 +3105,7 @@ CommonMarkupRules = (
 DocumentSummaryBody = (
     XProc(element   = "/Summary/SummarySection",
           order     = XProc.ORDER_PARENT,
+          textOut   = 0,
           prefix    = "\n  \\begin{cbunit}\n",
           suffix    = "\n  \\end{cbunit}\n\n"),
     XProc(element   = "/Summary/SummarySection/Title",
@@ -3117,15 +3130,15 @@ DocumentSummaryBody = (
           filters   = [stripEnds]),
     XProc(element   = "SummarySection",
           textOut   = 0),
-    XProc(element   = "CitationLink",
+    XProc(element   = "Reference",
           textOut   = 0,
           preProcs  = ((cite,()),)),
-    XProc(element   = "ReferenceList",
+    XProc(element   = "ReferenceSection",
           order     = XProc.ORDER_PARENT,
           textOut   = 0,
           prefix    = "\n  \\begin{thebibliography}{999}\n",
           suffix    = "\n  \\end{thebibliography}\n"),
-    XProc(element   = "Reference",
+    XProc(element   = "Citation",
           order     = XProc.ORDER_PARENT,
           preProcs  = ( (bibitem, ()), )),
     )
