@@ -1,0 +1,1554 @@
+<CdrDoc Type='PublishingSystem' Id='CDR0000000178'>
+<CdrDocCtl>
+<DocValStatus readonly="yes">V</DocValStatus>
+<DocActiveStatus readonly="yes">A</DocActiveStatus>
+<DocTitle readonly="yes">Primary</DocTitle>
+</CdrDocCtl>
+<CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
+ <SystemName>Primary</SystemName>
+ <SystemDescription>Used for exporting documents to and removing documents from Cancer.gov.</SystemDescription>
+ 
+<SystemSubset>
+  <SubsetName>Full-Load</SubsetName>
+  <SubsetDescription>Produce (filter and validate) all publishable vendor documents 
+    and push these vendor documents to Cancer.gov.</SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Full Load</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>100</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>NumDocsPerType</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>  
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Country documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Country'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Countries</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'PoliticalSubUnit'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>PoliticalSubUnits</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/Term/TermStatus'
+         AND q.value IN ('Reviewed-Problematic',
+                         'Reviewed-Retain',
+                         'Unreviewed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Terms</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/GlossaryTerm/TermStatus'
+         AND q.value = 'Approved'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>GlossaryTerms</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocsPerType? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Organization/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Organizations</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Person documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocsPerType? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Person/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Persons</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Open protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Active', 'Approved-Not Yet Active')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>OpenProtocols</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Closed protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>ClosedProtocols</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Summary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Summaries</Subdirectory>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>100</OptionValue>
+   </SubsetOption>   
+  </SubsetOptions>
+ </SystemSubset>
+
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
+  <SubsetDescription>Push Full-Load filtered vendor documents to Cancer.gov. 
+     Filtering and validating part will be skipped.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Full-Load</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Full Load</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+ 
+ <SystemSubset>
+  <SubsetName>Export</SubsetName>
+  <SubsetDescription>Produce monthly (weekly or daily) publishable vendor documents and 
+                     push these vendor documents to Cancer.gov.</SubsetDescription>
+  <SubsetParameters>    
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>20</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>NumDocsPerType</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>  
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+  <!--
+   ========================================================================
+   Country documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Country'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Countries</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'PoliticalSubUnit'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>PoliticalSubUnits</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/Term/TermStatus'
+         AND q.value IN ('Reviewed-Problematic',
+                         'Reviewed-Retain',
+                         'Unreviewed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Terms</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/GlossaryTerm/TermStatus'
+         AND q.value = 'Approved'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>GlossaryTerms</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocsPerType? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Organization/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Organizations</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Person documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocsPerType? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Person/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Persons</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Open protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Active', 'Approved-Not Yet Active')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>OpenProtocols</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Closed protocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>ClosedProtocols</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Summary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Summaries</Subdirectory>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>20</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export</SubsetName>
+  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
+                     Cancer.gov. Filtering and validating will be skipped.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+ <SubsetName>Hotfix-Export</SubsetName>
+  <SubsetDescription>Export the documents together with their linked documents
+    recursively.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Export)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IncludeLinkedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>5</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect/>    
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>  
+
+   <!-- DONT'T CHANGE THE FOLLOWING SubsetSpecifications. 
+        IT DEPENDS ON THE IMPLEMENTATION IN cdrpub.py. -->
+
+   <!--
+   ========================================================================
+   Country documents. 
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version          
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'Country'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Country</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version                 
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'PoliticalSubUnit'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Political SubUnit</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: PoliticalSubUnit</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version               
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'Term'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version                
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'GlossaryTerm'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: GlossaryTerm</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version                 
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'Organization'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Person documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version                 
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'Person'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version                
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'InScopeProtocol'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT ppd.doc_id,
+             ppd.doc_version             
+        FROM pub_proc_doc ppd
+        JOIN document d
+          ON d.id = ppd.doc_id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN pub_proc pp
+          ON pp.id = ppd.pub_proc
+       WHERE t.name = 'Summary'       
+         AND pp.pub_subset = 'Hotfix-Export'
+         AND pp.status NOT IN ('Success', 'Failure')  
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
+  <SubsetDescription>Tell Cancer.gov to publish the Hotfix-Export vendor documents.</SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Hotfix-Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Export)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+ <SubsetName>Hotfix-Remove</SubsetName>
+  <SubsetDescription>Produce the document IDs to be removed and tell vendor 
+    Cancer.gov to remove these documents immediately.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Remove)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect/>    
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Remove Document Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Remove</SubsetName>
+  <SubsetDescription>Tell Cancer.gov to removed the Hotfix-Remove vendor documents.</SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Hotfix-Remove</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Remove)</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Export-Protocol</SubsetName>
+  <SubsetDescription>Produce monthly (weekly or daily) publishable vendor documents and 
+                     push these vendor documents Cancer.gov.</SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>100</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 
+                         'Active', 'Approved-Not Yet Active')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Protocol</SubsetName>
+  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
+                     Cancer.gov. Filtering and validating will be skipped.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Protocol</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Export-Summary</SubsetName>
+  <SubsetDescription>Produce monthly (weekly or daily) publishable vendor documents and 
+                     push these vendor documents Cancer.gov.</SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>100</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Summary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilter>
+      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+<SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Summary</SubsetName>
+  <SubsetDescription>Push monthly (weekly or daily) filtered vendor documents to 
+                     Cancer.gov. Filtering and validating will be skipped.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Summary</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckRemovedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+    <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+</PublishingSystem>
+]]>
+</CdrDocXml>
+</CdrDoc>
