@@ -14,8 +14,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.1 2004-12-30 18:45:04 venglisc Exp $
+# $Id: NLMExport.py,v 1.2 2005-01-28 23:13:39 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2004/12/30 18:45:04  venglisc
+# Initial version of script to filter protocol data to NLM format and copy
+# resulting documents to CIPSFTP.
+#
 #----------------------------------------------------------------------
 import sys, re, string, cdr, os, shutil, time
 
@@ -26,14 +30,14 @@ if len(sys.argv) < 3:
 
 # Setting directory and file names
 # --------------------------------
-log     = "d:\\cdr\\log\\vendor.log" 
+log     = "d:\\cdr\\log\\hotfix_NLM.log" 
 outDir  = 'd:\\' + os.path.join('cdr', 'Output')
 pubDir  = 'd:\\' + os.path.join('cdr', 'publishing')
 utilDir = 'd:\\' + os.path.join('cdr', 'Utilities')
 venDir  =          os.path.join(outDir, 'VendorDocs')
 homeDir = 'd:\\' + os.path.join('home', 'cnetoper')
 sandBox =          os.path.join(homeDir, 'cdr', 'Utilities')
-workDir =          os.path.join(homeDir, 'cdr', 'NLM')
+workDir =          os.path.join(homeDir, 'NLM')
 nlmXsl  = 'NlmClinicalStudy.xsl'
 nlmProg = utilDir + '\\NlmFilter.py'
 ftpFile = 'FtpNlmDocs.txt'
@@ -93,7 +97,12 @@ try:
                               (jobId, workDir))
     print "Processing files..."
     os.chdir(workDir)
-    cdr.runCommand(nlmFilter)
+    nlmcmd = cdr.runCommand(nlmFilter)
+    # if nlmcmd.code == 1:
+    open(log, "a").write("    %d: ---------------------------\n%s\n" %
+                        (jobId, nlmcmd.output))
+    open(log, "a").write("    %d: ---------------------------\n" %
+                        (jobId))
 
     # Creating the FTP command file to copy files to CIPSFTP
     # ------------------------------------------------------
@@ -107,19 +116,20 @@ try:
     ftpCmd.write('cdrdev\n')
     ftpCmd.write('***REMOVED***\n')
     ftpCmd.write('binary\n')
-    ftpCmd.write('cd /u/ftp/qa/pdq/incoming/NLM\n')
 
     if jobType == 'monthly':
-       ftpCmd.write('lcd ' + outDir + '/NLMExport/m' + dateStr + '\n')
+       ftpCmd.write('cd /u/ftp/qa/nlm/incoming/monthly\n')
+       ftpCmd.write('lcd ' + outDir + '\NLMExport\m' + dateStr + '\n')
     else:
-       ftpCmd.write('lcd ' + outDir + '/NLMExport/w' + dateStr + '\n')
+       ftpCmd.write('cd /u/ftp/qa/nlm/incoming/mid-month\n')
+       ftpCmd.write('lcd ' + outDir + '\NLMExport\w' + dateStr + '\n')
 
     ftpCmd.write('mdel *.tar.bz2\n')
     ftpCmd.write('mput *.tar.bz2\n')
 
     # The manifest file is part of the zip file for hot-fix updates
     # -------------------------------------------------------------
-    if jobType == 'monthly':
+    if jobType == 'weekly':
        ftpCmd.write('del dropped.txt\n')
        ftpCmd.write('put dropped.txt\n')
     
@@ -137,7 +147,7 @@ try:
 
     open(log, "a").write("    %d: FTP command return code: %s\n" %
                         (jobId, mycmd.code))
-    if mycmd.code == 1:
+    if mycmd.code != 0:
        open(log, "a").write("    %d: ---------------------------\n%s\n" %
                         (jobId, mycmd.output))
 
