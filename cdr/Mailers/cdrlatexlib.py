@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.40 2003-05-09 03:44:06 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.41 2003-05-13 20:01:24 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.40  2003/05/09 03:44:06  ameyer
+# Added support for PersonTitle field in physician directory output.
+#
 # Revision 1.39  2003/04/09 14:33:21  bkline
 # Fixed problem with trial group membership (mismatch between integer and
 # string version of document ID).
@@ -1577,7 +1580,7 @@ def personLocs(pp):
     \item[Phone]                                         %s      \\
     \item[Fax]                                           %s      \\
                                                          %s      \\
-    \item[E-Mail]                                        %s      \\
+    \item[Official E-mail at this location]              %s      \\
     \item[Publish E-Mail to PDQ/Cancer.gov]              \yesno  \\
     \item[Website]                                       %s      \\
   \end{entry}
@@ -1613,10 +1616,18 @@ def personLocs(pp):
     \item[Phone]                                         %s      \\
     \item[Fax]                                           %s      \\
                                                          %s      \\
-    \item[E-Mail]                                        %s      \\
-    \item[Publish E-Mail to PDQ/Cancer.gov]              \emailPublicYesOrNoCircles  \\
+    \item[Official E-mail at this location]              %s      \\
+    \item[Display E-Mail address on PDQ/Cancer.gov clinical trials web site]
+    \emailPublicYesOrNoCircles  \\
     \item[Website]                                       %s      \\
   \end{entry}
+
+  \subsection*{Preferred Contact Method}
+
+  For future updates, how would you prefer to be contacted?
+  
+   $\bigcirc$ E-mail \qquad $\bigcirc$ Mail \\
+
 """ % (cipsContact.phone or blankLine,
        cipsContact.fax   or blankLine, adminOnly,
        cipsContact.email or blankLine,
@@ -1632,7 +1643,11 @@ def personLocs(pp):
 
 %s
 
-  \subsection*{Other Practice Locations}
+  \subsection*{Other Locations}
+
+  {\it (Medical centers, hospitals, or cancer centers where you
+  provide patient care or participate in clinical trials)} \\
+  
 
 """ % cipsContactInfo
 
@@ -1652,7 +1667,7 @@ def personLocs(pp):
     \item[Phone]                                         %s      \\
     \item[Fax]                                           %s      \\
                                                          %s      \\
-    \item[E-Mail]                                        %s      \\
+    \item[Official E-mail at this location]              %s      \\
     \item[Publish E-Mail to PDQ/Cancer.gov]              \emailPublicYesOrNoCircles  \\
     \item[Website]                                       %s      \\
   \end{entry}
@@ -2497,9 +2512,6 @@ PHONE_RULER=r"""
 PERSON_MISC_INFO=r"""
    %% PERSON_MISC_INFO %%
    %% ---------------- %%
-
-   \subsection*{Preferred Contact Mode}
-   $\bigcirc$ E-mail at primary contact \qquad $\bigcirc$ Mail
 
    \subsection*{Practice Information}
     Are you a physician (MD, DO, or foreign equivalent)?   \hfill
