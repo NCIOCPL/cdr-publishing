@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.18 2002-10-09 18:09:15 bkline Exp $
+# $Id: cdrmailer.py,v 1.19 2002-10-09 19:41:46 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.18  2002/10/09 18:09:15  bkline
+# Added new code for generating LaTeX for address label sheet.
+#
 # Revision 1.17  2002/10/09 02:01:55  ameyer
 # Changes in address generation based on new filters and new XML for
 # addresses returned from the server.
@@ -540,8 +543,26 @@ class MailerJob:
             lines.append(zip)
         return lines
 
+    #------------------------------------------------------------------
+    # Create LaTeX for a sheet containing just an address label.
+    #------------------------------------------------------------------
     def createAddressLabelPage(self, addr, upperCase = 0):
+        """
+        Parameters:
+            addr        - Object representing an address.
+            upperCase   - Optional flag requesting that the address
+                          strings be converted to uppercase.
+        Notes:
+            The window for the address labels is small, and the
+            envelope is larger than the sheet, so we drop the
+            country name line for U.S. addresses to save space.
+        Return value:
+            String containing LaTeX for address label sheet.
+        """
+
         lines = self.__assembleAddressLines(addr)
+        if len(lines) and lines[-1].upper() in ("US", "USA", "U.S.", "U.S.A."):
+            lines = lines[:-1]
         if upperCase:
             for i in range(len(lines)):
                 lines[i] = lines[i].upper()
