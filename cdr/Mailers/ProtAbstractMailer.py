@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.12 2002-11-07 21:22:07 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.13 2002-11-08 17:27:06 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2002/11/07 21:22:07  bkline
+# Fix for selection query.
+#
 # Revision 1.11  2002/10/24 17:52:06  bkline
 # Added support for RemailerFor element.
 #
@@ -148,6 +151,21 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
             self.log("generating LaTeX for CDR%010d" % docId)
             doc = self.getDocuments()[docId]
             doc.latex = self.makeLatex(doc, filters, '')
+            doc.profTitle = self.__getProfTitle(doc)
+
+    #------------------------------------------------------------------
+    # Get the text content of the /InScopeProtocol/ProtocolTitle where
+    # the Type attribute = 'Professional'.
+    #------------------------------------------------------------------
+    def __getProfTitle(self, doc):
+        id      = doc.getId() #"CDR%010d" % doc.getId()
+        ver     = doc.getVersion()
+        filters = ['name:Get Protocol Professional Title']
+        result  = cdr.filterDoc('guest', filters, id, docVer = ver)
+        if type(result) in (type(""), type(u"")):
+            raise StandardError (\
+                "failure filtering document %s: %s" % (docId, result))
+        return result[0] or "[No Protocol Professional Title found]"
 
     #------------------------------------------------------------------
     # Generate an index of the mailers order by country/postal code.
@@ -236,7 +254,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         if len(pieces) != 2:
             raise "Protocol title missing component: %s" % docTitle
         protId    = pieces[0]
-        protTitle = pieces[1]
+        protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
 
         # Replace placeholders:
