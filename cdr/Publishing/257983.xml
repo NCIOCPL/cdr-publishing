@@ -61,11 +61,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Terminology</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Term</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>     
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -146,19 +143,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Sort ProtocolSite</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: InScopeProtocol - Remove Duplicate ProtocolSite</SubsetFilterName>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -238,14 +223,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Create InScope Protocol XML for Full Protocol QC Report</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>InScope Protocol Full QC Report</SubsetFilterName>
-     </SubsetFilter>     
+      <SubsetFilterName>set:QC InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>        
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -320,14 +299,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): InScope Protocol</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>InScope Protocol Administrative Report Filter</SubsetFilterName>
-     </SubsetFilter>     
+      <SubsetFilterName>set:QC InScopeProtocol Admin Set</SubsetFilterName>
+     </SubsetFilter>   
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -413,13 +386,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Person</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Person Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
@@ -509,13 +476,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Person</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Person QC Report Filter</SubsetFilterName>
+      <SubsetFilterName>set:QC Person Set</SubsetFilterName>
      </SubsetFilter>
     </SubsetFilters>
    </SubsetSpecification>
@@ -588,32 +549,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Summary</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>    
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
       <ParmValue/>
@@ -689,32 +626,8 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (2/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (3/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (4/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (5/5): Summary</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter:(6/6)Summary</SubsetFilterName>
-     </SubsetFilter>     
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Add Citation Wrapper Data Element</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Summary-Sort Citations by refidx</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Health Professional Summary Report</SubsetFilterName>
-     </SubsetFilter>
+      <SubsetFilterName>set:QC Summary Set</SubsetFilterName>
+     </SubsetFilter>    
     </SubsetFilters>
    </SubsetSpecification>
 
@@ -799,13 +712,7 @@
     </SubsetSelection>
     <SubsetFilters>
      <SubsetFilter>
-      <SubsetFilterName>Denormalization Filter (1/1): Organization</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilter>
-      <SubsetFilterName>Denormalization: sort OrganizationName for Postal Address</SubsetFilterName>
-     </SubsetFilter>     
-     <SubsetFilter>
-      <SubsetFilterName>Vendor Filter: Organization</SubsetFilterName>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
      </SubsetFilter>
      <SubsetFilterParm>
       <ParmName>DateFirstPub</ParmName>
