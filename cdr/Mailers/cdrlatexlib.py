@@ -1,9 +1,13 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.20 2002-11-08 21:40:46 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.21 2002-11-14 21:42:40 ameyer Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.20  2002/11/08 21:40:46  bkline
+# Inserted newline between bibliographic items to prevent TeX from
+# choking on monstrously long lines.
+#
 # Revision 1.19  2002/11/08 16:11:45  bkline
 # Added spacing changes requested by Lakshmi (issue #511).
 #
@@ -55,6 +59,9 @@ import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 #----------------------------------------------------------------------
 personLists = None
 listStack   = []
+
+# Pattern for checking attribute name =/!= value
+_attrPat = re.compile(r'([A-Za-z_]+)\s*(!?)=\s*(.*)')
 
 class XProc:
     """
@@ -152,8 +159,6 @@ class XProc:
                    and returns a string.
     """
 
-    # Pattern for checking attribute name =/!= value
-    attrPat = re.compile(r'([A-Za-z_]+)\s*(!?)=\s*(.*)')
     ORDER_TOP      = 1  # Process in order given in instructions, at top level
     ORDER_PARENT   = 2  # Process in order given in instructions, within parent
     ORDER_DOCUMENT = 3  # Process in order found in the document
@@ -184,7 +189,7 @@ class XProc:
 
         # If an attribute specification was given, parse it here
         if attr != None:
-            matchObj = attrPat.search (attr)
+            matchObj = _attrPat.search (attr)
             if matchObj == None:
                 raise XmlLatexException ("Bad attr specification: '%s'" % attr)
             attrParts = matchObj.groups()
@@ -3566,20 +3571,24 @@ TestInstructions = \
 #   for processing a mailer.
 #   Value must be past as second parameter on command prompt.
 #   (First parameter being the XML document being processed.)
+#
+#   Table contains:
+#       Key = tuple of (output format, output format subtype)
+#     Value = tuple of (XProc list name, number of reqd. LaTeX passes)
 #------------------------------------------------------------------
 ControlTable = {\
-    ("Protocol",         ""):ProtocolInstructions,\
-    ("Protocol",         "initial"):ProtocolInstructions,\
-    ("InScopeProtocol",         ""):ProtocolInstructions,\
-    ("InScopeProtocol",         "initial"):ProtocolInstructions,\
-    ("Summary",          ""):SummaryInstructions,\
-    ("Summary",      "initial"):SummaryInstructions,\
-    ("Organization",     ""):OrgInstructions,\
-    ("Person",           ""):PersonInstructions,\
-    ("StatusCheck",      ""):StatusCheckInstructions,\
-    ("InScopeProtocol", "StatusCheck"):StatusCheckInstructions,\
-    ("StatusCheckCCOP",  ""):StatusCheckCCOPInstructions,\
-    ("Test",             ""):TestInstructions\
+    ("Protocol",         ""):(ProtocolInstructions, 2),\
+    ("Protocol",  "initial"):(ProtocolInstructions, 2),\
+    ("InScopeProtocol",  ""):(ProtocolInstructions, 2),\
+    ("InScopeProtocol", "initial"):(ProtocolInstructions, 2),\
+    ("Summary",          ""):(SummaryInstructions, 2),\
+    ("Summary",   "initial"):(SummaryInstructions, 2),\
+    ("Organization",     ""):(OrgInstructions, 2),\
+    ("Person",           ""):(PersonInstructions, 3),\
+    ("StatusCheck",      ""):(StatusCheckInstructions, 2),\
+    ("InScopeProtocol", "StatusCheck"):(StatusCheckInstructions, 2),\
+    ("StatusCheckCCOP",  ""):(StatusCheckCCOPInstructions, 2),\
+    ("Test",             ""):(TestInstructions, 2)\
 }
 
 
