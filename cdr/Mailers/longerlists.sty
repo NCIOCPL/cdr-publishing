@@ -1,0 +1,18 @@
+%----------------------------------------------------------------------
+%
+% $Id: longerlists.sty,v 1.1 2002-11-06 15:12:42 bkline Exp $
+%
+% Redefines itemize list to allow a fifth level of nesting.
+%
+% $Log: not supported by cvs2svn $
+%----------------------------------------------------------------------
+\def\itemize{%
+  \ifnum \@itemdepth >4\@toodeep\else
+    \advance\@itemdepth\@ne
+    \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
+    \expandafter
+    \list
+      \csname\@itemitem\endcsname
+      {\def\makelabel##1{\hss\llap{##1}}}%
+  \fi}
+\def\labelitemv{$\bullet$}
