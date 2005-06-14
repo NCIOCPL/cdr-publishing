@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.57 2005-03-02 15:42:26 bkline Exp $
+# $Id: cdrmailer.py,v 1.58 2005-06-14 12:38:51 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.57  2005/03/02 15:42:26  bkline
+# Finished work to support RTF mailers for PDQ board members.
+#
 # Revision 1.56  2004/11/24 05:50:09  bkline
 # Plugged in code to build fresh set of emailer lookup values.
 #
@@ -1684,11 +1687,20 @@ class Address:
     #------------------------------------------------------------------
     # Calculate the number of lines in a formatted address block.
     #------------------------------------------------------------------
-    def getNumAddressLines(self, dropUS = 0):
-        lines = self.__getAddressLines()
+    def getNumAddressLines(self, dropUS = 0, includeNameAndTitle = True):
+        lines = self.__getAddressLines(includeNameAndTitle)
         if not lines: return 0
         if dropUS and self.__lineIsUS(lines[-1]): return len(lines) - 1
         return len(lines)
+
+    #------------------------------------------------------------------
+    # Return a copy of one of the address lines.
+    #------------------------------------------------------------------
+    def getAddressLine(self, idx, includeNameAndTitle = True):
+        lines = self.__getAddressLines(includeNameAndTitle)
+        if not lines:
+            raise Exception("no address lines")
+        return lines[idx]
 
     #------------------------------------------------------------------
     # Create a LaTeX-ready string representing this address.
