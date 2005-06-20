@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.72 2004-11-18 21:22:47 ameyer Exp $
+# $Id: cdrlatexlib.py,v 1.73 2005-06-20 13:28:00 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.72  2004/11/18 21:22:47  ameyer
+# Added code to the organization mailers to perform the Yes/No circle
+# marking for public email addresses as is done for persons.  It's the
+# same code as for persons, just called from two additional locations.
+#
 # Revision 1.71  2004/11/12 15:45:56  bkline
 # Extended code for stripping trailing space from protocol IDs to
 # handle primary IDs as well.
@@ -3202,7 +3207,7 @@ CommonMarkupRules = (
           prefix    = "\\emph{",
           suffix    = "}"),
     XProc(element   = "GlossaryTermRef",
-          prefix    = "\\emph{",
+          prefix    = "{\\it ",
           suffix    = "}"),
     XProc(element   = "Emphasis",
           prefix    = "\\emph{",
@@ -3219,7 +3224,7 @@ CommonMarkupRules = (
           suffix    = "}"),
     XProc(element   = "InterventionName"),
     XProc(element   = "ScientificName",
-          prefix    = "\\emph{",
+          prefix    = "{\\it ",
           suffix    = "}"),
     XProc(element   = "Strong",
           prefix    = "\\textbf{",
