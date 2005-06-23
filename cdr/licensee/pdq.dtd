@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.51 2005-03-25 16:29:38 bkline Exp $
+   $Id: pdq.dtd,v 1.52 2005-06-23 19:34:34 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.51  2005/03/25 16:29:38  bkline
+   Added RelatedWebsites element to Term element definition.
+
    Revision 1.50  2005/03/24 13:49:26  bkline
    New elements SummaryDescription and SummaryURL moved to follow
    SummaryLanguage at Lakshmi's request.
@@ -481,8 +484,6 @@
 <!ELEMENT SummaryMetaData (SummaryType,
                            SummaryAudience,
                            SummaryLanguage,
-                           SummaryDescription,
-                           SummaryURL,
                            MainTopics+,
                            SecondaryTopics*
                           )>
@@ -509,12 +510,6 @@
   Possible values are:
     English
     Spanish -->
-
-<!ELEMENT SummaryDescription (#PCDATA)>                           
-
-<!-- Used by Cancer.gov website to link to the summary. -->
-<!ELEMENT SummaryURL (#PCDATA)>                           
-<!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>                           
 
