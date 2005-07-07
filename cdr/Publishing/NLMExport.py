@@ -14,8 +14,11 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.2 2005-01-28 23:13:39 venglisc Exp $
+# $Id: NLMExport.py,v 1.3 2005-07-07 21:28:28 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2005/01/28 23:13:39  venglisc
+# Modified script to adjust changes in directory structure on CIPSFTP.
+#
 # Revision 1.1  2004/12/30 18:45:04  venglisc
 # Initial version of script to filter protocol data to NLM format and copy
 # resulting documents to CIPSFTP.
@@ -24,13 +27,13 @@
 import sys, re, string, cdr, os, shutil, time
 
 if len(sys.argv) < 3:
-   sys.stderr.write('usage: python NLMExport jobID jobType\n')
-   sys.stderr.write('   eg: python NLMExport 12345 monthly|weekly\n')
+   sys.stderr.write('usage: python NLMExport jobID jobType [copy]\n')
+   sys.stderr.write('   eg: python NLMExport 12345 monthly|weekly copy\n')
    sys.exit(1)
 
 # Setting directory and file names
 # --------------------------------
-log     = "d:\\cdr\\log\\hotfix_NLM.log" 
+log     = "d:\\cdr\\log\\interim_NLM.log" 
 outDir  = 'd:\\' + os.path.join('cdr', 'Output')
 pubDir  = 'd:\\' + os.path.join('cdr', 'publishing')
 utilDir = 'd:\\' + os.path.join('cdr', 'Utilities')
@@ -52,6 +55,8 @@ dateStr = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 # -------------------------------------
 open(log, "a").write("Job %d: %s\n    %d: Started at: %s\n" % \
                     (jobId, divider, jobId, time.ctime(time.time())))
+open(log, "a").write("    %d: Input parameters: %s\n" %
+                              (jobId, sys.argv))
 try:
     # Ensure we are using the latest filter from CVS
     # ----------------------------------------------
@@ -67,17 +72,26 @@ try:
     # directory
     # ----------------------------------------------------------------
     if jobType == 'monthly':
-       open(log, "a").write("    %d: Removing files in %s\n" %
+       # Only refresh the content of the vendor directory if necessary
+       # Passing 4th command line parameter copies the data.
+       # -------------------------------------------------------------
+       if len(sys.argv) == 4:
+           open(log, "a").write("    %d: Removing files in %s\n" %
                               (jobId, venDir))
-       print "Removing files..."
-       os.chdir(outDir)
-       shutil.rmtree(venDir)
+           print "Removing files..."
+           os.chdir(outDir)
+           shutil.rmtree(venDir)
 
-       open(log, "a").write("    %d: Copying files to %s\n" %
+           open(log, "a").write("    %d: Copying  files to %s\n" %
                               (jobId, venDir))
-       print "Copying files..."
-       oldDir = os.path.join(outDir, 'Job' + sys.argv[1])
-       shutil.copytree(oldDir, venDir) 
+           print "Copying files..."
+           oldDir = os.path.join(outDir, 'Job' + sys.argv[1])
+           shutil.copytree(oldDir, venDir) 
+       else:
+           open(log, "a").write("    %d: Using files in %s\n" %
+                              (jobId, venDir))
+           print "Using existing files..."
+           
 
        nlmFilter = nlmProg + ' m' + dateStr + ' ' + venDir
 
@@ -88,6 +102,10 @@ try:
        nlmFilter = nlmProg + ' w' + dateStr
     else:
        print "ERROR:  jobType '%s' not allowed!" % jobType
+       open(log, "a").write("    %d: ERROR: jobType '%s' not defined!\n" %
+                              (jobId, jobType))
+       open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
+                        (jobId, time.ctime(time.time()), jobId, divider))
        sys.exit()
 
     # Process the active protocol files by running the NLMFilter.py
@@ -97,6 +115,12 @@ try:
                               (jobId, workDir))
     print "Processing files..."
     os.chdir(workDir)
+
+    # Submitting the command to create the NLM Export data
+    # -----------------------------------------------------
+    open(log, "a").write("    %d: Run command:\n    %d: %s\n" %
+                              (jobId, jobId, nlmFilter))
+
     nlmcmd = cdr.runCommand(nlmFilter)
     # if nlmcmd.code == 1:
     open(log, "a").write("    %d: ---------------------------\n%s\n" %
@@ -156,8 +180,10 @@ try:
                         (jobId, time.ctime(time.time()), jobId, divider))
 
 except StandardError, arg:
-    open(log, "a").write("    %d: Failure: %s\nJob %d: %s\n" % 
-                        (jobId, arg[0], jobId, divider))
+    open(log, "a").write("    %d: Failure: %s\n" % 
+                        (jobId, arg[0]))
+    open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
+                        (jobId, time.ctime(time.time()), jobId, divider))
 
 except SystemExit:
     # The mailers invoke sys.exit(0) when they're done, raising this exception.
@@ -166,3 +192,5 @@ except SystemExit:
 except:
     open(log, "a").write("    %d: Unexpected failure\nJob %d: %s\n" % 
                         (jobId, jobId, divider))
+    open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
+                        (jobId, time.ctime(time.time()), jobId, divider))
