@@ -14,8 +14,15 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.3 2005-07-07 21:28:28 venglisc Exp $
+# $Id: NLMExport.py,v 1.4 2005-07-18 20:39:36 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2005/07/07 21:28:28  venglisc
+# Modified code to log the command line arguments in the log file.
+# I also changed the name of the log file from hotfix_NLM to interim_NLM.
+# Additionally, I have modified the code to allow to skip the part that
+# copies all vendor data to the VendorDocs directory to allow the process
+# to be rerun without going through the lengthy copy process. (Bug 1751)
+#
 # Revision 1.2  2005/01/28 23:13:39  venglisc
 # Modified script to adjust changes in directory structure on CIPSFTP.
 #
@@ -34,6 +41,7 @@ if len(sys.argv) < 3:
 # Setting directory and file names
 # --------------------------------
 log     = "d:\\cdr\\log\\interim_NLM.log" 
+rootDir = os.getenv('SystemRoot')
 outDir  = 'd:\\' + os.path.join('cdr', 'Output')
 pubDir  = 'd:\\' + os.path.join('cdr', 'publishing')
 utilDir = 'd:\\' + os.path.join('cdr', 'Utilities')
@@ -50,6 +58,14 @@ jobType = sys.argv[2]
 
 divider = "=" * 60
 dateStr = time.strftime("%Y-%m-%d-%H%M", time.localtime())
+
+def outputExists(nlmDir):
+   try:
+      os.stat(nlmDir)
+      return True
+   except:
+      return False
+
 
 # Open Log file and enter start message
 # -------------------------------------
@@ -99,6 +115,33 @@ try:
     # for the latest job number and documents that need to be processed
     # -----------------------------------------------------------------
     elif jobType == 'weekly':
+       # If the process extracting and converting the data set already
+       # ran successfully but failed to FTP the data, a fourth 
+       # parameter may be submitted indicating the location of the 
+       # data to be FTP'ed.
+       # -------------------------------------------------------------
+       if len(sys.argv) == 4:
+           dateStr = sys.argv[3]
+
+           # Check if specified directory exists
+           # -----------------------------------
+           doesExist = outputExists(outDir + '\NLMExport\w' + dateStr)
+           if not doesExist: 
+              open(log, "a").write("    %d: ERROR: Directory does not exist\n" %
+                              (jobId))
+              open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
+                        (jobId, time.ctime(time.time()), jobId, divider))
+              sys.exit('ERROR: Directory specified does not exist.')
+
+           open(log, "a").write("    %d: FTP existing data set: w%s\n" %
+                              (jobId, dateStr))
+           print "No data extraction."
+           print "FTP existing data set w%s..." % dateStr
+       else:
+           open(log, "a").write("    %d: Creating data set: w%s\n" %
+                              (jobId, dateStr))
+           print "Creating data set w%s..." % dateStr
+
        nlmFilter = nlmProg + ' w' + dateStr
     else:
        print "ERROR:  jobType '%s' not allowed!" % jobType
@@ -120,6 +163,7 @@ try:
     # -----------------------------------------------------
     open(log, "a").write("    %d: Run command:\n    %d: %s\n" %
                               (jobId, jobId, nlmFilter))
+
 
     nlmcmd = cdr.runCommand(nlmFilter)
     # if nlmcmd.code == 1:
@@ -166,7 +210,7 @@ try:
                         (jobId))
     print "Copy files to ftp server..."
 
-    ftpDocs = "c:/Winnt/System32/ftp.exe -i -s:" + ftpFile
+    ftpDocs = rootDir + "/System32/ftp.exe -i -s:" + ftpFile
     mycmd = cdr.runCommand(ftpDocs)
 
     open(log, "a").write("    %d: FTP command return code: %s\n" %
