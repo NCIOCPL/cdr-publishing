@@ -12,4 +12,4 @@ tar cvjf ProtocolClosed.tar.bz2 ProtocolClosed
 tar cvjf CTGovProtocol.tar.bz2  CTGovProtocol
 tar cvjf Media.tar.bz2 Media
 
-c:\Winnt\System32\ftp.exe -i -s:\cdr\publishing\VendorDocsFtpScript
+%SystemRoot%\System32\ftp.exe -i -s:\cdr\publishing\VendorDocsFtpScript
