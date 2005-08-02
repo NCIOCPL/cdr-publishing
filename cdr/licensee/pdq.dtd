@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.52 2005-06-23 19:34:34 venglisc Exp $
+   $Id: pdq.dtd,v 1.53 2005-08-02 15:41:35 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -484,6 +484,8 @@
 <!ELEMENT SummaryMetaData (SummaryType,
                            SummaryAudience,
                            SummaryLanguage,
+                           SummaryDescription,
+                           SummaryURL,
                            MainTopics+,
                            SecondaryTopics*
                           )>
@@ -510,6 +512,12 @@
   Possible values are:
     English
     Spanish -->
+
+<!ELEMENT SummaryDescription (#PCDATA)>                           
+
+<!-- Used by Cancer.gov website to link to the summary. -->
+<!ELEMENT SummaryURL (#PCDATA)>                           
+<!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>                           
 
