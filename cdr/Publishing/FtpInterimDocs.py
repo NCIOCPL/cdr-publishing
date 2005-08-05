@@ -19,8 +19,14 @@
 # The original name of this program was FtpHotfixDocs.py but got
 # renamed after the update process got named 'Interim Update'.
 #
-# $Id: FtpInterimDocs.py,v 1.1 2005-07-07 22:03:23 venglisc Exp $
+# $Id: FtpInterimDocs.py,v 1.2 2005-08-05 20:55:53 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2005/07/07 22:03:23  venglisc
+# Initial version of FtpInterimDocs.py, however this program was named
+# FtpHotfixDocs.py in its former life.  Its name got changed due to the
+# renaming of the process from 'Hot Fix Updates' to 'Interim Updates'.
+# I changed all references to 'Hot fix' (including the log file name).
+#
 #----------------------------------------------------------------------
 import sys, re, string, cdr, os, shutil, time
 
@@ -74,6 +80,7 @@ try:
             # -------------------------------------------------------
             if file != 'InvalidDocs':
                 f = open(file, 'r')
+            else:
                 continue
             if file == manifest:
                 # Read all lines of the manifest file into a list
@@ -198,7 +205,7 @@ try:
 
     # FTP the Interim documents to ftpserver
     # --------------------------------------
-    mycmd = cdr.runCommand("c:/Winnt/System32/ftp.exe -i -s:FtpInterimDocs.txt")
+    mycmd = cdr.runCommand("%SYSTEMROOT%/System32/ftp.exe -i -s:FtpInterimDocs.txt")
 
     open(log, "a").write("    %d: FTP command return code: %s\n" %
                         (jobId, mycmd.code))
