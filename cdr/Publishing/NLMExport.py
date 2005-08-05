@@ -14,8 +14,14 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.4 2005-07-18 20:39:36 venglisc Exp $
+# $Id: NLMExport.py,v 1.5 2005-08-05 17:59:25 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2005/07/18 20:39:36  venglisc
+# Modified code to allow to FTP a data set that had been correctly created
+# as part of the weekly interim update but did not get copied.
+# A third parameter can be specified indicating the date of the data set
+# to be copied.
+#
 # Revision 1.3  2005/07/07 21:28:28  venglisc
 # Modified code to log the command line arguments in the log file.
 # I also changed the name of the log file from hotfix_NLM to interim_NLM.
@@ -77,10 +83,25 @@ try:
     # Ensure we are using the latest filter from CVS
     # ----------------------------------------------
     os.chdir(sandBox)
-    upNlm = 'cvs up ' + sandBox + '/' + nlmXsl
-    cdr.runCommand(upNlm)
-    cpNlm = 'cp ' + nlmXsl + ' ' + workDir
-    cdr.runCommand(cpNlm)
+    if not os.environ.has_key('CVSROOT'):
+        errMsg = 'ERROR:  CVSROOT variable not defined!!!'   
+        open(log, "a").write("    %d: %s\n" % (jobId, errMsg))
+        print errMsg
+        sys.exit('ERROR: Set CVSROOT before resuming.')
+
+    upNlmXsl = 'cvs up ' + sandBox + '/' + nlmXsl
+    rcResult = cdr.runCommand(upNlmXsl)
+    open(log, "a").write("    %d: cvs - %s\n" % 
+                         (jobId, rcResult.output or 'OK'))
+    print 'cvs: ', rcResult.output or 'OK'
+
+    cpNlmXsl = 'cp ' + nlmXsl + ' ' + workDir
+    cdr.runCommand(cpNlmXsl)
+    rcResult = cdr.runCommand(upNlmXsl)
+    open(log, "a").write("    %d: cp  - %s\n" % 
+                         (jobId, rcResult.output or 'OK'))
+    print 'cp : ', rcResult.output or 'OK'
+
     os.chdir(workDir)
 
     # Remove the content of the VendorDocs directory and copy the
@@ -165,12 +186,13 @@ try:
                               (jobId, jobId, nlmFilter))
 
 
-    nlmcmd = cdr.runCommand(nlmFilter)
+    rcResult = cdr.runCommand(nlmFilter)
     # if nlmcmd.code == 1:
     open(log, "a").write("    %d: ---------------------------\n%s\n" %
-                        (jobId, nlmcmd.output))
+                        (jobId, rcResult.output))
     open(log, "a").write("    %d: ---------------------------\n" %
                         (jobId))
+    print 'NLM: ', rcResult.output or 'OK'
 
     # Creating the FTP command file to copy files to CIPSFTP
     # ------------------------------------------------------
