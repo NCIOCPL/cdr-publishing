@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.53 2005-08-02 15:41:35 venglisc Exp $
+   $Id: pdq.dtd,v 1.54 2005-09-15 22:28:38 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,11 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.53  2005/08/02 15:41:35  venglisc
+   Reverted back to the version 1.51 to include the SummaryDescription and
+   SummaryURL previously removed since vendors were not ready at the time to
+   accept these. (Bug 1796)
+
    Revision 1.51  2005/03/25 16:29:38  bkline
    Added RelatedWebsites element to Term element definition.
 
@@ -271,6 +276,7 @@
 <!ATTLIST QandADiv id CDATA #IMPLIED>
 
 <!ELEMENT QandAEntry (Question, Answer*)>
+<!ATTLIST QandAEntry id CDATA #IMPLIED>
 
 <!ELEMENT Question (%TextElements;)*>
 
