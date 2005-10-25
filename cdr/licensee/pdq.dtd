@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.54 2005-09-15 22:28:38 venglisc Exp $
+   $Id: pdq.dtd,v 1.55 2005-10-25 19:15:09 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.54  2005/09/15 22:28:38  venglisc
+   Added the id attribute for the QandAEntry element. (Bug 1841)
+
    Revision 1.53  2005/08/02 15:41:35  venglisc
    Reverted back to the version 1.51 to include the SummaryDescription and
    SummaryURL previously removed since vendors were not ready at the time to
@@ -176,7 +179,7 @@
                    | OrderedList
                    | QandASet
                    | Contact
-		   )*,
+                   )*,
                    Section*
                    )>
 <!ATTLIST Section id CDATA #IMPLIED>
@@ -445,6 +448,8 @@
 
 <!ELEMENT PersonTitle (#PCDATA)>
 
+<!ELEMENT VerificationDate (#PCDATA)>
+
 <!ELEMENT DateLastModified (#PCDATA)>
 
 <!ELEMENT DateFirstPublished (#PCDATA)>
@@ -570,11 +575,14 @@
                     Eligibility,
                     ProtocolRelatedLinks?,
                     PublishedResults*,
+                    RelatedPublications*,
                     ProtocolPhase+,
+                    ExpectedEnrollment?,
                     ProtocolSpecialCategory*,
-		    ProtocolAdminInfo,
-		    DateFirstPublished?,
-		    DateLastModified?
+                    ProtocolAdminInfo,
+                    DateFirstPublished?,
+                    VerificationDate?,
+                    DateLastModified?
                    )>
 <!-- ReimbursementApproval might change name after NCI discussion. -->
 <!ATTLIST Protocol id CDATA #REQUIRED>
@@ -610,9 +618,10 @@
 <!ELEMENT ProtocolAbstract (Professional, Patient)>
 
 <!ELEMENT Professional (Objectives,
+                        Outcome*,
                         Outline,
                         EntryCriteria,
-                        ProjectedAccrual,
+                        ProjectedAccrual?,
                         EndPoints?,
                         Stratification?,
                         SpecialStudyParameters?,
@@ -622,6 +631,9 @@
                        )>
 
 <!ELEMENT Objectives (%TextSectionElements;)*>
+
+<!ELEMENT Outcome (%TextSectionElements;)*>
+<!ATTLIST Outcome OutcomeType (Primary | Secondary) #REQUIRED>
 
 <!ELEMENT Outline (%TextSectionElements;)*>
 
@@ -739,14 +751,25 @@
                            MedlineID CDATA ""
                            CancerlitID CDATA "">
 
+<!ELEMENT RelatedPublications (#PCDATA)>
+<!-- The data for published results is a formatted citation.-->
+<!ATTLIST RelatedPublications PMID CDATA ""
+                           MedlineID CDATA ""
+                           CancerlitID CDATA "">
+
 <!ELEMENT ProtocolPhase (#PCDATA)>
+
+<!ELEMENT ExpectedEnrollment (#PCDATA)>
 
 <!ELEMENT ProtocolSpecialCategory (#PCDATA)>
 
-<!ELEMENT ProtocolAdminInfo (CurrentProtocolStatus,
+<!ELEMENT ProtocolAdminInfo (StartDate*,
+                             CurrentProtocolStatus,
                              ProtocolLeadOrg+,
                              ProtocolSites?
                             )>                            
+
+<!ELEMENT StartDate (#PCDATA)>
 
 <!ELEMENT CurrentProtocolStatus (#PCDATA)>
 
@@ -848,8 +871,8 @@
 <!ATTLIST Home Status CDATA #IMPLIED>
 
 <!ELEMENT OtherPracticeLocation (PersonOrganizationName,
-					   PersonTitle?,
-					   PersonOrganizationLocation)>
+                    PersonTitle?,
+                    PersonOrganizationLocation)>
 <!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
 <!ATTLIST OtherPracticeLocation Status CDATA #REQUIRED>
 
@@ -870,8 +893,8 @@
                         OrganizationAffiliations?,
                         OrganizationType*,
                         PreferredProtocolOrganization?,
-			DateFirstPublished?,
-			DateLastModified?
+                        DateFirstPublished?,
+                        DateLastModified?
                        )>
 <!ATTLIST Organization id CDATA #REQUIRED>
 <!ATTLIST Organization LegacyPDQID CDATA #IMPLIED>
@@ -1043,34 +1066,34 @@
      document types or vice versa.-->
 
 <!ELEMENT GENETICSPROFESSIONAL (ID,
-				NAME,
-				DEGREE+,
-				PRACTICELOCATIONS+,
-				TYPE*,
-				SPECIALTY*,
-				TEAMSERVICES*,
-				GENETICSERVICES*,
-				MEMBERSHIP*,
-				NOTES?
-			       )>
+                        NAME,
+                        DEGREE+,
+                        PRACTICELOCATIONS+,
+                        TYPE*,
+                        SPECIALTY*,
+                        TEAMSERVICES*,
+                        GENETICSERVICES*,
+                        MEMBERSHIP*,
+                        NOTES?
+                        )>
 
 <!ELEMENT ID (#PCDATA)>
 
 <!ELEMENT NAME (SNAME,
-		FIRSTNAME,
-		LASTNAME,
-		SUFFIX?
-	       )>
+                        FIRSTNAME,
+                        LASTNAME,
+                        SUFFIX?
+                        )>
 
 <!ELEMENT PRACTICELOCATIONS (INSTITUTION,
-			     CADD+,
-			     CCIT?,
-			     CPUN?,
-			     CCOD?,
-			     CCTY,
-			     CPHN?,
-			     CEML?
-			    )>
+                        CADD+,
+                        CCIT?,
+                        CPUN?,
+                        CCOD?,
+                        CCTY,
+                        CPHN?,
+                        CEML?
+                        )>
 <!ELEMENT SPECIALTY (SPECIALTYNAME,BDCT?)>
 
 <!ELEMENT SPECIALTYNAME (#PCDATA)>
@@ -1128,13 +1151,13 @@
 <!-- Country, start element Country -->
 
 <!ELEMENT Country (CountryFullName,
-		   CountryShortName?,
-		   CountryAlternateName*,
-		   Continent,
-		   PostalCodePosition,
-      	   DateFirstPublished?,
-		   DateLastModified?
-		  )>
+                        CountryShortName?,
+                        CountryAlternateName*,
+                        Continent,
+                        PostalCodePosition,
+                        DateFirstPublished?,
+                        DateLastModified?
+                        )>
 <!ATTLIST Country id CDATA #REQUIRED>
 <!ATTLIST Country LegacyPDQID CDATA #IMPLIED>
 
@@ -1151,12 +1174,12 @@
 <!-- PoliticalSubUnit, start element PoliticalSubUnit -->
 
 <!ELEMENT PoliticalSubUnit (PoliticalSubUnitFullName,
-			    PoliticalSubUnitShortName?,
-			    PoliticalSubUnitAlternateName*,
-			    CountryName,
-			    DateFirstPublished?,
-			    DateLastModified?
-			   )>
+                        PoliticalSubUnitShortName?,
+                        PoliticalSubUnitAlternateName*,
+                        CountryName,
+                        DateFirstPublished?,
+                        DateLastModified?
+                        )>
 <!ATTLIST PoliticalSubUnit id CDATA #REQUIRED>
 <!ATTLIST PoliticalSubUnit LegacyPDQID CDATA #IMPLIED>
 
@@ -1257,9 +1280,7 @@
 <!ELEMENT PhoneExt             (#PCDATA)>
 <!ELEMENT Role                 (#PCDATA)>
 <!ELEMENT SecondaryID          (#PCDATA)>
-<!ELEMENT StartDate            (#PCDATA)>
 <!ELEMENT Status               (#PCDATA)>
-<!ELEMENT VerificationDate     (#PCDATA)>
 
 <!-- (Modestly) marked-up text. -->
 <!ELEMENT BriefSummary         ((Para|ItemizedList)+)>
