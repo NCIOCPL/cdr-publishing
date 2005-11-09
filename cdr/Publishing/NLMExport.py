@@ -14,8 +14,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.5 2005-08-05 17:59:25 venglisc Exp $
+# $Id: NLMExport.py,v 1.6 2005-11-09 21:04:07 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2005/08/05 17:59:25  venglisc
+# Added test for existance of CVSROOT variable and added a few more log
+# messages. (Bug 1715)
+#
 # Revision 1.4  2005/07/18 20:39:36  venglisc
 # Modified code to allow to FTP a data set that had been correctly created
 # as part of the weekly interim update but did not get copied.
@@ -53,7 +57,7 @@ pubDir  = 'd:\\' + os.path.join('cdr', 'publishing')
 utilDir = 'd:\\' + os.path.join('cdr', 'Utilities')
 venDir  =          os.path.join(outDir, 'VendorDocs')
 homeDir = 'd:\\' + os.path.join('home', 'cnetoper')
-sandBox =          os.path.join(homeDir, 'cdr', 'Utilities')
+### sandBox =          os.path.join(homeDir, 'cdr', 'Utilities')
 workDir =          os.path.join(homeDir, 'NLM')
 nlmXsl  = 'NlmClinicalStudy.xsl'
 nlmProg = utilDir + '\\NlmFilter.py'
@@ -80,27 +84,35 @@ open(log, "a").write("Job %d: %s\n    %d: Started at: %s\n" % \
 open(log, "a").write("    %d: Input parameters: %s\n" %
                               (jobId, sys.argv))
 try:
-    # Ensure we are using the latest filter from CVS
-    # ----------------------------------------------
-    os.chdir(sandBox)
-    if not os.environ.has_key('CVSROOT'):
-        errMsg = 'ERROR:  CVSROOT variable not defined!!!'   
-        open(log, "a").write("    %d: %s\n" % (jobId, errMsg))
-        print errMsg
-        sys.exit('ERROR: Set CVSROOT before resuming.')
+    ### Per BK on 2005-11-09 the filter should not be retrieved
+    ### from the CVS anymore.  
+    ### If we don't retrieve the filter from CVS we also don't 
+    ### need to create/update the sandbox and copy the filter
+    ### to the NLM directory.  It must be ensured that the 
+    ### NLM directory is being updated with the current filter
+    ### manually.
+    ### -------------------------------------------------------
+    ### # Ensure we are using the latest filter from CVS
+    ### # ----------------------------------------------
+    ### os.chdir(sandBox)
+    ### if not os.environ.has_key('CVSROOT'):
+    ###     errMsg = 'ERROR:  CVSROOT variable not defined!!!'   
+    ###     open(log, "a").write("    %d: %s\n" % (jobId, errMsg))
+    ###     print errMsg
+    ###     sys.exit('ERROR: Set CVSROOT before resuming.')
 
-    upNlmXsl = 'cvs up ' + sandBox + '/' + nlmXsl
-    rcResult = cdr.runCommand(upNlmXsl)
-    open(log, "a").write("    %d: cvs - %s\n" % 
-                         (jobId, rcResult.output or 'OK'))
-    print 'cvs: ', rcResult.output or 'OK'
+    ### upNlmXsl = 'cvs up ' + sandBox + '/' + nlmXsl
+    ### rcResult = cdr.runCommand(upNlmXsl)
+    ### open(log, "a").write("    %d: cvs - %s\n" % 
+    ###                      (jobId, rcResult.output or 'OK'))
+    ### print 'cvs: ', rcResult.output or 'OK'
 
-    cpNlmXsl = 'cp ' + nlmXsl + ' ' + workDir
-    cdr.runCommand(cpNlmXsl)
-    rcResult = cdr.runCommand(upNlmXsl)
-    open(log, "a").write("    %d: cp  - %s\n" % 
-                         (jobId, rcResult.output or 'OK'))
-    print 'cp : ', rcResult.output or 'OK'
+    ### cpNlmXsl = 'cp ' + nlmXsl + ' ' + workDir
+    ### cdr.runCommand(cpNlmXsl)
+    ### rcResult = cdr.runCommand(upNlmXsl)
+    ### open(log, "a").write("    %d: cp  - %s\n" % 
+    ###                      (jobId, rcResult.output or 'OK'))
+    ### print 'cp : ', rcResult.output or 'OK'
 
     os.chdir(workDir)
 
