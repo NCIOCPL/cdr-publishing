@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.55 2005-10-25 19:15:09 venglisc Exp $
+   $Id: pdq.dtd,v 1.56 2005-11-28 21:28:12 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.55  2005/10/25 19:15:09  venglisc
+   Added new elements RelatedPublications, ExpectedEnrollment, Outcome,
+   StartDate, and VerificationDate. (Bug 1870)
+
    Revision 1.54  2005/09/15 22:28:38  venglisc
    Added the id attribute for the QandAEntry element. (Bug 1841)
 
@@ -450,6 +454,10 @@
 
 <!ELEMENT VerificationDate (#PCDATA)>
 
+<!ELEMENT DateSubmittedtoPDQ (#PCDATA)>
+
+<!ELEMENT DateLastVerified (#PCDATA)>
+
 <!ELEMENT DateLastModified (#PCDATA)>
 
 <!ELEMENT DateFirstPublished (#PCDATA)>
@@ -568,8 +576,7 @@
 <!ELEMENT Protocol (ProtocolIDs,
                     FundingInfo?,
                     ProtocolSponsor*,
-                    ReimbursementApproval*,
-                    ProtocolTitle+,
+                    PDQProtocolTitle+,
                     ProtocolAbstract,
                     ProtocolDetail+,
                     Eligibility,
@@ -580,11 +587,11 @@
                     ExpectedEnrollment?,
                     ProtocolSpecialCategory*,
                     ProtocolAdminInfo,
+                    RegistryInfo?,
                     DateFirstPublished?,
-                    VerificationDate?,
-                    DateLastModified?
+                    DateLastModified?,
+                    DateLastVerified?
                    )>
-<!-- ReimbursementApproval might change name after NCI discussion. -->
 <!ATTLIST Protocol id CDATA #REQUIRED>
 <!ATTLIST Protocol LegacyPDQID CDATA #IMPLIED>
 
@@ -612,8 +619,11 @@
 
 <!ELEMENT ProtocolSponsor (#PCDATA)>
 
+<!ELEMENT PDQProtocolTitle (%TitleData;)*>
+<!ATTLIST PDQProtocolTitle Audience (Professional | Patient) #REQUIRED>
+
 <!ELEMENT ProtocolTitle (%TitleData;)*>
-<!ATTLIST ProtocolTitle Audience (Professional | Patient) #REQUIRED>
+<!ATTLIST ProtocolTitle Type (Official | Short) #REQUIRED>
 
 <!ELEMENT ProtocolAbstract (Professional, Patient)>
 
@@ -679,6 +689,7 @@
 
 <!ELEMENT ProtocolDetail (StudyType,
                           StudyCategory+,
+                          StudyDesign*,
                           StudyCondition*,
                           Gene*
                          )>
@@ -712,6 +723,8 @@
 
 <!ELEMENT ConditionParent (#PCDATA)>
 <!ATTLIST ConditionParent ref CDATA #IMPLIED>
+
+<!ELEMENT StudyDesign (#PCDATA)>
 
 <!ELEMENT Gene (SpecificGene)>
 
@@ -763,13 +776,21 @@
 
 <!ELEMENT ProtocolSpecialCategory (#PCDATA)>
 
-<!ELEMENT ProtocolAdminInfo (StartDate*,
+<!ELEMENT ProtocolAdminInfo (StartDate?,
                              CurrentProtocolStatus,
                              ProtocolLeadOrg+,
                              ProtocolSites?
                             )>                            
 
+
+                        DateSubmittedtoPDQ?,
+                        ClinicalTrialsGovID)>
+
+<!ELEMENT ClinicalTrialsGovID (#PCDATA)>
+<!ATTLIST ClinicalTrialsGovID xref CDATA #REQUIRED>
+
 <!ELEMENT StartDate (#PCDATA)>
+<!ATTLIST StartDate DateType (Actual|Projected) #REQUIRED>
 
 <!ELEMENT CurrentProtocolStatus (#PCDATA)>
 
@@ -1299,6 +1320,7 @@
 <!ATTLIST LeadSponsor           type (Person|Organization) #IMPLIED>
 <!ATTLIST LinkText              xref CDATA                 #REQUIRED>
 <!ATTLIST OverallContact        ref  CDATA                 #IMPLIED>
+<!ATTLIST OverallContactBackup  ref  CDATA                 #IMPLIED>
 <!ATTLIST OverallOfficial       ref  CDATA                 #IMPLIED>
 
 <!-- End CTGovProtocol -->
