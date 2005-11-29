@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.8 2003-08-07 19:33:59 ameyer Exp $
+# $Id: DirectoryMailer.py,v 1.9 2005-11-29 18:30:00 bkline Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2003/08/07 19:33:59  ameyer
+# Changed Organization filter.
+#
 # Revision 1.7  2003/07/01 22:06:06  ameyer
 # Using new filter set for generating Person XML.
 #
@@ -222,11 +225,22 @@ class DirectoryMailer(cdrmailer.MailerJob):
         for key in recipients.keys():
             # Show recipient identification
             recip = recipients[key]
-            f.write ("Recipient: %s (CDR%010d)\n" % (recip.getName(),
-                                                    recip.getId()))
+            try:
+                f.write ("Recipient: %s (CDR%010d)\n" % (recip.getName(),
+                                                         recip.getId()))
+            except:
+                raise ("Failure adding recipient CDR%010d to cover sheet" %
+                       recip.getId())
+            
             # Show each doc to be sent to recipient
             for doc in recip.getDocs():
-                f.write ("  CDR%010d: %s\n" % (doc.getId(), doc.getTitle()))
+                try:
+                    f.write ("  CDR%010d: %s\n" % (doc.getId(),
+                                                   doc.getTitle()))
+                except:
+                    raise ("Failure adding document CDR%010d to cover sheet" %
+                           doc.getId())
+
             f.write ("\n")
         f.close()
 
