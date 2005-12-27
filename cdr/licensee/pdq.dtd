@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.56 2005-11-28 21:28:12 venglisc Exp $
+   $Id: pdq.dtd,v 1.57 2005-12-27 21:45:19 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.56  2005/11/28 21:28:12  venglisc
+   Updated DTD to add PDQProtocolTitle, DateLastVerified, StartDate,
+   StudyDesign, etc. (Bug 1870)
+
    Revision 1.55  2005/10/25 19:15:09  venglisc
    Added new elements RelatedPublications, ExpectedEnrollment, Outcome,
    StartDate, and VerificationDate. (Bug 1870)
@@ -783,7 +787,8 @@
                             )>                            
 
 
-                        DateSubmittedtoPDQ?,
+<!ELEMENT RegistryInfo (ProtocolTitle, 
+                        DateSubmittedtoPDQ, 
                         ClinicalTrialsGovID)>
 
 <!ELEMENT ClinicalTrialsGovID (#PCDATA)>
