@@ -1,11 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.1 2005-10-19 14:14:29 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.2 2006-01-19 15:25:39 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2005/10/19 14:14:29  bkline
+# Script for generating mailers for board members (or prospective
+# board members) as RTF documents to be edited by Microsoft Word.
+#
 #----------------------------------------------------------------------
 import cdr, cdrmailer, RtfWriter, xml.dom.minidom, datetime, re, sys, time
 
@@ -540,8 +544,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         bmPhone      = toRtf(self.__board.manager.phone)
         bmEmail      = toRtf(self.__board.manager.email)
         adultTrEic   = self.__board.getAdultTreatmentEditorInChief()
-        atEcName     = toRtf(adultTrEic.name.format(False, False))
-        ecName       = toRtf(self.__board.editorInChief.name.format(False,
+        atEcName     = toRtf(adultTrEic.name.format(True, False))
+        ecName       = toRtf(self.__board.editorInChief.name.format(True,
                                                                     False))
         summaryType  = toRtf(self.__board.summaryType)
         edBoardName  = toRtf(self.__board.edBoardName)
