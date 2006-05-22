@@ -14,8 +14,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.6 2005-11-09 21:04:07 venglisc Exp $
+# $Id: NLMExport.py,v 1.7 2006-05-22 23:01:28 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2005/11/09 21:04:07  venglisc
+# Removed section to update filter from CVS prior to running the data
+# conversion. (Bug 1903)
+#
 # Revision 1.5  2005/08/05 17:59:25  venglisc
 # Added test for existance of CVSROOT variable and added a few more log
 # messages. (Bug 1715)
@@ -56,11 +60,7 @@ outDir  = 'd:\\' + os.path.join('cdr', 'Output')
 pubDir  = 'd:\\' + os.path.join('cdr', 'publishing')
 utilDir = 'd:\\' + os.path.join('cdr', 'Utilities')
 venDir  =          os.path.join(outDir, 'VendorDocs')
-homeDir = 'd:\\' + os.path.join('home', 'cnetoper')
-### sandBox =          os.path.join(homeDir, 'cdr', 'Utilities')
-workDir =          os.path.join(homeDir, 'NLM')
-nlmXsl  = 'NlmClinicalStudy.xsl'
-nlmProg = utilDir + '\\NlmFilter.py'
+nlmProg = 'NlmFilter.py'
 ftpFile = 'FtpNlmDocs.txt'
 
 jobId   = string.atoi(sys.argv[1])
@@ -84,37 +84,10 @@ open(log, "a").write("Job %d: %s\n    %d: Started at: %s\n" % \
 open(log, "a").write("    %d: Input parameters: %s\n" %
                               (jobId, sys.argv))
 try:
-    ### Per BK on 2005-11-09 the filter should not be retrieved
-    ### from the CVS anymore.  
-    ### If we don't retrieve the filter from CVS we also don't 
-    ### need to create/update the sandbox and copy the filter
-    ### to the NLM directory.  It must be ensured that the 
-    ### NLM directory is being updated with the current filter
-    ### manually.
-    ### -------------------------------------------------------
-    ### # Ensure we are using the latest filter from CVS
-    ### # ----------------------------------------------
-    ### os.chdir(sandBox)
-    ### if not os.environ.has_key('CVSROOT'):
-    ###     errMsg = 'ERROR:  CVSROOT variable not defined!!!'   
-    ###     open(log, "a").write("    %d: %s\n" % (jobId, errMsg))
-    ###     print errMsg
-    ###     sys.exit('ERROR: Set CVSROOT before resuming.')
-
-    ### upNlmXsl = 'cvs up ' + sandBox + '/' + nlmXsl
-    ### rcResult = cdr.runCommand(upNlmXsl)
-    ### open(log, "a").write("    %d: cvs - %s\n" % 
-    ###                      (jobId, rcResult.output or 'OK'))
-    ### print 'cvs: ', rcResult.output or 'OK'
-
-    ### cpNlmXsl = 'cp ' + nlmXsl + ' ' + workDir
-    ### cdr.runCommand(cpNlmXsl)
-    ### rcResult = cdr.runCommand(upNlmXsl)
-    ### open(log, "a").write("    %d: cp  - %s\n" % 
-    ###                      (jobId, rcResult.output or 'OK'))
-    ### print 'cp : ', rcResult.output or 'OK'
-
-    os.chdir(workDir)
+    # Need to change to Utilities directory because the *.xsl filter
+    # is run from the working directory.
+    # ----------------------------------------------------------------
+    os.chdir(utilDir)
 
     # Remove the content of the VendorDocs directory and copy the
     # new data from directory JobNNNN (NNNN = JobId) to the VendorDocs
@@ -188,9 +161,13 @@ try:
     # command
     # -------------------------------------------------------------
     open(log, "a").write("    %d: Processing files in %s\n" %
-                              (jobId, workDir))
+                              (jobId, utilDir))
     print "Processing files..."
-    os.chdir(workDir)
+
+    # Need to change to Utilities directory because the *.xsl filter
+    # is run from the working directory.
+    # ----------------------------------------------------------------
+    os.chdir(utilDir)
 
     # Submitting the command to create the NLM Export data
     # -----------------------------------------------------
