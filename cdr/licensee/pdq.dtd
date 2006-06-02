@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.57 2005-12-27 21:45:19 venglisc Exp $
+   $Id: pdq.dtd,v 1.58 2006-06-02 19:03:39 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.57  2005/12/27 21:45:19  venglisc
+   Added the missing RegistryEntry container element. (Bug 1916)
+
    Revision 1.56  2005/11/28 21:28:12  venglisc
    Updated DTD to add PDQProtocolTitle, DateLastVerified, StartDate,
    StudyDesign, etc. (Bug 1870)
@@ -99,49 +102,55 @@
    
 -->
 
-<!-- Common Elements -->
+<!-- =============================================================
+     Common Elements 
+     ============================================================= -->
 
-<!ENTITY % ParaLevelElements   " Contact          | ItemizedList     | LiteralLayout
-                               | OrderedList      | QandASet         | Para
-                               | MediaLink        | Table ">
+<!ENTITY % ParaLevelElements   
+                     " Contact          | ItemizedList     | LiteralLayout
+                     | OrderedList      | QandASet         | Para
+                     | MediaLink        | Table ">
 
-<!ENTITY % ParaElements        " #PCDATA          | DrugName         | Emphasis
-                               | ExternalRef      | ForeignWord      | GeneName
-                               | GlossaryTermLink | GlossaryTermRef  | InterventionName
-                               | LOELink          | LOERef           | MediaLink
-                               | MediaRef         | Note             | ProtocolRef
-                               | ProtocolLink     | Quote            | Reference
-                               | ScientificName   | Strong           | Subscript
-                               | SummaryLink      | SummaryRef       | Superscript
-                               | TT "> 
+<!ENTITY % ParaElements        
+                     " #PCDATA          | DrugName         | Emphasis
+                     | ExternalRef      | ForeignWord      | GeneName
+                     | GlossaryTermLink | GlossaryTermRef  | InterventionName
+                     | LOELink          | LOERef           | MediaLink
+                     | MediaRef         | Note             | ProtocolRef
+                     | ProtocolLink     | Quote            | Reference
+                     | ScientificName   | Strong           | Subscript
+                     | SummaryLink      | SummaryRef       | Superscript
+                     | TT "> 
 
-<!ENTITY % TextElements        " #PCDATA          | Contact          | DrugName
-                               | Emphasis         | ExternalRef      | ForeignWord
-                               | GeneName         | GlossaryTermLink | GlossaryTermRef
-                               | InterventionName | ItemizedList     | LiteralLayout
-                               | LOELink          | LOERef           | MediaLink
-                               | MediaRef         | Note             | OrderedList
-                               | Para             | ProtocolRef      | ProtocolLink
-                               | QandASet         | Quote            | Reference
-                               | ScientificName   | Strong           | Subscript
-                               | SummaryLink      | SummaryRef       | Superscript
-                               | Table            | TT ">
+<!ENTITY % TextElements        
+                     " #PCDATA          | Contact          | DrugName
+                     | Emphasis         | ExternalRef      | ForeignWord
+                     | GeneName         | GlossaryTermLink | GlossaryTermRef
+                     | InterventionName | ItemizedList     | LiteralLayout
+                     | LOELink          | LOERef           | MediaLink
+                     | MediaRef         | Note             | OrderedList
+                     | Para             | ProtocolRef      | ProtocolLink
+                     | QandASet         | Quote            | Reference
+                     | ScientificName   | Strong           | Subscript
+                     | SummaryLink      | SummaryRef       | Superscript
+                     | Table            | TT ">
 
-<!ENTITY % TextSectionElements " #PCDATA          | Contact          | DrugName
-                               | Emphasis         | ExternalRef      | ForeignWord
-                               | GeneName         | GlossaryTermLink | GlossaryTermRef
-                               | InterventionName | ItemizedList     | LiteralLayout
-                               | LOELink          | LOERef           | MediaLink
-                               | MediaRef         | Note             | OrderedList
-                               | Para             | ProtocolRef      | ProtocolLink
-                               | QandASet         | Quote            | Reference
-                               | ScientificName   | Section          | Strong
-                               | Subscript        | SummaryLink      | SummaryRef
-                               | Superscript      | Table            | TT ">
+<!ENTITY % TextSectionElements 
+                     " #PCDATA          | Contact          | DrugName
+                     | Emphasis         | ExternalRef      | ForeignWord
+                     | GeneName         | GlossaryTermLink | GlossaryTermRef
+                     | InterventionName | ItemizedList     | LiteralLayout
+                     | LOELink          | LOERef           | MediaLink
+                     | MediaRef         | Note             | OrderedList
+                     | Para             | ProtocolRef      | ProtocolLink
+                     | QandASet         | Quote            | Reference
+                     | ScientificName   | Section          | Strong
+                     | Subscript        | SummaryLink      | SummaryRef
+                     | Superscript      | Table            | TT ">
 
-<!ENTITY % TitleData           " #PCDATA          |  Emphasis        | ForeignWord
-                               | GeneName         | ScientificName   | Strong
-                               | Subscript        | Superscript      | TT ">
+<!ENTITY % TitleData " #PCDATA          |  Emphasis        | ForeignWord
+                     | GeneName         | ScientificName   | Strong
+                     | Subscript        | Superscript      | TT ">
 
 <!ENTITY % Location "OrganizationName*,PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
 
@@ -150,11 +159,9 @@
 <!ELEMENT Diagnosis (SpecificDiagnosis, DiagnosisParent+)>
 
 <!ELEMENT SpecificDiagnosis (#PCDATA)>
-
 <!ATTLIST SpecificDiagnosis ref CDATA #IMPLIED>
 
 <!ELEMENT DiagnosisParent (#PCDATA)>
-
 <!ATTLIST DiagnosisParent ref CDATA #IMPLIED>
 
 <!ELEMENT Title (%TitleData;)*>
@@ -163,19 +170,11 @@
 
 <!ELEMENT AltTitle (%TitleData;)*>
 
-
-
 <!ELEMENT Para (%ParaElements;)*>
-
 <!ATTLIST Para id CDATA #IMPLIED>
 
-
-
 <!ELEMENT LiteralLayout (%ParaElements;)*>
-
 <!ATTLIST LiteralLayout id CDATA #IMPLIED>
-
-
 
 <!ELEMENT Section (Title?,
                    AltTitle*,
@@ -197,30 +196,30 @@
   specification. -->
 
 <!ELEMENT Table (Title, TitleAbbrev?, TGroup+)>
-<!ATTLIST Table ColSep (0 | 1) #IMPLIED
-                Frame (All | Bottom | Sides | Top | TopBot | None ) #IMPLIED
-                RowSep (0 | 1) #IMPLIED
-                TabStyle CDATA #IMPLIED
-                id CDATA #IMPLIED>
+<!ATTLIST Table    ColSep (0 | 1) #IMPLIED
+                   Frame (All | Bottom | Sides | Top | TopBot | None ) #IMPLIED
+                   RowSep (0 | 1) #IMPLIED
+                   TabStyle CDATA #IMPLIED
+                   id CDATA #IMPLIED>
 
-<!ELEMENT TGroup (ColSpec*,SpanSpec*,THead?,TFoot?,TBody)>
-<!ATTLIST TGroup Align (Center | Char | Justify | Left | Right) #IMPLIED
-                 Char CDATA #IMPLIED
-                 Charoff CDATA #IMPLIED
-                 ColSep (0 | 1) #IMPLIED
-                 Cols CDATA #REQUIRED
-                 RowSep (0 | 1) #IMPLIED
-                 TGroupStyle CDATA #IMPLIED>
+<!ELEMENT TGroup   (ColSpec*,SpanSpec*,THead?,TFoot?,TBody)>
+<!ATTLIST TGroup   Align (Center | Char | Justify | Left | Right) #IMPLIED
+                   Char CDATA #IMPLIED
+                   Charoff CDATA #IMPLIED
+                   ColSep (0 | 1) #IMPLIED
+                   Cols CDATA #REQUIRED
+                   RowSep (0 | 1) #IMPLIED
+                   TGroupStyle CDATA #IMPLIED>
 
 <!ELEMENT ColSpec EMPTY>
-<!ATTLIST ColSpec Align (Center | Char | Justify | Left | Right) #IMPLIED
-                  Char CDATA #IMPLIED
-                  Charoff CDATA #IMPLIED
-                  ColName CDATA #IMPLIED
-                  ColNum CDATA #IMPLIED
-                  ColSep (0 | 1) #IMPLIED
-                  ColWidth CDATA #IMPLIED
-                  RowSep (0 | 1) #IMPLIED>
+<!ATTLIST ColSpec  Align (Center | Char | Justify | Left | Right) #IMPLIED
+                   Char CDATA #IMPLIED
+                   Charoff CDATA #IMPLIED
+                   ColName CDATA #IMPLIED
+                   ColNum CDATA #IMPLIED
+                   ColSep (0 | 1) #IMPLIED
+                   ColWidth CDATA #IMPLIED
+                   RowSep (0 | 1) #IMPLIED>
 
 <!ELEMENT SpanSpec EMPTY>
 <!ATTLIST SpanSpec Align (Center | Char | Justify | Left | Right) #IMPLIED
@@ -239,17 +238,17 @@
 <!ATTLIST Row RowSep (0 | 1) #IMPLIED Valign (Bottom | Middle | Top) #IMPLIED>
 
 <!ELEMENT entry (%ParaElements;)*>
-<!ATTLIST entry Align (Center | Char | Justify | Left | Right) #IMPLIED
-                Char CDATA #IMPLIED
-                Charoff CDATA #IMPLIED
-                ColSep (0 | 1) #IMPLIED
-                Cols CDATA #IMPLIED
-                MoreRows CDATA #IMPLIED
-                NameEnd CDATA #IMPLIED
-                NameSt CDATA #IMPLIED
-                RowSep (0 | 1) #IMPLIED
-                SpanName CDATA #IMPLIED
-                Valign (Bottom | Middle | Top) #IMPLIED>
+<!ATTLIST entry    Align (Center | Char | Justify | Left | Right) #IMPLIED
+                   Char CDATA #IMPLIED
+                   Charoff CDATA #IMPLIED
+                   ColSep (0 | 1) #IMPLIED
+                   Cols CDATA #IMPLIED
+                   MoreRows CDATA #IMPLIED
+                   NameEnd CDATA #IMPLIED
+                   NameSt CDATA #IMPLIED
+                   RowSep (0 | 1) #IMPLIED
+                   SpanName CDATA #IMPLIED
+                   Valign (Bottom | Middle | Top) #IMPLIED>
 
 <!ELEMENT TFoot (ColSpec*,Row+)>
 <!ATTLIST TFoot Valign (Bottom | Middle | Top) #IMPLIED>
@@ -486,7 +485,9 @@
 
 <!-- End Common Elements -->
 
-<!-- Summaries
+<!-- ================================================================
+     Summaries 
+     ================================================================
   PDQ Summaries on Treatment, Prevention, Screening, Supportive Care,
   Genetics, and Complementary/Alternative Medicine.
   Start element Summary. -->
@@ -575,7 +576,9 @@
 
 <!-- End Summaries -->
 
-<!-- Protocols  Start element Protocol. -->
+<!-- =============================================================== 
+     Protocols  Start element Protocol. 
+     =============================================================== -->
 
 <!ELEMENT Protocol (ProtocolIDs,
                     FundingInfo?,
@@ -840,7 +843,9 @@
 
 <!-- End Protocols -->
 
-<!-- Persons  Start element Person. -->
+<!-- =========================================================
+     Persons  Start element Person. 
+     ========================================================= -->
 
 <!-- ProfessionalInformation only when IncludeInDirectory has value Include -->
 
@@ -910,7 +915,9 @@
 
 <!-- End Persons -->
 
-<!-- Organizations Start element Organization. -->
+<!-- =========================================
+     Organizations Start element Organization. 
+     ========================================= -->
 
 <!ELEMENT Organization (OrganizationNameInformation,
                         OrganizationParent?,
@@ -988,7 +995,9 @@
 
 <!-- End Organizations -->
 
-<!-- Glossary  Start element GlossaryTerm. -->
+<!-- =========================================
+     Glossary  Start element GlossaryTerm. 
+     ========================================= -->
 
 <!ELEMENT GlossaryTerm (TermName,
                         TermPronunciation?,
@@ -1017,7 +1026,9 @@
 <!ELEMENT Audience (#PCDATA)>
 <!-- End Glossary -->
 
-<!-- Terminology  Start element Term. -->
+<!-- ========================================= 
+     Terminology  Start element Term. 
+     ========================================= -->
 
 <!ELEMENT Term (PreferredName,
                 OtherName*,
@@ -1085,7 +1096,9 @@
 
 <!-- End Terminology -->
 
-<!-- Genetics Directory, start element GENETICSPROFESSIONAL -->
+<!-- ======================================================
+     Genetics Directory, start element GENETICSPROFESSIONAL 
+     ====================================================== -->
 
 <!-- The Genetics directory documents are independent from the other documents.  
      No link exists from the genetics directory records to any of the other XML
@@ -1174,7 +1187,9 @@
 
 <!-- End Genetics Directory-->
 
-<!-- Country, start element Country -->
+<!-- ======================================================
+     Country, start element Country 
+     ====================================================== -->
 
 <!ELEMENT Country (CountryFullName,
                         CountryShortName?,
@@ -1197,7 +1212,9 @@
 
 <!-- End Country -->
 
-<!-- PoliticalSubUnit, start element PoliticalSubUnit -->
+<!-- ======================================================
+     PoliticalSubUnit, start element PoliticalSubUnit 
+     ====================================================== -->
 
 <!ELEMENT PoliticalSubUnit (PoliticalSubUnitFullName,
                         PoliticalSubUnitShortName?,
@@ -1217,7 +1234,9 @@
 
 <!-- End PoliticalSubUnit -->
 
-<!-- CTGovProtocol, start element CTGovProtocol -->
+<!-- ======================================================
+     CTGovProtocol, start element CTGovProtocol 
+     ====================================================== -->
 
 <!ENTITY % CTGovContact        "GivenName?,
                                 MiddleInitial?,
@@ -1329,5 +1348,73 @@
 <!ATTLIST OverallOfficial       ref  CDATA                 #IMPLIED>
 
 <!-- End CTGovProtocol -->
+
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+<!-- Begin Section for Internal Use Only                         -->
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-===-=-=-=- -->
+
+<!-- ===========================================================
+     DrugInformationSummary start element DrugInformationSummary
+     =========================================================== -->
+
+<!ELEMENT DrugInformationSummary 
+          ( DrugInfoMetaData, 
+            DrugInfoTitle,
+            SummarySection*,
+            DateFirstPublished,
+            DateLastModified? )>
+<!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
+
+<!ELEMENT DrugInfoMetaData 
+          ( DrugInfoType,
+            DrugInfoAudience,
+            DrugInfoDescription,
+            DrugInfoURL,
+            Manufacturer*,
+            FDAApproved,
+            TerminologyLink,
+            GlossaryLink,
+            USBrandName*,
+            Synonym*)>
+
+<!ELEMENT DrugInfoType (#PCDATA)>
+<!-- Types of DrugInfoType
+     Possible values are:
+     Brief
+     Detailed -->
+
+<!ELEMENT DrugInfoAudience (#PCDATA)>
+<!-- Types of DrugInfoAudience
+     Possible values are:
+     Patients
+     Health professionals -->
+
+<!ELEMENT DrugInfoDescription (#PCDATA)>
+
+<!ELEMENT DrugInfoURL (#PCDATA)>
+<!ATTLIST DrugInfoURL xref CDATA #REQUIRED>
+
+<!ELEMENT Manufacturer (%Location;)>
+<!ATTLIST Manufacturer ref CDATA #IMPLIED>
+
+<!ELEMENT FDAApproved (#PCDATA)>
+
+<!ELEMENT TerminologyLink (#PCDATA)>
+<!ATTLIST TerminologyLink ref CDATA #IMPLIED>
+
+<!ELEMENT GlossaryLink (#PCDATA)>
+<!ATTLIST GlossaryLink ref CDATA #IMPLIED>
+
+<!ELEMENT USBrandName (#PCDATA)>
+
+<!ELEMENT Synonym (#PCDATA)>
+
+<!ELEMENT DrugInfoTitle (#PCDATA)>
+
+<!-- End DrugInformationSummary -->
+
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+<!-- End   Section for Internal Use Only                         -->
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-===-=-=-=- -->
 
 <!-- End CDR DTD -->
