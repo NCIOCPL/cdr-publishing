@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.58 2006-06-02 19:03:39 venglisc Exp $
+   $Id: pdq.dtd,v 1.59 2006-06-06 14:42:23 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.58  2006/06/02 19:03:39  venglisc
+   Added new document type DrugInformationSummary.
+   Minor white space formatting. (Bug 2099)
+
    Revision 1.57  2005/12/27 21:45:19  venglisc
    Added the missing RegistryEntry container element. (Bug 1916)
 
@@ -1360,8 +1364,8 @@
 <!ELEMENT DrugInformationSummary 
           ( DrugInfoMetaData, 
             DrugInfoTitle,
-            SummarySection*,
-            DateFirstPublished,
+            SummarySection+,
+            DateFirstPublished?,
             DateLastModified? )>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
 
