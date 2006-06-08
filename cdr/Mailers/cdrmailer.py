@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.58 2005-06-14 12:38:51 bkline Exp $
+# $Id: cdrmailer.py,v 1.59 2006-06-08 14:07:39 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.58  2005/06/14 12:38:51  bkline
+# Added getAddressLine() and some additional optional parameters for
+# address access.
+#
 # Revision 1.57  2005/03/02 15:42:26  bkline
 # Finished work to support RTF mailers for PDQ board members.
 #
@@ -190,7 +194,7 @@
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
-import UnicodeToLatex, tarfile, glob, shutil, RtfWriter
+import UnicodeToLatex, tarfile, glob, shutil, RtfWriter, cdrdocobject
 
 debugCtr = 1
 
@@ -200,9 +204,12 @@ _DEVELOPER = "***REMOVED***"
 #------------------------------------------------------------------
 # Constants for adding a person's title to his address
 #------------------------------------------------------------------
-TITLE_OMITTED    = 0    # Do not print person's PersonTitle
-TITLE_AFTER_NAME = 1    # Print it below his name, if name present
-TITLE_AFTER_ORG  = 2    # Print it below org name, if present
+from cdrdocobject import TITLE_OMITTED, TITLE_AFTER_NAME, TITLE_AFTER_ORG
+
+#----------------------------------------------------------------------
+# Object for a personal name.
+#----------------------------------------------------------------------
+from cdrdocobject import PersonalName
 
 #----------------------------------------------------------------------
 # Object for managing mailer processing.
@@ -1443,67 +1450,6 @@ class Document:
     def getVersion(self): return self.__version
 
 #----------------------------------------------------------------------
-# Object for a personal name.
-#----------------------------------------------------------------------
-class PersonalName:
-    def __init__(self, node):
-        """
-        Parameters:
-            node - PersonName subelement DOM node from an AddressElements node.
-        """
-        self.__givenName     = u""
-        self.__middleInitial = u""
-        self.__surname       = u""
-        self.__prefix        = u""
-        self.__genSuffix     = u""
-        self.__proSuffixes   = []
-        for child in node.childNodes:
-            if child.nodeName == "GivenName":
-                self.__givenName = cdr.getTextContent(child).strip()
-            elif child.nodeName == "MiddleInitial":
-                self.__middleInitial = cdr.getTextContent(child).strip()
-            elif child.nodeName == "SurName":
-                self.__surname = cdr.getTextContent(child).strip()
-            elif child.nodeName == "ProfessionalSuffix":
-                for grandchild in child.childNodes:
-                    if grandchild.nodeName in ("StandardProfessionalSuffix",
-                                               "CustomProfessionalSuffix"):
-                        suffix = cdr.getTextContent(grandchild).strip()
-                        if suffix:
-                            self.__proSuffixes.append(suffix)
-            elif child.nodeName == "Prefix":
-                self.__prefix = cdr.getTextContent(child).strip()
-            elif child.nodeName == "GenerationSuffix":
-                self.__genSuffix = cdr.getTextContent(child).strip()
-
-    def getGivenName       (self): return self.__givenName
-    def getMiddleInitial   (self): return self.__middleInitial
-    def getSurname         (self): return self.__surname
-    def getPrefix          (self): return self.__prefix
-    def getGenSuffix       (self): return self.__genSuffix
-    def getProSuffixes     (self): return list(self.__proSuffixes)
-    
-    def format(self, useSuffixes = True, usePrefix = True):
-        """
-        Return value:
-            String containing formatted name, e.g.:
-                'Dr. John Q. Kildare, Jr.'
-        """
-        if usePrefix:
-            name = ("%s %s" % (self.__prefix, self.__givenName)).strip()
-        else:
-            name = self.__givenName.strip()
-        name = ("%s %s" % (name, self.__middleInitial)).strip()
-        name = ("%s %s" % (name, self.__surname)).strip()
-        if self.__genSuffix:
-            name = "%s, %s" % (name, self.__genSuffix)
-        if useSuffixes:
-            rest = ", ".join(self.__proSuffixes).strip()
-            if rest:
-                name = "%s, %s" % (name, rest)
-        return name
-
-#----------------------------------------------------------------------
 # Object to hold a formatted address.
 #----------------------------------------------------------------------
 class FormattedAddress:
@@ -1516,7 +1462,7 @@ class FormattedAddress:
 #----------------------------------------------------------------------
 # Object to hold information about a mailer address.
 #----------------------------------------------------------------------
-class Address:
+class Address(cdrdocobject.ContactInfo):
     """
     Public methods:
 
@@ -1607,58 +1553,12 @@ class Address:
                              address.
                              The top node should be <AddressElements>
         """
-        self.__addressee     = None
-        self.__personalName  = None
-        self.__orgs          = []   # Main + parent orgs in right order
-        self.__street        = []
-        self.__city          = None
-        self.__citySuffix    = None
-        self.__state         = None
-        self.__country       = None
-        self.__postalCode    = None
-        self.__codePos       = None
+        cdrdocobject.ContactInfo.__init__(self, xmlFragment, withPersonTitle)
+
         self.__addressLines  = None
         self.__orgLines      = None
         self.__nameLine      = None
         self.__titleLine     = None
-        self.__personTitle   = None
-        self.__phone         = None
-        self.__fax           = None
-        self.__email         = None
-        self.__incPersonTitle= withPersonTitle
-
-        if type(xmlFragment) in (type(""), type(u"")):
-            dom = xml.dom.minidom.parseString(xmlFragment)
-        else:
-            dom = xmlFragment
-
-        # No organization name nodes identified yet
-        orgParentNode = None
-
-        # Parse parts of an address
-        if dom:
-            for node in dom.documentElement.childNodes:
-                if node.nodeName == 'PostalAddress':
-                    self.__parsePostalAddress(node)
-                elif node.nodeName in ('Name', 'PersonName'):
-                    self.__personalName = PersonalName(node)
-                    self.__addressee = self.__personalName.format()
-                elif node.nodeName == 'OrgName':
-                    self.__orgs.append (cdr.getTextContent(node).strip())
-                elif node.nodeName == 'ParentNames':
-                    orgParentNode = node
-                elif node.nodeName == 'PersonTitle':
-                    self.__personTitle = cdr.getTextContent(node).strip()
-                elif node.nodeName == 'Phone':
-                    self.__phone = cdr.getTextContent(node).strip()
-                elif node.nodeName == 'Fax':
-                    self.__fax = cdr.getTextContent(node).strip()
-                elif node.nodeName == 'Email':
-                    self.__email = cdr.getTextContent(node).strip()
-
-        # If we got them, get org parent names to __orgs in right order
-        if orgParentNode:
-            self.__parseOrgParents (orgParentNode)
 
     #------------------------------------------------------------------
     # Public access methods.
