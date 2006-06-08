@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.15 2005-03-02 15:46:06 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.16 2006-06-08 13:57:33 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.15  2005/03/02 15:46:06  bkline
+# Removed temporary code to block Brussels mailers.
+#
 # Revision 1.14  2005/02/16 22:44:53  bkline
 # Added PubSubset attribute to EmailerManifest document.
 #
@@ -69,9 +72,10 @@ class PUP:
 #----------------------------------------------------------------------
 class ProtocolParms:
     def __init__(self, protXml):
-        self.protId = ""
-        self.title  = ""
-        self.status = ""
+        self.protId  = ""
+        self.title   = ""
+        self.status  = ""
+        self.sources = []
         topElem = xml.dom.minidom.parseString(protXml).documentElement
         for node in topElem.childNodes:
             if node.nodeName == "ProtocolStatusAndParticipants":
@@ -84,6 +88,14 @@ class ProtocolParms:
                         for grandchild in child.childNodes:
                             if grandchild.nodeName == "ProtocolStatusName":
                                 self.status = cdr.getTextContent(grandchild)
+            elif node.nodeName == "ProtocolSources":
+                for child in node.childNodes:
+                    if child.nodeName == "ProtocolSource":
+                        for grandchild in child.childNodes:
+                            if grandchild.nodeName == 'SourceName':
+                                sourceName = cdr.getTextContent(grandchild)
+                                if sourceName:
+                                    self.sources.append(sourceName)
 
 #----------------------------------------------------------------------
 # Derived class for PDQ Editorial Board Member mailings.
@@ -254,6 +266,7 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
      <EmailerAttr name='ProtID'>%s</EmailerAttr>
      <EmailerAttr name='Title'>%s</EmailerAttr>
      <EmailerAttr name='Status'>%s</EmailerAttr>
+     <EmailerAttr name='Sources'>%s</EmailerAttr>
     </EmailerAttrs>
    </EmailerDocument>
 """ % (document.getId(),
@@ -261,7 +274,8 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
        name,
        protocolParms.protId,
        xml.sax.saxutils.escape(protocolParms.title),
-       protocolParms.status)).encode('utf-8'))
+       protocolParms.status),
+       u"|".join(protocolParms.sources)).encode('utf-8'))
                 counter += 1
             manifest.write("""\
   </EmailerDocuments>
