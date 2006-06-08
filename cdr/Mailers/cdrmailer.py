@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.59 2006-06-08 14:07:39 bkline Exp $
+# $Id: cdrmailer.py,v 1.60 2006-06-08 20:01:29 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.59  2006/06/08 14:07:39  bkline
+# Pulled out PersonalName and Address classes to cdrdocobject module.
+#
 # Revision 1.58  2005/06/14 12:38:51  bkline
 # Added getAddressLine() and some additional optional parameters for
 # address access.
@@ -1450,21 +1453,11 @@ class Document:
     def getVersion(self): return self.__version
 
 #----------------------------------------------------------------------
-# Object to hold a formatted address.
-#----------------------------------------------------------------------
-class FormattedAddress:
-    def __init__(self, block, numLines):
-        self.__block = block
-        self.__numLines = numLines
-    def getBlock(self):     return self.__block
-    def getNumLines(self):  return self.__numLines
-
-#----------------------------------------------------------------------
 # Object to hold information about a mailer address.
 #----------------------------------------------------------------------
 class Address(cdrdocobject.ContactInfo):
     """
-    Public methods:
+    Public methods (in addition to those inherited from ContactInfo):
 
         format(upperCase, dropUS, wrapAt, useRtf, contactFields)
             Returns address in a format ready for inclusion in a
@@ -1480,65 +1473,9 @@ class Address(cdrdocobject.ContactInfo):
             optional contactFields parameter is True the result
             will be an RTF block of labeled contact information.
 
-        getNumAddressLines(dropUS)
-            Returns the number of lines in the formatted address.
-            The last line is not counted if dropUS is true and the
-            last line contains only the abbreviation for the United
-            States.
-
-        getAddressee()
-            Returns concatenation of prefix, forename, and surname.
-
-        getPersonalName()
-            Returns PersonalName object behind the addressee string
-
-        getPersonTitle()
-            Returns PersonTitle element for this address, or None.
-
-        getNumStreetLines()
-            Returns the number of strings in the street address.
-
-        getStreetLine(number)
-            Returns the string for the street address, indexed from
-            base of 0.
-
-        getCity()
-            Returns string for city of this address, if any; otherwise
-            None.
-
-        getCitySuffix()
-            Returns the string for the city suffix for this address,
-            if any; otherwise None.
-
-        getState()
-            Returns the name of the political unit for this address,
-            if any; otherwise None.
-
-        getCountry()
-            Returns the string for the country for this address, if
-            any; otherwise None.
-
-        getPostalCode()
-            Returns the postal code (ZIP code for US addresses) for
-            this address, if any; otherwise None.
-
-        getCodePosition()
-            One of:
-                "after City"
-                "after Country"
-                "after PoliticalUnit_State"
-                "before City"
-                None
-
-        getPhone()
-            Returns the phone number, if any; otherwise None.
-            
-        getFax()
-            Returns the fax number, if any; otherwise None.
-            
-        getEmail()
-            Returns the email address, if any; otherwise None.
-            
+        getXml()
+            returns a serialized version of the address information
+            needed for a Mailer (tracking) document.
 
     """
 
@@ -1555,81 +1492,54 @@ class Address(cdrdocobject.ContactInfo):
         """
         cdrdocobject.ContactInfo.__init__(self, xmlFragment, withPersonTitle)
 
-        self.__addressLines  = None
-        self.__orgLines      = None
-        self.__nameLine      = None
-        self.__titleLine     = None
+        # Turned off if format() is called with contactFields == True.
+        self.__includeNameAndTitle = True
 
     #------------------------------------------------------------------
-    # Public access methods.
+    # Create a LaTeX- (or RTF-) ready string representing this address.
     #------------------------------------------------------------------
-    def getNumStreetLines (self): return len(self.__street)
-    def getNumOrgs        (self): return len(self.__orgs)
-    def getStreetLine(self, idx): return self.__street[idx]
-    def getOrg       (self, idx): return self.__orgs[idx]
-    def getCity           (self): return self.__city
-    def getCitySuffix     (self): return self.__citySuffix
-    def getState          (self): return self.__state
-    def getCountry        (self): return self.__country
-    def getPostalCode     (self): return self.__postalCode
-    def getCodePosition   (self): return self.__codePos
-    def getAddressee      (self): return self.__addressee
-    def getPersonalName   (self): return self.__personalName
-    def getPersonTitle    (self): return self.__personTitle
-    def getPhone          (self): return self.__phone
-    def getFax            (self): return self.__fax
-    def getEmail          (self): return self.__email
-
-    # Caller may need to manipulate the name line of the address
-    def setAddressee (self, nameStr): self.__addressee = nameStr
-
-
-    #------------------------------------------------------------------
-    # Calculate the number of lines in a formatted address block.
-    #------------------------------------------------------------------
-    def getNumAddressLines(self, dropUS = 0, includeNameAndTitle = True):
-        lines = self.__getAddressLines(includeNameAndTitle)
-        if not lines: return 0
-        if dropUS and self.__lineIsUS(lines[-1]): return len(lines) - 1
-        return len(lines)
-
-    #------------------------------------------------------------------
-    # Return a copy of one of the address lines.
-    #------------------------------------------------------------------
-    def getAddressLine(self, idx, includeNameAndTitle = True):
-        lines = self.__getAddressLines(includeNameAndTitle)
-        if not lines:
-            raise Exception("no address lines")
-        return lines[idx]
-
-    #------------------------------------------------------------------
-    # Create a LaTeX-ready string representing this address.
-    #------------------------------------------------------------------
-    def format(self, upperCase = 0, dropUS = 0, wrapAt = sys.maxint,
+    def format(self, upperCase = False, dropUS = False, wrapAt = sys.maxint,
                useRtf = False, contactFields = False):
-        lines = self.__getAddressLines(includeNameAndTitle = not contactFields)
+        self.__includeNameAndTitle = not contactFields
+        lines = self.getAddressLines(self.__includeNameAndTitle)
         if upperCase:
             upperLines = []
             for line in lines:
                 upperLines.append(line.upper())
             lines = upperLines
-        if dropUS and len(lines) and self.__lineIsUS(lines[-1]):
+        if dropUS and len(lines) and self.lineIsUS(lines[-1]):
             lines = lines[:-1]
-        lines = self.__wrapLines(lines, wrapAt)
+        lines = self.wrapLines(lines, wrapAt)
         if contactFields:
             return self.__formatContactFields(lines)
         return self.__formatAddressFromLines(lines, useRtf)
 
     #------------------------------------------------------------------
+    # Create XML string from address information.
+    #------------------------------------------------------------------
+    def getXml(self):
+        xml        = ["<MailerAddress>"]
+        country    = self.getCountry()
+        postalCode = self.getPostalCode()
+        if country:
+            xml.append("<Country>%s</Country>" % country)
+        if postalCode:
+            xml.append("<PostalCode>%s</PostalCode>" % postalCode)
+        for line in self.getAddressLines(self.__includeNameAndTitle):
+            xml.append("<AddressLine>%s</AddressLine>" % line)
+        xml.append("</MailerAddress>")
+        return "".join(xml)
+
+    #------------------------------------------------------------------
     # Create RTF for contact fields on fax-back form.
     #------------------------------------------------------------------
     def __formatContactFields(self, lines):
-        title = RtfWriter.fix(self.__personTitle or "")
-        phone = RtfWriter.fix(self.__phone or "")
-        fax   = RtfWriter.fix(self.__fax or "")
-        email = RtfWriter.fix(self.__email or "")
+        title = RtfWriter.fix(self.getPersonTitle() or "")
+        phone = RtfWriter.fix(self.getPhone() or "")
+        fax   = RtfWriter.fix(self.getFax() or "")
+        email = RtfWriter.fix(self.getEmail() or "")
         rtfLines = [
-            "\\tab Name:\\tab %s\\line" % RtfWriter.fix(self.__addressee),
+            "\\tab Name:\\tab %s\\line" % RtfWriter.fix(self.getAddressee()),
             "\\tab Title:\\tab %s\\line" % title
         ]
         prefix = "\\tab Address:\\tab "
@@ -1644,102 +1554,6 @@ class Address(cdrdocobject.ContactInfo):
         return "\n".join(rtfLines)
             
     #------------------------------------------------------------------
-    # Create XML string from address information.
-    #------------------------------------------------------------------
-    def getXml(self):
-        xml = "<MailerAddress>"
-        if self.__country:
-            xml += "<Country>%s</Country>" % self.__country
-        if self.__postalCode:
-            xml += "<PostalCode>%s</PostalCode>" % self.__postalCode
-        for line in self.__getAddressLines():
-            xml += "<AddressLine>%s</AddressLine>" % line
-        return xml + "</MailerAddress>"
-
-    #------------------------------------------------------------------
-    # Perform word wrap if needed.
-    #------------------------------------------------------------------
-    def __wrapLines(self, lines, wrapAt):
-        needWrap = 0
-        for line in lines:
-            if len(line) > wrapAt:
-                needWrap = 1
-                break
-        if not needWrap:
-            return lines
-        newLines = []
-        for line in lines:
-            indent = 0
-            while len(line) > wrapAt - indent:
-                partLen = wrapAt - indent
-                while partLen > 0:
-                    if line[partLen] == ' ':
-                        break
-                    partLen -= 1
-                if partLen == 0:
-                    partLen = wrapAt - indent
-                firstPart = line[:partLen].strip()
-                line = line[partLen:].strip()
-                if firstPart:
-                    newLines.append(' ' * indent + firstPart)
-                    indent = 2
-            if line:
-                newLines.append(' ' * indent + line)
-        return newLines
-
-    #------------------------------------------------------------------
-    # Extract postal address element values.
-    #------------------------------------------------------------------
-    def __parsePostalAddress(self, node):
-        """
-        Extracts individual elements from street address, storing
-        each in a field of the Address object.
-
-        Pass:
-            node    - DOM node of PostalAddress element
-        """
-        for child in node.childNodes:
-            if node.nodeType == xml.dom.minidom.Node.ELEMENT_NODE:
-                if child.nodeName == "Street":
-                    self.__street.append(cdr.getTextContent(child).strip())
-                elif child.nodeName == "City":
-                    self.__city = cdr.getTextContent(child).strip()
-                elif child.nodeName == "CitySuffix":
-                    self.__citySuffix = cdr.getTextContent(child).strip()
-                elif child.nodeName in ("State", "PoliticalSubUnit_State"):
-                    self.__state = cdr.getTextContent(child).strip()
-                elif child.nodeName == "Country":
-                    self.__country = cdr.getTextContent(child).strip()
-                elif child.nodeName == "PostalCode_ZIP":
-                    self.__postalCode = cdr.getTextContent(child).strip()
-                elif child.nodeName == "CodePosition":
-                    self.__codePos = cdr.getTextContent(child).strip()
-
-    #------------------------------------------------------------------
-    # Extract and sort (if necessary) organization name values of parents
-    #------------------------------------------------------------------
-    def __parseOrgParents (self, node):
-        """
-        Parses a ParentNames element, extracting organization names
-        and appending them, in the right order, to the list of
-        organizations.
-
-        Pass:
-            node    - DOM node of ParentNames element
-        """
-        # Attribute tells us the order in which to place parents
-        parentsFirst = 0
-        pfAttr = node.getAttribute("OrderParentNameFirst")
-        if pfAttr == "Yes":
-            parentsFirst = 1
-
-        for child in node.childNodes:
-            if child.nodeName == "ParentName":
-                self.__orgs.append(cdr.getTextContent(child).strip())
-        if parentsFirst:
-            self.__orgs.reverse()
-
-    #------------------------------------------------------------------
     # Format an address block from its address lines.
     #------------------------------------------------------------------
     def __formatAddressFromLines(self, lines, useRtf = False):
@@ -1749,100 +1563,17 @@ class Address(cdrdocobject.ContactInfo):
                 block += "%s\\line\n" % RtfWriter.fix(line)
             else:
                 block += "%s \\\\\n" % UnicodeToLatex.convert(line)
-        return FormattedAddress(block, len(lines))
+        return self.FormattedAddress(block, len(lines))
 
-    #------------------------------------------------------------------
-    # Construct a list of strings representing the lines of a
-    # formatted address.  This part of address formatting is broken
-    # out separately, so we can cache the results, and so we can
-    # hand out the lines without the formatting for routines like
-    # the one which creates address label sheets (which use uppercase
-    # versions of the address line strings).
-    #------------------------------------------------------------------
-    def __getAddressLines(self, includeNameAndTitle = True):
-
-        #--------------------------------------------------------------
-        # Cache address lines if not already done.
-        #--------------------------------------------------------------
-        if self.__addressLines is None:
-            lines = []
-            city    = self.getCity()
-            suffix  = self.getCitySuffix()
-            state   = self.getState()
-            zip     = self.getPostalCode()
-            pos     = self.getCodePosition()
-            country = self.getCountry()
-            line    = ""
-            city    = ("%s %s" % (city or "",
-                                  suffix or "")).strip()
-            for i in range(self.getNumStreetLines()):
-                streetLine = self.getStreetLine(i)
-                if streetLine:
-                    lines.append(streetLine)
-            if zip and pos == "before City":
-                line = zip
-                if city: line += " "
-            if city: line += city
-            if zip and pos == "after City":
-                if line: line += " "
-                line += zip
-            if state:
-                if line: line += ", "
-                line += state
-            if zip and (not pos or pos == "after PoliticalUnit_State"):
-                if line: line += " "
-                line += zip
-            if line:
-                lines.append(line)
-            if country:
-                if zip and pos == "after Country":
-                    lines.append("%s %s" % (country, zip))
-                else:
-                    lines.append(country)
-            elif zip and pos == "after Country":
-                lines.append(zip)
-            self.__addressLines = lines
-
-        #--------------------------------------------------------------
-        # Cache organization lines.
-        #--------------------------------------------------------------
-        if not self.__orgLines:
-            lines = []
-            if self.getNumOrgs():
-                for i in range(self.getNumOrgs()):
-                    org = self.getOrg(i)
-                    if org:
-                        lines.append(self.getOrg(i))
-            self.__orgLines = lines
-
-        #--------------------------------------------------------------
-        # Cache the name and title lines.
-        #--------------------------------------------------------------
-        if not self.__nameLine:
-            addressee = self.getAddressee()
-            self.__nameLine = addressee and [addressee] or []
-        if not self.__titleLine:
-            title = self.__personTitle
-            self.__titleLine = title and [title] or []
-
-        #--------------------------------------------------------------
-        # Assemble the cached lines.
-        #--------------------------------------------------------------
-        lines = []
-        if includeNameAndTitle:
-            lines += self.__nameLine
-            if self.__incPersonTitle == TITLE_AFTER_NAME:
-                lines += self.__titleLine
-        lines += self.__orgLines
-        if includeNameAndTitle and self.__incPersonTitle == TITLE_AFTER_ORG:
-            lines += self.__titleLine
-        return lines + self.__addressLines
-
-    #------------------------------------------------------------------
-    # Check to see if a line is just U.S. (or the equivalent).
-    #------------------------------------------------------------------
-    def __lineIsUS(self, line):
-        return line.strip().upper() in ("US", "USA", "U.S.", "U.S.A.")
+    #----------------------------------------------------------------------
+    # Object to hold a formatted address.
+    #----------------------------------------------------------------------
+    class FormattedAddress:
+        def __init__(self, block, numLines):
+            self.__block = block
+            self.__numLines = numLines
+        def getBlock(self):     return self.__block
+        def getNumLines(self):  return self.__numLines
 
 #----------------------------------------------------------------------
 # Object for an electronic mailer.
