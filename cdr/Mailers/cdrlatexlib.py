@@ -1,9 +1,14 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.74 2006-06-09 19:52:20 venglisc Exp $
+# $Id: cdrlatexlib.py,v 1.75 2006-06-09 20:03:17 venglisc Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.74  2006/06/09 19:52:20  venglisc
+# Modified code to adjust for DTD change of ProtocolTitle element to
+# PDQProtocolTitle and moving the OriginalTitle element to the
+# RegistryInfo block. (Bug 2200)
+#
 # Revision 1.73  2005/06/20 13:28:00  bkline
 # Replace \emph with \it.
 #
@@ -3091,7 +3096,7 @@ PROTOCOLBOILER=r"""
      \item[Fax]          301-402-6728
      \item[Address]      PDQ Cancer.gov Protocol Coordinator \\
                          Attn: CIAT \\
-                         Cancer Information Products and Systems, NCI, NIH \\
+                         Office of Cancer Content Management, NCI, NIH \\
                          6116 Executive Blvd., Suite 3002B MSC-8321 \\
                          Bethesda MD 20892-8321
   \end{entry}
