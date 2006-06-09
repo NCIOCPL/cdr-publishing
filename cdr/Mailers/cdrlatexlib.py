@@ -1,9 +1,12 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.73 2005-06-20 13:28:00 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.74 2006-06-09 19:52:20 venglisc Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.73  2005/06/20 13:28:00  bkline
+# Replace \emph with \it.
+#
 # Revision 1.72  2004/11/18 21:22:47  ameyer
 # Added code to the organization mailers to perform the Yes/No circle
 # marking for public email addresses as is done for persons.  It's the
@@ -1120,31 +1123,48 @@ def bibitem (pp):
 
     return 0
 
+
 def protocolTitle (pp):
-    "Get the PDQ and original protocol titles for the summary mailer."
+    "Get the PDQ and patient protocol titles for the summary mailer."
+    "Note: The original title is now part of the Registry Info. VE"
     node = pp.getCurNode()
     attr = node.getAttribute("Audience")
     macro = None
     if attr == "Professional":
         macro = "\\newcommand\\PDQProtocolTitle{{\\bfseries PDQ Title:} "
-    elif attr == "Original":
-        macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
-                 "Original Title:} ")
     elif attr == "Patient":
         macro = ("\\newcommand\\PatientProtocolTitle{{\\bfseries "
                  "Patient Title:} ")
-        """
-        macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
-                 "Original Title:} DON'T HAVE ONE YET \\\\} \n"
-                 "\\newcommand\\PatientProtocolTitle{{\\bfseries "
-                 "Patient Title:} "
-                 )
-        """
+        #"""
+        #macro = ("\\newcommand\\OriginalProtocolTitle{{\\bfseries "
+        #         "Original Title:} DON'T HAVE ONE YET \\\\} \n"
+        #         "\\newcommand\\PatientProtocolTitle{{\\bfseries "
+        #         "Patient Title:} "
+        #         )
+        #"""
     else:
         macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title:} "
+
     pp.setOutput(macro)
     #if macro:
     #    pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
+
+
+def officialTitle (pp):
+    "Get the official protocol titles for the protocol mailer."
+    node = pp.getCurNode()
+    attr = node.getAttribute("Type")
+    macro = None
+    if attr == "Official":
+        macro = ("\\newcommand\\OfficialProtocolTitle{{\\bfseries "
+                 "Original Title:} ")
+    elif attr == "Short":
+        macro = "\\newcommand\\ShortProtocolTitle{{\\bfseries Short Title:} "
+    else:
+        macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title:} "
+
+    pp.setOutput(macro)
+
 
 def street (pp):
     """
@@ -3016,7 +3036,7 @@ PROTOCOLTITLE=r"""
 
   \setcounter{qC}{0}
   \subsection*{Protocol Title}
-  \OriginalProtocolTitle
+  \OfficialProtocolTitle
   \PDQProtocolTitle
 %
 % -----
@@ -3350,6 +3370,11 @@ ProtAbstProtID = (
 
 ProtAbstInfo = (
     XProc(element   = "ProtocolTitle",
+          textOut   = 1,
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[officialTitle]],
+          suffix    = " \\\\}\n"),
+    XProc(element   = "PDQProtocolTitle",
           textOut   = 1,
           order     = XProc.ORDER_TOP,
           preProcs  = [[protocolTitle]],
