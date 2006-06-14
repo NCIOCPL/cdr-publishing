@@ -11,7 +11,7 @@
 # For instance, if an interim update ran under JobID=1234 and an
 # interim remove ran under JobID=1235 you want to package these 
 # documents by entering the command
-#     FtpHotfixDocs 1234 1235
+#     FtpInterimDocs.py 1234 1235
 # 
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
@@ -19,8 +19,11 @@
 # The original name of this program was FtpHotfixDocs.py but got
 # renamed after the update process got named 'Interim Update'.
 #
-# $Id: FtpInterimDocs.py,v 1.2 2005-08-05 20:55:53 venglisc Exp $
+# $Id: FtpInterimDocs.py,v 1.3 2006-06-14 21:30:10 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2005/08/05 20:55:53  venglisc
+# Replaced the path to the ftp command with SYSTEMROOT variable.
+#
 # Revision 1.1  2005/07/07 22:03:23  venglisc
 # Initial version of FtpInterimDocs.py, however this program was named
 # FtpHotfixDocs.py in its former life.  Its name got changed due to the
@@ -31,7 +34,8 @@
 import sys, re, string, cdr, os, shutil, time
 
 if len(sys.argv) < 2:
-   sys.stder.write('usage: FtpInterimDocs jobID [JobID [...]]\n')
+   sys.stderr.write('usage: FtpInterimDocs jobID[/dirname] [JobID [...]]\n')
+   sys.stderr.write(' i.e.: FtpInterimDocs 3388 3389/ProtocolActive 3390\n')
    sys.exit(1)
 
 # Setting directory and file names
@@ -43,10 +47,14 @@ hfDir    = os.path.join(outDir, 'mid-month')
 dateStr  = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 newDir   = os.path.join(hfDir, dateStr)
 manifest = 'media_catalog.txt'
+tarName  = dateStr + '.tar.bz2'
 rmDir    = 0
 cdrDir   = 0
 
-jobId = string.atoi(sys.argv[1])
+# If the first argument is entered with subdirectory name as in
+#   3388/ActiveProtocol we need to strip the subdirectory name
+# -------------------------------------------------------------
+jobId = string.atoi(sys.argv[1].rsplit('/')[0])
 divider = "=" * 60
 
 # ------------------------------------------------------------
@@ -155,6 +163,21 @@ try:
             print >> f, line,
         f.close()
 
+    # We may have created way too many interim update files to be 
+    # handled by the FTP mput command. 
+    # Create a tar file to be copied the the FTP server instead.
+    # -----------------------------------------------------------
+    os.chdir(hfDir)
+    outFile = os.popen('tar cjf %s %s 2>&1' % (tarName, dateStr))
+    output  = outFile.read()
+    result  = outFile.close()
+    if result:
+        sys.stderr.write("tar return code: %d\n" % result)
+    if output:
+        sys.stderr.write("%s\n" % output)
+    sys.stderr.write("%s created\n" % tarName)
+
+    
     # Creating the FTP command file
     # -----------------------------
     open(log, "a").write("    %d: Creating ftp command file\n" %
@@ -166,35 +189,9 @@ try:
     ftpCmd.write('cdrdev\n')
     ftpCmd.write('***REMOVED***\n')
     ftpCmd.write('binary\n')
-    ftpCmd.write('cd /u/ftp/qa/pdq/mid-month\n')
-    ftpCmd.write('mkdir ' + dateStr + '\n')
-    ftpCmd.write('cd ' + dateStr + '\n')
-    ftpCmd.write('lcd d:/cdr/Output/mid-month/' + dateStr + '\n')
-
-    # If a manifest file exists it needs to be pushed
-    # -----------------------------------------------
-    if len(mfFiles):
-        ftpCmd.write('put ' + manifest + '\n')
-
-    # Only add this part if updated documents exist.
-    # ----------------------------------------------
-    # print "cdrDir = " + str(cdrDir)
-    if cdrDir:
-        ftpCmd.write('mkdir cdr\n')
-        ftpCmd.write('lcd cdr\n')
-        ftpCmd.write('cd cdr\n')
-        ftpCmd.write('mput *\n')
-        ftpCmd.write('lcd ..\n')
-        ftpCmd.write('cd ..\n')
-
-    # Only add this part if removed documents exist.
-    # ----------------------------------------------
-    # print "rmDir = " + str(rmDir)
-    if rmDir:
-        ftpCmd.write('mkdir remove\n')
-        ftpCmd.write('lcd remove\n')
-        ftpCmd.write('cd  remove\n')
-        ftpCmd.write('mput *\n')
+    ftpCmd.write('cd /u/ftp/qa/pdq/incoming/mid-month\n')
+    ftpCmd.write('lcd d:/cdr/Output/mid-month\n')
+    ftpCmd.write('put ' + tarName + '\n')
 
     ftpCmd.write('bye\n')
     ftpCmd.close()
