@@ -1,9 +1,21 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.75 2006-06-09 20:03:17 venglisc Exp $
+# $Id: cdrlatexlib.py,v 1.76 2006-06-15 13:03:15 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
+# ***************************** WARNING *******************************
+# The generic rules for processing common elements such as Para
+# will find and dump into the output the text content of those
+# elements, even the ones you don't want, unless you explicitly
+# suppress this behavior by telling the software *not* to descend
+# into the parent element's children.  For example, see the entries
+# below under the comment SUPPRESS THESE ELEMENTS.
+# *************************** END WARNING *****************************
+#
 # $Log: not supported by cvs2svn $
+# Revision 1.75  2006/06/09 20:03:17  venglisc
+# Changed addres from CIPS to OCCM.
+#
 # Revision 1.74  2006/06/09 19:52:20  venglisc
 # Modified code to adjust for DTD change of ProtocolTitle element to
 # PDQProtocolTitle and moving the OriginalTitle element to the
@@ -1632,6 +1644,22 @@ def protLeadOrg(pp):
 %s}
 """ % (statDate, orgName, protChair, phone, address))
 
+def otherProtIds(pp):
+    "Show all other protocol IDs except those with type 'CTEP ID'"
+    output = ["  \\newcommand{\OtherID}{\n  "]
+    for node in pp.getTopNode().getElementsByTagName("OtherID"):
+        protId = None
+        idType = None
+        for child in node.childNodes:
+            if child.nodeName == 'IDType':
+                idType = getText(child).strip()
+            elif child.nodeName == 'IDString':
+                protId = stripEnds(stripLines(getText(child)))
+        if protId and idType != 'CTEP ID':
+            output.append("   \\\\%s\n  " % protId)
+    output.append("}\n")
+    pp.setOutput("".join(output))
+
 def leadOrgRole(pp):
     "Remember if this is a secondary lead organization"
     if getText(pp.getCurNode()) == "Secondary":
@@ -1665,7 +1693,7 @@ def protPhaseAndDesign(pp):
             phases.append(getText(child))
         elif child.nodeName == "ProtocolDesign":
             designs.append(getText(child))
-    output = "  \\newcommand\\ProtocolPhaseAndDesign{\\item[Protocol Phase] "
+    output = "  \\newcommand{\\ProtocolPhaseAndDesign}{\\item[Protocol Phase] "
     if phases:
         output += ", ".join(phases) + " \n"
     else:
@@ -1693,7 +1721,7 @@ def protRetrievalTerms(pp):
     keys = terms.keys()
     keys.sort()
     output = r"""
-  \subsection*{Disease Retrieval Terms}
+  \subsection*{Diagnosis/Condition}
   \begin{itemize}{\setlength{\itemsep}{-5pt}}
   \setlength{\parskip}{0mm}
 """
@@ -1703,6 +1731,40 @@ def protRetrievalTerms(pp):
   \end{itemize}
   \setlength{\parskip}{3.0mm}
 """)
+
+def protOutcomes(pp):
+    """
+    Gather expected outcomes for the trial.
+    """
+    primaryOutcomes = []
+    secondaryOutcomes = []
+    for node in pp.getTopNode().getElementsByTagName('Outcome'):
+        if node.getAttribute('OutcomeType') == 'Primary':
+            primaryOutcomes.append(getText(node))
+        else:
+            secondaryOutcomes.append(getText(node))
+    if primaryOutcomes or secondaryOutcomes:
+        output = [r"""
+  \subsection*{Protocol Outcomes}
+"""]
+        if primaryOutcomes:
+            output.append(r"""
+  \subsubsection*{Primary}
+  \begin{itemize}
+""")
+            for outcome in primaryOutcomes:
+                output.append("  \\item %s\n" % outcome)
+            output.append("  \\end{itemize}\n")
+        if secondaryOutcomes:
+            output.append(r"""
+  \subsubsection*{Secondary}
+  \begin{itemize}
+""")
+            for outcome in secondaryOutcomes:
+                output.append("  \\item %s\n" % outcome)
+            output.append("  \\end{itemize}\n")
+        pp.setOutput("".join(output))
+
 
 def checkNotAbstracted(pp):
     "Check for a missing optional protocol section."
@@ -3001,14 +3063,11 @@ ENDPROTOCOLPREAMBLE=r"""
 PROTOCOLDEF=r"""
   %% PROTOCOLDEF %%
   %% ----------- %%
-  \newcommand{\HighAge}{XXX}
-  \newcommand{\LowAge}{XXX}
   \newcommand{\Disease}{XXX}
   \newcommand{\EligibilityText}{XXX}
   \newcommand{\Outline}{XXX}
   \newcommand{\BaselineTreatmentProcedures}{XXX}
   \newcommand{\MeasureofResponse}{XXX}
-  \newcommand{\ProjectedAccrual}{XXX}
   \newcommand{\DiseaseCaveat}{XXX}
   \newcommand{\StratificationParameters}{XXX}
   \newcommand{\DosageFormulation}{XXX}
@@ -3018,6 +3077,8 @@ PROTOCOLDEF=r"""
   \newcommand{\PriorConcurrentTherapy}{XXX}
   \newcommand{\ProtocolLeadOrg}{XXX}
   \newcommand{\ChairPhone}{XXX}
+  \newcommand{\StartDate}{INFORMATION NOT PROVIDED}
+  \newcommand{\ExpectedEnrollment}{INFORMATION NOT PROVIDED}
 %
 % -----
 """
@@ -3062,15 +3123,15 @@ PROTOCOLINFO=r"""
                                        \OtherID
 %    \item[Protocol Activation Date]   \ProtocolActiveDate
      \item[Current Protocol Status]    \ProtocolStatus
+     \item[Date Trial First Opened]    \StartDate
      \item[Lead Organization]          \ProtocolLeadOrg
      \item[Protocol Personnel]         \ProtocolChair
      \item[Phone]                      \ChairPhone
      \item[Address]                    \ChairAddress
      %\vspace{6pt}
      \item[Eligible Patient Age Range] \AgeText
-     \item[Lower Age Limit]            \LowAge
-     \item[Upper Age Limit]            \HighAge
      \ProtocolPhaseAndDesign
+     \item[Expected Enrollment]        \ExpectedEnrollment
   \end{entry}
 %
 % -----
@@ -3121,6 +3182,12 @@ PROTOCOLBOILER=r"""
   \chkbox & Withdrawn & Study discontinued, and to be removed from the
                         PDQ/Cancer.gov database
   \end{tabular}
+
+  If withdrawn, please provide the reason the trial has withdrawn.
+  \vspace{6pt} \\
+  \makebox[6.5in]{\hrulefill} \\
+  \makebox[6.5in]{\hrulefill} \\
+  \makebox[6.5in]{\hrulefill} \\
 
   \vspace{20pt}
 
@@ -3345,25 +3412,20 @@ ProtAbstProtID = (
           suffix="}\n"),
 
     # Concatenating Other protocol IDs
-    XProc(prefix="  \\newcommand{\OtherID}{\n  ", order=XProc.ORDER_TOP_FRONT),
-    XProc(element="/Protocol/ProtocolIDs/OtherID/IDString",
-          order=XProc.ORDER_TOP_FRONT,
-          prefix="   \\\\",
-          filters=[stripEnds],
-          suffix="\n  "),
-    XProc(prefix="}\n", order=XProc.ORDER_TOP_FRONT),
+    XProc(preProcs  = [[otherProtIds]],
+          order     = XProc.ORDER_TOP),
 
     XProc(element="CurrentProtocolStatus",
           order=XProc.ORDER_TOP_FRONT,
           prefix="  \\newcommand{\ProtocolStatus}{",
           suffix="}\n"),
-    XProc(element="LowAge",
+    XProc(element="StartDate",
           order=XProc.ORDER_TOP_FRONT,
-          prefix="  \\renewcommand{\LowAge}{",
+          prefix="  \\renewcommand{\\StartDate}{",
           suffix="}\n"),
-    XProc(element="HighAge",
+    XProc(element="ExpectedEnrollment",
           order=XProc.ORDER_TOP_FRONT,
-          prefix="  \\renewcommand{\HighAge}{",
+          prefix="  \\renewcommand{\\ExpectedEnrollment}{",
           suffix="}\n"),
     XProc(element="AgeText",
           order=XProc.ORDER_TOP_FRONT,
@@ -3393,6 +3455,8 @@ ProtAbstInfo = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           prefix    = sectPrefix("subsection*", "Protocol Objectives")),
+    XProc(preProcs  = [[protOutcomes]],
+          order     = XProc.ORDER_TOP),
     XProc(element   = "Outline",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
@@ -3417,10 +3481,6 @@ ProtAbstInfo = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           prefix    = sectPrefix("subsubsection", "General Criteria")),
-    XProc(element   = "ProjectedAccrual",
-          textOut   = 0,
-          order     = XProc.ORDER_TOP,
-          prefix    = sectPrefix("subsection*", "Projected Accrual")),
     XProc(element   = "EndPoints",
           textOut   = 0,
           order     = XProc.ORDER_TOP,
@@ -3445,8 +3505,11 @@ ProtAbstInfo = (
           preProcs  = ((optProtSect, ("subsection*", "Dosage Form")), )),
     XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
 
-    # Mask these out.
+    # SUPPRESS THESE ELEMENTS AND THEIR CHILDREN.
     XProc(element   = "GlossaryTerm",
+          textOut   = 0,
+          descend   = 0),
+    XProc(element   = "ProjectedAccrual",
           textOut   = 0,
           descend   = 0),
     XProc(element   = "/Protocol/ProtocolAbstract/Patient",
