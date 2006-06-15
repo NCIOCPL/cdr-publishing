@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.59 2006-06-06 14:42:23 venglisc Exp $
+   $Id: pdq.dtd,v 1.60 2006-06-15 15:44:35 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,11 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.59  2006/06/06 14:42:23  venglisc
+   Changed SummarySection from optional to mandatory.
+   Changed DateFirstPublished from mandatory to optional to mimic the
+   definition of the Summary DTD. (Bug 2099)
+
    Revision 1.58  2006/06/02 19:03:39  venglisc
    Added new document type DrugInformationSummary.
    Minor white space formatting. (Bug 2099)
@@ -1374,12 +1379,12 @@
             DrugInfoAudience,
             DrugInfoDescription,
             DrugInfoURL,
-            Manufacturer*,
+            Manufacturers?,
             FDAApproved,
             TerminologyLink,
             GlossaryLink,
-            USBrandName*,
-            Synonym*)>
+            USBrandNames?,
+            Synonyms?)>
 
 <!ELEMENT DrugInfoType (#PCDATA)>
 <!-- Types of DrugInfoType
@@ -1398,6 +1403,8 @@
 <!ELEMENT DrugInfoURL (#PCDATA)>
 <!ATTLIST DrugInfoURL xref CDATA #REQUIRED>
 
+<!ELEMENT Manufacturers ( Manufacturer* )>
+
 <!ELEMENT Manufacturer (%Location;)>
 <!ATTLIST Manufacturer ref CDATA #IMPLIED>
 
@@ -1409,7 +1416,11 @@
 <!ELEMENT GlossaryLink (#PCDATA)>
 <!ATTLIST GlossaryLink ref CDATA #IMPLIED>
 
+<!ELEMENT USBrandNames ( USBrandName* )>
+
 <!ELEMENT USBrandName (#PCDATA)>
+
+<!ELEMENT Synonyms ( Synonym* )>
 
 <!ELEMENT Synonym (#PCDATA)>
 
