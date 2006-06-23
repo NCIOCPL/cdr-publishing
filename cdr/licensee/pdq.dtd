@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.61 2006-06-23 23:04:42 venglisc Exp $
+   $Id: pdq.dtd,v 1.62 2006-06-23 23:07:05 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.61  2006/06/23 23:04:42  venglisc
+   *** empty log message *** 
+
    Revision 1.60  2006/06/15 15:44:35  venglisc
    Created wrapper elements for Manufacturer, USBrandName, and Synonym
    elements per request from Cancer.gov staff. (Bug 2099)
