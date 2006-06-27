@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.76 2006-06-15 13:03:15 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.77 2006-06-27 20:10:01 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.76  2006/06/15 13:03:15  bkline
+# Changes requested by Sheri in issue #2230.
+#
 # Revision 1.75  2006/06/09 20:03:17  venglisc
 # Changed addres from CIPS to OCCM.
 #
@@ -1646,17 +1649,17 @@ def protLeadOrg(pp):
 
 def otherProtIds(pp):
     "Show all other protocol IDs except those with type 'CTEP ID'"
-    output = ["  \\newcommand{\OtherID}{\n  "]
+    output = ["  \\newcommand{\OtherID}{"]
     for node in pp.getTopNode().getElementsByTagName("OtherID"):
         protId = None
         idType = None
         for child in node.childNodes:
             if child.nodeName == 'IDType':
-                idType = getText(child).strip()
+                idType = getText(child)
             elif child.nodeName == 'IDString':
                 protId = stripEnds(stripLines(getText(child)))
-        if protId and idType != 'CTEP ID':
-            output.append("   \\\\%s\n  " % protId)
+        if protId and idType == 'ClinicalTrials.gov ID':
+            output.append(protId)
     output.append("}\n")
     pp.setOutput("".join(output))
 
@@ -1679,6 +1682,28 @@ def optProtSect(pp):
   \setcounter{qC}{0}
   \%s{%s}
 """ % (pp.args[0], pp.args[1]))
+
+def protAbstLastPage(pp):
+    leadOrg = None
+    for node in pp.getTopNode().getElementsByTagName('ProtocolLeadOrg'):
+        orgName = None
+        primary = False
+        for child in node.childNodes:
+            sys.stderr.write("node name: %s\n" % child.nodeName)
+            if child.nodeName == 'LeadOrgName':
+                orgName = getText(child)
+                sys.stderr.write("org name: %s\n" % orgName)
+            elif child.nodeName == 'LeadOrgRole':
+                sys.stderr.write("role: %s\n" % getText(child))
+                if getText(child).upper() == 'PRIMARY':
+                    primary = True
+        if primary and orgName:
+            leadOrg = r"\textbf{%s}" % orgName
+        if leadOrg:
+            break
+    if not leadOrg:
+        leadOrg = 'the primary lead organization'
+    pp.setOutput(PROTOCOLBOILER.replace('@@LEADORGNAME@@', leadOrg))
 
 def protPhaseAndDesign(pp):
     """
@@ -3119,8 +3144,8 @@ PROTOCOLINFO=r"""
 
   \renewcommand{\ewidth}{180pt}
   \begin{entry}
-     \item[Protocol ID]                \ProtocolID
-                                       \OtherID
+     \item[PDQ Primary Protocol ID]    \ProtocolID
+     \item[ClinicalTrials.gov ID]      \OtherID
 %    \item[Protocol Activation Date]   \ProtocolActiveDate
      \item[Current Protocol Status]    \ProtocolStatus
      \item[Date Trial First Opened]    \StartDate
@@ -3166,8 +3191,8 @@ PROTOCOLBOILER=r"""
 
   \newcommand\chkbox{\makebox[20pt]{\hrulefill}\ \ \ }
 
-  If the status of this protocol has changed, please indicate
-  the current status:
+  If the status of @@LEADORGNAME@@ has changed, please indicate
+  the current status and the status effective date:
   \vspace{6pt}
 
   \begin{tabular}{llp{4in}}
@@ -3179,20 +3204,26 @@ PROTOCOLBOILER=r"""
   \chkbox & Closed & No longer accepting patients; previously entered
                      patients will continue treatment \\
   \chkbox & Completed & Study closed, data collection completed \\
-  \chkbox & Withdrawn & Study discontinued, and to be removed from the
-                        PDQ/Cancer.gov database
+  \chkbox & Withdrawn & Study discontinued due to lack of funding,
+                        adverse events, or drug issues (unavailable
+                        or not approved)
   \end{tabular}
-
+  \vspace{12pt} \\
+  \makebox[2.25in]{\hrulefill} \ \ \ \  Status effective date \\
+  \vspace{12pt} \\
   If withdrawn, please provide the reason the trial has withdrawn.
   \vspace{6pt} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
 
-  \vspace{20pt}
+  %% \vspace{20pt}
+  \newpage
 
   Please list/attach any citations resulting from this study.
   \vspace{6pt} \\
+  \makebox[6.5in]{\hrulefill} \\
+  \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
   \makebox[6.5in]{\hrulefill} \\
@@ -3220,21 +3251,21 @@ PROTOCOLBOILER=r"""
 #   of the object, like "textOut" and "descend", are ignored
 #
 #   Example:
-#       OversimplifedExampleInstructions = [\
-#          XProc(\
-#               preProcs=doThisFirst, ("With this arg", "and this one")),\
-#          XProc(element="Author",\
-#               descend=0,\
-#               prefix="\fancyhead[C]{\bfseries \",\
-#               suffix=" \\")),\
-#          XProc(element="Title"),\
-#          XProc(element="SummarySection",\
-#               descend=0,\
-#               preProcs=((handleSummary,),),\
-#               textOut=0)),\
-#          XProc(\
-#               suffix="\End{document}")\
-#       ]
+#       OversimplifedExampleInstructions = (
+#          XProc(
+#               preProcs=doThisFirst, ("With this arg", "and this one")),
+#          XProc(element="Author",
+#               descend=0,
+#               prefix="\fancyhead[C]{\bfseries \",
+#               suffix=" \\")),
+#          XProc(element="Title"),
+#          XProc(element="SummarySection",
+#               descend=0,
+#               preProcs=((handleSummary,),),
+#               textOut=0)),
+#          XProc(
+#               suffix="\End{document}")
+#       )
 #
 ###################################################################
 
@@ -3503,7 +3534,9 @@ ProtAbstInfo = (
           textOut   = 0,
           order     = XProc.ORDER_TOP,
           preProcs  = ((optProtSect, ("subsection*", "Dosage Form")), )),
-    XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
+    #XProc(prefix=PROTOCOLBOILER, order=XProc.ORDER_TOP),
+    XProc(preProcs  = [[protAbstLastPage]],
+          order     = XProc.ORDER_TOP),
 
     # SUPPRESS THESE ELEMENTS AND THEIR CHILDREN.
     XProc(element   = "GlossaryTerm",
