@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.16 2006-06-08 13:57:33 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.17 2006-07-13 13:18:10 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2006/06/08 13:57:33  bkline
+# Added sources to emailer manifest.
+#
 # Revision 1.15  2005/03/02 15:46:06  bkline
 # Removed temporary code to block Brussels mailers.
 #
@@ -274,8 +277,8 @@ class StatusAndParticipantMailer(cdrmailer.MailerJob):
        name,
        protocolParms.protId,
        xml.sax.saxutils.escape(protocolParms.title),
-       protocolParms.status),
-       u"|".join(protocolParms.sources)).encode('utf-8'))
+       protocolParms.status,
+       u"|".join(protocolParms.sources))).encode('utf-8'))
                 counter += 1
             manifest.write("""\
   </EmailerDocuments>
