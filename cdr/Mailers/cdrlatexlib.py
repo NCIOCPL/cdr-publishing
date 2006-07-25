@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.77 2006-06-27 20:10:01 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.78 2006-07-25 20:54:40 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.77  2006/06/27 20:10:01  bkline
+# Additional changes tacked on to issue #2230.
+#
 # Revision 1.76  2006/06/15 13:03:15  bkline
 # Changes requested by Sheri in issue #2230.
 #
@@ -1144,7 +1147,7 @@ def bibitem (pp):
     return 0
 
 
-def protocolTitle (pp):
+def pdqProtocolTitle (pp):
     "Get the PDQ and patient protocol titles for the summary mailer."
     "Note: The original title is now part of the Registry Info. VE"
     node = pp.getCurNode()
@@ -1169,22 +1172,30 @@ def protocolTitle (pp):
     #if macro:
     #    pp.setOutput("  %s %s \\\\}\n" % (macro, getText(node)))
 
-
-def officialTitle (pp):
-    "Get the official protocol titles for the protocol mailer."
+def protocolTitle (pp):
+    """Get the official protocol titles for the protocol mailer.
+    This approach doesn't work any more because the users decided
+    to suppress the element in which the ProtocolTitle element
+    appears under some circumstances.  See officialTitle() function
+    below."""
     node = pp.getCurNode()
     attr = node.getAttribute("Type")
     macro = None
-    if attr == "Official":
-        macro = ("\\newcommand\\OfficialProtocolTitle{{\\bfseries "
-                 "Original Title:} ")
-    elif attr == "Short":
+    #if attr == "Official":
+    #    macro = ("\\newcommand\\OfficialProtocolTitle{{\\bfseries "
+    #             "Original Title:} ")
+    #elif attr == "Short":
+    if attr == "Short":
         macro = "\\newcommand\\ShortProtocolTitle{{\\bfseries Short Title:} "
     else:
         macro = "\\newcommand\\UnknownProtTitle{{\\bfseries Unknown Title:} "
 
     pp.setOutput(macro)
 
+def officialTitle(pp):
+    "Get the official protocol title for the protocol mailer."
+    macro = r"\newcommand\OfficialProtocolTitle{{\bfseries Original Title:} "
+    pp.setOutput(macro)
 
 def street (pp):
     """
@@ -1689,12 +1700,9 @@ def protAbstLastPage(pp):
         orgName = None
         primary = False
         for child in node.childNodes:
-            sys.stderr.write("node name: %s\n" % child.nodeName)
             if child.nodeName == 'LeadOrgName':
                 orgName = getText(child)
-                sys.stderr.write("org name: %s\n" % orgName)
             elif child.nodeName == 'LeadOrgRole':
-                sys.stderr.write("role: %s\n" % getText(child))
                 if getText(child).upper() == 'PRIMARY':
                     primary = True
         if primary and orgName:
@@ -1768,27 +1776,28 @@ def protOutcomes(pp):
             primaryOutcomes.append(getText(node))
         else:
             secondaryOutcomes.append(getText(node))
-    if primaryOutcomes or secondaryOutcomes:
-        output = [r"""
+    output = [r"""
   \subsection*{Protocol Outcomes}
 """]
-        if primaryOutcomes:
-            output.append(r"""
+    if primaryOutcomes:
+        output.append(r"""
   \subsubsection*{Primary}
   \begin{itemize}
 """)
-            for outcome in primaryOutcomes:
-                output.append("  \\item %s\n" % outcome)
-            output.append("  \\end{itemize}\n")
-        if secondaryOutcomes:
-            output.append(r"""
+        for outcome in primaryOutcomes:
+            output.append("  \\item %s\n" % outcome)
+        output.append("  \\end{itemize}\n")
+    if secondaryOutcomes:
+        output.append(r"""
   \subsubsection*{Secondary}
   \begin{itemize}
 """)
-            for outcome in secondaryOutcomes:
-                output.append("  \\item %s\n" % outcome)
-            output.append("  \\end{itemize}\n")
-        pp.setOutput("".join(output))
+        for outcome in secondaryOutcomes:
+            output.append("  \\item %s\n" % outcome)
+        output.append("  \\end{itemize}\n")
+    if not (primaryOutcomes or secondaryOutcomes):
+        output.append("INFORMATION NOT PROVIDED\n\n")
+    pp.setOutput("".join(output))
 
 
 def checkNotAbstracted(pp):
@@ -3470,12 +3479,17 @@ ProtAbstInfo = (
     XProc(element   = "ProtocolTitle",
           textOut   = 1,
           order     = XProc.ORDER_TOP,
-          preProcs  = [[officialTitle]],
+          preProcs  = [[protocolTitle]],
           suffix    = " \\\\}\n"),
     XProc(element   = "PDQProtocolTitle",
           textOut   = 1,
           order     = XProc.ORDER_TOP,
-          preProcs  = [[protocolTitle]],
+          preProcs  = [[pdqProtocolTitle]],
+          suffix    = " \\\\}\n"),
+    XProc(element   = "OfficialProtocolTitle",
+          textOut   = 1,
+          order     = XProc.ORDER_TOP,
+          preProcs  = [[officialTitle]],
           suffix    = " \\\\}\n"),
 
     XProc(prefix=PROTOCOLTITLE, order=XProc.ORDER_TOP),
