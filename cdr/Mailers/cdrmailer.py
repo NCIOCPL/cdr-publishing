@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.60 2006-06-08 20:01:29 bkline Exp $
+# $Id: cdrmailer.py,v 1.61 2006-09-12 16:00:04 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.60  2006/06/08 20:01:29  bkline
+# Extracted out some common classes to cdrdocobject.py module.
+#
 # Revision 1.59  2006/06/08 14:07:39  bkline
 # Pulled out PersonalName and Address classes to cdrdocobject module.
 #
@@ -320,7 +323,8 @@ class MailerJob:
 
         getDeadline()
             Returns a string in the form YYYY-MM-DD for the deadline
-            by which the mailer must be responded to.
+            by which the mailer must be responded to.  Can be
+            overridden by the derived classes as appropriate.
 
         getJobTime()
             Returns a string in the form YYYY-MM-DDTHH:MM:SS
@@ -545,7 +549,7 @@ class MailerJob:
 </CdrDoc>
 """ % (docId, recipId, mode, mailerType, remailerFor, self.__id, recipId,
        recipient.getName(), protOrg, address, docId, doc.getTitle(),
-       self.__now, self.__deadline)
+       self.__now, self.getDeadline())
         rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
                            checkIn = "Y", ver = "Y", val = 'Y')
         match = self.__ERR_PATTERN.search(rsp)
@@ -928,7 +932,7 @@ You can retrieve the letters at:
     #------------------------------------------------------------------
     def __getDates(self):
         now             = time.localtime(time.time())
-        deadline        = (now[0], now[1] + 2, now[2], 0, 0, 0, 0, 0, -1)
+        deadline        = (now[0], now[1], now[2] + 60, 0, 0, 0, 0, 0, -1)
         deadline        = time.localtime(time.mktime(deadline))
         self.__now      = time.strftime("%Y-%m-%dT%H:%M:%S", now)
         self.__deadline = time.strftime("%Y-%m-%d", deadline)

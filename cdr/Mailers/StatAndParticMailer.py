@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.17 2006-07-13 13:18:10 bkline Exp $
+# $Id: StatAndParticMailer.py,v 1.18 2006-09-12 16:00:04 bkline Exp $
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.17  2006/07/13 13:18:10  bkline
+# Fixed typo (misplaced parenthesis).
+#
 # Revision 1.16  2006/06/08 13:57:33  bkline
 # Added sources to emailer manifest.
 #
@@ -104,6 +107,16 @@ class ProtocolParms:
 # Derived class for PDQ Editorial Board Member mailings.
 #----------------------------------------------------------------------
 class StatusAndParticipantMailer(cdrmailer.MailerJob):
+
+    #------------------------------------------------------------------
+    # Overrides method in base class for determining the deadline for
+    # responding to the mailer.
+    #------------------------------------------------------------------
+    def getDeadline(self):
+        now      = time.localtime(time.time())
+        deadline = (now[0], now[1], now[2] + 30, 0, 0, 0, 0, 0, -1)
+        deadline = time.localtime(time.mktime(deadline))
+        return time.strftime("%Y-%m-%d", deadline)
 
     #------------------------------------------------------------------
     # Overrides method in base class for filling the print queue.
