@@ -2,16 +2,23 @@
 <CdrDocCtl>
 <DocValStatus readonly="yes">V</DocValStatus>
 <DocActiveStatus readonly="yes">A</DocActiveStatus>
+<DocValDate readonly="yes">2006-06-06T11:48:27.570</DocValDate>
 <DocTitle readonly="yes">Primary</DocTitle>
+<DocComment>Changing MaxDocUpdatedDate for readability</DocComment><ReadyForReview readonly="yes">N</ReadyForReview>
 </CdrDocCtl>
 <CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
+ 
  <SystemName>Primary</SystemName>
- <SystemDescription>Used for producing documents for licensees and Cancer.gov.</SystemDescription>
+ <SystemDescription>
+   Used for producing documents for licensees and Cancer.gov.
+ </SystemDescription>
  
  <SystemSubset>
   <SubsetName>Full-Load</SubsetName>
-  <SubsetDescription>Filter and validate all publishable documents to produce
-        licensee documents and push them to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Filter and validate all publishable documents to produce
+    licensee documents and push them to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -41,6 +48,10 @@
     <ParmName>NumDocsPerDocType</ParmName>
     <ParmValue>50000</ParmValue>
    </SubsetParameter>  
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -63,6 +74,7 @@
          AND q.value IN ('Active', 'Approved-Not Yet Active')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -98,6 +110,7 @@
          AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -131,6 +144,7 @@
        WHERE t.name = 'Summary'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -164,6 +178,7 @@
        WHERE t.name = 'Country'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -197,6 +212,7 @@
        WHERE t.name = 'PoliticalSubUnit'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -233,6 +249,7 @@
                          'Unreviewed')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -264,9 +281,11 @@
         JOIN query_term q
           ON q.doc_id = d.id
        WHERE q.path = '/GlossaryTerm/TermStatus'
-         AND q.value = 'Approved'
+         AND (q.value = 'Approved'
+          OR  q.value = 'Revision pending')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -313,6 +332,7 @@
                          AND q2.path LIKE '%@cdr:ref')))
          AND  v.val_status = 'V'
          AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND  d.active_status = 'A'
     GROUP BY  d.id
      </SubsetSQL>
@@ -359,6 +379,7 @@
                          AND q2.path LIKE '%@cdr:ref')))
          AND  v.val_status = 'V'
          AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND  d.active_status = 'A'
     GROUP BY  d.id
      </SubsetSQL>
@@ -392,6 +413,7 @@
        WHERE t.name = 'CTGovProtocol'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -406,6 +428,73 @@
      </SubsetFilterParm> 
     </SubsetFilters>
     <Subdirectory>CTGovProtocol</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Media documents
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN query_term q
+          ON q.int_val = d.id
+       WHERE t.name = 'Media'
+         AND q.path LIKE '%/@cdr:%ref'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Media</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   DrugInformationSummary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'DrugInformationSummary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>DrugInfoSummary</Subdirectory>
    </SubsetSpecification>
 
   </SubsetSpecifications>
@@ -429,8 +518,8 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
-  <SubsetDescription>Push filtered/validated Full-Load licensee documents to 
-     Cancer.gov.
+  <SubsetDescription>
+    Push filtered/validated Full-Load licensee documents to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
@@ -476,8 +565,9 @@
  
  <SystemSubset>
   <SubsetName>Export</SubsetName>
-  <SubsetDescription>Produce monthly/weekly licensee documents and push them 
-    to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Produce monthly/weekly licensee documents and push them to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters>    
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -485,7 +575,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
@@ -497,12 +587,16 @@
    </SubsetParameter>    
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
-    <ParmValue>20</ParmValue>
+    <ParmValue>250</ParmValue>
    </SubsetParameter> 
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
     <ParmValue>50000</ParmValue>
    </SubsetParameter>  
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -525,6 +619,7 @@
          AND q.value IN ('Active', 'Approved-Not Yet Active')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -560,6 +655,7 @@
          AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -593,6 +689,7 @@
        WHERE t.name = 'Summary'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -626,6 +723,7 @@
        WHERE t.name = 'Country'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -659,6 +757,7 @@
        WHERE t.name = 'PoliticalSubUnit'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -695,6 +794,7 @@
                          'Unreviewed')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -726,9 +826,11 @@
         JOIN query_term q
           ON q.doc_id = d.id
        WHERE q.path = '/GlossaryTerm/TermStatus'
-         AND q.value = 'Approved'
+         AND (q.value = 'Approved'
+          OR  q.value = 'Revision pending')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -775,6 +877,7 @@
                          AND q2.path LIKE '%@cdr:ref')))
          AND  v.val_status = 'V'
          AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND  d.active_status = 'A'
     GROUP BY  d.id
      </SubsetSQL>
@@ -821,6 +924,7 @@
                          AND q2.path LIKE '%@cdr:ref')))
          AND  v.val_status = 'V'
          AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND  d.active_status = 'A'
     GROUP BY  d.id
      </SubsetSQL>
@@ -854,6 +958,7 @@
        WHERE t.name = 'CTGovProtocol'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -870,6 +975,73 @@
     <Subdirectory>CTGovProtocol</Subdirectory>
    </SubsetSpecification>
 
+   <!--
+   ========================================================================
+   Media documents
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN query_term q
+          ON q.int_val = d.id
+       WHERE t.name = 'Media'
+         AND q.path LIKE '%/@cdr:%ref'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+    <Subdirectory>Media</Subdirectory>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   DrugInformationSummary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocsPerDocType? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'DrugInformationSummary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>PoliticalSubUnit</Subdirectory>
+   </SubsetSpecification>
+
   </SubsetSpecifications>
 
   <SubsetOptions>
@@ -879,7 +1051,7 @@
    </SubsetOption>
    <SubsetOption>
     <OptionName>AbortOnError</OptionName>
-    <OptionValue>20</OptionValue>
+    <OptionValue>200</OptionValue>
    </SubsetOption> 
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
@@ -890,8 +1062,10 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export</SubsetName>
-  <SubsetDescription>Push filtered/validated monthly/weekly Export licensee 
-    documents to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Push filtered/validated monthly/weekly Export licensee 
+    documents to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -936,9 +1110,11 @@
 
  <SystemSubset>
   <SubsetName>Hotfix-Export</SubsetName>
-  <SubsetDescription>Filter and validate specified documents together with 
+  <SubsetDescription>
+    Filter and validate specified documents together with 
     their recursively linked documents and push them to Cancer.gov for
-    immediate action.</SubsetDescription>
+    immediate action.
+  </SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -946,7 +1122,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ReportOnly</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
@@ -958,12 +1134,16 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>IncludeLinkedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
-    <ParmValue>5</ParmValue>
+    <ParmValue>50</ParmValue>
    </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   
   <SubsetSpecifications>
@@ -1157,6 +1337,44 @@
     </SubsetFilters>
    </SubsetSpecification>
 
+   <!--
+   ========================================================================
+   Media documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Media</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>     
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
+     </UserSelect>  
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
   </SubsetSpecifications>
 
   <SubsetOptions>
@@ -1177,8 +1395,10 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
-  <SubsetDescription>Push filtered/validated Hotfix-Export licensee documents 
-    to Cancer.gov for immediate action.</SubsetDescription>
+  <SubsetDescription>
+    Push filtered/validated Hotfix-Export licensee documents 
+    to Cancer.gov for immediate action.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1223,8 +1443,10 @@
 
  <SystemSubset>
   <SubsetName>Hotfix-Remove</SubsetName>
-  <SubsetDescription>Produce CDR document IDs to be removed and push
-    the IDs to Cancer.gov for immediate action.</SubsetDescription>
+  <SubsetDescription>
+    Create list of CDR document IDs to be removed from 
+    Cancer.gov.  Push the list to Cancer.gov for immediate action.
+  </SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1253,8 +1475,10 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Remove</SubsetName>
-  <SubsetDescription>Push Hotfix-Remove document IDs to Cancer.gov for 
-    immediate action.</SubsetDescription>
+  <SubsetDescription>
+    Push list of CDR IDs created under Hotfix-Remove to Cancer.gov for 
+    immediate action.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1295,8 +1519,10 @@
 
  <SystemSubset>
   <SubsetName>Export-Protocol</SubsetName>
-  <SubsetDescription>Filter and validate publishable protocol documents for
-    licensees and push them to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Filter and validate publishable protocol documents for
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1317,6 +1543,10 @@
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
     <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -1344,6 +1574,7 @@
          AND q.value IN ('Active', 'Approved-Not Yet Active')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -1379,6 +1610,7 @@
          AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -1415,8 +1647,10 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Protocol</SubsetName>
-  <SubsetDescription>Push filtered/validated Export-Protocol protocol 
-    documents to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Push filtered/validated Export-Protocol protocol 
+    documents to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1461,8 +1695,10 @@
 
  <SystemSubset>
   <SubsetName>Export-Summary</SubsetName>
-  <SubsetDescription>Filter and validate publishable summary documents for 
-    licensees and push them to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Filter and validate publishable summary documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1483,6 +1719,10 @@
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
     <ParmValue>1000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -1508,6 +1748,7 @@
        WHERE t.name = 'Summary'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -1543,8 +1784,10 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Summary</SubsetName>
-  <SubsetDescription>Push filtered/validated Export-Summary summary 
-    documents to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Push filtered/validated Export-Summary summary 
+    documents to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
@@ -1589,8 +1832,10 @@
 
  <SystemSubset>
   <SubsetName>Export-CTGovProtocol</SubsetName>
-  <SubsetDescription>Filter and validate publishable CTGovProtocol documents 
-    for licensees and push them to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Filter and validate publishable CTGovProtocol documents 
+    for licensees and push them to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters>  
    <SubsetParameter>
     <ParmName>PubType</ParmName>
@@ -1611,6 +1856,10 @@
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
     <ParmValue>1000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
@@ -1636,6 +1885,7 @@
        WHERE t.name = 'CTGovProtocol'
          AND v.val_status = 'V'
          AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND d.active_status = 'A'
     GROUP BY d.id
      </SubsetSQL>
@@ -1670,12 +1920,1138 @@
 
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-CTGovProtocol</SubsetName>
-  <SubsetDescription>Push filtered/validated Export-CTGovProtocol 
-    documents to Cancer.gov.</SubsetDescription>
+  <SubsetDescription>
+    Push filtered/validated Export-CTGovProtocol 
+    documents to Cancer.gov.
+  </SubsetDescription>
   <SubsetParameters> 
    <SubsetParameter>
     <ParmName>SubSetName</ParmName>
     <ParmValue>Export-CTGovProtocol</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-Media</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable Media documents 
+    for licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Media documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+        JOIN query_term q
+          ON q.int_val = d.id
+       WHERE t.name = 'Media'
+         AND q.path LIKE '%/@cdr:%ref'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>     
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Media</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-Media
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Media</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-Country</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable country documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>200</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>10</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Country'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Country</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-Country 
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Country</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-GlossaryTerm</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable GlossaryTerm documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>10000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/GlossaryTerm/TermStatus'
+         AND (q.value = 'Approved'
+          OR  q.value = 'Revision pending')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-GlossaryTerm</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-GlossaryTerm 
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-GlossaryTerm</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-Organization</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable Organization documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>25000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT  TOP ?NumDocs? d.id,
+              MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Organization/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Organization</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-Organization
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Organization</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-Person</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable Person documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM  doc_version v
+        JOIN  document d
+          ON  d.id = v.id
+        JOIN  query_term q
+          ON  q.doc_id = d.id
+       WHERE  q.path = '/Person/Status/CurrentStatus'
+         AND (q.value = 'Active'
+          OR (q.value = 'Inactive'
+         AND  EXISTS (SELECT q2.int_val
+                        FROM query_term q2
+                        JOIN document d2
+                          ON d2.id = q2.doc_id
+                        JOIN doc_version v2
+                          ON v2.id = d2.id
+                       WHERE q2.int_val = d.id
+                         AND d2.active_status = 'A'
+                         AND v2.publishable = 'Y'
+                         AND v2.val_status = 'V'
+                         AND q2.path LIKE '%@cdr:ref')))
+         AND  v.val_status = 'V'
+         AND  v.publishable = 'Y'
+         AND  v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND  d.active_status = 'A'
+    GROUP BY  d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Person Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Person</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-Person summary 
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Person</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-PoliticalSubUnit</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable PoliticalSubUnit documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>200</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>10</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'PoliticalSubUnit'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-PoliticalSubUnit</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-PoliticalSubUnit
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-PoliticalSubUnit</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-Term</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable Term documents for 
+    licensees and push them to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>20000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>20</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/Term/TermStatus'
+         AND q.value IN ('Reviewed-Problematic',
+                         'Reviewed-Retain',
+                         'Unreviewed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>20</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Term</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-Term documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-Term</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-DrugInfoSummary</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable DrugInfoSummary documents.
+    This document type is for Cancer.gov only.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>200</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>10</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   DrugInfoSummary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'DrugInformationSummary'
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-DrugInfoSummary</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-DrugInfoSummary
+    documents to Cancer.gov.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-DrugInfoSummary</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>PubType</ParmName>
