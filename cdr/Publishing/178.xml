@@ -1693,6 +1693,289 @@
   </SubsetOptions>
  </SystemSubset>
 
+<!--
+ <SystemSubset>
+  <SubsetName>Export-ProtocolActive</SubsetName>
+  <SubsetDescription>
+    Filter and validate active publishable protocol documents.
+    (Used for testing only.)
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+-->
+   <!--
+   ========================================================================
+   Open protocol documents.
+   ======================================================================== -->
+<!--
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Active', 'Approved-Not Yet Active')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>ProtocolActive</Subdirectory>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-Protocol</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-ProtocolActive protocol documents.
+    (Used for testing only.)
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-ProtocolActive</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Export-ProtocolClosed</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable closed protocol documents.
+    (Used for testing only.)
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>   
+  </SubsetParameters>
+  <SubsetSpecifications>
+-->
+   <!--
+   ========================================================================
+   Closed protocol documents.
+   ======================================================================== -->
+<!--
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id,
+             MAX(v.num)
+        FROM doc_version v
+        JOIN document d
+          ON d.id = v.id
+        JOIN query_term q
+          ON q.doc_id = d.id
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo'
+                    + '/CurrentProtocolStatus'
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed')
+         AND v.val_status = 'V'
+         AND v.publishable = 'Y'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND d.active_status = 'A'
+    GROUP BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter>     
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters>
+    <Subdirectory>ProtocolClosed</Subdirectory>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Export-ProtocolClosed</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Export-ProtocolClosed protocol documents.
+    (Used for testing only.)
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Export-ProtocolClosed</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>   
+     <SubsetSQL>
+         SELECT document.id 
+           FROM document
+          WHERE document.id = 0 
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>   
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+-->
+
  <SystemSubset>
   <SubsetName>Export-Summary</SubsetName>
   <SubsetDescription>
@@ -2141,7 +2424,7 @@
 
     <!--
    ========================================================================
-   Summary documents.
+   Country documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
@@ -2417,7 +2700,7 @@
 
     <!--
    ========================================================================
-   Summary documents.
+   Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
@@ -2567,7 +2850,7 @@
 
     <!--
    ========================================================================
-   Summary documents.
+   Person documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
@@ -2717,7 +3000,7 @@
 
     <!--
    ========================================================================
-   Summary documents.
+   PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
@@ -2854,7 +3137,7 @@
 
     <!--
    ========================================================================
-   Summary documents.
+   Term documents.
    ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
