@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.63 2006-09-12 16:37:40 venglisc Exp $
+   $Id: pdq.dtd,v 1.64 2006-09-14 15:38:42 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.63  2006/09/12 16:37:40  venglisc
+   Modified DateLastModified to be mandatory for DrugInfoSummary.
+   Added tags for processing of DTD to strip internal data. (Bug 2099)
+
    Revision 1.62  2006/06/23 23:07:05  venglisc
    Adding log message for previous commit:
    Added DrugInfoDisclaimer element and changed SummarySection to Section
@@ -1444,6 +1448,13 @@
 <!ELEMENT DrugInfoDisclaimer (%TextSectionElements;)*>
 
 <!-- End DrugInformationSummary -->
+
+
+<!-- Media element requested by Cancer.gov -->
+<!ELEMENT Media                (#PCDATA)>
+<!ATTLIST Media                 Type CDATA                 #REQUIRED
+                                Size CDATA                 #REQUIRED
+                                Encoding (base64|hex)      #REQUIRED>
 
 <!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
 <!-- End   Section for Internal Use Only                         -->
