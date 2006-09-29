@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.64 2006-09-14 15:38:42 venglisc Exp $
+   $Id: pdq.dtd,v 1.65 2006-09-29 15:58:54 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.64  2006/09/14 15:38:42  venglisc
+   Per request from Cancer.gov added Media element to internal section.
+
    Revision 1.63  2006/09/12 16:37:40  venglisc
    Modified DateLastModified to be mandatory for DrugInfoSummary.
    Added tags for processing of DTD to strip internal data. (Bug 2099)
@@ -1387,7 +1390,7 @@
             Section+,
             DrugInfoDisclaimer,
             DateFirstPublished,
-            DateLastModified )>
+            DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
 <!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
             used within a DrugInformationSummary will not contain these
