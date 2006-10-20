@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.9 2004-07-08 19:16:58 bkline Exp $
+# $Id: PublishingService.py,v 1.10 2006-10-20 04:22:20 ameyer Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2004/07/08 19:16:58  bkline
+# Made the script as bulletproof as possible by catching every possible
+# exception.
+#
 # Revision 1.8  2004/07/08 18:58:48  bkline
 # Cleaned up loop logging.
 #
@@ -80,14 +84,14 @@ def logLoop():
             LogDelay = 0
     except:
         LogDelay = 0
-        
+
 conn = None
 while 1:
     try:
 
         # Let the world know we're still alive.
         logLoop()
-        
+
         # Connection for all efforts
         if not conn:
             conn = cdrdb.connect("CdrPublishing")
@@ -102,6 +106,7 @@ while 1:
         cursor.close()
         cursor = None
         for row in rows:
+            cdr.logwrite("PublishingService starting job %d" % row[0], PUBLOG)
             print "publishing job %d" % row[0]
             os.spawnv(os.P_NOWAIT, cdr.PYTHON, ("CdrPublish", PUBSCRIPT,
                                                 str(row[0])))
@@ -176,7 +181,7 @@ while 1:
             pass
     except Exception, e:
         try:
-            cdr.logwrite('Failure: %s' % str(e), logfile = PUBLOG, 
+            cdr.logwrite('Failure: %s' % str(e), logfile = PUBLOG,
                          tback = True)
         except:
             pass
