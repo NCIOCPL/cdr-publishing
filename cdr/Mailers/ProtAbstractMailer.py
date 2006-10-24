@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.20 2003-06-27 15:11:37 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.21 2006-10-24 20:29:47 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.20  2003/06/27 15:11:37  bkline
+# Added @@CLOSEMATH@@ placeholder; removed extra backslashes in title
+# markup.
+#
 # Revision 1.19  2003/06/27 14:03:33  bkline
 # Plugged in new filter set for protocol abstract mailers.
 #
@@ -145,7 +149,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                     self.getDocuments()[row[2]] = document
                 recipient.getDocs().append(document)
         except cdrdb.Error, info:
-            raise "database error finding recipients: %s" % str(info[1][0])
+            raise Exception("database error finding recipients: %s" %
+                            str(info[1][0]))
 
     #------------------------------------------------------------------
     # Find a protocol lead organization personnel's mailing address.
@@ -154,12 +159,13 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         try:
             docId, fragId = fragLink.split("#")
         except:
-            raise "Invalid fragment link: %s" % fragLink
+            raise Exception("Invalid fragment link: %s" % fragLink)
         parms = (("fragId", fragId),)
         filters = ["name:Person Address Fragment With Name"]
         rsp = cdr.filterDoc(self.getSession(), filters, docId, parm = parms)
         if type(rsp) == type("") or type(rsp) == type(u""):
-            raise "Unable to find address for %s: %s" % (str(fragLink), rsp)
+            raise Exception("Unable to find address for %s: %s" %
+                            (str(fragLink), rsp))
         return rsp[0]
 
     #------------------------------------------------------------------
@@ -188,8 +194,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         result  = cdr.filterDoc('guest', filters, id, docVer = ver,
                                 parm = [('useLatexMarkup', 'Y')])
         if type(result) in (type(""), type(u"")):
-            raise StandardError (\
-                "failure filtering document %s: %s" % (docId, result))
+            raise Exception("failure filtering document %s: %s" %
+                            (docId, result))
         if result[0]:
             title = UnicodeToLatex.convert(unicode(result[0], "utf-8"))
             return (title.replace("@@EMPH@@",      r"\emph{")
@@ -265,12 +271,12 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
                        AND prot_mailer.int_val = %d""" % docId)
                 row = self.getCursor().fetchone()
                 if not row:
-                    raise "Lookup for original mailer failed for protocol %d"\
-                          % docId
+                    raise Exception("Lookup for original mailer failed for "
+                                    "protocol %d" % docId)
                 remailerFor = row[0]
             except cdrdb.Error, info:
-                raise "database error finding original mailer: %s" % \
-                      str(info[1][0])
+                raise Exception("database error finding original mailer: %s" %
+                                str(info[1][0]))
         mailerId = self.addMailerTrackingDoc(doc, recip, self.getSubset(),
                                              remailerFor)
 
@@ -285,7 +291,8 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         docTitle  = doc.getTitle()
         pieces    = docTitle.split(';', 1)
         if len(pieces) != 2:
-            raise "Protocol title missing component: %s" % docTitle
+            raise Exception("Protocol title for CDR%d missing component: %s" %
+                            (doc.getId(), docTitle))
         protId    = pieces[0]
         protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
