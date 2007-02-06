@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.22 2007-02-06 19:07:25 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.23 2007-02-06 22:23:08 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.22  2007/02/06 19:07:25  bkline
+# Used UnicodeToLatex on protocol ID.
+#
 # Revision 1.21  2006/10/24 20:29:47  bkline
 # Fixed some exception throwing code.
 #
@@ -296,7 +299,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         if len(pieces) != 2:
             raise Exception("Protocol title for CDR%d missing component: %s" %
                             (doc.getId(), docTitle))
-        protId    = UnicodeToLatex.convert(unicode(pieces[0], "utf-8"))
+        protId    = UnicodeToLatex.convert(pieces[0])
         protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
 
