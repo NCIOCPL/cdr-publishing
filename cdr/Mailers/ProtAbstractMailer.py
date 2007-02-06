@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: ProtAbstractMailer.py,v 1.21 2006-10-24 20:29:47 bkline Exp $
+# $Id: ProtAbstractMailer.py,v 1.22 2007-02-06 19:07:25 bkline Exp $
 #
 # Master driver script for processing initial protocol abstract mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.21  2006/10/24 20:29:47  bkline
+# Fixed some exception throwing code.
+#
 # Revision 1.20  2003/06/27 15:11:37  bkline
 # Added @@CLOSEMATH@@ placeholder; removed extra backslashes in title
 # markup.
@@ -293,7 +296,7 @@ class ProtocolAbstractMailer(cdrmailer.MailerJob):
         if len(pieces) != 2:
             raise Exception("Protocol title for CDR%d missing component: %s" %
                             (doc.getId(), docTitle))
-        protId    = pieces[0]
+        protId    = UnicodeToLatex.convert(unicode(pieces[0], "utf-8"))
         protTitle = doc.profTitle #pieces[1]
         docId     = "%d (Tracking ID: %d)" % (doc.getId(), mailerId)
 
