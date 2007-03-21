@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.65 2006-09-29 15:58:54 venglisc Exp $
+   $Id: pdq.dtd,v 1.66 2007-03-21 21:59:21 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.65  2006/09/29 15:58:54  venglisc
+   Reverted former change for DateLastModified.  Element will stay an optional
+   element. (Bug 2099)
+
    Revision 1.64  2006/09/14 15:38:42  venglisc
    Per request from Cancer.gov added Media element to internal section.
 
@@ -197,6 +201,7 @@
 <!ELEMENT TitleAbbrev (%TitleData;)*>
 
 <!ELEMENT AltTitle (%TitleData;)*>
+<!ATTLIST AltTitle TitleType (Short | Display) #IMPLIED>
 
 <!ELEMENT Para (%ParaElements;)*>
 <!ATTLIST Para id CDATA #IMPLIED>
@@ -442,6 +447,7 @@
 
 <!ELEMENT SummaryRef (#PCDATA)>
 <!ATTLIST SummaryRef href CDATA #IMPLIED>
+<!ATTLIST SummaryRef url  CDATA #IMPLIED>
 
 <!ELEMENT SummaryLink (#PCDATA)>
 <!ATTLIST SummaryLink ref CDATA #IMPLIED>
@@ -521,6 +527,7 @@
 
 <!ELEMENT Summary (SummaryMetaData,
                    SummaryTitle,
+                   AltTitle*,
                    SummarySection+,
                    TranslationOf?,
                    PatientVersionOf?,
@@ -769,6 +776,7 @@
                        LowAge,
                        HighAge,
                        AgeText,
+                       Gender,
                        Diagnosis*,
                        ExclusionCriteria*
                       )>
@@ -780,6 +788,8 @@
 <!ELEMENT HighAge (#PCDATA)>
 
 <!ELEMENT AgeText (#PCDATA)>
+
+<!ELEMENT Gender (#PCDATA)>
 
 <!ELEMENT ExclusionCriteria (#PCDATA)>
 <!ATTLIST ExclusionCriteria ref CDATA #IMPLIED>
@@ -831,7 +841,7 @@
 
 <!ELEMENT ProtocolLeadOrg (LeadOrgName,
                            LeadOrgRole,
-                           LeadOrgProtocolID+,
+                           LeadOrgProtocolID*,
                            LeadOrgProtocolStatus,
                            LeadOrgPersonnel
                           )>
@@ -1033,7 +1043,8 @@
                         SpanishTermName?,
                         SpanishTermDefinition*,
                         DateFirstPublished?,
-                        DateLastModified?
+                        DateLastModified?,
+                        RelatedInformation?
                        )>
 <!ATTLIST GlossaryTerm id CDATA #REQUIRED>
 <!ATTLIST GlossaryTerm LegacyPDQID CDATA #IMPLIED>
@@ -1051,6 +1062,22 @@
 <!ELEMENT DefinitionText (%TextSectionElements;)*>
 <!ELEMENT Dictionary (#PCDATA)>
 <!ELEMENT Audience (#PCDATA)>
+
+<!ELEMENT RelatedInformation (RelatedExternalRef,
+                              ReleatedSummaryRef,
+                              RelatedDrugSummaryRef)>
+
+<!ELEMENT RelatedExternalRef                  (#PCDATA)>
+<!ATTLIST RelatedExternalRef xref       CDATA  #REQUIRED>
+<!ATTLIST RelatedExternalRef UseWith (en | es) #IMPLIED>
+
+<!ELEMENT RelatedSummaryRef                   (#PCDATA)>
+<!ATTLIST RelatedSummaryRef  href       CDATA  #REQUIRED>
+<!ATTLIST RelatedSummaryRef  UseWith (en | es) #IMPLIED>
+
+<!ELEMENT RelatedDrugSummaryRef               (#PCDATA)>
+<!ATTLIST RelatedDrugSummaryRef href    CDATA  #REQUIRED>
+
 <!-- End Glossary -->
 
 <!-- ========================================= 
@@ -1338,7 +1365,7 @@
 <!ELEMENT Affiliation          (#PCDATA)>
 <!ELEMENT BriefTitle           (#PCDATA)>
 <!ELEMENT Collaborator         (#PCDATA)>
-<!ELEMENT CTGovDisclaimer      (#PCDATA)>
+<!ELEMENT CTGovDisclaimer      (%TextSectionElements;)*>
 <!ELEMENT DownloadDate         (#PCDATA)>
 <!ELEMENT EndDate              (#PCDATA)>
 <!ELEMENT FacilityName         (#PCDATA)>
