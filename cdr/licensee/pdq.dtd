@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.66 2007-03-21 21:59:21 venglisc Exp $
+   $Id: pdq.dtd,v 1.67 2007-03-30 20:53:06 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,17 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.66  2007/03/21 21:59:21  venglisc
+   DTD changes to
+     - add AltTitle to supplement the SummaryTitle
+     - add TitleType attribute to AltTitle element
+     - add url attribute to SummaryRef element
+     - add Gender element
+     - make LeadOrgProtocolID element optional
+     - add RelatedInformation wrapper element
+     - modify definition of CTGovDisclaimer element
+   (Bug 2857)
+
    Revision 1.65  2006/09/29 15:58:54  venglisc
    Reverted former change for DateLastModified.  Element will stay an optional
    element. (Bug 2099)
@@ -144,41 +155,42 @@
                      | MediaLink        | Table ">
 
 <!ENTITY % ParaElements        
-                     " #PCDATA          | DrugName         | Emphasis
-                     | ExternalRef      | ForeignWord      | GeneName
-                     | GlossaryTermLink | GlossaryTermRef  | InterventionName
-                     | LOELink          | LOERef           | MediaLink
-                     | MediaRef         | Note             | ProtocolRef
-                     | ProtocolLink     | Quote            | Reference
-                     | ScientificName   | Strong           | Subscript
-                     | SummaryLink      | SummaryRef       | Superscript
-                     | TT "> 
+                     " #PCDATA          | DrugName         | DrugRef
+                     | Emphasis         | ExternalRef      | ForeignWord
+                     | GeneName         | GlossaryTermLink | GlossaryTermRef
+                     | InterventionName | LOELink          | LOERef
+                     | MediaLink        | MediaRef         | Note
+                     | ProtocolRef      | ProtocolLink     | Quote
+                     | Reference        | ScientificName   | Strong
+                     | Subscript        | SummaryLink      | SummaryRef
+                     | Superscript      | TT"> 
 
 <!ENTITY % TextElements        
                      " #PCDATA          | Contact          | DrugName
-                     | Emphasis         | ExternalRef      | ForeignWord
-                     | GeneName         | GlossaryTermLink | GlossaryTermRef
-                     | InterventionName | ItemizedList     | LiteralLayout
-                     | LOELink          | LOERef           | MediaLink
-                     | MediaRef         | Note             | OrderedList
-                     | Para             | ProtocolRef      | ProtocolLink
-                     | QandASet         | Quote            | Reference
-                     | ScientificName   | Strong           | Subscript
-                     | SummaryLink      | SummaryRef       | Superscript
-                     | Table            | TT ">
+                     | DrugRef          | Emphasis         | ExternalRef
+                     | ForeignWord      | GeneName         | GlossaryTermLink
+                     | GlossaryTermRef  | InterventionName | ItemizedList
+                     | LiteralLayout    | LOELink          | LOERef
+                     | MediaLink        | MediaRef         | Note
+                     | OrderedList      | Para             | ProtocolRef
+                     | ProtocolLink     | QandASet         | Quote
+                     | Reference        | ScientificName   | Strong
+                     | Subscript        | SummaryLink      | SummaryRef
+                     | Superscript      | Table            | TT">
 
 <!ENTITY % TextSectionElements 
                      " #PCDATA          | Contact          | DrugName
-                     | Emphasis         | ExternalRef      | ForeignWord
-                     | GeneName         | GlossaryTermLink | GlossaryTermRef
-                     | InterventionName | ItemizedList     | LiteralLayout
-                     | LOELink          | LOERef           | MediaLink
-                     | MediaRef         | Note             | OrderedList
-                     | Para             | ProtocolRef      | ProtocolLink
-                     | QandASet         | Quote            | Reference
-                     | ScientificName   | Section          | Strong
-                     | Subscript        | SummaryLink      | SummaryRef
-                     | Superscript      | Table            | TT ">
+                     | DrugRef          | Emphasis         | ExternalRef
+                     | ForeignWord      | GeneName         | GlossaryTermLink
+                     | GlossaryTermRef  | InterventionName | ItemizedList
+                     | LiteralLayout    | LOELink          | LOERef
+                     | MediaLink        | MediaRef         | Note
+                     | OrderedList      | Para             | ProtocolRef
+                     | ProtocolLink     | QandASet         | Quote
+                     | Reference        | ScientificName   | Section
+                     | Strong           | Subscript        | SummaryLink
+                     | SummaryRef       | Superscript      | Table
+                     | TT">
 
 <!ENTITY % TitleData " #PCDATA          |  Emphasis        | ForeignWord
                      | GeneName         | ScientificName   | Strong
@@ -437,6 +449,9 @@
 
 <!ELEMENT Caption (%TextElements;)*>
 <!ATTLIST Caption language NMTOKENS #IMPLIED>
+
+<!ELEMENT DrugRef  (#PCDATA)>
+<!ATTLIST DrugRef  href CDATA #REQUIRED>
 
 <!ELEMENT MediaRef (#PCDATA)>
 <!ATTLIST MediaRef href CDATA #REQUIRED>
@@ -1039,6 +1054,7 @@
 <!ELEMENT GlossaryTerm (TermName,
                         TermPronunciation?,
                         TermDefinition+,
+                        TermRef?,
                         MediaLink*,
                         SpanishTermName?,
                         SpanishTermDefinition*,
