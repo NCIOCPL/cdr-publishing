@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.13 2007-04-10 13:06:07 kidderc Exp $
+# $Id: BoardSummaryMailer.py,v 1.14 2007-04-10 14:24:52 kidderc Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
@@ -81,7 +81,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
             sWhere = ' AND person.id = %s' % Person
         else:
             sWhere = ''
-		
+            		
         memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
         boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
         infoPath   = '/PDQBoardMemberInfo/BoardMemberName/@cdr:ref'
@@ -138,6 +138,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                                                  "Summary", docVer)
                         self.getDocuments()[summaryId] = doc
                     recipient.getDocs().append(doc)
+                    
         except cdrdb.Error, info:
             raise "database error finding board members: %s" % (
                 info[1][0].encode('ascii'))
