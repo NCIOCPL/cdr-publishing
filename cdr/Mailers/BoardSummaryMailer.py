@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.12 2004-04-27 15:44:00 bkline Exp $
+# $Id: BoardSummaryMailer.py,v 1.13 2007-04-10 13:06:07 kidderc Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2004/04/27 15:44:00  bkline
+# Added support for use of PDQBoardMemberInfo documents.
+#
 # Revision 1.11  2004/04/19 15:54:25  bkline
 # Suppressed creation of mailing labels at Lakshmi's request (#1188).
 #
@@ -73,6 +76,12 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     # Gather the list of board members.
     #----------------------------------------------------------------------
     def __getBoardMembers(self):
+        Person = self.getParm("Person")
+        if (Person and ( len(Person) > 0) ):
+            sWhere = ' AND person.id = %s' % Person
+        else:
+            sWhere = ''
+		
         memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
         boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
         infoPath   = '/PDQBoardMemberInfo/BoardMemberName/@cdr:ref'
@@ -97,6 +106,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                              ON member_info.int_val = person.id
                           WHERE board.int_val = ?
                             AND pub_proc_doc.pub_proc = ?
+                            %s
                             AND board.path = '%s'
                             AND member.path = '%s'
                             AND member_info.path = '%s'
@@ -105,10 +115,11 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                        ORDER BY person.title,
                                 person.id,
                                 summary.title,
-                                summary.id""" % (memberPath, boardPath,
+                                summary.id""" % (sWhere, memberPath, boardPath,
                                                  infoPath), 
                                                 (self.__boardId,
                                                  self.getId()))
+                                                 
             rows = self.getCursor().fetchall()
             for (personId, personTitle, summaryId, summaryTitle, docVer,
                  memberInfo) in rows:
