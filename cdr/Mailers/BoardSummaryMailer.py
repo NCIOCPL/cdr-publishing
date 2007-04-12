@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.14 2007-04-10 14:24:52 kidderc Exp $
+# $Id: BoardSummaryMailer.py,v 1.15 2007-04-12 12:43:31 kidderc Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
@@ -76,12 +76,15 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     # Gather the list of board members.
     #----------------------------------------------------------------------
     def __getBoardMembers(self):
+        sWhere = ''
+              
         Person = self.getParm("Person")
-        if (Person and ( len(Person) > 0) ):
-            sWhere = ' AND person.id = %s' % Person
-        else:
-            sWhere = ''
-            		
+        if (Person):
+			sPerson = Person[0]
+			sPerson.strip()
+        if ( Person and len(sPerson) > 0 ) :
+            sWhere = ' AND person.id = %s' % sPerson
+                      		
         memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
         boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
         infoPath   = '/PDQBoardMemberInfo/BoardMemberName/@cdr:ref'
