@@ -1,0 +1,69 @@
+#############################################################
+# Example control file for TestModifyPubProcsCG.py
+# 
+# Use a file in this format to force manipulations of the 
+# pub_proc_cg and doc_version tables in order to make some
+# documents publish.
+# 
+# Format of the file:
+#    Leading and trailing whitespace are ignored (stripped)
+#    '#' as first non-whitespace char makes whole line a comment
+#        (it must be the first non ws char.)
+# Keywords
+#   =PubAsNewDocs
+#     Following docs will be deleted from pub_proc_cg
+#
+#   =ChangeDocs
+#     Following docs will have XML modified in pub_proc_cg
+# 
+#   =NewVersionDocs
+#     Following docs will have last publishable version
+#     extracted and re-stored as a new publishable version,
+#     plus xml will be modified in pub_proc_cg.
+#
+# DocIDs
+#   List them after keywords, one per line, no CDR000... prefix.
+#
+# Block comments
+#   An entire block can be commented out with:
+#      /*
+#      ...
+#      */
+#   Comment delimiters must stand alone on a line.
+#
+# WARNING!
+#   After editing a control file, ALWAYS run it through
+#       TestModifyPubProcsCG.py userid pw test
+#   Test mode will detect any doc IDs which are not in
+#   pub_proc_cg or for which no publishable version exists.
+#
+#   After one run of the program, any =PubAsNewDocs will fail
+#   the test on a subsequent run unless publishing intervenes.
+#
+# $Id: TestModifyExample.txt,v 1.1 2007-04-24 20:24:35 ameyer Exp $
+#
+# $Log: not supported by cvs2svn $
+#
+#############################################################
+
+# Test of grouping
+
+=PubAsNewDocs
+   # Media doc (tumor size compared to fruits and nuts)
+   415526
+
+=ChangeDocs
+   # Summaries that reference that media
+   # Breast cancer
+   62955
+   # Anal cancer
+   258179
+
+   # Some other summaries that should be in groups of their own
+   # Pain management
+   62738
+   # Prostate cancer
+   62965
+
+=NewVersionDocs
+   43764
