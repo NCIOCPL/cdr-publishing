@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.11 2007-05-10 02:33:51 bkline Exp $
+# $Id: PublishingService.py,v 1.12 2007-05-10 03:01:50 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2007/05/10 02:33:51  bkline
+# Added code to verify push jobs.
+#
 # Revision 1.10  2006/10/20 04:22:20  ameyer
 # Added logging to publishing job start.
 #
@@ -36,7 +39,7 @@
 #
 #
 
-import cdrdb, cdrbatch, os, time, cdr, sys, string
+import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk
 
 # Sleep time between checks for things to do
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
@@ -92,7 +95,6 @@ def logLoop():
 def verifyLoad(jobId, pushFinished, cursor, conn):
     
     cdr.logwrite("verifying push job %d" % jobId, PUBLOG)
-    import cdr2gk
     
     # Local values.
     failures = 0
@@ -100,8 +102,18 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     target   = "Live"
     verified = True
 
+    # Find out which host the job was sent to, if overridden.
+    cursor.execute("""\
+        SELECT parm_value
+          FROM pub_proc_parm
+         WHERE pub_proc = ?
+           AND parm_name = 'GKServer'""")
+    rows = cursor.fetchall()
+    host = rows and rows[0][0] or None
+
     # Retrieve status information from Cancer.gov for the push job.
-    import cdr2gk
+    if host:
+        cdr2gk.host = host
     response = cdr2gk.requestStatus('Summary', jobId)
     details = response.details
 
@@ -186,7 +198,7 @@ def reportLoadProblems(jobId, failures = 0, warnings = 0, stalled = False):
 More than 24 hours have elapsed since completion of the push of CDR
 documents for publishing job %d, and loading of the documents
 has still not completed.
-""" % jodId
+""" % jobId
 
     # The job finished, but there were problems reported.
     else:
