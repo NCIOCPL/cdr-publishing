@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.13 2007-05-10 03:04:06 bkline Exp $
+# $Id: PublishingService.py,v 1.14 2007-05-10 11:49:23 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2007/05/10 03:04:06  bkline
+# Plugging in missing SQL query parameter.
+#
 # Revision 1.12  2007/05/10 03:01:50  bkline
 # Fixed a typo and set the host name for the cdr2gk module when
 # appropriate.
@@ -49,10 +52,13 @@ import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
 
 # Script and log file for publishing
-PUBSCRIPT = cdr.BASEDIR + "/publishing/publish.py"
-PUBLOG    = cdr.PUBLOG
-LOGFLAG   = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
-LogDelay  = 0
+PUBSCRIPT   = cdr.BASEDIR + "/publishing/publish.py"
+PUBLOG      = cdr.PUBLOG
+LOGFLAG     = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
+VERIFYFLAG  = cdr.DEFAULT_LOGDIR + "VerifyPushJobsLoop.on"
+LogDelay    = 0
+VerifyDelay = 0
+
 
 # Publishing queries
 query  = """\
@@ -69,6 +75,30 @@ UPDATE pub_proc
 # Query for batch job initiation
 batchQry = "SELECT id, command FROM batch_job WHERE status='%s'" %\
            cdrbatch.ST_QUEUED
+
+#----------------------------------------------------------------------
+# Check to see whether we should check the disposition of documents
+# pushed to Cancer.gov.  The presense of the file VERIFYFLAG tells
+# us whether we should ever check.  A countdown integer is used to
+# throttle the checks so we're not performing it every time we go
+# through the top-level loop.
+#----------------------------------------------------------------------
+def timeToVerifyPushJobs():
+
+    global VerifyDelay
+
+    if os.path.isfile(VERIFYFLAG):
+        if VerifyDelay:
+            VerifyDelay -= 1
+            return False
+        try:
+            f = open(VERIFYFLAG)
+            VerifyDelay = int(f.readline().strip())
+            f.close()
+        except:
+            VerifyDelay = 360
+        return True
+    return False
 
 def logLoop():
 
@@ -97,7 +127,7 @@ def logLoop():
 # whether any of the documents failed the load.
 #----------------------------------------------------------------------
 def verifyLoad(jobId, pushFinished, cursor, conn):
-    
+
     cdr.logwrite("verifying push job %d" % jobId, PUBLOG)
     
     # Local values.
@@ -320,19 +350,20 @@ while True:
             conn = None
 
         # Verify loading of documents pushed to Cancer.gov.
-        try:
-            cursor.execute("""\
-                SELECT id, completed
-                  FROM pub_proc
-                 WHERE status = 'Verifying'
-              ORDER BY id""")
-            for row in cursor.fetchall():
-                verifyLoad(row[0], row[1], cursor, conn)
-        except Exception, e:
+        if timeToVerifyPushJobs():
             try:
-                cdr.logwrite("failure verifying push jobs: %s" % e)
-            except:
-                pass
+                cursor.execute("""\
+                    SELECT id, completed
+                      FROM pub_proc
+                     WHERE status = 'Verifying'
+                  ORDER BY id""")
+                for row in cursor.fetchall():
+                    verifyLoad(row[0], row[1], cursor, conn)
+            except Exception, e:
+                try:
+                    cdr.logwrite("failure verifying push jobs: %s" % e)
+                except:
+                    pass
                 
     except cdrdb.Error, info:
         # Log publishing job initiation errors
