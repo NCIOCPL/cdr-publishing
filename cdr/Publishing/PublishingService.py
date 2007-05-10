@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.14 2007-05-10 11:49:23 bkline Exp $
+# $Id: PublishingService.py,v 1.15 2007-05-10 12:21:37 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.14  2007/05/10 11:49:23  bkline
+# Added throttle to push job verification.
+#
 # Revision 1.13  2007/05/10 03:04:06  bkline
 # Plugging in missing SQL query parameter.
 #
@@ -223,7 +226,7 @@ def reportLoadProblems(jobId, failures = 0, warnings = 0, stalled = False):
     sender = "cdr@%s" % cdrcgi.WEBSERVER
     url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s" %
            (cdrcgi.WEBSERVER, cdrcgi.BASE, jobId, cdr2gk.host))
-    recips = cdr.getEmailList('xPushVerificationAlerts')
+    recips = cdr.getEmailList('PushVerificationAlerts')
 
     # Different message and subject for jobs that are stuck.
     if stalled:
