@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.12 2007-05-10 03:01:50 bkline Exp $
+# $Id: PublishingService.py,v 1.13 2007-05-10 03:04:06 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2007/05/10 03:01:50  bkline
+# Fixed a typo and set the host name for the cdr2gk module when
+# appropriate.
+#
 # Revision 1.11  2007/05/10 02:33:51  bkline
 # Added code to verify push jobs.
 #
@@ -107,7 +111,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         SELECT parm_value
           FROM pub_proc_parm
          WHERE pub_proc = ?
-           AND parm_name = 'GKServer'""")
+           AND parm_name = 'GKServer'""", jobId)
     rows = cursor.fetchall()
     host = rows and rows[0][0] or None
 
