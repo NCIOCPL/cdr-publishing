@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.10 2006-10-20 04:22:20 ameyer Exp $
+# $Id: PublishingService.py,v 1.11 2007-05-10 02:33:51 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2006/10/20 04:22:20  ameyer
+# Added logging to publishing job start.
+#
 # Revision 1.9  2004/07/08 19:16:58  bkline
 # Made the script as bulletproof as possible by catching every possible
 # exception.
@@ -40,7 +43,9 @@ sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
 
 # Script and log file for publishing
 PUBSCRIPT = cdr.BASEDIR + "/publishing/publish.py"
-PUBLOG    = cdr.DEFAULT_LOGDIR + "/publish.log"
+PUBLOG    = cdr.PUBLOG
+LOGFLAG   = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
+LogDelay  = 0
 
 # Publishing queries
 query  = """\
@@ -57,11 +62,6 @@ UPDATE pub_proc
 # Query for batch job initiation
 batchQry = "SELECT id, command FROM batch_job WHERE status='%s'" %\
            cdrbatch.ST_QUEUED
-
-# Logfile for publishing
-PUBLOG = cdr.DEFAULT_LOGDIR + "/publish.log"
-LOGFLAG = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
-LogDelay = 0
 
 def logLoop():
 
@@ -85,8 +85,139 @@ def logLoop():
     except:
         LogDelay = 0
 
+#----------------------------------------------------------------------
+# Find out if loading of documents to Cancer.gov has completed, and
+# whether any of the documents failed the load.
+#----------------------------------------------------------------------
+def verifyLoad(jobId, pushFinished, cursor, conn):
+    
+    cdr.logwrite("verifying push job %d" % jobId, PUBLOG)
+    import cdr2gk
+    
+    # Local values.
+    failures = 0
+    warnings = 0
+    target   = "Live"
+    verified = True
+
+    # Retrieve status information from Cancer.gov for the push job.
+    import cdr2gk
+    response = cdr2gk.requestStatus('Summary', jobId)
+    details = response.details
+
+    # Check each of the documents in the job.
+    for doc in details.docs:
+
+        # Remember if any warnings have been reported.
+        if doc.status == "Warning":
+            warnings += 1
+
+        # Find out if the document failed the load.
+        if "Error" in (doc.status, doc.dependentStatus):
+            failures += 1
+
+        # If it hasn't failed, and it finished loading, the loading
+        # process is still under way, so we can't verify the status
+        # of the job yet.
+        elif doc.location != target:
+            verified = False
+            break
+
+    # If the load is done, update the status of the job.
+    if verified:
+
+        # Notify the appropriate people of any problems found.
+        if failures or warnings:
+            reportLoadProblems(jobId, failures, warnings)
+
+        # If every document failed the load, mark the status for the
+        # entire job as Failure; however, if even 1 document was
+        # successfully loaded to the live site, we must set the
+        # status to Success; otherwise, software to find out whether
+        # that document is on Cancer.gov may return the wrong answer.
+        #
+        # Note that if the attempt to report any problems fails,
+        # we won't reach this code, because an exception will have
+        # been thrown.  That's appropriate, because we don't want
+        # to close out a job with problems going undetected.
+        if len(failures) == len(details.docs):
+            jobStatus = "Failure"
+        else:
+            jobStatus = "Success"
+        cursor.execute("""\
+            UPDATE pub_proc
+               SET status = ?
+             WHERE id = ?""", (jobStatus, jobId))
+        conn.commit()
+
+    # The load hasn't yet finished; find out how long we've been waiting.
+    else:
+        now = time.localtime()
+        then = list(now)
+        then[2] -= 1
+        then = time.localtime(time.mktime(then))
+        yesterday = time.strftime("%Y-%m-%d %H:%M:%S", then)
+
+        # If it's been longer than a day, the job is probably stuck.
+        if yesterday < str(pushFinished):
+            reportLoadProblems(jobId, stalled = True)
+            cursor.execute("""\
+                UPDATE pub_proc
+                   SET status = 'Stalled'
+                 WHERE id = ?""", jobId)
+            conn.commit()
+
+#----------------------------------------------------------------------
+# Send out an alert for problems with loading of a push job.
+#----------------------------------------------------------------------
+def reportLoadProblems(jobId, failures = 0, warnings = 0, stalled = False):
+
+    # Gather some values needed for the call to cdr.sendMail().
+    import cdrcgi
+    sender = "cdr@%s" % cdrcgi.WEBSERVER
+    url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s" %
+           (cdrcgi.WEBSERVER, cdrcgi.BASE, jobId, cdr2gk.host))
+    recips = cdr.getEmailList('xPushVerificationAlerts')
+
+    # Different message and subject for jobs that are stuck.
+    if stalled:
+        subject = "Push job %d stalled" % jobId
+        body = """\
+More than 24 hours have elapsed since completion of the push of CDR
+documents for publishing job %d, and loading of the documents
+has still not completed.
+""" % jodId
+
+    # The job finished, but there were problems reported.
+    else:
+        subject = "Problems with loading of job %d to Cancer.gov" % jobId
+        body = """\
+%s were encountered in the loading of documents for job %d
+to Cancer.gov.
+""" % (failures and "Errors" or "Warnings", jobId)
+
+    # Provide a link to a web page where the status of each document
+    # in the job can be checked.
+    body += """
+Please visit the following link for further details:
+
+%s
+""" % url
+
+    # Make sure the alert gets sent to someone.
+    if not recips:
+        recips = ['***REMOVED***']
+        body += """
+*** NO RECIPIENTS FOUND FOR ALERT NOTIFICATION GROUP ***
+"""
+
+    # Make sure the mail gets out.
+    errors = cdr.sendMail(sender, recips, subject, body)
+    if errors:
+        raise cdr.Exception("reportLoadProblems(): %s" % errors)
+    
 conn = None
-while 1:
+while True:
     try:
 
         # Let the world know we're still alive.
@@ -172,6 +303,21 @@ while 1:
                           cdrbatch.LF)
             conn = None
 
+        # Verify loading of documents pushed to Cancer.gov.
+        try:
+            cursor.execute("""\
+                SELECT id, completed
+                  FROM pub_proc
+                 WHERE status = 'Verifying'
+              ORDER BY id""")
+            for row in cursor.fetchall():
+                verifyLoad(row[0], row[1], cursor, conn)
+        except Exception, e:
+            try:
+                cdr.logwrite("failure verifying push jobs: %s" % e)
+            except:
+                pass
+                
     except cdrdb.Error, info:
         # Log publishing job initiation errors
         try:
