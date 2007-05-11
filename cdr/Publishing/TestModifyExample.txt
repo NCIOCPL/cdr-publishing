@@ -21,12 +21,22 @@
 #     extracted and re-stored as a new publishable version,
 #     plus xml will be modified in pub_proc_cg.
 #
+#   =InactivateDocs
+#    Following docs will have the active_status set to 'I' in the
+#    document table, causing document removal at the next
+#    publishing run if the documents were previously active.
+#
+#   =ReactivateDocs
+#    Following docs will have active_status set to 'A' in the
+#    document table.  This will cause republishing of the docs if
+#    they were previously inactive and removed.
+#
 # DocIDs
 #   List them after keywords, one per line, no CDR000... prefix.
 #
 # Block comments
 #   An entire block can be commented out with:
-#      /*
+#      /*:sp
 #      ...
 #      */
 #   Comment delimiters must stand alone on a line.
@@ -40,9 +50,12 @@
 #   After one run of the program, any =PubAsNewDocs will fail
 #   the test on a subsequent run unless publishing intervenes.
 #
-# $Id: TestModifyExample.txt,v 1.1 2007-04-24 20:24:35 ameyer Exp $
+# $Id: TestModifyExample.txt,v 1.2 2007-05-11 03:51:41 ameyer Exp $
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/04/24 20:24:35  ameyer
+# Initial example.
+#
 #
 #############################################################
 
@@ -67,3 +80,8 @@
 
 =NewVersionDocs
    43764
+
+=InactivateDocs
+   # Nothing here
+=ReactivateDocs
+   # Nothing here
