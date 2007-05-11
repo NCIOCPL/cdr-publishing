@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.15 2007-05-10 12:21:37 bkline Exp $
+# $Id: PublishingService.py,v 1.16 2007-05-11 16:34:06 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.15  2007/05/10 12:21:37  bkline
+# Removed debugging block of recipient list usage for notification of
+# problems with push jobs.
+#
 # Revision 1.14  2007/05/10 11:49:23  bkline
 # Added throttle to push job verification.
 #
@@ -58,7 +62,7 @@ sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
 PUBSCRIPT   = cdr.BASEDIR + "/publishing/publish.py"
 PUBLOG      = cdr.PUBLOG
 LOGFLAG     = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
-VERIFYFLAG  = cdr.DEFAULT_LOGDIR + "VerifyPushJobsLoop.on"
+VERIFYFLAG  = cdr.DEFAULT_LOGDIR + "/VerifyPushJobsLoop.on"
 LogDelay    = 0
 VerifyDelay = 0
 
@@ -189,7 +193,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         # we won't reach this code, because an exception will have
         # been thrown.  That's appropriate, because we don't want
         # to close out a job with problems going undetected.
-        if len(failures) == len(details.docs):
+        if failures == len(details.docs):
             jobStatus = "Failure"
         else:
             jobStatus = "Success"
