@@ -1,9 +1,12 @@
 #################################################################
 # Modify the pub_proc_cg table to support testing of nightly publishing
 #
-# $Id: TestModifyPubProcCG.py,v 1.1 2007-04-19 23:05:22 ameyer Exp $
+# $Id: TestModifyPubProcCG.py,v 1.2 2007-05-11 03:50:54 ameyer Exp $
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/04/19 23:05:22  ameyer
+# Initial version.
+#
 #################################################################
 
 import sys, cdr, cdrdb
@@ -11,10 +14,16 @@ import sys, cdr, cdrdb
 CHG_STATE = '=ChangeDocs'
 NEW_STATE = '=PubAsNewDocs'
 VER_STATE = '=NewVersionDocs'
+DEL_STATE = '=InactivateDocs'
+ACT_STATE = '=ReactivateDocs'
+
+validStates = set((CHG_STATE, NEW_STATE, VER_STATE, DEL_STATE, ACT_STATE))
 
 chg_count = 0
 new_count = 0
 ver_count = 0
+del_count = 0
+act_count = 0
 lineNum   = 0
 err_count = 0
 
@@ -63,8 +72,6 @@ def newVersionDoc(docId, pubVerNum):
     new version by modifying the text of the pub_proc_cg.xml, and resaving the
     last publishable version as a new publishable version.
     """
-    global cursor
-
     # Get and re-store the doc as a new publishable version
     doc = cdr.getDoc(session, docId, checkout='Y', version=pubVerNum, xml='Y')
     (repId, errors) = cdr.repDoc(session, doc=doc,
@@ -77,6 +84,34 @@ def newVersionDoc(docId, pubVerNum):
 
     # Update pub_proc_cg.xml so this version will appear different
     changeDoc(docId)
+
+
+def inactivateDoc(docId):
+    """
+    Cause the document to be removed by changing its active_status
+    in the document table to 'I'.
+
+    Does nothing if doc is already marked inactive.
+    """
+    global cursor
+
+    cursor.execute("UPDATE document SET active_status='I' where id=%d" % \
+                   docId)
+
+def reactivateDoc(docId):
+    """
+    Cause the document to be restored by changing its active_status
+    in the document table to 'A'.
+
+    The doc will be published as new if it had previously been removed
+    by a publishing job.  Otherwise nothing will happen.
+
+    Does nothing if doc is already marked active.
+    """
+    global cursor
+
+    cursor.execute("UPDATE document SET active_status='A' where id=%d" % \
+                   docId)
 
 
 def error(msg):
@@ -164,7 +199,7 @@ while True:
 
     # Is it a keyword
     if not docId:
-        if (line != CHG_STATE and line != NEW_STATE and line != VER_STATE):
+        if line not in validStates:
             error("%s is not a keyword or a numeric doc id" % line)
         else:
             state = line
@@ -175,9 +210,11 @@ while True:
             error("DocID %d appeared before any state is declared" % docId)
 
         # Is docId in pub_proc_cg?
-        cursor.execute("SELECT 0 FROM pub_proc_cg WHERE id=%d" % docId)
-        if not cursor.fetchone():
-            error("No instance of docId=%d found in pub_proc_cg" % docId)
+        # Don't do this check if reactivating a doc
+        if state != ACT_STATE:
+            cursor.execute("SELECT 0 FROM pub_proc_cg WHERE id=%d" % docId)
+            if not cursor.fetchone():
+                error("No instance of docId=%d found in pub_proc_cg" % docId)
 
         # Is there a publishable version to use?
         docIdStr = cdr.normalize(docId)
@@ -197,6 +234,12 @@ while True:
             elif state == VER_STATE:
                 newVersionDoc(docId, pubVerNum)
                 ver_count += 1
+            elif state == DEL_STATE:
+                inactivateDoc(docId)
+                del_count += 1
+            elif state == ACT_STATE:
+                reactivateDoc(docId)
+                act_count += 1
 
 conn.commit()
 
@@ -207,3 +250,5 @@ else:
     print ("%6d changed docs" % chg_count)
     print ("%6d newly published docs" % new_count)
     print ("%6d new doc versions" % ver_count)
+    print ("%6d inactivated docs" % del_count)
+    print ("%6d reactivated docs" % act_count)
