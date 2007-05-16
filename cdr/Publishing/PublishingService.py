@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.16 2007-05-11 16:34:06 bkline Exp $
+# $Id: PublishingService.py,v 1.17 2007-05-16 15:56:26 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2007/05/11 16:34:06  bkline
+# Fixed a couple of typos.
+#
 # Revision 1.15  2007/05/10 12:21:37  bkline
 # Removed debugging block of recipient list usage for notification of
 # problems with push jobs.
@@ -138,8 +141,8 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     cdr.logwrite("verifying push job %d" % jobId, PUBLOG)
     
     # Local values.
-    failures = 0
-    warnings = 0
+    failures = []
+    warnings = []
     target   = "Live"
     verified = True
 
@@ -163,11 +166,11 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
 
         # Remember if any warnings have been reported.
         if doc.status == "Warning":
-            warnings += 1
+            warnings.append(doc)
 
         # Find out if the document failed the load.
         if "Error" in (doc.status, doc.dependentStatus):
-            failures += 1
+            failures.append(doc)
 
         # If it hasn't failed, and it finished loading, the loading
         # process is still under way, so we can't verify the status
@@ -178,6 +181,16 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
 
     # If the load is done, update the status of the job.
     if verified:
+
+        # Mark failed docs.
+        for doc in failures:
+            cursor.execute("""\
+                UPDATE pub_proc_doc
+                   SET failure = 'Y'
+                 WHERE pub_proc = ?
+                   AND doc_id = ?""", (jobId, doc.cdrId))
+        if failures:
+            conn.commit()
 
         # Notify the appropriate people of any problems found.
         if failures or warnings:
@@ -193,7 +206,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         # we won't reach this code, because an exception will have
         # been thrown.  That's appropriate, because we don't want
         # to close out a job with problems going undetected.
-        if failures == len(details.docs):
+        if len(failures) == len(details.docs):
             jobStatus = "Failure"
         else:
             jobStatus = "Success"
@@ -212,6 +225,8 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         yesterday = time.strftime("%Y-%m-%d %H:%M:%S", then)
 
         # If it's been longer than a day, the job is probably stuck.
+        cdr.logwrite("verifying push job: yesterday=%s pushFinished=%s" %
+                     (yesterday, str(pushFinished)))
         if yesterday < str(pushFinished):
             reportLoadProblems(jobId, stalled = True)
             cursor.execute("""\
@@ -223,7 +238,8 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
 #----------------------------------------------------------------------
 # Send out an alert for problems with loading of a push job.
 #----------------------------------------------------------------------
-def reportLoadProblems(jobId, failures = 0, warnings = 0, stalled = False):
+def reportLoadProblems(jobId, failures = None, warnings = None,
+                       stalled = False):
 
     # Gather some values needed for the call to cdr.sendMail().
     import cdrcgi
@@ -245,9 +261,9 @@ has still not completed.
     else:
         subject = "Problems with loading of job %d to Cancer.gov" % jobId
         body = """\
-%s were encountered in the loading of documents for job %d
-to Cancer.gov.
-""" % (failures and "Errors" or "Warnings", jobId)
+%d failures and %d warnings were encountered in the loading of documents
+for job %d to Cancer.gov.
+""" % (len(failures), len(warnings), jobId)
 
     # Provide a link to a web page where the status of each document
     # in the job can be checked.
