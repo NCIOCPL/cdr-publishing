@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.17 2007-05-16 15:56:26 bkline Exp $
+# $Id: PublishingService.py,v 1.18 2007-05-17 20:18:58 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.17  2007/05/16 15:56:26  bkline
+# Added code to mark failed docs in the pub_proc_doc table.
+#
 # Revision 1.16  2007/05/11 16:34:06  bkline
 # Fixed a couple of typos.
 #
@@ -227,7 +230,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         # If it's been longer than a day, the job is probably stuck.
         cdr.logwrite("verifying push job: yesterday=%s pushFinished=%s" %
                      (yesterday, str(pushFinished)))
-        if yesterday < str(pushFinished):
+        if yesterday > str(pushFinished):
             reportLoadProblems(jobId, stalled = True)
             cursor.execute("""\
                 UPDATE pub_proc
