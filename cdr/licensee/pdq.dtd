@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.67 2007-03-30 20:53:06 venglisc Exp $
+   $Id: pdq.dtd,v 1.68 2007-06-20 18:11:18 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.67  2007/03/30 20:53:06  venglisc
+   Added DrugRef for common text elements and TermRef as additional
+   GlossaryTerm element.  (Bug 2857)
+
    Revision 1.66  2007/03/21 21:59:21  venglisc
    DTD changes to
      - add AltTitle to supplement the SummaryTitle
@@ -1185,6 +1189,7 @@
                         MEMBERSHIP*,
                         NOTES?
                         )>
+<!ATTLIST GENETICSPROFESSIONAL id CDATA #IMPLIED>
 
 <!ELEMENT ID (#PCDATA)>
 
