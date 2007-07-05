@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.2 2006-01-19 15:25:39 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.3 2007-07-05 21:26:38 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2006/01/19 15:25:39  bkline
+# Added professional suffixes to ECNAME and ATECNAME replacements.
+#
 # Revision 1.1  2005/10/19 14:14:29  bkline
 # Script for generating mailers for board members (or prospective
 # board members) as RTF documents to be edited by Microsoft Word.
@@ -184,9 +187,11 @@ class Board:
                     elif child.nodeName == "BoardManagerEmail":
                         emailNode = child
                     elif child.nodeName == "BoardMeetingDate":
-                        md = self.MeetingDate(child)
-                        if md.date >= today:
-                            self.meetingDates.append(md)
+                        for grandchild in child.childNodes:
+                            if grandchild.nodeName == 'Date':
+                                md = self.MeetingDate(grandchild)
+                                if md.date >= today:
+                                    self.meetingDates.append(md)
                     elif child.nodeName == "AdvisoryBoardFor":
                         edBoardId = child.getAttribute("cdr:ref")
                         self.edBoardId = cdr.exNormalize(edBoardId)[1]
@@ -313,17 +318,7 @@ class Board:
 
     class MeetingDate:
         def __init__(self, node):
-            self.year = None
-            self.date = None
-            self.time = None
-            for child in node.childNodes:
-                if child.nodeName == "Year":
-                    self.year = int(cdr.getTextContent(child))
-                elif child.nodeName == "Date":
-                    self.date = cdr.getTextContent(child)
-                elif child.nodeName == "DayTime":
-                    self.time = cdr.getTextContent(child)
-
+            self.date = cdr.getTextContent(node)
         def format(self):
             parts = self.date.split('-', 2)
             date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
