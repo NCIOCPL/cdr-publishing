@@ -7,15 +7,27 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-07-06 22:50:05 $
+# Last Modified:    $Date: 2007-08-10 16:42:11 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: SubmitPubJob.py,v 1.1 2007-07-06 22:50:05 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.2 2007-08-10 16:42:11 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/07/06 22:50:05  venglisc
+# Initial copy of MFP scheduling scripts.
+#
 # *********************************************************************
-import sys, re, string, cdr, cdrdb, os, shutil, time, getopt
+import sys, re, cdr, cdrdb, os, shutil, time, getopt
+
+# Setting the host variable to submit the link for the error report
+# -----------------------------------------------------------------
+if cdr.PUB_NAME.upper() == "MAHLER":
+    host   = cdr.DEV_HOST
+elif cdr.PUB_NAME.upper() == "FRANCK":
+    host   =  'franck.nci.nih.gov'
+else:
+    host   = cdr.PROD_HOST
 
 # Setting directory and file names
 # --------------------------------
@@ -26,7 +38,7 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
 emailDL    = 'EmailDL.txt'
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
-wait       =  60     # number of seconds to wait between status checks
+wait       = 1000    # number of seconds to wait between status checks
 
 testMode   = None
 fullMode   = None
@@ -34,7 +46,8 @@ fullMode   = None
 credentials = ('CdrGuest', 'never.0n-$undaY')
 pubSystem   = 'Primary'
 
-notify      = ['***REMOVED***', '***REMOVED***']
+#notify      = ['***REMOVED***', '***REMOVED***']
+notify      = ['***REMOVED***']
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -104,7 +117,7 @@ options:
 
     -l, --livemode
            run in LIVE mode
-""" % args[0].split('\\')[-1])
+""" % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
 
@@ -169,6 +182,9 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 # Function to check if an Interim job is already underway (maybe it runs
 # longer then 24 hours or it has been started manually).
+# Note:
+# We may want to change the SQL query to make sure a weekly export can
+# not be started if a nightly job hasn't finished yet.
 # ---------------------------------------------------------------------
 def checkPubJob(pubType):
     try:
@@ -255,7 +271,7 @@ try:
         f = open(lockFile, 'a')
         f.write('%s\n' % str(submit[0]))
         f.close()
-        l.write("SubmitPubJob - Completed", stdout = True)
+        l.write("Waiting for publishing job to complete...", stdout = True)
 
     # We started the publishing job.  Now we need to wait until
     # publishing (and pushing) is complete before we exit the 
@@ -270,10 +286,11 @@ try:
         counter += 1
         jobInfo = checkJobStatus(submit[0])
         status  = jobInfo[1]
-        l.write("Status %s" % status)
+        l.write("    Status: %s (%d sec)" % (status, counter * wait), 
+                                            stdout=True)
 
-        if counter % 1 == 0:
-           l.write("Job running %d seconds..." % (counter * wait), stdout=True)
+        ### if counter % 1 == 0:
+        ###    l.write("Job running %d seconds..." % (counter * wait), stdout=True)
 
         # Once the publishing job completed with status Success
         # we need to find the push job and wait for it to finish
@@ -301,7 +318,8 @@ try:
                pcounter += 1
                jobInfo = checkJobStatus(pushId)
                pstatus = jobInfo[1]
-               l.write("    Status: %s" % pstatus, stdout=True)
+               l.write("    Status: %s (%d sec)" % (pstatus, pcounter * wait), 
+                                                    stdout=True)
 
                if pstatus in ('Verifying', 'Success'):
                    pdone = 1
@@ -328,7 +346,7 @@ try:
         mailList  = file.read()
         file.close()
         receivers = mailList.split()
-        subject   = "Publish: Status and Error Report"
+        subject   = "%s: Status and Error Report" % cdr.PUB_NAME.capitalize()
         message   = """\
 
 Status and Error report for the publishing/push jobs:
@@ -342,17 +360,19 @@ For the error report of this publishing job please follow the link
 To view the output of the push job please follow the link
    http://%s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (cdr.DEV_HOST, submit[0], cdr.DEV_HOST, submit[0], cdr.DEV_HOST, pushId) 
+""" % (host, submit[0], host, submit[0], host, pushId) 
 
         notify = cdr.sendMail(cdr.OPERATOR, receivers, subject, message)
 
-        l.write("Email submission status: %s" % notify, stdout=True)
+        l.write("Submitting Email: %s" % (notify or 'OK'), stdout=True)
     except:
         l.write("*** Error sending email ***", stdout=True)
+        raise
 
 except StandardError, arg:
     l.write("*** Standard Failure - %s" % arg, stdout=True)
 except:
     l.write("*** Error - Program stopped with failure ***", stdout=True)
+    raise
 
 sys.exit(0)
