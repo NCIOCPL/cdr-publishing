@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-07-06 16:41:23 $
+# Last Modified:    $Date: 2007-08-10 16:44:37 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: Jobmaster.py,v 1.1 2007-07-06 16:41:23 venglisc Exp $
+# $Id: Jobmaster.py,v 1.2 2007-08-10 16:44:37 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/07/06 16:41:23  venglisc
+# Initial copy of Jobmaster script used to run all nightly publishing
+# steps for MFP.
+#
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt
 
@@ -28,6 +32,7 @@ LOGFILE    = 'Jobmaster.log'
 testMode   = None
 fullUpdate = None
 backup     = True
+refresh    = True
 istep      = 0
 
 EmailError = 'oops'
@@ -35,18 +40,21 @@ CTGovError = 'oops'
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
+# Note:  testmode/livemode is currently only used to be passed
+#        to the called program
 # ------------------------------------------------------------
 def parseArgs(args):
 
     global testMode
     global fullUpdate
     global backup
+    global refresh
     global l
 
     try:
         longopts = ["testmode", "livemode", "interim", "export",
-                    "nobackup"]
-        opts, args = getopt.getopt(args[1:], "btlie", longopts)
+                    "nobackup", "norefresh"]
+        opts, args = getopt.getopt(args[1:], "btlier", longopts)
     except getopt.GetoptError, e:
         usage(args)
 
@@ -70,6 +78,9 @@ def parseArgs(args):
         elif o in ("-b", "--nobackup"):
             backup = False
             l.write("running in NOBACKUP mode")
+        elif o in ("-r", "--norefresh"):
+            refresh = False
+            l.write("running in NOREFRESH mode")
 
     if len(args) > 0:
         usage(args)
@@ -104,7 +115,10 @@ options:
 
     -b, --nobackup
            run without creating a database backup file
-""" % args[0].split('\\')[-1])
+
+    -r, --norefresh
+           run without refreshing CDR database from BACH
+""" % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
 # ------------------------------------------------------------
@@ -132,33 +146,73 @@ if fullUpdate:
 else:
     pubmode = '--interim'
 
-# Submit initial Notification that publishing started
-# ---------------------------------------------------
+# **** Temporary Step - Begin **************************************
+# This step is refreshing the CDR database on FRANCK from BACH
+# Step is only used for testing!!!
+# -----------------------------------------------------------------
+if refresh:
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: Refresh CDR Database on FRANCK' % istep, stdout = True)
+        cmd = os.path.join(UTIL, 'NightlyRefreshFromProd.py')
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+
+        myCmd = cdr.runCommand(cmd)
+    
+        print "Code: ", myCmd.code
+        print "Outp: ", myCmd.output.find('Failure')
+        print "--------------"
+        if myCmd.code or myCmd.output.find('Failure') > 0:
+            l.write('*** Error submitting command:\n%s' % myCmd.output, 
+                     stdout = True)
+            subject = '*** Error in NightlyRefreshFromProd.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                            (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+
+    except:
+        l.write('Refresh CDR Database on FRANCK failed', stdout = True)
+        sys.exit(1)
+# **** Temporary Step - End ****************************************
+
+# Submit initial email notification to indicate process has started
+# -----------------------------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: Initial Email' % istep, stdout = True)
     if fullUpdate:
-        cmd = os.path.join(PUBPATH, 'SuccessEmail.py "%s" "%s"' % \
-              ('Export Publishing Started',        # Subject
-               'Export Job Started Successfully')) # Body
+        subject = 'Export Publishing Started'
+        message = 'Export Job Started Successfully'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
     else:
-        cmd = os.path.join(PUBPATH, 'SuccessEmail.py "%s" "%s"' % \
-              ('Interim Publishing Started',        # Subject
-               'Interim Job Started Successfully')) # Body
+        subject = 'Interim Publishing Started'
+        message = 'Interim Job Started Successfully'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
     try:
         myCmd = cdr.runCommand(cmd)
-        if myCmd.output:
+        print "Code: ", myCmd.code
+        print "Outp: ", myCmd.output.find('Failure')
+        print "--------------"
+        if myCmd.code or myCmd.output.find('Failure') > 0:
             raise EmailError
     except EmailError:
         l.write('*** Error submitting email\n%s' % myCmd.output, 
                  stdout = True)
+        raise
 except:
     l.write('Sending Initial Email failed', stdout = True)
     sys.exit(1)
 
 # Create the "Before" database snapshot
+# To do for weekly update
 # -------------------------------------
 if fullUpdate and backup:
     try:
@@ -179,8 +233,8 @@ if fullUpdate and backup:
         l.write('Creating Before DB Backup failed', stdout = True)
         sys.exit(1)
 
-# Start the publishing job and FTP the data 
-# -----------------------------------------
+# Start the publishing process and push the data to Cancer.gov
+# ------------------------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
@@ -197,19 +251,20 @@ try:
     if myCmd.code or myCmd.output.find('Failure') > 0:
         l.write('*** Error submitting command:\n%s' % myCmd.output, 
                  stdout = True)
-        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-          ('*** Error in SubmitPubJob.py', 
-           'Program returned with error code.  Please see logfile.'))
-        myCmd = cdr.runCommand(cmd)
+        subject = '*** Error in SubmitPubJob.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+        myCmd   = cdr.runCommand(cmd)
         raise
 
 except:
     l.write('Submitting Publishing Job failed', stdout = True)
     sys.exit(1)
 
-# Start the copy of vendor data to CIPSFTP
-# Only needed for export publishing
-# ----------------------------------------
+# FTP the publishing data (Vendor output) to CIPSFTP
+# Note: Step only needed for weekly publishing
+# --------------------------------------------------
 if fullUpdate:
     try:
         istep += 1
@@ -225,24 +280,27 @@ if fullUpdate:
             l.write('*** Error submitting command:\n%s' % myCmd.output,
                      stdout = True)
             l.write('Code: %s' % myCmd.code, stdout = True)
-            cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-              ('*** Error in FtpExportData.py', 
-               'Program returned with error code.  Please see logfile.'))
-            myCmd = cdr.runCommand(cmd)
+            subject = '*** Error in FtpExportData.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
             raise
     except:
         l.write('Submitting FtpExportData Job failed', stdout = True)
         sys.exit(1)
 
 
-# Start the CTGovExport job and FTP the data
-# ------------------------------------------
+# Create the CTGovExport data for NLM
+# -----------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: CTGovExport Job' % istep, stdout = True)
     cmd = os.path.join(UTIL, 
-                       'CTGovExport.py --optimize --maxtest 100 %s' %  runmode)
+                       'CTGovExport.py --optimize %s' %  runmode)
+#                      'CTGovExport.py --optimize --maxtest 100 %s' %  runmode)
+#   Specifying maxtest option for testing only
 
     l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
     myCmd = cdr.runCommand(cmd)
@@ -250,18 +308,19 @@ try:
     if myCmd.code:
         l.write('*** Error submitting command:\n%s' % myCmd.output,
                  stdout = True)
-        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-          ('*** Error in CTGovExport.py', 
-           'Program returned with error code.  Please see logfile.'))
-        myCmd = cdr.runCommand(cmd)
+        subject = '*** Error in CTGovExport.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                    (subject, message))
+        myCmd   = cdr.runCommand(cmd)
         raise
 except:
     l.write('Submitting CTGovExport Job failed', stdout = True)
     sys.exit(1)
 
 
-# Start the FtpCTGovData job to copy the data
-# -------------------------------------------
+# Ftp the FtpCTGovData to the CIPSFTP server
+# ------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
@@ -274,9 +333,10 @@ try:
     if myCmd.code:
         l.write('*** Error submitting command:\n%s' % myCmd.output,
                  stdout = True)
+        subject = '*** Error in FtpCTGovData.py'
+        message = 'Program returned with error code.  Please see logfile.'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
-          ('*** Error in FtpCTGovData.py', 
-           'Program returned with error code.  Please see logfile.'))
+                                    (subject, message))
         myCmd = cdr.runCommand(cmd)
         raise
 except:
@@ -284,35 +344,41 @@ except:
     sys.exit(1)
 
 
-# Send final Notification that publishing finished
-# ------------------------------------------------
+# Send final Notification that publishing on CDR servers has finished
+# Note: More processing to be completed on Cancer.gov and CIPSFTP
+# -------------------------------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: Jobmaster Job Complete notification' % istep, 
                                                            stdout = True)
     if fullUpdate:
+        subject = 'Export Publishing Finished'
+        message = 'Export Job Finished Successfully'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-         ('Export Publishing Finished', 
-          'Export Job Finished Successfully'))
+                                     (subject, message))
     else:
+        subject = 'Interim Publishing Finished'
+        message = 'Interim Job Finished Successfully'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-         ('Interim Publishing Finished', 
-          'Interim Job Finished Successfully'))
+                                    (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
     try:
         myCmd = cdr.runCommand(cmd)
-        if myCmd.output:
+        print "Code: ", myCmd.code
+        print "Outp: ", myCmd.output.find('Failure')
+        print "--------------"
+        if myCmd.code or myCmd.output.find('Failure') > 0:
             raise EmailError
     except EmailError:
         l.write('*** Error submitting email\n%s' % myCmd.output,
                  stdout = True)
+        raise
 except:
     l.write('Submitting Final Email failed', stdout = True)
     sys.exit(1)
 
-# Send Error Notification
-# -----------------------
-
+# All done, going home now
+# ------------------------
 l.write('Jobmaster Publishing - Finished', stdout = True)
 sys.exit(0)
