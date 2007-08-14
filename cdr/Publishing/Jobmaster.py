@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-08-10 16:44:37 $
+# Last Modified:    $Date: 2007-08-14 00:04:40 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 #
-# $Id: Jobmaster.py,v 1.2 2007-08-10 16:44:37 venglisc Exp $
+# $Id: Jobmaster.py,v 1.3 2007-08-14 00:04:40 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2007/08/10 16:44:37  venglisc
+# Finalized initial version of submission program.
+#
 # Revision 1.1  2007/07/06 16:41:23  venglisc
 # Initial copy of Jobmaster script used to run all nightly publishing
 # steps for MFP.
@@ -53,8 +56,8 @@ def parseArgs(args):
 
     try:
         longopts = ["testmode", "livemode", "interim", "export",
-                    "nobackup", "norefresh"]
-        opts, args = getopt.getopt(args[1:], "btlier", longopts)
+                    "nobackup"]
+        opts, args = getopt.getopt(args[1:], "btlie", longopts)
     except getopt.GetoptError, e:
         usage(args)
 
@@ -78,9 +81,6 @@ def parseArgs(args):
         elif o in ("-b", "--nobackup"):
             backup = False
             l.write("running in NOBACKUP mode")
-        elif o in ("-r", "--norefresh"):
-            refresh = False
-            l.write("running in NOREFRESH mode")
 
     if len(args) > 0:
         usage(args)
@@ -115,9 +115,6 @@ options:
 
     -b, --nobackup
            run without creating a database backup file
-
-    -r, --norefresh
-           run without refreshing CDR database from BACH
 """ % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
@@ -146,38 +143,6 @@ if fullUpdate:
 else:
     pubmode = '--interim'
 
-# **** Temporary Step - Begin **************************************
-# This step is refreshing the CDR database on FRANCK from BACH
-# Step is only used for testing!!!
-# -----------------------------------------------------------------
-if refresh:
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: Refresh CDR Database on FRANCK' % istep, stdout = True)
-        cmd = os.path.join(UTIL, 'NightlyRefreshFromProd.py')
-
-        l.write('Submitting command...\n%s' % cmd, stdout = True)
-
-        myCmd = cdr.runCommand(cmd)
-    
-        print "Code: ", myCmd.code
-        print "Outp: ", myCmd.output.find('Failure')
-        print "--------------"
-        if myCmd.code or myCmd.output.find('Failure') > 0:
-            l.write('*** Error submitting command:\n%s' % myCmd.output, 
-                     stdout = True)
-            subject = '*** Error in NightlyRefreshFromProd.py'
-            message = 'Program returned with error code.  Please see logfile.'
-            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-                                            (subject, message))
-            myCmd   = cdr.runCommand(cmd)
-            raise
-
-    except:
-        l.write('Refresh CDR Database on FRANCK failed', stdout = True)
-        sys.exit(1)
-# **** Temporary Step - End ****************************************
 
 # Submit initial email notification to indicate process has started
 # -----------------------------------------------------------------
