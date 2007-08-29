@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-08-10 16:42:11 $
+# Last Modified:    $Date: 2007-08-29 21:27:42 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 #
-# $Id: SubmitPubJob.py,v 1.2 2007-08-10 16:42:11 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.3 2007-08-29 21:27:42 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2007/08/10 16:42:11  venglisc
+# Finalized initial version.  Added log comments.
+#
 # Revision 1.1  2007/07/06 22:50:05  venglisc
 # Initial copy of MFP scheduling scripts.
 #
@@ -38,7 +41,7 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
 emailDL    = 'EmailDL.txt'
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
-wait       = 1000    # number of seconds to wait between status checks
+wait       = 60    # number of seconds to wait between status checks
 
 testMode   = None
 fullMode   = None
@@ -175,7 +178,8 @@ def getPushJobId(jobId):
             sys.exit(1)
 
     except cdrdb.Error, info:
-        l.write("Failure finding push job for Job%d: %s" % (int(jobId), info[1][0]))
+        l.write("Failure finding push job for Job%d: %s" % (int(jobId), 
+                                                            info[1][0]))
     return row[0]
 
 
@@ -267,7 +271,7 @@ try:
         l.write("%s" % submit[1], stdout = True)
         sys.exit(1)
     else:
-        l.write("Job%s started" % submit[0], stdout = True)
+        l.write("Pub job started as Job%s" % submit[0], stdout = True)
         f = open(lockFile, 'a')
         f.write('%s\n' % str(submit[0]))
         f.close()
@@ -286,8 +290,11 @@ try:
         counter += 1
         jobInfo = checkJobStatus(submit[0])
         status  = jobInfo[1]
-        l.write("    Status: %s (%d sec)" % (status, counter * wait), 
-                                            stdout=True)
+        # Don't print every time we're checking (every 15 minutes)
+        # ---------------------------------------------------------
+        if counter % 15 == 0:
+            l.write("    Status: %s (%d sec)" % (status, counter * wait), 
+                                                 stdout=True)
 
         ### if counter % 1 == 0:
         ###    l.write("Job running %d seconds..." % (counter * wait), stdout=True)
@@ -318,11 +325,17 @@ try:
                pcounter += 1
                jobInfo = checkJobStatus(pushId)
                pstatus = jobInfo[1]
-               l.write("    Status: %s (%d sec)" % (pstatus, pcounter * wait), 
-                                                    stdout=True)
+               if pcounter % 15 == 0:
+                   l.write("    Status: %s (%d sec)" % (pstatus, 
+                                                        pcounter * wait), 
+                                                        stdout=True)
 
                if pstatus in ('Verifying', 'Success'):
                    pdone = 1
+                   l.write("   Pushing job started at %s" % jobInfo[2], 
+                                                             stdout=True)
+                   l.write("         and completed at %s" % jobInfo[3], 
+                                                             stdout=True)
                elif pstatus == 'Failure':
                    l.write("*** Push job failed at %s" % jobInfo[3], 
                            stdout=True)
@@ -349,18 +362,25 @@ try:
         subject   = "%s: Status and Error Report" % cdr.PUB_NAME.capitalize()
         message   = """\
 
-Status and Error report for the publishing/push jobs:
+Status and Error reports for the latest publishing/push jobs:
 
-For the output of the publishing job please follow the link
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s
+Publishing Job Summary Report:
+   http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=Report&Session=Guest
 
-For the error report of this publishing job please follow the link
+Error Report of the publishing job:
    http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=error
 
-To view the output of the push job please follow the link
+Warnings Report of the publishing job
+   http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=warning
+
+Publishing Job Output:
    http://%s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (host, submit[0], host, submit[0], host, pushId) 
+Push Job Output:
+   http://%s/cgi-bin/cdr/PubStatus.py?id=%s
+
+""" % (host, pushId, host, submit[0], host, submit[0], 
+                     host, submit[0], host, pushId) 
 
         notify = cdr.sendMail(cdr.OPERATOR, receivers, subject, message)
 
