@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-08-22 00:50:04 $
+# Last Modified:    $Date: 2007-09-07 22:29:53 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 #
-# $Id: Jobmaster.py,v 1.4 2007-08-22 00:50:04 venglisc Exp $
+# $Id: Jobmaster.py,v 1.5 2007-09-07 22:29:53 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2007/08/22 00:50:04  venglisc
+# Added code to only run the CTGovExport creation on Wednesdays and
+# Fridays per NLM request.
+#
 # Revision 1.3  2007/08/14 00:04:40  venglisc
 # Final version of Jobmaster.py.  For production the NightlyRefresh
 # to update the CDR database on FRANCK has been removed.
@@ -36,9 +40,9 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 UTIL       = os.path.join('d:\\cdr', 'Utilities')
 LOGFILE    = 'Jobmaster.log'
 
+weekDay    = time.strftime("%a")
 testMode   = None
 fullUpdate = None
-backup     = True
 refresh    = True
 istep      = 0
 
@@ -54,14 +58,12 @@ def parseArgs(args):
 
     global testMode
     global fullUpdate
-    global backup
     global refresh
     global l
 
     try:
-        longopts = ["testmode", "livemode", "interim", "export",
-                    "nobackup"]
-        opts, args = getopt.getopt(args[1:], "btlie", longopts)
+        longopts = ["testmode", "livemode", "interim", "export"]
+        opts, args = getopt.getopt(args[1:], "tlie", longopts)
     except getopt.GetoptError, e:
         usage(args)
 
@@ -82,9 +84,6 @@ def parseArgs(args):
         elif o in ("-e", "--export"):
             fullUpdate = True
             l.write("running in EXPORT mode")
-        elif o in ("-b", "--nobackup"):
-            backup = False
-            l.write("running in NOBACKUP mode")
 
     if len(args) > 0:
         usage(args)
@@ -102,7 +101,7 @@ def parseArgs(args):
 def usage(args):
     print args
     sys.stderr.write("""\
-usage: %s [--livemode|--testmode] [--interim|--export] [--nobackup] [options]
+usage: %s [--livemode|--testmode] [--interim|--export] [options]
 
 options:
     -i, --interim
@@ -117,8 +116,6 @@ options:
     -l, --livemode
            run in LIVE mode
 
-    -b, --nobackup
-           run without creating a database backup file
 """ % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
@@ -180,30 +177,6 @@ except:
     l.write('Sending Initial Email failed', stdout = True)
     sys.exit(1)
 
-# Create the "Before" database snapshot
-# To do for weekly update
-# -------------------------------------
-if fullUpdate and backup:
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: Before DB Backup' % istep, stdout = True)
-        cmd = os.path.join('d:\db_backup', 'BeforeSnapshot.bat')
-        l.write('Submitting command...\n%s' % cmd, stdout = True)
-        l.write('*** FIX ME ***', stdout = True)
-        #try:
-        #    myCmd = cdr.runCommand(cmd)
-        #    if myCmd.output:
-        #        raise EmailError
-        #except EmailError:
-        #    l.write('*** Error submitting email\n%s' % myCmd.output, 
-        #             stdout = True)
-    except:
-        l.write('Creating Before DB Backup failed', stdout = True)
-        sys.exit(1)
-
-# Start the publishing process and push the data to Cancer.gov
-# ------------------------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
@@ -264,7 +237,7 @@ if fullUpdate:
 # This will change later, when we are creating a daily interim file
 # plus a full load on Fridays.
 # -------------------------------------------------------------------
-if time.strftime("%a") in ('Wed', 'Fri'):
+if weekDay in ('Wed') or fullUpdate:
     # Create the CTGovExport data for NLM
     # -----------------------------------
     try:
@@ -273,9 +246,10 @@ if time.strftime("%a") in ('Wed', 'Fri'):
         l.write('Step %d: CTGovExport Job' % istep, stdout = True)
         cmd = os.path.join(UTIL, 
                            'CTGovExport.py --optimize %s' %  runmode)
-    #                      'CTGovExport.py --optimize --maxtest 100 %s' %  
-    #                                                              runmode)
-    #   Specifying maxtest option for testing only
+
+                         # 'CTGovExport.py --optimize --maxtest 100 %s' %  
+                         #                                         runmode)
+                         #   Specifying maxtest option for testing only
     
         l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
         myCmd = cdr.runCommand(cmd)
