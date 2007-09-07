@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-08-29 21:27:42 $
+# Last Modified:    $Date: 2007-09-07 22:32:03 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 #
-# $Id: SubmitPubJob.py,v 1.3 2007-08-29 21:27:42 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.4 2007-09-07 22:32:03 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2007/08/29 21:27:42  venglisc
+# Reducing the time interval for checking if the jobs completed.  Adding
+# additional log messages.
+#
 # Revision 1.2  2007/08/10 16:42:11  venglisc
 # Finalized initial version.  Added log comments.
 #
@@ -39,7 +43,6 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
-emailDL    = 'EmailDL.txt'
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 
@@ -49,8 +52,7 @@ fullMode   = None
 credentials = ('CdrGuest', 'never.0n-$undaY')
 pubSystem   = 'Primary'
 
-#notify      = ['***REMOVED***', '***REMOVED***']
-notify      = ['***REMOVED***']
+pubEmail    = ['***REMOVED***', 'operator@cips.nci.nih.gov']
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -264,7 +266,7 @@ try:
                                     time.strftime('%Y-%m-%d %H:%M:%S'))
     submit = cdr.publish(credentials, pubSystem, pubSubset, 
                          parms = [('GKPushJobDescription', jobDescription)], 
-                         email = notify)
+                         email = pubEmail)
 
     if submit[0] == None:
         l.write("*** Failure starting publishing job ***", stdout = True)
@@ -272,9 +274,6 @@ try:
         sys.exit(1)
     else:
         l.write("Pub job started as Job%s" % submit[0], stdout = True)
-        f = open(lockFile, 'a')
-        f.write('%s\n' % str(submit[0]))
-        f.close()
         l.write("Waiting for publishing job to complete...", stdout = True)
 
     # We started the publishing job.  Now we need to wait until
@@ -312,7 +311,7 @@ try:
            except:
                l.write("*** Failed to submit Push job for Job%s" % submit[0], 
                         stdout=True)
-               os.remove(lockFile)
+               # os.remove(lockFile)
                sys.exit(1)
 
            pdone = 0
@@ -352,17 +351,40 @@ try:
         else: 
            done = 0
 
+    # The publishing AND pushing job completed.  Add the pub jobID
+    # to the FTP lock file so we know which file(s) need to be FTP'ed
+    # to the FTP server
+    # (currently only export data is provided to licensees)
+    # ---------------------------------------------------------------
+    if fullMode:
+        f = open(lockFile, 'a')
+        f.write('%s\n' % str(submit[0]))
+        f.close()
+
     try:
         # Submitting the email notification including the error report
+        # The mail is send two different groups depending if it's a
+        # nightly or a weekly publishing job
         # ------------------------------------------------------------
-        file      = open(os.path.join(PUBPATH, emailDL), 'r')
-        mailList  = file.read()
-        file.close()
-        receivers = mailList.split()
-        subject   = "%s: Status and Error Report" % cdr.PUB_NAME.capitalize()
+        if fullMode:
+            emailDL = cdr.getEmailList('Weekly Publishing Notification')
+            addSubj = 'Weekly'
+        else:
+            emailDL = cdr.getEmailList('Nightly Publishing Notification')
+            addSubj = 'Nightly'
+
+        subject = '%s: Status and Error Report for %s Publishing' % (
+                                                  cdr.PUB_NAME.capitalize(),
+                                                  addSubj)
+        emailDL.sort()
+        if not len(emailDL):
+            emailDL = ['***REMOVED***']
+            subject = '*** DL Missing *** %s' % subject
+            l.write('*** Warning: No Email DL found')
+
         message   = """\
 
-Status and Error reports for the latest publishing/push jobs:
+Status and Error reports for the latest %s publishing/push jobs:
 
 Publishing Job Summary Report:
    http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=Report&Session=Guest
@@ -379,10 +401,10 @@ Publishing Job Output:
 Push Job Output:
    http://%s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (host, pushId, host, submit[0], host, submit[0], 
+""" % (addSubj.lower(), host, pushId, host, submit[0], host, submit[0], 
                      host, submit[0], host, pushId) 
 
-        notify = cdr.sendMail(cdr.OPERATOR, receivers, subject, message)
+        notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
 
         l.write("Submitting Email: %s" % (notify or 'OK'), stdout=True)
     except:
