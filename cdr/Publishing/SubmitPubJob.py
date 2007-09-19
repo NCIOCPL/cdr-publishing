@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-09-07 22:32:03 $
+# Last Modified:    $Date: 2007-09-19 17:38:41 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 #
-# $Id: SubmitPubJob.py,v 1.4 2007-09-07 22:32:03 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.5 2007-09-19 17:38:41 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2007/09/07 22:32:03  venglisc
+# Modified program to use multiple groups for receiving email messages.
+# EmailDLs are retrieved from CDR instead from file.
+#
 # Revision 1.3  2007/08/29 21:27:42  venglisc
 # Reducing the time interval for checking if the jobs completed.  Adding
 # additional log messages.
@@ -406,15 +410,16 @@ Push Job Output:
 
         notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
 
-        l.write("Submitting Email: %s" % (notify or 'OK'), stdout=True)
+        l.write("Submitting Email: %s" % (notify or 'OK'), stdout = True)
     except:
-        l.write("*** Error sending email ***", stdout=True)
+        l.write("*** Error sending email ***", stdout = True)
         raise
 
 except StandardError, arg:
-    l.write("*** Standard Failure - %s" % arg, stdout=True)
+    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout=True)
+    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+                                                            tback = 1)
     raise
 
 sys.exit(0)
