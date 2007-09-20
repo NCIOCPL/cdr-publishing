@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.18 2007-05-17 20:18:58 bkline Exp $
+# $Id: PublishingService.py,v 1.19 2007-09-20 14:54:44 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.18  2007/05/17 20:18:58  bkline
+# Fixed backward comparison logic for dates.
+#
 # Revision 1.17  2007/05/16 15:56:26  bkline
 # Added code to mark failed docs in the pub_proc_doc table.
 #
@@ -223,14 +226,14 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     else:
         now = time.localtime()
         then = list(now)
-        then[2] -= 1
+        then[3] -= 8
         then = time.localtime(time.mktime(then))
-        yesterday = time.strftime("%Y-%m-%d %H:%M:%S", then)
+        then = time.strftime("%Y-%m-%d %H:%M:%S", then)
 
-        # If it's been longer than a day, the job is probably stuck.
-        cdr.logwrite("verifying push job: yesterday=%s pushFinished=%s" %
-                     (yesterday, str(pushFinished)))
-        if yesterday > str(pushFinished):
+        # If it's been longer than 8 hours, the job is probably stuck.
+        cdr.logwrite("verifying push job: then=%s pushFinished=%s" %
+                     (then, str(pushFinished)))
+        if then > str(pushFinished):
             reportLoadProblems(jobId, stalled = True)
             cursor.execute("""\
                 UPDATE pub_proc
@@ -255,7 +258,7 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
     if stalled:
         subject = "Push job %d stalled" % jobId
         body = """\
-More than 24 hours have elapsed since completion of the push of CDR
+More than 8 hours have elapsed since completion of the push of CDR
 documents for publishing job %d, and loading of the documents
 has still not completed.
 """ % jobId
