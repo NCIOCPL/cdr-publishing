@@ -1,8 +1,11 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.19 2007-09-20 14:54:44 bkline Exp $
+# $Id: PublishingService.py,v 1.20 2007-09-27 20:57:35 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.19  2007/09/20 14:54:44  bkline
+# Shortened time we'll wait before declaring a push job stalled.
+#
 # Revision 1.18  2007/05/17 20:18:58  bkline
 # Fixed backward comparison logic for dates.
 #
@@ -250,7 +253,7 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
     # Gather some values needed for the call to cdr.sendMail().
     import cdrcgi
     sender = "cdr@%s" % cdrcgi.WEBSERVER
-    url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s" %
+    url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s&flavor=all" %
            (cdrcgi.WEBSERVER, cdrcgi.BASE, jobId, cdr2gk.host))
     recips = cdr.getEmailList('PushVerificationAlerts')
 
