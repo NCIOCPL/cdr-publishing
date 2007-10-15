@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-09-19 17:38:41 $
+# Last Modified:    $Date: 2007-10-15 18:37:36 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.5 $
+# $Revision: 1.6 $
 #
-# $Id: SubmitPubJob.py,v 1.5 2007-09-19 17:38:41 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.6 2007-10-15 18:37:36 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2007/09/19 17:38:41  venglisc
+# Added option to display a traceback in case of a system error.
+#
 # Revision 1.4  2007/09/07 22:32:03  venglisc
 # Modified program to use multiple groups for receiving email messages.
 # EmailDLs are retrieved from CDR instead from file.
@@ -376,6 +379,13 @@ try:
         else:
             emailDL = cdr.getEmailList('Nightly Publishing Notification')
             addSubj = 'Nightly'
+
+        # If we're not running in production we want to avoid sending
+        # these email messages to the users.  Overwriting the emailDL
+        # group to a developers/testers list or recipients
+        # -----------------------------------------------------------
+        if not cdr.PUB_NAME.upper() == 'BACH':
+            emailDL = cdr.getEmailList('Test Publishing Notification')
 
         subject = '%s: Status and Error Report for %s Publishing' % (
                                                   cdr.PUB_NAME.capitalize(),
