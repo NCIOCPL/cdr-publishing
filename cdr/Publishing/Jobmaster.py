@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-09-07 22:29:53 $
+# Last Modified:    $Date: 2007-11-14 19:38:09 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.5 $
+# $Revision: 1.6 $
 #
-# $Id: Jobmaster.py,v 1.5 2007-09-07 22:29:53 venglisc Exp $
+# $Id: Jobmaster.py,v 1.6 2007-11-14 19:38:09 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2007/09/07 22:29:53  venglisc
+# Removed backup option.
+#
 # Revision 1.4  2007/08/22 00:50:04  venglisc
 # Added code to only run the CTGovExport creation on Wednesdays and
 # Fridays per NLM request.
@@ -152,13 +155,13 @@ try:
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: Initial Email' % istep, stdout = True)
     if fullUpdate:
-        subject = 'Export Publishing Started'
-        message = 'Export Job Started Successfully'
+        subject = 'Weekly Publishing Started'
+        message = 'Weekly Job Started Successfully'
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
     else:
-        subject = 'Interim Publishing Started'
-        message = 'Interim Job Started Successfully'
+        subject = 'Nightly Publishing Started'
+        message = 'Nightly Job Started Successfully'
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
@@ -233,64 +236,68 @@ if fullUpdate:
         sys.exit(1)
 
 
-# Initially, we only want to create the CTGovExport data twice a week
-# This will change later, when we are creating a daily interim file
-# plus a full load on Fridays.
+# Create the CTGovExport data with every nightly job and the full export
+# as part of the weekly (on Friday/Saturday).
 # -------------------------------------------------------------------
-if weekDay in ('Wed') or fullUpdate:
-    # Create the CTGovExport data for NLM
-    # -----------------------------------
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: CTGovExport Job' % istep, stdout = True)
+# Create the CTGovExport data for NLM
+# -----------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: CTGovExport Job' % istep, stdout = True)
+
+    if fullUpdate:
+        since = '--since="2000-01-01"'
+        cmd = os.path.join(UTIL, 
+                           'CTGovExport.py --optimize %s %s' %  (runmode,
+                                                                 since))
+    else:
         cmd = os.path.join(UTIL, 
                            'CTGovExport.py --optimize %s' %  runmode)
-
                          # 'CTGovExport.py --optimize --maxtest 100 %s' %  
                          #                                         runmode)
                          #   Specifying maxtest option for testing only
     
-        l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+    l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
     
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
-                     stdout = True)
-            subject = '*** Error in CTGovExport.py'
-            message = 'Program returned with error code.  Please see logfile.'
-            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+                 stdout = True)
+        subject = '*** Error in CTGovExport.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
-            myCmd   = cdr.runCommand(cmd)
-            raise
-    except:
-        l.write('Submitting CTGovExport Job failed', stdout = True)
-        sys.exit(1)
+        myCmd   = cdr.runCommand(cmd)
+        raise
+except:
+    l.write('Submitting CTGovExport Job failed', stdout = True)
+    sys.exit(1)
     
     
-    # Ftp the FtpCTGovData to the CIPSFTP server
-    # ------------------------------------------
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: FTP CTGovExport Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'FtpCTGovData.py %s' % runmode)
+# Ftp the FtpCTGovData to the CIPSFTP server
+# ------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: FTP CTGov2Nlm Job' % istep, stdout = True)
+    cmd = os.path.join(PUBPATH, 'FtpCTGov2Nlm.py %s' % runmode)
     
-        l.write('Submitting command...\n%s' % cmd, stdout = True)
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
+    
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+                 stdout = True)
+        subject = '*** Error in FtpCTGov2Nlm.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
+                                    (subject, message))
         myCmd = cdr.runCommand(cmd)
-    
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
-                     stdout = True)
-            subject = '*** Error in FtpCTGovData.py'
-            message = 'Program returned with error code.  Please see logfile.'
-            cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
-                                        (subject, message))
-            myCmd = cdr.runCommand(cmd)
-            raise
-    except:
-        l.write('Submitting FtpCTGovData Job failed', stdout = True)
-        sys.exit(1)
+        raise
+except:
+    l.write('Submitting FtpCTGov2Nlm Job failed', stdout = True)
+    sys.exit(1)
 
 
 # Send final Notification that publishing on CDR servers has finished
@@ -302,13 +309,13 @@ try:
     l.write('Step %d: Jobmaster Job Complete notification' % istep, 
                                                            stdout = True)
     if fullUpdate:
-        subject = 'Export Publishing Finished'
-        message = 'Export Job Finished Successfully'
+        subject = 'Weekly Publishing Finished'
+        message = 'Weekly Job Finished Successfully'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                      (subject, message))
     else:
-        subject = 'Interim Publishing Finished'
-        message = 'Interim Job Finished Successfully'
+        subject = 'Nightly Publishing Finished'
+        message = 'Nightly Job Finished Successfully'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                     (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
