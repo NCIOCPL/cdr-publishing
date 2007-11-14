@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.78 2006-07-25 20:54:40 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.79 2007-11-14 15:47:28 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,10 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.78  2006/07/25 20:54:40  bkline
+# Modified collection of protocol titles to work around the fact that
+# the vendor filter no longer preserves the original title in all cases.
+#
 # Revision 1.77  2006/06/27 20:10:01  bkline
 # Additional changes tacked on to issue #2230.
 #
@@ -2960,6 +2964,16 @@ END_TABLE=r"""
 % -----
 """
 
+#----------------------------------------------------------------------
+# The \topmargin instruction below was added 2007-11-13 by Bob Kline
+# in response to reports (issue #3746) that the page numbers were being
+# cut off on the production server, following an upgrade of the hardware
+# for that server, during which MiKTeX was upgraded from 2.4 to 2.6.
+# Haven't yet tracked down exactly what changed to cause the problem,
+# but the solution is to add the line below which sets \topmargin to
+# a negative half inch.  For further information, please refer to
+# http://en.wikibooks.org/wiki/LaTeX/Page_Layout.
+#----------------------------------------------------------------------
 ENDSUMMARYPREAMBLE=r"""
   %% ENDSUMMARYPREAMBLE %%
   %% ------------------ %%
@@ -2970,6 +2984,7 @@ ENDSUMMARYPREAMBLE=r"""
   \setlength{\textwidth}{6.5in}
   \setlength{\textheight}{8.5in}
   \setlength{\oddsidemargin}{0in}
+  \setlength{\topmargin}{-0.50in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
