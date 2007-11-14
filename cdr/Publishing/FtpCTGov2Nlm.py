@@ -4,8 +4,12 @@
 #            ==============
 # Submit the CTGovExport data to the NLM's FTP Server.
 # 
-# $Id: FtpCTGov2Nlm.py,v 1.1 2007-10-29 19:21:31 venglisc Exp $
+# $Id: FtpCTGov2Nlm.py,v 1.2 2007-11-14 19:39:39 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/10/29 19:21:31  venglisc
+# Inital copy of FtpCTGov2Nlm.py (a modification of FtpCTGovData.py) to
+# ftp directly to the NLM site instead to go to CIPSFTP. (Bug 3536)
+#
 # Revision 1.2  2007/08/10 16:50:15  venglisc
 # Finalized copy of FTP script to copy vendor/NLM data.
 #
@@ -21,9 +25,6 @@ import sys, cdr, os, glob, ftplib, time, getopt
 LOGFILE    = 'Jobmaster.log'
 dateStr    = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 FTPDIR     = os.path.join('d:\\cdr', 'Output', 'NLMExport')
-FTPSERVER  = "clinftpp.nlm.nih.gov"
-FTPUSER    = "nci"
-FTPPWD     = "***REMOVED***"
 # FTPLOCK    = "sending"
 
 testMode   = None
@@ -78,6 +79,9 @@ def copyNlmFtpFile(localDirectory = 'd:/cdr/output/NLMExport',
                    ftpDirectory   = '/export/home/NCI', 
                    ftpName        = 'clinical.txt'):
 
+    FTPSERVER  = "clinftpp.nlm.nih.gov"
+    FTPUSER    = "nci"
+    FTPPWD     = "***REMOVED***"
     global testMode
 
     # Setting path variables for FTP server
