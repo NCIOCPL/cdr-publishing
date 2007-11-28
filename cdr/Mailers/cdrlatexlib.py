@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.79 2007-11-14 15:47:28 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.80 2007-11-28 15:38:45 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.79  2007/11/14 15:47:28  bkline
+# Fixed problem with changed page layout after upgrade to MiKTeX 2.6.
+#
 # Revision 1.78  2006/07/25 20:54:40  bkline
 # Modified collection of protocol titles to work around the fact that
 # the vendor filter no longer preserves the original title in all cases.
@@ -2973,6 +2976,10 @@ END_TABLE=r"""
 # but the solution is to add the line below which sets \topmargin to
 # a negative half inch.  For further information, please refer to
 # http://en.wikibooks.org/wiki/LaTeX/Page_Layout.
+#
+# 2007-11-28:
+#  Changed \topmargin to \voffset after research and discussions with
+# Alan.
 #----------------------------------------------------------------------
 ENDSUMMARYPREAMBLE=r"""
   %% ENDSUMMARYPREAMBLE %%
@@ -2984,14 +2991,14 @@ ENDSUMMARYPREAMBLE=r"""
   \setlength{\textwidth}{6.5in}
   \setlength{\textheight}{8.5in}
   \setlength{\oddsidemargin}{0in}
-  \setlength{\topmargin}{-0.50in}
+  \setlength{\voffset}{-0.50in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
   %----------------------------------------------------------------------
   % Example of how to get debugging output to the console.
   %----------------------------------------------------------------------
-  \typeout{footskip is \footskip}
+  \typeout{footskip is \the\footskip}
   \renewcommand{\footskip}{40pt}
 
   %% -- END -- Document Declarations and Definitions
