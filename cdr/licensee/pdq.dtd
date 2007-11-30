@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.69 2007-11-30 22:00:36 venglisc Exp $
+   $Id: pdq.dtd,v 1.70 2007-11-30 22:04:42 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,10 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.69  2007/11/30 22:00:36  venglisc
+   Added new element CompletionDate and made top level AltTitle mandatory
+   (Bug 3742).
+
    Revision 1.68  2007/06/20 18:11:18  venglisc
    Added optional id attribute to GENETICSPROFESSIONAL root element.
 
@@ -859,6 +863,9 @@
 
 <!ELEMENT StartDate (#PCDATA)>
 <!ATTLIST StartDate DateType (Actual|Projected) #REQUIRED>
+
+<!ELEMENT CompletionDate (#PCDATA)>
+<!ATTLIST CompletionDate DateType (Actual|Projected) #REQUIRED>
 
 <!ELEMENT CurrentProtocolStatus (#PCDATA)>
 
