@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.68 2007-06-20 18:11:18 venglisc Exp $
+   $Id: pdq.dtd,v 1.69 2007-11-30 22:00:36 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.68  2007/06/20 18:11:18  venglisc
+   Added optional id attribute to GENETICSPROFESSIONAL root element.
+
    Revision 1.67  2007/03/30 20:53:06  venglisc
    Added DrugRef for common text elements and TermRef as additional
    GlossaryTerm element.  (Bug 2857)
@@ -546,7 +549,7 @@
 
 <!ELEMENT Summary (SummaryMetaData,
                    SummaryTitle,
-                   AltTitle*,
+                   AltTitle,
                    SummarySection+,
                    TranslationOf?,
                    PatientVersionOf?,
@@ -840,6 +843,7 @@
 <!ELEMENT ProtocolSpecialCategory (#PCDATA)>
 
 <!ELEMENT ProtocolAdminInfo (StartDate?,
+                             CompletionDate?,
                              CurrentProtocolStatus,
                              ProtocolLeadOrg+,
                              ProtocolSites?
