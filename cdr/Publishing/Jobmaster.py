@@ -1,19 +1,23 @@
 #!d:/python/python.exe
 # *********************************************************************
 #
-# File Name: $RCSFile:$
+# File Name: Jobmaster.py
 #            ===============
 # Control file to start the publishing scripts.
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-11-14 19:38:09 $
+# Last Modified:    $Date: 2007-12-12 20:41:11 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.6 $
+# $Revision: 1.7 $
 #
-# $Id: Jobmaster.py,v 1.6 2007-11-14 19:38:09 venglisc Exp $
+# $Id: Jobmaster.py,v 1.7 2007-12-12 20:41:11 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2007/11/14 19:38:09  venglisc
+# Modified program to run the CTGovExport as part of the nightly job
+# and push the data to NLM's ftp site.
+#
 # Revision 1.5  2007/09/07 22:29:53  venglisc
 # Removed backup option.
 #
@@ -33,7 +37,7 @@
 # steps for MFP.
 #
 # *********************************************************************
-import sys, re, string, os, shutil, cdr, getopt, time
+import sys, re, string, os, shutil, cdr, getopt, time, glob
 
 # Setting directory and file names
 # --------------------------------
@@ -122,6 +126,52 @@ options:
 """ % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
+# ------------------------------------------------------------
+# Function to find the directory names storing the CTGovExport
+# data.
+# The file names are created automatically and represent a 
+# time stamp.  Once the CTGovExport job finished we need to 
+# identify the newly created directory name plus the one 
+# created before this containing the files WithdrawnFromPDQ.txt
+# ------------------------------------------------------------
+def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
+    """
+    Retrieve the directories created by the CTGovExport process
+    for the current month and the month before and sort them 
+    by date.  We want to compare the latest directory content
+    with the one created just before as long as it contains the 
+    file WithdrawnFromPDQ.txt
+    """
+    # Setting variables
+    # -----------------
+    notPDQ  = 'WithdrawnFromPDQ.txt'
+    now     = time.localtime(time.time())
+    fromDir = str(now[0]) + str(now[1] - 1)
+    toDir   = str(now[0]) + str(now[1])
+
+    # Find the directories created during the past two months
+    # -------------------------------------------------------
+    dirs1   = glob.glob(baseDir + '/' + fromDir + '*')
+    dirs2   = glob.glob(baseDir + '/' + toDir   + '*')
+    allDirs = dirs1 + dirs2
+    allDirs.sort()
+    allDirs.reverse()
+    
+    # Find the last two directories that contain the 
+    # WithdrawnFromPDQ.txt file (not all do)
+    # ----------------------------------------------
+    checkDirs = ()
+    dirCount  = 0
+    for dir in allDirs:
+        if os.access(dir + '/' + notPDQ , os.F_OK):
+            dirCount += 1
+            dstart = dir.find('20')      # Change to 21 for year > 2100 
+            checkDirs += (dir[dstart:],)
+            if dirCount == 2: break
+
+    return (checkDirs[:2])
+
+    
 # ------------------------------------------------------------
 # *** Main ***
 # Jetzt wird es ernst
@@ -291,12 +341,42 @@ try:
                  stdout = True)
         subject = '*** Error in FtpCTGov2Nlm.py'
         message = 'Program returned with error code.  Please see logfile.'
-        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                     (subject, message))
         myCmd = cdr.runCommand(cmd)
         raise
 except:
     l.write('Submitting FtpCTGov2Nlm Job failed', stdout = True)
+    sys.exit(1)
+
+
+# Check for new protocols with status 'Withdrawn from PDQ'
+# --------------------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: Submitting CheckWithdrawn Job' % istep, stdout = True)
+    dirs = getCTGovExportDirs()
+
+    cmd = os.path.join(PUBPATH, 
+                       'CheckWithdrawn.py "%s" "--dir=%s" "--dir=%s"' % \
+                                               (runmode, dirs[0], dirs[1]))
+    
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
+    
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+                 stdout = True)
+        subject = '*** Error in CheckWithdrawn.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
+                                    (subject, message))
+        myCmd = cdr.runCommand(cmd)
+        raise
+except StandardError, info:
+    l.write('Submitting CheckWithdrawn Job failed\n%s' % str(info), 
+                                                         stdout = True)
     sys.exit(1)
 
 
