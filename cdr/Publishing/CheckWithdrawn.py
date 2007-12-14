@@ -12,13 +12,20 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2007-12-12 18:00:44 $
+# Last Modified:    $Date: 2007-12-14 15:20:47 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: CheckWithdrawn.py,v 1.1 2007-12-12 18:00:44 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.2 2007-12-14 15:20:47 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2007/12/12 18:00:44  venglisc
+# Initial version of program to take two directories created by the
+# CTGovExport process and compare the files WithdrawnFromPDQ.txt in order
+# to find if any protocols exist in the newer file that are not listed in
+# the older file.  Those will need to be reported so that they can be
+# handled properly by ClinicalTrials.gov to be removed or disabled. (Bug 3761)
+#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib
 
@@ -207,13 +214,13 @@ SELECT dv.id, dv.num, comment, nct.value
     mailBody = """\
 <html>
  <head>
-  <title>Recent Protocols with status: Withdrawn from PDQ</title>
+  <title>Protocols with status: Withdrawn from PDQ</title>
   <style type='text/css'>
    th      { background-color: #f0f0f0; }
   </style>
  </head>
  <body>
-  <h2>Recent Protocols with status: Withdrawn from PDQ</h2>
+  <h2>Protocols with status: Withdrawn from PDQ</h2>
   <h3>Date: %s</h3>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
@@ -259,15 +266,13 @@ SELECT dv.id, dv.num, comment, nct.value
                     "Leech, Mark J <mark.j.leech@lmco.com>",
                     "James Silk <james.d.silk@lmco.com", 
                     "Cherryl Villanueva <***REMOVED***>"]
-        strTo    = ["Volker H. Englisch <volker@englisch.us>",
-                    "Volker W. Englisch <***REMOVED***>"]
 
     mailHeader   = """\
 From: %s
 To: %s
 Subject: %s: %s
 """ % (strFrom, ", ".join(strTo), cdr.PUB_NAME.capitalize(),
-       'Protocols with status: Withdrawn from PDQ')
+       'Protocols with status "Withdrawn from PDQ"')
 
     mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
 
