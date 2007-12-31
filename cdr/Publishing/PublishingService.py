@@ -1,8 +1,12 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.20 2007-09-27 20:57:35 venglisc Exp $
+# $Id: PublishingService.py,v 1.21 2007-12-31 16:33:01 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.20  2007/09/27 20:57:35  venglisc
+# Modified GateKeeperStatus report link to only display documents with
+# errors or warnings instead of the full report.
+#
 # Revision 1.19  2007/09/20 14:54:44  bkline
 # Shortened time we'll wait before declaring a push job stalled.
 #
@@ -255,7 +259,12 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
     sender = "cdr@%s" % cdrcgi.WEBSERVER
     url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s&flavor=all" %
            (cdrcgi.WEBSERVER, cdrcgi.BASE, jobId, cdr2gk.host))
-    recips = cdr.getEmailList('PushVerificationAlerts')
+
+    # Don't send the notification to everyone if we're on the test server
+    if cdr2gk.host == 'bach.nci.nih.gov':
+        recips = cdr.getEmailList('PushVerificationAlerts')
+    else:
+        recips = cdr.getEmailList('Test PushVerificationAlerts')
 
     # Different message and subject for jobs that are stuck.
     if stalled:
