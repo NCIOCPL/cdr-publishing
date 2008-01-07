@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.80 2007-11-28 15:38:45 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.81 2008-01-07 17:38:46 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.80  2007/11/28 15:38:45  bkline
+# Changed \topmargin to \voffset in summary mailer preamble.
+#
 # Revision 1.79  2007/11/14 15:47:28  bkline
 # Fixed problem with changed page layout after upgrade to MiKTeX 2.6.
 #
@@ -3073,6 +3076,9 @@ ALTENDPREAMBLE=r"""
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{48pt}
   \setlength{\footskip}{60pt}
+
+  %% Adjustment for US letter paper size
+  \setlength{\voffset}{-0.65in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
   %\newcommand{\deadline}{""" + getDeadline() + r"""}
