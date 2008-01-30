@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-10-15 18:37:36 $
+# Last Modified:    $Date: 2008-01-30 19:53:53 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.6 $
+# $Revision: 1.7 $
 #
-# $Id: SubmitPubJob.py,v 1.6 2007-10-15 18:37:36 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.7 2008-01-30 19:53:53 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2007/10/15 18:37:36  venglisc
+# Added code to redirect email output to developers/testers if run on a
+# non-production system.
+#
 # Revision 1.5  2007/09/19 17:38:41  venglisc
 # Added option to display a traceback in case of a system error.
 #
@@ -199,7 +203,7 @@ def getPushJobId(jobId):
 # We may want to change the SQL query to make sure a weekly export can
 # not be started if a nightly job hasn't finished yet.
 # ---------------------------------------------------------------------
-def checkPubJob(pubType):
+def checkPubJob():
     try:
         conn = cdrdb.connect()
         cursor = conn.cursor()
@@ -208,7 +212,8 @@ def checkPubJob(pubType):
               FROM pub_proc
              WHERE status not in ('Failure', 'Success')
                AND pub_system = 178
-               AND pub_subset LIKE '%%_%s' """ % pubType, timeout = 300)
+               AND pub_subset LIKE '%%Export' """, timeout = 300)
+#              AND pub_subset LIKE '%%_%s' """ % pubType, timeout = 300)
         row = cursor.fetchone()
 
         if row:
@@ -254,11 +259,16 @@ try:
     # checkPubJob will exit if another job is already running
     # -------------------------------------------------------
     try:
-        currentJobs = checkPubJob(pubSubset)
+        # currentJobs = checkPubJob(pubSubset)
+        currentJobs = checkPubJob()
         if currentJobs:
-            print "\n%s job already running." % pubSubset
-            print "Job%s status: %s" % (currentJobs[0], currentJobs[2])
-            raise StandardError("""Job%s still active (%s: %s)""" % 
+            l.write("\n%s job is still running." % pubSubset, 
+                                                  stdout = True)
+            l.write("Job%s status: %s" % (currentJobs[0], currentJobs[2]), 
+                                                  stdout = True)
+            l.write("Job%s type  : %s" % (currentJobs[0], currentJobs[1]), 
+                                                  stdout = True)
+            raise StandardError("""Job%s still in process (%s: %s)""" % 
                                    (currentJobs[0], pubSubset, currentJobs[2]))
     except:
         raise
