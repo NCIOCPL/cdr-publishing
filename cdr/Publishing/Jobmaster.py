@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-12-12 20:41:11 $
+# Last Modified:    $Date: 2008-02-19 23:49:19 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.7 $
+# $Revision: 1.8 $
 #
-# $Id: Jobmaster.py,v 1.7 2007-12-12 20:41:11 venglisc Exp $
+# $Id: Jobmaster.py,v 1.8 2008-02-19 23:49:19 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2007/12/12 20:41:11  venglisc
+# Added additional production step to check the WithdrawnFromPDQ.txt file
+# for newly added protocols. (Bug 3761)
+#
 # Revision 1.6  2007/11/14 19:38:09  venglisc
 # Modified program to run the CTGovExport as part of the nightly job
 # and push the data to NLM's ftp site.
@@ -146,8 +150,8 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
     # -----------------
     notPDQ  = 'WithdrawnFromPDQ.txt'
     now     = time.localtime(time.time())
-    fromDir = str(now[0]) + str(now[1] - 1)
-    toDir   = str(now[0]) + str(now[1])
+    fromDir = str(now[0]) + '%02d' % (now[1] - 1)
+    toDir   = str(now[0]) + '%02d' % now[1]
 
     # Find the directories created during the past two months
     # -------------------------------------------------------
@@ -301,6 +305,8 @@ try:
         cmd = os.path.join(UTIL, 
                            'CTGovExport.py --optimize %s %s' %  (runmode,
                                                                  since))
+                        ###'CTGovExport.py            %s %s' %  (runmode,
+                        ###'CTGovExport.py --optimize %s %s' %  (runmode,
     else:
         cmd = os.path.join(UTIL, 
                            'CTGovExport.py --optimize %s' %  runmode)
