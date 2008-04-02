@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.72 2008-02-06 22:25:55 venglisc Exp $
+   $Id: pdq.dtd,v 1.73 2008-04-02 22:09:55 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.72  2008/02/06 22:25:55  venglisc
+   Making DateFirstPublished optional element
+
    Revision 1.71  2007/12/21 16:08:59  venglisc
    Adding the optional Safety attribute needed so that publish preview on
    BACH will work until the new filters (eliminating the attribute from
@@ -1457,7 +1460,7 @@
             DrugInfoTitle,
             Section+,
             DrugInfoDisclaimer,
-            DateFirstPublished?,
+            DateFirstPublished,
             DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
 <!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
