@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.81 2008-01-07 17:38:46 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.82 2008-04-08 15:40:38 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.81  2008/01/07 17:38:46  bkline
+# Adjustment for US letter paper size for the other mailers.
+#
 # Revision 1.80  2007/11/28 15:38:45  bkline
 # Changed \topmargin to \voffset in summary mailer preamble.
 #
@@ -3364,6 +3367,9 @@ CommonMarkupRules = (
           prefix    = "\\emph{",
           suffix    = "}"),
     XProc(element   = "ProtocolLink",
+          prefix    = "\\emph{",
+          suffix    = "}"),
+    XProc(element   = "ProtocolRef",
           prefix    = "\\emph{",
           suffix    = "}"),
     XProc(element   = "GlossaryTermRef",
