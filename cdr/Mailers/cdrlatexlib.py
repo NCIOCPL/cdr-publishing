@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.82 2008-04-08 15:40:38 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.83 2008-06-03 21:28:06 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.82  2008/04/08 15:40:38  bkline
+# Added support for ProtocolRef elements (request #4027).
+#
 # Revision 1.81  2008/01/07 17:38:46  bkline
 # Adjustment for US letter paper size for the other mailers.
 #
@@ -4123,4 +4126,4 @@ def showVal (val):
         return val
     if type(val) == type(1):
         return '%d' % val
-    raise StandardError ("showVal with unexpected type: %s" % str(type(val)))
+    raise Exception("showVal with unexpected type: %s" % str(type(val)))

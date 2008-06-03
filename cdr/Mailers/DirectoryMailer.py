@@ -1,10 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.9 2005-11-29 18:30:00 bkline Exp $
+# $Id: DirectoryMailer.py,v 1.10 2008-06-03 21:28:06 bkline Exp $
 #
 # Master driver script for processing directory mailers.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2005/11/29 18:30:00  bkline
+# Modified code to generate cover sheet so the document ID is logged
+# when a name with Unicode characters can't be written.
+#
 # Revision 1.8  2003/08/07 19:33:59  ameyer
 # Changed Organization filter.
 #
@@ -144,7 +148,7 @@ class DirectoryMailer(cdrmailer.MailerJob):
             # Filters are different for physicians and organizations
             docType = self.getParm("docType")[0]
             if not docType:
-                raise StandardError ("docType parameter missing")
+                raise Exception ("docType parameter missing")
 
             # Find or create a recipient object for this doc
             # It may be rare to find one person as the contact for
@@ -159,14 +163,14 @@ class DirectoryMailer(cdrmailer.MailerJob):
                 elif docType == 'Organization':
                     address = self.getOrganizationAddress (docId)
                 else:
-                    raise StandardError (
+                    raise Exception (
                         "Unknown directory docType %s - can't happen" %
                         docType)
 
                 # Response should be list of filtered doc + messages
                 # If it's a single string, it's an error message
                 if type(address)==type("") or type(address)==type(u""):
-                    raise StandardError (
+                    raise Exception (
                         "Unable to find address for %d: %s" % (recipId,
                                                                address))
 

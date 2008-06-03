@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.6 2003-12-16 20:31:11 bkline Exp $
+# $Id: cdrlatextables.py,v 1.7 2008-06-03 21:28:07 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2003/12/16 20:31:11  bkline
+# Added conditional debugging output.
+#
 # Revision 1.5  2003/07/02 21:22:53  bkline
 # Added code to add running head for tables which span multiple pages.
 #
@@ -96,8 +99,7 @@ class Group:
                 sys.stderr.write("curRow=%d rowsLeft = %d numCols=%d\n" % 
                                  (curRow, rowsLeft, len(row)))
             if not row:
-                raise StandardError(
-                        "Internal Error: empty row in assembleRows()")
+                raise Exception("Internal Error: empty row in assembleRows()")
             maxCellHeight = 1
             minCellHeight = sys.maxint
             for cell in row:
@@ -110,8 +112,7 @@ class Group:
             if maxCellHeight > rowsLeft:
                 if TABLE_DEBUG:
                     sys.stderr.write("cell content: %s\n" % cell.content)
-                raise StandardError(
-                        "Row ranges for spanning cells cannot overlap")
+                raise Exception("Row ranges for spanning cells cannot overlap")
             if maxCellHeight == rowsLeft:
                 lastRow = 1
             if minCellHeight == maxCellHeight:
@@ -292,7 +293,7 @@ class Cell:
 
         i = group.currentColumn
         if i >= len(group.cols):
-            raise StandardError("Too many table cells, Herr Mozart!")
+            raise Exception("Too many table cells, Herr Mozart!")
         col = group.cols[i]
 
         # Skip past any columns spanning additional rows.
@@ -305,7 +306,7 @@ class Cell:
             if TABLE_DEBUG:
                 sys.stderr.write("i is now %d\n" % i)
             if i >= len(group.cols):
-                raise StandardError("Too many table cells, Herr Mozart!")
+                raise Exception("Too many table cells, Herr Mozart!")
             col = group.cols[i]
         self.colPos     = i
 
@@ -331,26 +332,22 @@ class Cell:
                 if moreRows > 0:
                     col.moreRows = moreRows
                 if moreRows < 0:
-                    raise StandardError("Invalid value for MoreRows: %s" % 
-                                        moreRows)
+                    raise Exception("Invalid value for MoreRows: %s" % moreRows)
             except:
-                raise StandardError("Invalid value for MoreRows: %s" % moreRows)
+                raise Exception("Invalid value for MoreRows: %s" % moreRows)
         self.numRows = col.moreRows + 1
             
         # See if we are spanning multiple columns with this cell.
         col.colSpan   = 1
         self.spanWidth = col.width
         if nameSt and not nameEnd:
-            raise StandardError(
-                    "NameSt attribute must be accompanied by NameEnd")
+            raise Exception("NameSt attribute must be accompanied by NameEnd")
         if nameEnd and not nameSt:
-            raise StandardError(
-                    "NameEnd attribute must be accompanied by NameSt")
+            raise Exception("NameEnd attribute must be accompanied by NameSt")
         if nameSt:
             if nameSt != col.name:
-                raise StandardError(
-                    "NameSt (%s) does not match name of current column (%s)" % 
-                    (nameSt, col.name))
+                raise Exception("NameSt (%s) does not match name of current "
+                                "column (%s)" % (nameSt, col.name))
             spanEnd  = -1
             for j in range(i, len(group.cols)):
                 if j > i:
@@ -359,8 +356,8 @@ class Cell:
                     spanEnd = j
                     break
             if spanEnd == -1:
-                raise StandardError("No column with name %s follows %s" % 
-                                   (nameEnd, nameSt))
+                raise Exception("No column with name %s follows %s" % 
+                                (nameEnd, nameSt))
             col.colSpan = spanEnd + 1 - i
         else:
             spanEnd = i
@@ -382,9 +379,9 @@ class Cell:
         elif self.align == "Justify":
             return ""
         elif self.align == "Char":
-            raise StandardError("No current support for Char alignment")
+            raise Exception("No current support for Char alignment")
         elif self.align:
-            raise StandardError("Invalid alignment request: %s" % self.align)
+            raise Exception("Invalid alignment request: %s" % self.align)
         elif self.where == IN_THEAD:
             return ">{\\centering}"
         else:
@@ -410,7 +407,7 @@ def openTable(pp):
 #----------------------------------------------------------------------
 def closeTable(pp):
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     tableStack.pop()
     pp.setOutput("\n")
 
@@ -421,7 +418,7 @@ def openGroup(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
 
     # Extract top-level attributes.
@@ -470,7 +467,7 @@ def openGroup(pp):
                 amount    = float(match.group(1))
                 widthType = match.group(2)
                 if amount <= 0:
-                    raise StandardError("Illegal ColWidth: %s" % col.width)
+                    raise Exception("Illegal ColWidth: %s" % col.width)
                 if widthType == "pt":
                     widthType = "in"
                     amount /= 72.0
@@ -484,9 +481,9 @@ def openGroup(pp):
                     widthType = "in"
                     amount /= 25.4
                 elif widthType != "*":
-                    raise StandardError("Illegal ColWidth: %s" % col.width)
+                    raise Exception("Illegal ColWidth: %s" % col.width)
             except:
-                raise StandardError("Illegal ColWidth: %s" % col.width)
+                raise Exception("Illegal ColWidth: %s" % col.width)
         else:
             amount = 1
             widthType = "*"
@@ -510,7 +507,7 @@ def openGroup(pp):
         else:
             usableSpace -= spec.amount
     if usableSpace < MIN_WIDTH * propCols:
-        raise StandardError("Total of explicit ColWidth too large")
+        raise Exception("Total of explicit ColWidth too large")
     propUnit = usableSpace / propTotal
 
     # Divide up the remaining space proportionally as requested.
@@ -556,10 +553,10 @@ def closeGroup(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack.pop()
     headEnds = 1
     bodyEnds = 1
@@ -600,10 +597,10 @@ def openBody(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     group.where = IN_TBODY
 
@@ -614,10 +611,10 @@ def openHeader(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     group.where = IN_THEAD
 
@@ -628,10 +625,10 @@ def openFooter(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     group.where = IN_TFOOT
 
@@ -642,10 +639,10 @@ def closeSection(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     group.where = IN_NOTHING
 
@@ -656,10 +653,10 @@ def openRow(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     group.currentColumn = 0
 
@@ -678,8 +675,7 @@ def openRow(pp):
     elif group.where == IN_TBODY: group.body.append(group.currentCellRow)
     elif group.where == IN_TFOOT: group.foot.append(group.currentCellRow)
     else:
-        raise StandardError(
-            "openRow(): group doesn't know what section it's in")
+        raise Exception("openRow(): group doesn't know what section it's in")
     return
 
     # XXX
@@ -694,10 +690,10 @@ def closeRow(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
 
     # Finish off multi-row leftovers
@@ -714,7 +710,7 @@ def closeRow(pp):
 
     row = group.row
     if not row:
-        raise StandardError("Internal error: no current row found")
+        raise Exception("Internal error: no current row found")
 
     # Do we have any pending cells (that is, cells which span multiple
     # rows, for which we haven't yet seen all the row data yet)?
@@ -778,10 +774,10 @@ def openCell(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     global tableCellDepth
     tableCellDepth += 1
     group = table.groupStack[-1]
@@ -793,7 +789,7 @@ def openCell(pp):
     output = "  "
     i = group.currentColumn
     if i >= len(group.cols):
-        raise StandardError("Too many table cells, Herr Mozart!")
+        raise Exception("Too many table cells, Herr Mozart!")
     col = group.cols[i]
     if i > 0:
         output += "& "
@@ -810,7 +806,7 @@ def openCell(pp):
                   (col.colSpan, leftMark, col.spanWidth, rightMark)
         i += col.colSpan
         if i >= len(group.cols):
-            raise StandardError("Too many table cells, Herr Mozart!")
+            raise Exception("Too many table cells, Herr Mozart!")
         col = group.cols[i]
         leftMark = ""
 
@@ -834,23 +830,21 @@ def openCell(pp):
             if moreRows > 0:
                 col.moreRows = moreRows
             if moreRows < 0:
-                raise StandardError("Invalid value for MoreRows: %s" % 
-                                    moreRows)
+                raise Exception("Invalid value for MoreRows: %s" % moreRows)
         except:
-            raise StandardError("Invalid value for MoreRows: %s" % moreRows)
+            raise Exception("Invalid value for MoreRows: %s" % moreRows)
         
     # See if we are spanning multiple columns with this cell.
     col.colSpan   = 1
     col.spanWidth = col.width
     if nameSt and not nameEnd:
-        raise StandardError("NameSt attribute must be accompanied by NameEnd")
+        raise Exception("NameSt attribute must be accompanied by NameEnd")
     if nameEnd and not nameSt:
-        raise StandardError("NameEnd attribute must be accompanied by NameSt")
+        raise Exception("NameEnd attribute must be accompanied by NameSt")
     if nameSt:
         if nameSt != col.name:
-            raise StandardError(
-                "NameSt (%s) does not match name of current column (%s)" % 
-                (nameSt, col.name))
+            raise Exception("NameSt (%s) does not match name of current "
+                            "column (%s)" % (nameSt, col.name))
         spanEnd  = -1
         for j in range(i, len(group.cols)):
             if j > i:
@@ -859,8 +853,8 @@ def openCell(pp):
                 spanEnd = j
                 break
         if spanEnd == -1:
-            raise StandardError("No column with name %s follows %s" % 
-                               (nameEnd, nameSt))
+            raise Exception("No column with name %s follows %s" % 
+                            (nameEnd, nameSt))
         col.colSpan = spanEnd + 1 - i
     else:
         spanEnd = i
@@ -885,8 +879,7 @@ def openCell(pp):
     elif group.where == IN_TFOOT:
         output += "\\it "
     elif group.where != IN_TBODY:
-        raise StandardError(
-            "Entry must be contained within THead, TBody, or TFoot")
+        raise Exception("Entry must be contained within THead, TBody, or TFoot")
 
     # Adjust the horizontal alignment of the cell's contents.
     align = cellNode.getAttribute("Align")
@@ -899,9 +892,9 @@ def openCell(pp):
     elif align == "Justify":
         pass
     elif align == "Char":
-        raise StandardError("No current support for Char alignment")
+        raise Exception("No current support for Char alignment")
     elif align:
-        raise StandardError("Invalid alignment request: %s" % align)
+        raise Exception("Invalid alignment request: %s" % align)
     elif group.where == IN_THEAD:
         output += "\\centering "
     else:
@@ -918,13 +911,13 @@ def closeCell(pp):
 
     # Find the current table.
     if not tableStack:
-        raise StandardError("Internal error: empty table stack")
+        raise Exception("Internal error: empty table stack")
     table = tableStack[-1]
     if not table.groupStack:
-        raise StandardError("Internal error: empty Group stack")
+        raise Exception("Internal error: empty Group stack")
     group = table.groupStack[-1]
     if not group.currentCellRow:
-        raise StandardError("Internal error: no open cell found")
+        raise Exception("Internal error: no open cell found")
     group.currentCellRow[-1].content = pp.procNode.releaseOutput().strip()
     global tableCellDepth
     tableCellDepth -= 1

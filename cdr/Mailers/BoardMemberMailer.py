@@ -1,11 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.3 2007-07-05 21:26:38 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.4 2008-06-03 21:28:06 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2007/07/05 21:26:38  bkline
+# Modified code to handle multiple Date children of misnamed "BoardMeetingDate"
+# element.
+#
 # Revision 1.2  2006/01/19 15:25:39  bkline
 # Added professional suffixes to ECNAME and ATECNAME replacements.
 #
@@ -404,8 +408,8 @@ class BoardMember:
         result  = cdr.filterDoc('guest', filters, id, docVer = str(ver),
                                 parm = (('fragId', self.contactId),))
         if type(result) in (type(""), type(u"")):
-            raise StandardError("failure extracting contact address "
-                                "for %s: %s" % (id, result))
+            raise Exception("failure extracting contact address for %s: %s" %
+                            (id, result))
         self.address = cdrmailer.Address(result[0], cdrmailer.TITLE_AFTER_NAME)
         self.name = self.address.getPersonalName()
 

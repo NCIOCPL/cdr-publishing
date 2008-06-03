@@ -28,7 +28,7 @@ def lg(msg):
     open("TestLatex.log", "a").write(msg + "\n")
 
 # Try it
-latexDoc = cdrxmllatex.makeLatex (xmlText, fmt, subfmt) #, logFunc=lg)
+latexDoc = cdrxmllatex.makeLatex (xmlText, fmt, subfmt, logFunc=lg)
 
 # Output
 print latexDoc.getLatex()
