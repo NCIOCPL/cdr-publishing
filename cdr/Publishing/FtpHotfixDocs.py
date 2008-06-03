@@ -16,8 +16,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.6 2005-03-04 20:44:51 venglisc Exp $
+# $Id: FtpHotfixDocs.py,v 1.7 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2005/03/04 20:44:51  venglisc
+# Fixed problem of files not being copied correctly because we were sitting
+# in the wrong directory. (Bug 1406)
+#
 # Revision 1.5  2005/03/02 20:45:32  venglisc
 # Modified process to correctly handle media_catalog.txt file in case an
 # update ran creating multiple media manifest files during separate publish
@@ -223,13 +227,13 @@ try:
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
 
-except StandardError, arg:
+except SystemExit:
+    # We've invoked sys.exit(): we're done.
+    pass
+
+except Exception, arg:
     open(log, "a").write("    %d: Failure: %s\nJob %d: %s\n" % 
                         (jobId, arg[0], jobId, divider))
-
-except SystemExit:
-    # The mailers invoke sys.exit(0) when they're done, raising this exception.
-    pass
 
 except:
     open(log, "a").write("    %d: Unexpected failure\nJob %d: %s\n" % 

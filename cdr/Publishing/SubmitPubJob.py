@@ -5,15 +5,18 @@
 #            ===============
 # Program to submit the interim and full export publishing job.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author: bkline $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-01-30 19:53:53 $
+# Last Modified:    $Date: 2008-06-03 21:43:05 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.7 $
+# $Revision: 1.8 $
 #
-# $Id: SubmitPubJob.py,v 1.7 2008-01-30 19:53:53 venglisc Exp $
+# $Id: SubmitPubJob.py,v 1.8 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2008/01/30 19:53:53  venglisc
+# Preventing nightly job to be started id weekly job is still processing
+#
 # Revision 1.6  2007/10/15 18:37:36  venglisc
 # Added code to redirect email output to developers/testers if run on a
 # non-production system.
@@ -217,10 +220,6 @@ def checkPubJob():
         row = cursor.fetchone()
 
         if row:
-            #print "\n%s job already running." % pubType
-            #print "Job%s status: %s" % (row[0], row[2])
-            #raise StandardError("""Job%s still active (%s: %s)""" % 
-            #                       (row[0], pubType, row[2]))
             return row
     
     except cdrdb.Error, info:
@@ -268,8 +267,8 @@ try:
                                                   stdout = True)
             l.write("Job%s type  : %s" % (currentJobs[0], currentJobs[1]), 
                                                   stdout = True)
-            raise StandardError("""Job%s still in process (%s: %s)""" % 
-                                   (currentJobs[0], pubSubset, currentJobs[2]))
+            raise Exception("Job%s still in process (%s: %s)" % 
+                            (currentJobs[0], pubSubset, currentJobs[2]))
     except:
         raise
 
@@ -435,7 +434,7 @@ Push Job Output:
         l.write("*** Error sending email ***", stdout = True)
         raise
 
-except StandardError, arg:
+except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
     l.write("*** Error - Program stopped with failure ***", stdout = True, 

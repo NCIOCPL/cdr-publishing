@@ -4,8 +4,11 @@
 #            ==============
 # Submit the CTGovExport data to the CIPSFTP Server.
 # 
-# $Id: FtpCTGovData.py,v 1.2 2007-08-10 16:50:15 venglisc Exp $
+# $Id: FtpCTGovData.py,v 1.3 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2007/08/10 16:50:15  venglisc
+# Finalized copy of FTP script to copy vendor/NLM data.
+#
 # Revision 1.1  2007/07/06 22:50:06  venglisc
 # Initial copy of MFP scheduling scripts.
 #
@@ -220,7 +223,7 @@ try:
 
     doneFtp = makeNlmFtpFile(localDirectory = lDir, compress = 'N')
 
-except StandardError, arg:
+except Exception, arg:
     l.write('*** Error - %s' % arg, stdout=True)
     raise
 except:

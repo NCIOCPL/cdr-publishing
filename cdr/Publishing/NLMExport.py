@@ -14,8 +14,13 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.7 2006-05-22 23:01:28 venglisc Exp $
+# $Id: NLMExport.py,v 1.8 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2006/05/22 23:01:28  venglisc
+# Modified the script to run the NlmClinicalStudies.xsl filter from the
+# d:\cdr\utilities directory instead of the d:\home\cnetoper\NLM directory.
+# (Bug 2184)
+#
 # Revision 1.6  2005/11/09 21:04:07  venglisc
 # Removed section to update filter from CVS prior to running the data
 # conversion. (Bug 1903)
@@ -234,15 +239,15 @@ try:
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
 
-except StandardError, arg:
+except SystemExit:
+    # If we've invoked sys.exit() then we've already done our logging.
+    pass
+
+except Exception, arg:
     open(log, "a").write("    %d: Failure: %s\n" % 
                         (jobId, arg[0]))
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
-
-except SystemExit:
-    # The mailers invoke sys.exit(0) when they're done, raising this exception.
-    pass
 
 except:
     open(log, "a").write("    %d: Unexpected failure\nJob %d: %s\n" % 

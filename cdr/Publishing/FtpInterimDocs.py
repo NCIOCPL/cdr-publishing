@@ -19,8 +19,20 @@
 # The original name of this program was FtpHotfixDocs.py but got
 # renamed after the update process got named 'Interim Update'.
 #
-# $Id: FtpInterimDocs.py,v 1.3 2006-06-14 21:30:10 venglisc Exp $
+# $Id: FtpInterimDocs.py,v 1.4 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2006/06/14 21:30:10  venglisc
+# The FTP process has now been simplified because we are creating a comressed
+# tar file from interim update directories to prevent problems in case of a
+# large number of documents needing to be pushed.
+# The process now allows also to include processing of an entire document
+# type interim update.  These files are located within a subdirectory of the
+# JobNNNN directory.
+# Just specify
+#    FtpInterimDocs.py NNNN/ProtocolActive
+# for those documents instead of just specifying the Job-ID.
+# Mixing of both notations is possible. (Bug 2140)
+#
 # Revision 1.2  2005/08/05 20:55:53  venglisc
 # Replaced the path to the ftp command with SYSTEMROOT variable.
 #
@@ -213,13 +225,13 @@ try:
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
 
-except StandardError, arg:
+except SystemExit:
+    # We've invoked sys.exit() so we're done.
+    pass
+
+except Exception, arg:
     open(log, "a").write("    %d: Failure: %s\nJob %d: %s\n" % 
                         (jobId, arg[0], jobId, divider))
-
-except SystemExit:
-    # The mailers invoke sys.exit(0) when they're done, raising this exception.
-    pass
 
 except:
     open(log, "a").write("    %d: Unexpected failure\nJob %d: %s\n" % 

@@ -4,8 +4,11 @@
 #            ==============
 # Submit the CTGovExport data to the NLM's FTP Server.
 # 
-# $Id: FtpCTGov2Nlm.py,v 1.2 2007-11-14 19:39:39 venglisc Exp $
+# $Id: FtpCTGov2Nlm.py,v 1.3 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2007/11/14 19:39:39  venglisc
+# Modified program to push data to NLM's ftp site. (Bug 3536)
+#
 # Revision 1.1  2007/10/29 19:21:31  venglisc
 # Inital copy of FtpCTGov2Nlm.py (a modification of FtpCTGovData.py) to
 # ftp directly to the NLM site instead to go to CIPSFTP. (Bug 3536)
@@ -234,7 +237,7 @@ try:
 
     doneFtp = copyNlmFtpFile(localDirectory = lDir)
 
-except StandardError, arg:
+except Exception, arg:
     l.write('*** Error - %s' % arg, stdout=True)
     raise
 except:

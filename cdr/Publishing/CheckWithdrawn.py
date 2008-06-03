@@ -10,15 +10,18 @@
 # information so that they can be removed from ClinicalTrials.gov
 # if appropriate.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author: bkline $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2007-12-20 16:23:52 $
+# Last Modified:    $Date: 2008-06-03 21:43:05 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 #
-# $Id: CheckWithdrawn.py,v 1.3 2007-12-20 16:23:52 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.4 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2007/12/20 16:23:52  venglisc
+# Modified one email address removing a comma. (Bug 3761)
+#
 # Revision 1.2  2007/12/14 15:20:47  venglisc
 # Replaced email DL for testing with the correct group. (Bug 3761)
 #
@@ -297,7 +300,7 @@ Subject: %s: %s
 except NothingFound, arg:
     msg  = "No new documents found with 'WithdrawnFromPDQ' status"
     l.write("%s" % msg, stdout = True)
-except StandardError, arg:
+except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
     l.write("*** Error - Program stopped with failure ***", stdout = True, 

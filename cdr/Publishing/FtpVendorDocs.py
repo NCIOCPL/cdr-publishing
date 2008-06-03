@@ -12,8 +12,12 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpVendorDocs.py,v 1.1 2004-12-16 22:47:44 venglisc Exp $
+# $Id: FtpVendorDocs.py,v 1.2 2008-06-03 21:43:05 bkline Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2004/12/16 22:47:44  venglisc
+# Initial version of script to ftp monthly production data to CIPSFTP.
+# (Bug 1401)
+#
 #----------------------------------------------------------------------
 import sys, re, string, cdr, os, shutil, time
 
@@ -106,13 +110,13 @@ try:
     open(log, "a").write("    %d: Ended   at: %s\nJob %d: %s\n" %
                         (jobId, time.ctime(time.time()), jobId, divider))
 
-except StandardError, arg:
+except SystemExit:
+    # If we invoked sys.exit() logging is done.
+    pass
+
+except Exception, arg:
     open(log, "a").write("    %d: Failure: %s\nJob %d: %s\n" % 
                         (jobId, arg[0], jobId, divider))
-
-except SystemExit:
-    # The mailers invoke sys.exit(0) when they're done, raising this exception.
-    pass
 
 except:
     open(log, "a").write("    %d: Unexpected failure\nJob %d: %s\n" % 
