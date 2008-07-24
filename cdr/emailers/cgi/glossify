@@ -1,0 +1,85 @@
+#!/usr/bin/python
+
+import sys, xml.dom.minidom, WebService, time
+
+LOG_LEVEL  = 1
+STANDALONE = False
+
+def debugWrite(what, logLevel = 1):
+    if logLevel <= LOG_LEVEL:
+        try:
+            logFile = open('/tmp/glossifier.log', 'a')
+            now     = time.strftime("%Y-%m-%d %H:%M:%S")
+            logFile.write("%s: %s\n" % (now, what))
+            logFile.close()
+        except:
+            if STANDALONE:
+                raise
+
+def main():
+    global LOG_LEVEL
+    LOG_LEVEL = 1
+    global STANDALONE
+    if len(sys.argv) > 1 and sys.argv[1] == "--standalone":
+        STANDALONE = True
+    soapNS = 'http://schemas.xmlsoap.org/soap/envelope/'
+    #soapNS = 'http://www.w3.org/2003/05/soap-envelope'
+    contentType = 'text/xml'
+    try:
+        request = WebService.Request(STANDALONE, debugWrite)
+        LOG_LEVEL = request.logLevel
+        debugWrite("%s request from %s" % (request.type, request.client))
+        debugWrite("Request body:\n%s" % request.message)
+        if '/www.w3.org/2003/05/soap-envelope' in request.message.lower():
+            soapNS = 'http://www.w3.org/2003/05/soap-envelope'
+            contentType = 'application/soap+xml'
+    except Exception, e:
+        debugWrite("Failure: %s" % e)
+        if STANDALONE:
+            raise
+        else:
+            fp = open('glossifier.xml')
+            doc = fp.read()
+            fp.close()
+            response = WebService.Response(doc)
+            response.send()
+    response = WebService.Response(u"""\
+<?xml version='1.0' encoding='utf-8'?>
+<soap:Envelope xmlns:soap='%s'>
+ <soap:Body>
+  <glossifyResponse xmlns='cips.nci.nih.gov/cdr'>
+   <glossifyResult>
+    <Term>
+     <start>32</start>
+     <length>8</length>
+     <docId>CDR0000044043</docId>
+     <dictionaries>
+      <string>cg</string>
+      <string>genetics</string>
+     </dictionaries>
+     <languages>
+      <string>en</string>
+      <string>es</string>
+     </languages>
+    </Term>
+    <Term>
+     <start>58</start>
+     <length>10</length>
+     <docId>CDR0000044046</docId>
+     <dictionaries>
+      <string>cg</string>
+     </dictionaries>
+     <languages>
+      <string>en</string>
+     </languages>
+    </Term>
+   </glossifyResult>
+  </glossifyResponse>
+ </soap:Body>
+</soap:Envelope>
+""" % soapNS)
+    debugWrite("Response body:\n%s" % response.body)
+    response.send(contentType)
+
+if __name__ == '__main__':
+    main()
