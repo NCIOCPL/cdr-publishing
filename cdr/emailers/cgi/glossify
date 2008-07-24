@@ -1,6 +1,13 @@
 #!/usr/bin/python
-
-import sys, xml.dom.minidom, WebService, time
+#----------------------------------------------------------------------
+#
+# $Id: glossify,v 1.2 2008-07-24 15:08:39 bkline Exp $
+#
+# Service for Cancer.gov (task #4001).
+#
+# $Log: not supported by cvs2svn $
+#----------------------------------------------------------------------
+import sys, xml.dom.minidom, WebService, time, util, re
 
 LOG_LEVEL  = 1
 STANDALONE = False
@@ -16,6 +23,112 @@ def debugWrite(what, logLevel = 1):
             if STANDALONE:
                 raise
 
+def getTextContent(node):
+    text = []
+    for child in node.childNodes:
+        if child.nodeType in (child.TEXT_NODE, child.CDATA_SECTION_NODE):
+            text.append(child.nodeValue)
+    return u"".join(text)
+
+def loadExpression():
+    class e:
+        def __init__(self, a, b): self.expr = a; self.names = b
+    #fp = open('/var/www/html/PDQUpdate/cgi-bin/cached-expression')
+    fp = open('glossifier-cache')
+    expr, names = fp.read().split('\n')
+    fp.close()
+    return e(unicode(expr, 'utf-8'), eval(names))
+
+whitespace = re.compile(u"\\s+", re.UNICODE)
+def normalize(name):
+    return whitespace.sub(" ", name).replace(u"\u8217", "'").lower()
+
+def maskMarkup(match):
+    #print "replacing '%s'" % match.group(0).encode('utf-8')
+    return u"|" * len(match.group(0))
+
+def glossify(doc, e, soapNS):
+    seen = set()
+    doc = re.sub(u"<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup, doc,
+                 re.IGNORECASE | re.DOTALL | re.UNICODE)
+    matches = []
+    for m in re.finditer(e.expr, doc, re.UNICODE | re.IGNORECASE):
+        word = doc[m.start():m.end()]
+        matches.append((word, m.start(), m.end()))
+    response = [u"""\
+<?xml version='1.0' encoding='utf-8'?>
+<soap:Envelope xmlns:soap='%s'>
+ <soap:Body>
+  <glossifyResponse xmlns='cips.nci.nih.gov/cdr'>
+   <glossifyResult>
+""" % soapNS]
+    for word, start, end in matches:
+        length = end - start
+        key = normalize(word)
+        if key in seen:
+            firstOccurrence = 'true'
+        else:
+            firstOccurrence = 'false'
+        seen.add(key)
+        terms = e.names.get(key)
+        if not terms:
+            debugWrite(u"can't find '%s'" % key)
+        else:
+            for docId in terms:
+                term = terms[docId]
+                for language in term:
+                    dictionaries = term[language]
+                    if not dictionaries:
+                        response.append(u"""\
+    <Term>
+     <start>%d</start>
+     <length>%d</length>
+     <docId>CDR%010d</docId>
+     <language>%s</language>
+     <firstOccurrence>%s</firstOccurrence>
+    </Term>
+""" % (start, length, docId, language, firstOccurrence))
+                    else:
+                        for dictionary in dictionaries:
+                            response.append(u"""\
+    <Term>
+     <start>%d</start>
+     <length>%d</length>
+     <docId>CDR%010d</docId>
+     <dictionary>%s</dictionary>
+     <language>%s</language>
+     <firstOccurrence>%s</firstOccurrence>
+    </Term>
+""" % (start, length, docId, dictionary, language, firstOccurrence))
+    response.append(u"""\
+   </glossifyResult>
+  </glossifyResponse>
+ </soap:Body>
+</soap:Envelope>
+""")
+    return u"".join(response)
+
+class GlossifyRequest:
+    def __init__(self, documentElement):
+        self.fragment = ''
+        self.dictionaries = []
+        self.languages = []
+        parameterNodes = []
+        for node in documentElement.getElementsByTagName('glossify'):
+            for child in node.childNodes:
+                if child.nodeType == child.ELEMENT_NODE:
+                    parameterNodes.append(child)
+        if len(parameterNodes) >= 1:
+            self.fragment = getTextContent(parameterNodes[0])
+        if len(parameterNodes) >= 2:
+            for child in parameterNodes[1].childNodes:
+                if child.nodeType == child.ELEMENT_NODE:
+                    self.dictionaries.append(getTextContent(child))
+        if len(parameterNodes) >= 3:
+            for child in parameterNodes[2].childNodes:
+                if child.nodeType == child.ELEMENT_NODE:
+                    self.languages.append(getTextContent(child))
+
 def main():
     global LOG_LEVEL
     LOG_LEVEL = 1
@@ -28,8 +141,8 @@ def main():
     try:
         request = WebService.Request(STANDALONE, debugWrite)
         LOG_LEVEL = request.logLevel
-        debugWrite("%s request from %s" % (request.type, request.client))
-        debugWrite("Request body:\n%s" % request.message)
+        debugWrite("%s request from %s" % (request.type, request.client), 2)
+        debugWrite("Request body:\n%s" % request.message, 2)
         if '/www.w3.org/2003/05/soap-envelope' in request.message.lower():
             soapNS = 'http://www.w3.org/2003/05/soap-envelope'
             contentType = 'application/soap+xml'
@@ -43,7 +156,17 @@ def main():
             fp.close()
             response = WebService.Response(doc)
             response.send()
-    response = WebService.Response(u"""\
+    try:
+        glossifyRequest = GlossifyRequest(request.doc)
+        debugWrite("fragment: '%s..." % glossifyRequest.fragment[:40])
+        debugWrite("languages: %s" % repr(glossifyRequest.languages))
+        debugWrite("dictionaries: %s" % repr(glossifyRequest.dictionaries))
+        e = loadExpression()
+        response = WebService.Response(glossify(glossifyRequest.fragment,
+                                                e, soapNS))
+    except Exception, e:
+        debugWrite("GlossifyRequest(): %s" % e)
+        response = WebService.Response(u"""\
 <?xml version='1.0' encoding='utf-8'?>
 <soap:Envelope xmlns:soap='%s'>
  <soap:Body>
@@ -78,7 +201,7 @@ def main():
  </soap:Body>
 </soap:Envelope>
 """ % soapNS)
-    debugWrite("Response body:\n%s" % response.body)
+    debugWrite("Response body:\n%s" % response.body, 2)
     response.send(contentType)
 
 if __name__ == '__main__':
