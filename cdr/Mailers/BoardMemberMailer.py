@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.4 2008-06-03 21:28:06 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.5 2008-08-15 19:59:22 venglisc Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2008/06/03 21:28:06  bkline
+# Replaced StandardError with Exception objects.
+#
 # Revision 1.3  2007/07/05 21:26:38  bkline
 # Modified code to handle multiple Date children of misnamed "BoardMeetingDate"
 # element.
@@ -64,7 +67,7 @@ class BoardValues:
     def findBoardValues(name):
         bn = name.upper()
         if not bn in _boardValues:
-            raise Exception(u"no board values found for board %s" % name)
+            raise Exception(u"No board values found for board %s" % name)
         return _boardValues[bn]
     findBoardValues = staticmethod(findBoardValues)
 
@@ -99,9 +102,9 @@ I would like to join the following genetics working group(s):\line
     'PDQ SCREENING AND PREVENTION EDITORIAL BOARD':
     BoardValues('screening and prevention',
                 'Ed Bd Invite Letter - Screening and Prevention'),
-    'PDQ SUPPORTIVE CARE EDITORIAL ADVISORY BOARD':
+    'PDQ SUPPORTIVE AND PALLIATIVE CARE EDITORIAL ADVISORY BOARD': 
     BoardValues('supportive care'),
-    'PDQ SUPPORTIVE CARE EDITORIAL BOARD':
+    'PDQ SUPPORTIVE AND PALLIATIVE CARE EDITORIAL BOARD':
     BoardValues('supportive care', 'Ed Bd Invite Letter - Supportive Care')
 }
 
