@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-02-19 23:49:19 $
+# Last Modified:    $Date: 2008-09-16 18:10:09 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.8 $
+# $Revision: 1.9 $
 #
-# $Id: Jobmaster.py,v 1.8 2008-02-19 23:49:19 venglisc Exp $
+# $Id: Jobmaster.py,v 1.9 2008-09-16 18:10:09 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2008/02/19 23:49:19  venglisc
+# Fixed directory name format error to identify the directories to be
+# checked for CheckWithdrawn.py.
+#
 # Revision 1.7  2007/12/12 20:41:11  venglisc
 # Added additional production step to check the WithdrawnFromPDQ.txt file
 # for newly added protocols. (Bug 3761)
@@ -173,6 +177,12 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
             checkDirs += (dir[dstart:],)
             if dirCount == 2: break
 
+    # If there didn't run any full export jobs during this and the last
+    # month, we have nothing to compare and we can't return a tuple
+    # -----------------------------------------------------------------
+    if len(checkDirs < 2):
+        return None
+
     return (checkDirs[:2])
 
     
@@ -261,10 +271,39 @@ except:
     l.write('Submitting Publishing Job failed', stdout = True)
     sys.exit(1)
 
-# FTP the publishing data (Vendor output) to CIPSFTP
-# Note: Step only needed for weekly publishing
-# --------------------------------------------------
+# Process the licensee data that's running on weekends only
+# ---------------------------------------------------------
 if fullUpdate:
+
+    # FTP the publishing data (Vendor output) to CIPSFTP
+    # Note: Step only needed for weekly publishing
+    # --------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: CG2Public Job' % istep, stdout = True)
+        cmd = os.path.join(PUBPATH, 'CG2Public.py %s' % (runmode)) 
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        myCmd = cdr.runCommand(cmd)
+
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                     stdout = True)
+            l.write('Code: %s' % myCmd.code, stdout = True)
+            subject = '*** Error in CG2Public.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+    except:
+        l.write('Submitting CG2Public Job failed', stdout = True)
+        sys.exit(1)
+
+    # FTP the publishing data (Vendor output) to CIPSFTP
+    # Note: Step only needed for weekly publishing
+    # --------------------------------------------------
     try:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
@@ -364,22 +403,28 @@ try:
     l.write('Step %d: Submitting CheckWithdrawn Job' % istep, stdout = True)
     dirs = getCTGovExportDirs()
 
-    cmd = os.path.join(PUBPATH, 
+    if type(dirs) == type(()):
+        cmd = os.path.join(PUBPATH, 
                        'CheckWithdrawn.py "%s" "--dir=%s" "--dir=%s"' % \
                                                (runmode, dirs[0], dirs[1]))
     
-    l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
-    
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
-                 stdout = True)
-        subject = '*** Error in CheckWithdrawn.py'
-        message = 'Program returned with error code.  Please see logfile.'
-        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
-                                    (subject, message))
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
         myCmd = cdr.runCommand(cmd)
-        raise
+    
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                 stdout = True)
+            subject = '*** Error in CheckWithdrawn.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
+                                    (subject, message))
+            myCmd = cdr.runCommand(cmd)
+            raise
+    else:
+        l.write('*** Warning: Unable to submit CheckWithdrawn.py',
+                 stdout = True)
+        l.write('             Nothing to compare to!',
+                 stdout = True)
 except StandardError, info:
     l.write('Submitting CheckWithdrawn Job failed\n%s' % str(info), 
                                                          stdout = True)
