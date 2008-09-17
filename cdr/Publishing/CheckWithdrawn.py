@@ -10,15 +10,19 @@
 # information so that they can be removed from ClinicalTrials.gov
 # if appropriate.
 # ---------------------------------------------------------------------
-# $Author: bkline $
+# $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2008-06-03 21:43:05 $
+# Last Modified:    $Date: 2008-09-17 17:57:04 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 #
-# $Id: CheckWithdrawn.py,v 1.4 2008-06-03 21:43:05 bkline Exp $
+# $Id: CheckWithdrawn.py,v 1.5 2008-09-17 17:57:04 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2008/06/03 21:43:05  bkline
+# Replaced StandardError (slated to be removed in the future) with
+# Exception objects.
+#
 # Revision 1.3  2007/12/20 16:23:52  venglisc
 # Modified one email address removing a comma. (Bug 3761)
 #
@@ -267,8 +271,9 @@ SELECT dv.id, dv.num, comment, nct.value
         strTo    = ["VE Test <***REMOVED***>"]
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
-                    "Sheri Khanna <***REMOVED***>", 
+                    "William Osei-Poku <william.osei-poku@lmco.com>", 
                     "Kim Eckley <***REMOVED***>",
+                    "Judy Morris <judith.morris@lmco.com>",
                     "Mark Leech <mark.j.leech@lmco.com>",
                     "James Silk <james.d.silk@lmco.com", 
                     "Cherryl Villanueva <***REMOVED***>"]
