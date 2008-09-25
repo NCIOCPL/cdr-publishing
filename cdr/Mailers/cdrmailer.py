@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.62 2008-06-03 21:28:07 bkline Exp $
+# $Id: cdrmailer.py,v 1.63 2008-09-25 12:58:45 bkline Exp $
 #
 # Base class for mailer jobs
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.62  2008/06/03 21:28:07  bkline
+# Replaced StandardError with Exception objects.
+#
 # Revision 1.61  2006/09/12 16:00:04  bkline
 # Changed default deadline from 2 months to 60 days, and overrode the
 # deadline for S&P mailers (30 days).
@@ -465,7 +468,7 @@ class MailerJob:
         files), and the filenames provided to the constructor for the
         PrintJob objects should not include any path information.
         """
-        raise Exception("fillQueue() must be defined by derived class")
+        raise cdr.Exception("fillQueue() must be defined by derived class")
 
     #------------------------------------------------------------------
     # Placeholder for method to create electronic mailers (if any).
@@ -559,8 +562,8 @@ class MailerJob:
         match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
-            raise Exception("failure adding tracking document for %s: %s" %
-                            (docId, err))
+            raise cdr.Exception("failure adding tracking document for %s: %s" %
+                                (docId, err))
         self.__nMailers += 1
         digits = re.sub("[^\d]", "", rsp)
         return int(digits)
@@ -592,7 +595,7 @@ class MailerJob:
         rows = cdr.getQueryTermValueForId (
                 '/Person/PersonLocations/CIPSContact', id, self.__conn)
         if not rows:
-            raise Exception("no CIPSContact for %s" % docId)
+            raise cdr.Exception("no CIPSContact for %s" % docId)
         fragId = rows[0]
 
         # Filter to create AddressElement XML
@@ -602,8 +605,8 @@ class MailerJob:
 
         # Expecting tuple of xml fragment, messages.  Single string is error.
         if type(result) == type(""):
-            raise Exception("failure extracting contact address for %s: %s" %
-                            (docId, result))
+            raise cdr.Exception("failure extracting contact address "
+                                "for %s: %s" % (docId, result))
         return Address(result[0], withPersonTitle)
 
     #------------------------------------------------------------------
@@ -626,8 +629,8 @@ class MailerJob:
             filters = ["name:Board Member Address Fragment With Name"]
         result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
         if type(result) in (type(""), type(u"")):
-            raise Exception("failure extracting contact address "
-                            "for %s: %s" % (docId, result))
+            raise cdr.Exception("failure extracting contact address "
+                                "for %s: %s" % (docId, result))
         return Address(result[0])
 
     #------------------------------------------------------------------
@@ -660,8 +663,8 @@ class MailerJob:
              '/Organization/OrganizationLocations/CIPSContact',
              id, self.__conn)
         if not rows:
-            raise Exception("No CIPSContact element found for Organization %d"
-                            % id)
+            raise cdr.Exception("No CIPSContact element found for "
+                                "Organization %d" % id)
 
         filters = ["name:Organization Address Fragment"]
         parms   = (("fragId", rows[0]),)
@@ -669,8 +672,8 @@ class MailerJob:
 
         # Expecting tuple of xml fragment, messages.  Single string is error.
         if type(result) == type(""):
-            raise Exception("failure extracting contact address for %d: %s" %
-                            (id, result))
+            raise cdr.Exception("failure extracting contact address "
+                                "for %d: %s" % (id, result))
 
         # Construct an address from returned XML
         orgAddr = Address(result[0])
@@ -729,8 +732,8 @@ class MailerJob:
         result = cdr.filterDoc(self.__session, filters, docId, parm = parm,
                                docVer = doc.getVersion())
         if type(result) in (type(""), type(u"")):
-            raise Exception("failure filtering document %s: %s" %
-                            (docId, result))
+            raise cdr.Exception("failure filtering document %s: %s" %
+                                (docId, result))
         try:
             global debugCtr
             fname = "%d.xml" % debugCtr
@@ -741,11 +744,12 @@ class MailerJob:
                                          mailType, self.log)
         except:
             (eType, eValue) = sys.exc_info()[:2]
-            cdr.logwrite ("Contents of result[0] when following exception raised:\n%s"\
-                 % result[0])
+            cdr.logwrite("Contents of result[0] when following exception "
+                         "raised:\n%s"\
+                         % result[0], MailerJob.__LOGFILE, tback = True)
             eMsg = eValue or eType
-            raise Exception("failure generating LaTeX for %s: %s" %
-                            (docId, eMsg))
+            raise cdr.Exception("failure generating LaTeX for %s: %s" %
+                                (docId, eMsg))
 
     #------------------------------------------------------------------
     # Create a formatted address block from an Address object.
@@ -803,12 +807,12 @@ class MailerJob:
             for unused in range(passCount):
                 rc = os.system("latex %s %s" % (self.__LATEX_OPTS, filename))
                 if rc:
-                    raise Exception("failure running LaTeX processor on %s" %
-                                    filename)
+                    raise cdr.Exception("failure running LaTeX processor "
+                                        "on %s" % filename)
             rc = os.system("dvips -q %s" % basename)
             if rc:
-                raise Exception("failure running dvips processor on %s.dvi" %
-                                basename)
+                raise cdr.Exception("failure running dvips processor "
+                                    "on %s.dvi" % basename)
             return PrintJob(basename + ".ps", jobType)
 
         except:
@@ -1155,7 +1159,8 @@ You can retrieve the letters at:
         printName = "PrintFilesForJob%d.tar.bz2" % self.getId()
         os.chdir("..")
         if not os.path.isdir(dir):
-            raise Exception("INTERNAL ERROR: cannot find directory %s" % dir)
+            raise cdr.Exception("INTERNAL ERROR: cannot find "
+                                "directory %s" % dir)
         try:
             workFile = tarfile.open(workName, 'w:bz2')
             for ext in workExt:
@@ -1166,7 +1171,7 @@ You can retrieve the letters at:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
                     os.unlink(file)
         except:
-            raise Exception("failure packing working files for job")
+            raise cdr.Exception("failure packing working files for job")
 
         try:
             printFile = tarfile.open(printName, 'w:bz2')
@@ -1176,7 +1181,7 @@ You can retrieve the letters at:
             for file in os.listdir(dir):
                 os.unlink("%s/%s" % (dir, file))
         except:
-            raise Exception("failure creating print job package")
+            raise cdr.Exception("failure creating print job package")
         os.rmdir(dir)
 
     #------------------------------------------------------------------
