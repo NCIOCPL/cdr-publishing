@@ -7,13 +7,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-09-16 18:10:09 $
+# Last Modified:    $Date: 2008-09-26 22:23:35 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.9 $
+# $Revision: 1.10 $
 #
-# $Id: Jobmaster.py,v 1.9 2008-09-16 18:10:09 venglisc Exp $
+# $Id: Jobmaster.py,v 1.10 2008-09-26 22:23:35 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2008/09/16 18:10:09  venglisc
+# Added code to create licensee output from CG output.  The data is then
+# revalidated with the pdq.dtd. (Bug 4123)
+#
 # Revision 1.8  2008/02/19 23:49:19  venglisc
 # Fixed directory name format error to identify the directories to be
 # checked for CheckWithdrawn.py.
@@ -429,6 +433,35 @@ except StandardError, info:
     l.write('Submitting CheckWithdrawn Job failed\n%s' % str(info), 
                                                          stdout = True)
     sys.exit(1)
+
+
+if fullUpdate:
+    # Submit the job to count the # of studies with Arms info
+    # Note: Step only needed for weekly publishing
+    # -------------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: CountArmsLabel Job' % istep, stdout = True)
+        cmd = os.path.join(UTIL, 'CountArmsLabel.py %s' % (runmode)) 
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        myCmd = cdr.runCommand(cmd)
+
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                     stdout = True)
+            l.write('Code: %s' % myCmd.code, stdout = True)
+            subject = '*** Error in CountArmsLabel.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+    except:
+        l.write('Submitting CountArmsLabel Job failed', stdout = True)
+        sys.exit(1)
+
 
 
 # Send final Notification that publishing on CDR servers has finished
