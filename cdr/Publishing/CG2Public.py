@@ -1,12 +1,17 @@
 #----------------------------------------------------------------------
 #
-# $Id: CG2Public.py,v 1.1 2008-09-16 18:15:19 venglisc Exp $
+# $Id: CG2Public.py,v 1.2 2008-09-26 22:18:05 venglisc Exp $
 #
 # Take the CDR publishing data (for Gatekeeper use) and convert to 
 # Licensee data.
 # Validate the new licensee data against its DTD.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2008/09/16 18:15:19  venglisc
+# Initial copy of program that take the CDR output (intented for Cancer.gov)
+# and re-filters and re-validates the documents to create the licensee output.
+# (Bug 4123)
+#
 #----------------------------------------------------------------------
 import cdr, cdrpub, os, os.path, shutil, sys, re, glob, optparse, time
 ###import xml.dom.minidom, cdrdb, socket, cdrcgi, getopt
@@ -18,6 +23,7 @@ SOURCEBASE    = cdr.BASEDIR + "/Output"
 DTDPUBLIC     = "d:\\cdr\\Licensee\\pdq.dtd"
 LOGNAME       = "Jobmaster.log"
 EXCLUDEDIRS   = ('DrugInfoSummary', 'InvalidDocs', 'media_catalog.txt')
+warnings      = False
 
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
@@ -95,6 +101,7 @@ class documentType:
         # Processing all documents by reading, filtering, validating, 
         # and writing the files, if necessary.  
         # -------------------------------------------------------
+        valError = ()
         for doc in allDocs:
             f = open(doc, "rb")
             xmlDoc = f.read()
@@ -125,6 +132,7 @@ class documentType:
             if not directory == 'Media':
                 resp = cdrpub.validateDoc(newDoc, dtd = DTDPUBLIC)
                 if resp:
+                    valError += (doc,)
                     l.write('*** Validation Error for %s:\n%s' % (doc, resp),
                                                                stdout = True)
 
@@ -135,7 +143,7 @@ class documentType:
             exportFile.write(newDoc)
             exportFile.close()
 
-        return
+        return valError
 
 
 # ------------------------------------------------------------
@@ -277,7 +285,7 @@ if outputdir:
 # Creating the output directory
 # ------------------------------
 try:
-    l.write("Copying from directory: %s" % jobDir, stdout = True)
+    l.write("Copying from directory: %s" % jobDir,  stdout = True)
     l.write("Creating directory: %s" % d.outputDir, stdout = True)
     os.mkdir(d.outputDir)
 except OSError, info:
@@ -294,10 +302,18 @@ except OSError, info:
 for dir in pubDirs:
     if not dir in EXCLUDEDIRS:
         result = d.copy(dir)
-        if result: l.write("Error processing %s" % (dir, result), 
+        if result: 
+            warnings = True
+            l.write("Validation error processing %s" % dir, 
+                                                    stdout = True)
+            l.write("  Documents with Errors: %s" % str(result), 
                                                     stdout = True)
     else:
         l.write("%s skipped" % dir, stdout = True)
+
+if warnings:
+    l.write('CG2Public.py - Finished with Warnings', stdout = True)
+    sys.exit(1)
 
 l.write('CG2Public.py - Finished', stdout = True)
 sys.exit(0)
