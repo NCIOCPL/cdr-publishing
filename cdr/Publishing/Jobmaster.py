@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-09-26 22:23:35 $
+# Last Modified:    $Date: 2008-10-06 19:52:26 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.10 $
+# $Revision: 1.11 $
 #
-# $Id: Jobmaster.py,v 1.10 2008-09-26 22:23:35 venglisc Exp $
+# $Id: Jobmaster.py,v 1.11 2008-10-06 19:52:26 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.10  2008/09/26 22:23:35  venglisc
+# Including the ArmsCount script in publishing schedule.
+#
 # Revision 1.9  2008/09/16 18:10:09  venglisc
 # Added code to create licensee output from CG output.  The data is then
 # revalidated with the pdq.dtd. (Bug 4123)
@@ -184,7 +187,7 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
     # If there didn't run any full export jobs during this and the last
     # month, we have nothing to compare and we can't return a tuple
     # -----------------------------------------------------------------
-    if len(checkDirs < 2):
+    if len(checkDirs) < 2:
         return None
 
     return (checkDirs[:2])
