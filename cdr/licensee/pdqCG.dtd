@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdqCG.dtd,v 1.1 2008-09-16 21:01:19 venglisc Exp $
+   $Id: pdqCG.dtd,v 1.2 2008-10-07 17:03:43 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,11 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.1  2008/09/16 21:01:19  venglisc
+   Initial copy of DTD used for publishing.  This DTD includes elements that
+   can/should go to Cancer.gov but need to be removed for the licensees.
+   (Bug 4123)
+
    Revision 1.73  2008/04/02 22:09:55  venglisc
    Reverting the change of v1.72.
 
@@ -1173,7 +1178,7 @@
 <!ELEMENT Audience (#PCDATA)>
 
 <!ELEMENT RelatedInformation (RelatedExternalRef,
-                              ReleatedSummaryRef,
+                              RelatedSummaryRef,
                               RelatedDrugSummaryRef)>
 
 <!ELEMENT RelatedExternalRef                  (#PCDATA)>

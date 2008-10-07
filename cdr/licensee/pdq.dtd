@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdq.dtd,v 1.73 2008-04-02 22:09:55 venglisc Exp $
+   $Id: pdq.dtd,v 1.74 2008-10-07 17:03:43 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.73  2008/04/02 22:09:55  venglisc
+   Reverting the change of v1.72.
+
    Revision 1.72  2008/02/06 22:25:55  venglisc
    Making DateFirstPublished optional element
 
@@ -1107,7 +1110,7 @@
 <!ELEMENT Audience (#PCDATA)>
 
 <!ELEMENT RelatedInformation (RelatedExternalRef,
-                              ReleatedSummaryRef,
+                              RelatedSummaryRef,
                               RelatedDrugSummaryRef)>
 
 <!ELEMENT RelatedExternalRef                  (#PCDATA)>
