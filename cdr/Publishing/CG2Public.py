@@ -1,12 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: CG2Public.py,v 1.2 2008-09-26 22:18:05 venglisc Exp $
+# $Id: CG2Public.py,v 1.3 2008-10-14 21:45:03 venglisc Exp $
 #
 # Take the CDR publishing data (for Gatekeeper use) and convert to 
 # Licensee data.
 # Validate the new licensee data against its DTD.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2008/09/26 22:18:05  venglisc
+# Modified to catch warning messages.
+#
 # Revision 1.1  2008/09/16 18:15:19  venglisc
 # Initial copy of program that take the CDR output (intented for Cancer.gov)
 # and re-filters and re-validates the documents to create the licensee output.
@@ -23,6 +26,7 @@ SOURCEBASE    = cdr.BASEDIR + "/Output"
 DTDPUBLIC     = "d:\\cdr\\Licensee\\pdq.dtd"
 LOGNAME       = "Jobmaster.log"
 EXCLUDEDIRS   = ('DrugInfoSummary', 'InvalidDocs', 'media_catalog.txt')
+AUXFILES      = ('media_catalog.txt',)
 warnings      = False
 
 # -------------------------------------------------------------------------
@@ -44,8 +48,13 @@ class documentType:
     # -------------------------------------------------------------------
     def lastJobDir(self):
         os.chdir(self.sourceBase)
-        #jobDirs = glob.glob('Job?????')
-        jobDirs = glob.glob('Job[0-9]*')
+
+        # The glob module is not flexible enough to test for jobs with
+        # 4 or 5 digits.  This will have to be modified when we're 
+        # approaching Job5999+
+        # jobDirs = glob.glob('Job?????')
+        # ------------------------------------------------------------
+        jobDirs = glob.glob('Job????')
         if not jobDirs:
             l.write("*** Error: No publishing directory found", 
                                                      stdout = True)
@@ -315,6 +324,10 @@ if warnings:
     l.write('CG2Public.py - Finished with Warnings', stdout = True)
     sys.exit(1)
 
+# A few auxiliary files also need to be copied
+# --------------------------------------------
+for auxFile in AUXFILES:
+    shutil.copy(auxFile, d.outputDir)
+
 l.write('CG2Public.py - Finished', stdout = True)
 sys.exit(0)
-
