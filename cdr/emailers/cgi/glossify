@@ -1,13 +1,17 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------
 #
-# $Id: glossify,v 1.2 2008-07-24 15:08:39 bkline Exp $
+# $Id: glossify,v 1.3 2008-11-18 15:32:00 bkline Exp $
 #
 # Service for Cancer.gov (task #4001).
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2008/07/24 15:08:39  bkline
+# First proof-of-concept version.
+#
 #----------------------------------------------------------------------
-import sys, xml.dom.minidom, WebService, time, util, re
+
+import sys, xml.dom.minidom, WebService, time, util, re, MySQLdb
 
 LOG_LEVEL  = 1
 STANDALONE = False
@@ -30,6 +34,50 @@ def getTextContent(node):
             text.append(child.nodeValue)
     return u"".join(text)
 
+def toRegex(name):
+    return (name
+            .replace(u"\\", ur"\\")
+            .replace(u"+",  ur"\+")
+            .replace(u" ",  ur"\s+")
+            .replace(u".",  ur"\.")
+            .replace(u"^",  ur"\^")
+            .replace(u"$",  ur"\$")
+            .replace(u"*",  ur"\*")
+            .replace(u"?",  ur"\?")
+            .replace(u"{",  ur"\{")
+            .replace(u"}",  ur"\}")
+            .replace(u"[",  ur"\[")
+            .replace(u"]",  ur"\]")
+            .replace(u"|",  ur"\|")
+            .replace(u"(",  ur"\(")
+            .replace(u"'",  ur"['\u2019]")
+            .replace(u")",  ur"\)"))
+
+def buildRegex(names, languages, dictionaries):
+    nameSet = set()
+    for name in names:
+        for docId in names[name]:
+            for language in names[name][docId]:
+                if language in languages or not languages:
+                    if not dictionaries:
+                        nameSet.add(name)
+                    else:
+                        dictSet = names[name][docId][language]
+                        if dictionaries.intersection(dictSet):
+                            nameSet.add(name)
+    nameList = list(nameSet)
+    nameList.sort(lambda first, second: cmp(len(second), len(first)))
+    regexNames = u"|".join([toRegex(n) for n in nameList])
+    return u"(?<!\\w)(%s)(?!\\w)" % regexNames
+
+def loadNames():
+    conn = MySQLdb.connect(user = 'glossifier',
+                           passwd = '***REMOVED***',
+                           db = 'glossifier')
+    cursor = conn.cursor()
+    cursor.execute("SELECT terms_dict FROM terms")
+    return eval(cursor.fetchall()[0][0].strip())
+
 def loadExpression():
     class e:
         def __init__(self, a, b): self.expr = a; self.names = b
@@ -41,18 +89,21 @@ def loadExpression():
 
 whitespace = re.compile(u"\\s+", re.UNICODE)
 def normalize(name):
-    return whitespace.sub(" ", name).replace(u"\u8217", "'").lower()
+    return whitespace.sub(" ", name).replace(u"\u2019", "'").lower()
 
 def maskMarkup(match):
     #print "replacing '%s'" % match.group(0).encode('utf-8')
     return u"|" * len(match.group(0))
 
-def glossify(doc, e, soapNS):
-    seen = set()
-    doc = re.sub(u"<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup, doc,
+def glossify(request, soapNS):
+    names = loadNames()
+    doc = re.sub(u"<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup, request.fragment,
                  re.IGNORECASE | re.DOTALL | re.UNICODE)
+    regex = buildRegex(names, request.languages, request.dictionaries)
+    #debugWrite((u"regex: %s\n" % regex).encode('utf-8'))
+    seen = set()
     matches = []
-    for m in re.finditer(e.expr, doc, re.UNICODE | re.IGNORECASE):
+    for m in re.finditer(regex, doc, re.UNICODE | re.IGNORECASE):
         word = doc[m.start():m.end()]
         matches.append((word, m.start(), m.end()))
     response = [u"""\
@@ -66,19 +117,21 @@ def glossify(doc, e, soapNS):
         length = end - start
         key = normalize(word)
         if key in seen:
-            firstOccurrence = 'true'
-        else:
             firstOccurrence = 'false'
+        else:
+            firstOccurrence = 'true'
         seen.add(key)
-        terms = e.names.get(key)
+        terms = names.get(key)
         if not terms:
             debugWrite(u"can't find '%s'" % key)
         else:
             for docId in terms:
                 term = terms[docId]
                 for language in term:
+                    if request.languages and language not in request.languages:
+                        continue
                     dictionaries = term[language]
-                    if not dictionaries:
+                    if not dictionaries and not request.dictionaries:
                         response.append(u"""\
     <Term>
      <start>%d</start>
@@ -90,6 +143,9 @@ def glossify(doc, e, soapNS):
 """ % (start, length, docId, language, firstOccurrence))
                     else:
                         for dictionary in dictionaries:
+                            if request.dictionaries:
+                                if dictionary not in request.dictionaries:
+                                    continue
                             response.append(u"""\
     <Term>
      <start>%d</start>
@@ -111,8 +167,8 @@ def glossify(doc, e, soapNS):
 class GlossifyRequest:
     def __init__(self, documentElement):
         self.fragment = ''
-        self.dictionaries = []
-        self.languages = []
+        self.dictionaries = set()
+        self.languages = set()
         parameterNodes = []
         for node in documentElement.getElementsByTagName('glossify'):
             for child in node.childNodes:
@@ -120,14 +176,18 @@ class GlossifyRequest:
                     parameterNodes.append(child)
         if len(parameterNodes) >= 1:
             self.fragment = getTextContent(parameterNodes[0])
-        if len(parameterNodes) >= 2:
-            for child in parameterNodes[1].childNodes:
-                if child.nodeType == child.ELEMENT_NODE:
-                    self.dictionaries.append(getTextContent(child))
-        if len(parameterNodes) >= 3:
-            for child in parameterNodes[2].childNodes:
-                if child.nodeType == child.ELEMENT_NODE:
-                    self.languages.append(getTextContent(child))
+            if len(parameterNodes) >= 2:
+                for child in parameterNodes[1].childNodes:
+                    if child.nodeType == child.ELEMENT_NODE:
+                        dictionary = getTextContent(child).strip()
+                        if dictionary:
+                            self.dictionaries.add(dictionary)
+                if len(parameterNodes) >= 3:
+                    for child in parameterNodes[2].childNodes:
+                        if child.nodeType == child.ELEMENT_NODE:
+                            language = getTextContent(child).strip()
+                            if language:
+                                self.languages.add(language)
 
 def main():
     global LOG_LEVEL
@@ -158,12 +218,15 @@ def main():
             response.send()
     try:
         glossifyRequest = GlossifyRequest(request.doc)
-        debugWrite("fragment: '%s..." % glossifyRequest.fragment[:40])
+        try:
+            debugWrite("doc: %s" % request.message)
+        except:
+            pass
+        #debugWrite("fragment: '%s..." % glossifyRequest.fragment[:40])
+        debugWrite("fragment: '%s..." % glossifyRequest.fragment)
         debugWrite("languages: %s" % repr(glossifyRequest.languages))
         debugWrite("dictionaries: %s" % repr(glossifyRequest.dictionaries))
-        e = loadExpression()
-        response = WebService.Response(glossify(glossifyRequest.fragment,
-                                                e, soapNS))
+        response = WebService.Response(glossify(glossifyRequest, soapNS))
     except Exception, e:
         debugWrite("GlossifyRequest(): %s" % e)
         response = WebService.Response(u"""\
@@ -201,7 +264,7 @@ def main():
  </soap:Body>
 </soap:Envelope>
 """ % soapNS)
-    debugWrite("Response body:\n%s" % response.body, 2)
+    debugWrite("Response body:\n%s" % response.body) #, 2)
     response.send(contentType)
 
 if __name__ == '__main__':
