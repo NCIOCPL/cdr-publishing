@@ -1,17 +1,20 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------
 #
-# $Id: glossify,v 1.3 2008-11-18 15:32:00 bkline Exp $
+# $Id: glossify,v 1.4 2008-11-18 19:36:26 bkline Exp $
 #
 # Service for Cancer.gov (task #4001).
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2008/11/18 15:32:00  bkline
+# First version released to CG for testing.
+#
 # Revision 1.2  2008/07/24 15:08:39  bkline
 # First proof-of-concept version.
 #
 #----------------------------------------------------------------------
 
-import sys, xml.dom.minidom, WebService, time, util, re, MySQLdb
+import sys, xml.dom.minidom, WebService, time, util, re, MySQLdb, cgi
 
 LOG_LEVEL  = 1
 STANDALONE = False
@@ -78,21 +81,11 @@ def loadNames():
     cursor.execute("SELECT terms_dict FROM terms")
     return eval(cursor.fetchall()[0][0].strip())
 
-def loadExpression():
-    class e:
-        def __init__(self, a, b): self.expr = a; self.names = b
-    #fp = open('/var/www/html/PDQUpdate/cgi-bin/cached-expression')
-    fp = open('glossifier-cache')
-    expr, names = fp.read().split('\n')
-    fp.close()
-    return e(unicode(expr, 'utf-8'), eval(names))
-
 whitespace = re.compile(u"\\s+", re.UNICODE)
 def normalize(name):
     return whitespace.sub(" ", name).replace(u"\u2019", "'").lower()
 
 def maskMarkup(match):
-    #print "replacing '%s'" % match.group(0).encode('utf-8')
     return u"|" * len(match.group(0))
 
 def glossify(request, soapNS):
@@ -100,7 +93,6 @@ def glossify(request, soapNS):
     doc = re.sub(u"<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup, request.fragment,
                  re.IGNORECASE | re.DOTALL | re.UNICODE)
     regex = buildRegex(names, request.languages, request.dictionaries)
-    #debugWrite((u"regex: %s\n" % regex).encode('utf-8'))
     seen = set()
     matches = []
     for m in re.finditer(regex, doc, re.UNICODE | re.IGNORECASE):
@@ -189,6 +181,20 @@ class GlossifyRequest:
                             if language:
                                 self.languages.add(language)
 
+def makeFaultResponse(soapNS, agent, message):
+    return WebService.Response(u"""\
+<?xml version='1.0' encoding='utf-8'?>
+<soap:Envelope xmlns:soap='%s'>
+ <soap:Body>
+  <soap:Fault>
+   <faultcode>soap:%s</faultcode>
+   <faultstring>%s</faultstring>
+   <detail/>
+  </soap:Fault>
+ </soap:Body>
+</soap:Envelope>
+""" % (soapNS, agent, message))
+
 def main():
     global LOG_LEVEL
     LOG_LEVEL = 1
@@ -196,7 +202,6 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--standalone":
         STANDALONE = True
     soapNS = 'http://schemas.xmlsoap.org/soap/envelope/'
-    #soapNS = 'http://www.w3.org/2003/05/soap-envelope'
     contentType = 'text/xml'
     try:
         request = WebService.Request(STANDALONE, debugWrite)
@@ -207,8 +212,8 @@ def main():
             soapNS = 'http://www.w3.org/2003/05/soap-envelope'
             contentType = 'application/soap+xml'
     except Exception, e:
-        debugWrite("Failure: %s" % e)
         if STANDALONE:
+            debugWrite("Failure: %s" % e)
             raise
         else:
             fp = open('glossifier.xml')
@@ -222,48 +227,19 @@ def main():
             debugWrite("doc: %s" % request.message)
         except:
             pass
-        #debugWrite("fragment: '%s..." % glossifyRequest.fragment[:40])
         debugWrite("fragment: '%s..." % glossifyRequest.fragment)
         debugWrite("languages: %s" % repr(glossifyRequest.languages))
         debugWrite("dictionaries: %s" % repr(glossifyRequest.dictionaries))
-        response = WebService.Response(glossify(glossifyRequest, soapNS))
+        try:
+            response = WebService.Response(glossify(glossifyRequest, soapNS))
+        except Exception, e:
+            debugWrite("glossify(): %s" % e)
+            e = cgi.escape(u"%s" % e)
+            response = makeFaultResponse(soapNS, u"Server", e)
     except Exception, e:
         debugWrite("GlossifyRequest(): %s" % e)
-        response = WebService.Response(u"""\
-<?xml version='1.0' encoding='utf-8'?>
-<soap:Envelope xmlns:soap='%s'>
- <soap:Body>
-  <glossifyResponse xmlns='cips.nci.nih.gov/cdr'>
-   <glossifyResult>
-    <Term>
-     <start>32</start>
-     <length>8</length>
-     <docId>CDR0000044043</docId>
-     <dictionaries>
-      <string>cg</string>
-      <string>genetics</string>
-     </dictionaries>
-     <languages>
-      <string>en</string>
-      <string>es</string>
-     </languages>
-    </Term>
-    <Term>
-     <start>58</start>
-     <length>10</length>
-     <docId>CDR0000044046</docId>
-     <dictionaries>
-      <string>cg</string>
-     </dictionaries>
-     <languages>
-      <string>en</string>
-     </languages>
-    </Term>
-   </glossifyResult>
-  </glossifyResponse>
- </soap:Body>
-</soap:Envelope>
-""" % soapNS)
+        e = cgi.escape(u"%s" % e)
+        response = makeFaultResponse(soapNS, u"Client", e)
     debugWrite("Response body:\n%s" % response.body) #, 2)
     response.send(contentType)
 
