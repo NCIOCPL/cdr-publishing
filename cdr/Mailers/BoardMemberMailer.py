@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.5 2008-08-15 19:59:22 venglisc Exp $
+# $Id: BoardMemberMailer.py,v 1.6 2008-12-09 13:04:00 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2008/08/15 19:59:22  venglisc
+# Name change for supportive board name. (Bug 4207)
+#
 # Revision 1.4  2008/06/03 21:28:06  bkline
 # Replaced StandardError with Exception objects.
 #
@@ -193,9 +196,9 @@ class Board:
                         phoneNode = child
                     elif child.nodeName == "BoardManagerEmail":
                         emailNode = child
-                    elif child.nodeName == "BoardMeetingDate":
+                    elif child.nodeName == "BoardMeetings":
                         for grandchild in child.childNodes:
-                            if grandchild.nodeName == 'Date':
+                            if grandchild.nodeName == 'BoardMeeting':
                                 md = self.MeetingDate(grandchild)
                                 if md.date >= today:
                                     self.meetingDates.append(md)
@@ -325,7 +328,10 @@ class Board:
 
     class MeetingDate:
         def __init__(self, node):
-            self.date = cdr.getTextContent(node)
+            self.date = u"0000-00-00"
+            for child in node.childNodes:
+                if child.nodeName == 'MeetingDate':
+                    self.date = cdr.getTextContent(child)
         def format(self):
             parts = self.date.split('-', 2)
             date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
