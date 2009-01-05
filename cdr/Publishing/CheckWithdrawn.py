@@ -12,13 +12,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2008-10-29 22:30:01 $
+# Last Modified:    $Date: 2009-01-05 16:09:37 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.6 $
+# $Revision: 1.7 $
 #
-# $Id: CheckWithdrawn.py,v 1.6 2008-10-29 22:30:01 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.7 2009-01-05 16:09:37 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2008/10/29 22:30:01  venglisc
+# Removed Kim's email address since her email account has been disabled.
+#
 # Revision 1.5  2008/09/17 17:57:04  venglisc
 # Added two more addresses for the distribution and removed Sheri per her
 # request.
@@ -276,6 +279,7 @@ SELECT dv.id, dv.num, comment, nct.value
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
                     "William Osei-Poku <william.osei-poku@lmco.com>", 
+                    "Kimberly Eckley <***REMOVED***>",
                     "Judy Morris <judith.morris@lmco.com>",
                     "Mark Leech <mark.j.leech@lmco.com>",
                     "James Silk <james.d.silk@lmco.com", 
