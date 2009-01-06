@@ -1,11 +1,14 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------
 #
-# $Id: glossify,v 1.4 2008-11-18 19:36:26 bkline Exp $
+# $Id: glossify,v 1.5 2009-01-06 21:19:23 bkline Exp $
 #
 # Service for Cancer.gov (task #4001).
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2008/11/18 19:36:26  bkline
+# Code cleanup; added soap:Fault responses for failures.
+#
 # Revision 1.3  2008/11/18 15:32:00  bkline
 # First version released to CG for testing.
 #
@@ -90,8 +93,8 @@ def maskMarkup(match):
 
 def glossify(request, soapNS):
     names = loadNames()
-    doc = re.sub(u"<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup, request.fragment,
-                 re.IGNORECASE | re.DOTALL | re.UNICODE)
+    doc = re.sub(u"(?isu)<a\\s[^>]+>.*?</a>|{{.*?}}", maskMarkup,
+                 request.fragment)
     regex = buildRegex(names, request.languages, request.dictionaries)
     seen = set()
     matches = []
@@ -162,10 +165,17 @@ class GlossifyRequest:
         self.dictionaries = set()
         self.languages = set()
         parameterNodes = []
-        for node in documentElement.getElementsByTagName('glossify'):
+        ns = 'cips.nci.nih.gov/cdr'
+        for node in documentElement.getElementsByTagNameNS(ns, 'glossify'):
             for child in node.childNodes:
                 if child.nodeType == child.ELEMENT_NODE:
                     parameterNodes.append(child)
+        if not parameterNodes:
+            # soapPy doesn't handle the namespace correctly.
+            for node in documentElement.getElementsByTagName('glossify'):
+                for child in node.childNodes:
+                    if child.nodeType == child.ELEMENT_NODE:
+                        parameterNodes.append(child)
         if len(parameterNodes) >= 1:
             self.fragment = getTextContent(parameterNodes[0])
             if len(parameterNodes) >= 2:
