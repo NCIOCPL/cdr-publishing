@@ -1,12 +1,16 @@
 #----------------------------------------------------------------------
 #
-# $Id: Notify_VOL.py,v 1.1 2009-01-23 15:59:41 venglisc Exp $
+# $Id: Notify_VOL.py,v 1.2 2009-01-23 18:34:54 venglisc Exp $
 #
 # Script intended to submit an email to the Visuals OnLine (VOL) 
 # manager (Kevin Broun) when a media document has been updated or 
 # added to Cancer.gov.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2009/01/23 15:59:41  venglisc
+# Initial copy of program to notify the visual online person about newly
+# published media documents. (Bug 4402)
+#
 #----------------------------------------------------------------------
 import os, sys, cdr, time, optparse, socket, cdrdb
 
@@ -179,7 +183,13 @@ if not len(emailDL) or testMode:
 else:
     recips = emailDL
 
-if recips:
+if mediaChanges and recips:
+    l.write("Email submitted to DL", stdout = True)
+    cdr.sendMail(sender, recips, subject, body, html = 1)
+else:
+    # Else statement included to monitor the program
+    recips = ["***REMOVED***"]
+    l.write("Email NOT submitted to DL", stdout = True)
     cdr.sendMail(sender, recips, subject, body, html = 1)
 
 # All done, going home now
