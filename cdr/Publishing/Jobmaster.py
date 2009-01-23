@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-10-06 19:52:26 $
+# Last Modified:    $Date: 2009-01-23 19:26:19 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.11 $
+# $Revision: 1.12 $
 #
-# $Id: Jobmaster.py,v 1.11 2008-10-06 19:52:26 venglisc Exp $
+# $Id: Jobmaster.py,v 1.12 2009-01-23 19:26:19 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.11  2008/10/06 19:52:26  venglisc
+# Fixed typo in len() function. (Bug 4123)
+#
 # Revision 1.10  2008/09/26 22:23:35  venglisc
 # Including the ArmsCount script in publishing schedule.
 #
@@ -464,6 +467,35 @@ if fullUpdate:
     except:
         l.write('Submitting CountArmsLabel Job failed', stdout = True)
         sys.exit(1)
+
+
+    # Submit the job to check for newly published media 
+    # documents and send a notification email
+    # Note: Step only needed for weekly publishing
+    # -------------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: Notify_VOL Job' % istep, stdout = True)
+        cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode)) 
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        myCmd = cdr.runCommand(cmd)
+
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                     stdout = True)
+            l.write('Code: %s' % myCmd.code, stdout = True)
+            subject = '*** Error in Notify_VOL.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+    except:
+        l.write('Submitting Notify_VOL Job failed', stdout = True)
+        sys.exit(1)
+
 
 
 
