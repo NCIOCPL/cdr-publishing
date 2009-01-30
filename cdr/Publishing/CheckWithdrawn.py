@@ -12,13 +12,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2009-01-05 16:09:37 $
+# Last Modified:    $Date: 2009-01-30 18:53:58 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.7 $
+# $Revision: 1.8 $
 #
-# $Id: CheckWithdrawn.py,v 1.7 2009-01-05 16:09:37 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.8 2009-01-30 18:53:58 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2009/01/05 16:09:37  venglisc
+# Added Kim Eckley back to the distribution list.
+#
 # Revision 1.6  2008/10/29 22:30:01  venglisc
 # Removed Kim's email address since her email account has been disabled.
 #
@@ -181,24 +184,40 @@ try:
         conn = cdrdb.connect()
         cursor = conn.cursor()
         
-        # Prepare CDR-IDs to query the reason for withdrawl
-        # from the comment field.
-        # ----------------------------------------------------
-        CDRIDS = []
+        # Prepare CDR-IDs to query the reason for removal from PDQ from
+        # the comment field.
+        # We need to split these IDs and query them separately. It's 
+        # possible that we picked up a document without an NCTID and this 
+        # one would not get reported in the SQL query looking for the 
+        # NCTID.
+        # Note: If this program is run manually an NCT ID may have been 
+        #       added to the protocol even if it was originally listed
+        #       without one.  In this case the NCT ID would not be 
+        #       queried from the database.
+        # ---------------------------------------------------------------
+        CdrIdWithNct    = []
+        CdrIdWithoutNct = []
         for doc in newWithdrawn:
-            CDRIDS.append(str(cdr.exNormalize(doc[0])[1]))
+            NctId = doc[2].strip()
+            if not NctId:
+                CdrIdWithoutNct.append(str(cdr.exNormalize(doc[0])[1]))
+            else:
+                CdrIdWithNct.append(str(cdr.exNormalize(doc[0])[1]))
 
-        CDRID = ','.join(CDRIDS)
+        CdrIds = ','.join(CdrIdWithNct)
+        NoNctCdrIds = ','.join(CdrIdWithoutNct)
+
 
         # Query the database with the information that needs to
         # be reported.
         # -----------------------------------------------------
-        cursor.execute("""\
+        if CdrIds:
+            cursor.execute("""\
 SELECT dv.id, dv.num, comment, nct.value
   FROM doc_version dv
-  JOIN (select id, max(num) as maxnum
-          from doc_version
-         group by id) dvmax
+  JOIN (SELECT id, MAX(num) AS maxnum
+          FROM doc_version
+         GROUP BY id) dvmax
     ON dv.id  = dvmax.id
    AND dv.num = dvmax.maxnum
   JOIN query_term_pub nct
@@ -209,10 +228,28 @@ SELECT dv.id, dv.num, comment, nct.value
    AND LEFT(qt.node_loc, 8) = LEFT(nct.node_loc, 8)
  WHERE dv.id in (%s)
    AND qt.value = 'ClinicalTrials.gov ID'
-""" % CDRID)
+""" % CdrIds)
 
-        rows = cursor.fetchall()
-        cursor.close()
+            rows = cursor.fetchall()
+            cursor.close()
+
+        # Query the database with the information that needs to
+        # be reported for records without an NCTID
+        # -----------------------------------------------------
+        if NoNctCdrIds:
+            cursor.execute("""\
+SELECT dv.id, dv.num, comment
+  FROM doc_version dv
+  JOIN (SELECT id, MAX(num) AS maxnum
+          FROM doc_version
+         GROUP BY id) dvmax
+    ON dv.id  = dvmax.id
+   AND dv.num = dvmax.maxnum
+ WHERE dv.id in (%s)
+""" % NoNctCdrIds)
+
+            noNctRows = cursor.fetchall()
+            cursor.close()
 
     # If there are no new records that need to be reported we can
     # stop here.  No messages are being send.
@@ -221,23 +258,32 @@ SELECT dv.id, dv.num, comment, nct.value
         raise NothingFound
 
     # List the records we found since the last time the process ran
+    # in the log file
     # -------------------------------------------------------------
-    for (cdrId, versionNum, comment, nctid) in rows:
-        l.write("%s, %s, %s, %s" % (cdrId, versionNum, comment, nctid), 
-                                    stdout = True)
+    if CdrIds:
+        l.write("Protocols with NCTID", stdout = True)
+        for (cdrId, versionNum, comment, nctid) in rows:
+            l.write("%s, %s, %s, %s" % (cdrId, versionNum, comment, nctid), 
+                                        stdout = True)
+
+    if NoNctCdrIds:
+        l.write("Protocols without NCTID", stdout = True)
+        for (cdrId, versionNum, comment) in noNctRows:
+            l.write("%s, %s, %s" % (cdrId, versionNum, comment), 
+                                        stdout = True)
 
     # Create the message body and display the query results
     # -----------------------------------------------------
     mailBody = """\
 <html>
  <head>
-  <title>Protocols with status: Withdrawn from PDQ</title>
+  <title>Protocols Removed from PDQ</title>
   <style type='text/css'>
    th      { background-color: #f0f0f0; }
   </style>
  </head>
  <body>
-  <h2>Protocols with status: Withdrawn from PDQ</h2>
+  <h2>Protocols Removed from PDQ</h2>
   <h3>Date: %s</h3>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
@@ -249,8 +295,11 @@ SELECT dv.id, dv.num, comment, nct.value
    </tr>
 """ % (time.strftime("%m/%d/%Y", now))
 
-    for (cdrId, versionNum, comment, nctid) in rows:
-        mailBody += """\
+    # Display the records of protocols with NCT ID
+    # --------------------------------------------
+    if CdrIds:
+        for (cdrId, versionNum, comment, nctid) in rows:
+            mailBody += """\
    <tr>
     <td>%s</td>
     <td>%s</td>
@@ -260,6 +309,19 @@ SELECT dv.id, dv.num, comment, nct.value
     <td>%s</td>
    </tr>
 """ % (cdrId, versionNum, nctid, nctid, comment)
+
+    # Display the records of protocols without NCT ID
+    # -----------------------------------------------
+    if NoNctCdrIds:
+        for (cdrId, versionNum, comment) in noNctRows:
+            mailBody += """\
+   <tr>
+    <td>CDR%010d</td>
+    <td>%s</td>
+    <td>&nbsp </td>
+    <td>%s</td>
+   </tr>
+""" % (cdrId, versionNum, comment)
 
     mailBody += """\
   </table>
@@ -290,7 +352,7 @@ From: %s
 To: %s
 Subject: %s: %s
 """ % (strFrom, ", ".join(strTo), cdr.PUB_NAME.capitalize(),
-       'Protocols with status "Withdrawn from PDQ"')
+       'Protocols Removed from PDQ')
 
     mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
 
