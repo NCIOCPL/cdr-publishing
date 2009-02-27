@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009-01-23 19:26:19 $
+# Last Modified:    $Date: 2009-02-27 23:28:05 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.12 $
+# $Revision: 1.13 $
 #
-# $Id: Jobmaster.py,v 1.12 2009-01-23 19:26:19 venglisc Exp $
+# $Id: Jobmaster.py,v 1.13 2009-02-27 23:28:05 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.12  2009/01/23 19:26:19  venglisc
+# Added new step to run the Media report for Visual OnLine. (Bug 4402)
+#
 # Revision 1.11  2008/10/06 19:52:26  venglisc
 # Fixed typo in len() function. (Bug 4123)
 #
@@ -440,6 +443,62 @@ except StandardError, info:
                                                          stdout = True)
     sys.exit(1)
 
+
+# Check for protocols that were re-activated (i.e. published, 
+# then withdrawn, and now published again).
+# --------------------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: Submitting CheckRepublishWithdrawn Job' % istep, 
+                                                            stdout = True)
+    cmd = os.path.join(PUBPATH, 'CheckRepublishWithdrawn.py "%s"' % \
+                                                                runmode)
+    
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
+    
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+             stdout = True)
+        subject = '*** Error in CheckRepublishWithdrawn.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                                       (subject, message))
+        myCmd = cdr.runCommand(cmd)
+        raise
+except StandardError, info:
+    l.write('Submitting CheckRepublishWithdrawn Job failed\n%s' % str(info), 
+                                                         stdout = True)
+    sys.exit(1)
+
+
+# # Check for protocols with the CTGovDuplicate flag
+# # --------------------------------------------------------
+# try:
+#     istep += 1
+#     l.write('--------------------------------------------', stdout = True)
+#     l.write('Step %d: Submitting CheckCTGovDuplicate Job' % istep, 
+#                                                             stdout = True)
+#     cmd = os.path.join(PUBPATH, 'CheckCTGovDuplicate.py "%s"' % runmode)
+#     
+#     l.write('Submitting command...\n%s' % cmd, stdout = True)
+#     myCmd = cdr.runCommand(cmd)
+#     
+#     if myCmd.code:
+#         l.write('*** Error submitting command:\n%s' % myCmd.output,
+#              stdout = True)
+#         subject = '*** Error in CheckCTGovDuplicate.py'
+#         message = 'Program returned with error code.  Please see logfile.'
+#         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+#                                                      (subject, message))
+#         myCmd = cdr.runCommand(cmd)
+#         raise
+# except StandardError, info:
+#     l.write('Submitting CheckCTGovDuplicate Job failed\n%s' % str(info), 
+#                                                          stdout = True)
+#     sys.exit(1)
+# 
 
 if fullUpdate:
     # Submit the job to count the # of studies with Arms info
