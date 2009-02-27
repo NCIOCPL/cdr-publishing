@@ -10,13 +10,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2009-01-28        Volker Englisch
-# Last Modified:    $Date: 2009-02-26 22:05:55 $
+# Last Modified:    $Date: 2009-02-27 23:23:02 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckRepublishWithdrawn.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: CheckRepublishWithdrawn.py,v 1.1 2009-02-26 22:05:55 venglisc Exp $
+# $Id: CheckRepublishWithdrawn.py,v 1.2 2009-02-27 23:23:02 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2009/02/26 22:05:55  venglisc
+# Initial copy of program to identify protocols previously withdrawn and now
+# published again.
+#
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib
@@ -150,8 +154,13 @@ SELECT ppd.pub_proc, ppd.doc_id, pp.completed, ppd.doc_version, ppd.removed,
     rows = cursor.fetchall()
     cursor.close()
 
-    # Find out the latest publishing jobId
-    # -------------------------------------
+    # Find out the latest publishing jobId (latest push job)
+    # Note: If for some reason a publishing job ran but this publishing
+    #       job did not create any document to be pushed to Cancer.gov
+    #       a previously reported would be reported again due to the 
+    #       join to the pub_proc_doc table even though a new publishing
+    #       event happend (but no push event).
+    # -----------------------------------------------------------------
     cursor.execute("""\
 SELECT MAX(pub_proc)
   FROM pub_proc_doc ppd
@@ -298,9 +307,9 @@ SELECT MIN(pub_proc)
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
     strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
     if testMode:
-        strTo    = ["VE Test <***REMOVED***>",
-                    "William Osei-Poku <william.osei-poku@lmco.com>", 
-                    "Kimberly Eckley <***REMOVED***>"]
+        strTo    = ["VE Test <***REMOVED***>"]
+                    #"William Osei-Poku <william.osei-poku@lmco.com>", 
+                    #"Kimberly Eckley <***REMOVED***>"]
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
                     "William Osei-Poku <william.osei-poku@lmco.com>", 
