@@ -1,12 +1,16 @@
 #----------------------------------------------------------------------
 #
-# $Id: CG2Public.py,v 1.3 2008-10-14 21:45:03 venglisc Exp $
+# $Id: CG2Public.py,v 1.4 2009-03-03 21:10:02 venglisc Exp $
 #
 # Take the CDR publishing data (for Gatekeeper use) and convert to 
 # Licensee data.
 # Validate the new licensee data against its DTD.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2008/10/14 21:45:03  venglisc
+# Had to fix the glob.glob() pattern since there were folders/files on BACH
+# that matched the regexp used that shouldn't have been picked up.
+#
 # Revision 1.2  2008/09/26 22:18:05  venglisc
 # Modified to catch warning messages.
 #
@@ -35,7 +39,8 @@ class documentType:
 
     def __init__(self):
         self.filters = { 'ProtocolActive':['name:Vendor Filter: CG2Public'],
-                         'ProtocolClosed':['name:Vendor Filter: CG2Public'] }
+                         'ProtocolClosed':['name:Vendor Filter: CG2Public'],
+                         'Terminology':   ['name:Vendor Filter: CG2Public']}
         self.sourceBase  = cdr.BASEDIR + "/Output"
         self.jobDir      = self.lastJobDir()
         self.credentials = cdr.login('venglisc', 'gimte')
@@ -169,11 +174,18 @@ def parseArguments(args):
 
     parser.set_defaults(testMode = True)
     parser.set_defaults(emailMode = True)
+    parser.set_defaults(fullMode = True)
     parser.add_option('-t', '--testmode',
                       action = 'store_true', dest = 'testMode',
                       help = 'running in TEST mode')
     parser.add_option('-l', '--livemode',
                       action = 'store_false', dest = 'testMode',
+                      help = 'running in LIVE mode')
+    parser.add_option('-f', '--export',
+                      action = 'store_true', dest = 'fullMode',
+                      help = 'running in TEST mode')
+    parser.add_option('-i', '--interim',
+                      action = 'store_false', dest = 'fullMode',
                       help = 'running in LIVE mode')
     parser.add_option('-e', '--email',
                       action = 'store_true', dest = 'emailMode',
@@ -201,6 +213,11 @@ def parseArguments(args):
         l.write("Running in TEST mode", stdout = True)
     else:
         l.write("Running in LIVE mode", stdout = True)
+
+    if parser.values.fullMode:
+        l.write("Running in EXPORT mode", stdout = True)
+    else:
+        l.write("Running in INTERIM mode", stdout = True)
 
     if parser.values.emailMode:
         l.write("Running in EMAIL mode", stdout = True)
@@ -249,6 +266,7 @@ print ''
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
 emailMode = options.values.emailMode
+fullMode  = options.values.fullMode
 inputdir  = options.values.inputdir  and options.values.inputdir[0] or None
 outputdir = options.values.outputdir and options.values.outputdir[0] or None
 print ""
@@ -326,8 +344,9 @@ if warnings:
 
 # A few auxiliary files also need to be copied
 # --------------------------------------------
-for auxFile in AUXFILES:
-    shutil.copy(auxFile, d.outputDir)
+if fullMode:
+    for auxFile in AUXFILES:
+        shutil.copy('%s/%s' % (d.inputDir, auxFile), d.outputDir)
 
 l.write('CG2Public.py - Finished', stdout = True)
 sys.exit(0)
