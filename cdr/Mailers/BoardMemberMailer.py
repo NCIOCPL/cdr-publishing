@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.6 2008-12-09 13:04:00 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.7 2009-03-05 21:29:38 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2008/12/09 13:04:00  bkline
+# Adjusted to match new structure for board meeting information.
+#
 # Revision 1.5  2008/08/15 19:59:22  venglisc
 # Name change for supportive board name. (Bug 4207)
 #
@@ -563,6 +566,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         twoWeeksAway = friendlyDate(datetime.date.fromordinal(
                                     self.__board.today.toordinal() + 14))
         letter       = self.__plugInSummaryTopics(template, self.__board)
+        letter       = self.__addConflictOfInterestForm(letter)
         return (letter.replace("@@DATE@@",           date)
                       .replace("@@BOARDNAME@@",      boardName)
                       .replace("@@MEETINGDATE@@",    meetingDate)
@@ -578,6 +582,19 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                       .replace("@@ADVBOARDNAME@@",   advBoardName)
                       .replace("@@DATEPLUS1MONTH@@", oneMonthAway)
                       .replace("@@DATEPLUS2WEEKS@@", twoWeeksAway))
+
+    #------------------------------------------------------------------
+    # Insert a conflict of interest form if appropriate.
+    #------------------------------------------------------------------
+    def __addConflictOfInterestForm(self, letter):
+        placeholder = "@@CONFLICTOFINTERESTFORM@@"
+        if placeholder not in letter:
+            return letter
+        name = "%s/conflict-of-interest-form.rtf" % self.getMailerIncludePath()
+        fp = open(name, "rb")
+        form = fp.read()
+        fp.close()
+        return letter.replace(placeholder, form)
 
     #------------------------------------------------------------------
     # Insert a list of summary topics if appropriate.
