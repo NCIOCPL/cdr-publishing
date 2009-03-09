@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.16 2007-04-20 18:28:53 kidderc Exp $
+# $Id: BoardSummaryMailer.py,v 1.17 2009-03-09 19:35:58 bkline Exp $
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.16  2007/04/20 18:28:53  kidderc
+# 3132 add ability to specify particular mailers to send to particular board members.
+#
 # Revision 1.12  2004/04/27 15:44:00  bkline
 # Added support for use of PDQBoardMemberInfo documents.
 #
@@ -308,7 +311,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         nPasses  = doc.latex.getLatexPassCount()
         latex    = doc.latex.getLatex()
         latex    = latex.replace('@@BoardMember@@', name)
-        #latex   = latex.replace('@@MailerDocId@@', str(mailerId))
+        latex    = latex.replace('@@MailerDocID@@', str(mailerId))
         basename = 'Mailer-%d-%d' % (recipient.getId(), doc.getId())
         jobType  = cdrmailer.PrintJob.MAINDOC
         self.addToQueue(self.makePS(latex, nPasses, basename, jobType))

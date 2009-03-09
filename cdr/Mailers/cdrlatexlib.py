@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.83 2008-06-03 21:28:06 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.84 2009-03-09 19:35:58 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.83  2008/06/03 21:28:06  bkline
+# Replaced StandardError with Exception objects.
+#
 # Revision 1.82  2008/04/08 15:40:38  bkline
 # Added support for ProtocolRef elements (request #4027).
 #
@@ -2626,7 +2629,7 @@ SUMMARY_HDRTEXT=r"""
   %% SUMMARY_HDRTEXT%%
   %% --------------- %%
   \newcommand{\CenterHdr}{{\bfseries \SummaryTitle} \\ }
-  \newcommand{\RightHdr}{Reviewer:  @@BoardMember@@}
+  \newcommand{\RightHdr}{Reviewer:  @@BoardMember@@ (Mailer ID: @@MailerDocID@@)}
   \newcommand{\LeftHdr}{\today}
 %
 % -----
