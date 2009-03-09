@@ -12,13 +12,17 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2009-01-30 18:53:58 $
+# Last Modified:    $Date: 2009-03-09 18:00:23 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.8 $
+# $Revision: 1.9 $
 #
-# $Id: CheckWithdrawn.py,v 1.8 2009-01-30 18:53:58 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.9 2009-03-09 18:00:23 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2009/01/30 18:53:58  venglisc
+# Modifications to also include the display of protocols for which an NCT-ID
+# might not yet exist.
+#
 # Revision 1.7  2009/01/05 16:09:37  venglisc
 # Added Kim Eckley back to the distribution list.
 #
@@ -53,11 +57,19 @@ OUTPUTBASE     = cdr.BASEDIR + "/Output/NLMExport"
 WITHDRAWN_LIST = "WithdrawnFromPDQ.txt"
 LOGNAME        = "CheckWithdrawn.log"
 
-NothingFound   = 'Oops'
 now            = time.localtime(time.time())
 
 testMode       = None
 emailMode      = None
+
+# Create an exception allowing us to break out if there are no new
+# protocols found to report.
+# ----------------------------------------------------------------
+class NothingFoundError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -255,7 +267,7 @@ SELECT dv.id, dv.num, comment
     # stop here.  No messages are being send.
     # -----------------------------------------------------------
     else:
-        raise NothingFound
+        raise NothingFoundError('Exiting.')
 
     # List the records we found since the last time the process ran
     # in the log file
@@ -371,9 +383,10 @@ Subject: %s: %s
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
     server.quit()
 
-except NothingFound, arg:
+except NothingFoundError, arg:
     msg  = "No new documents found with 'WithdrawnFromPDQ' status"
     l.write("%s" % msg, stdout = True)
+    l.write("%s" % arg, stdout = True)
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
