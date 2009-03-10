@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.7 2009-03-05 21:29:38 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.8 2009-03-10 19:08:50 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2009/03/05 21:29:38  bkline
+# Added code to fill in @@CONFLICTOFINTERESTFORM@@ placeholder.
+#
 # Revision 1.6  2008/12/09 13:04:00  bkline
 # Adjusted to match new structure for board meeting information.
 #
@@ -511,6 +514,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             forename    = toRtf(m.name.getGivenName())
             surname     = toRtf(m.name.getSurname())
             memberName  = toRtf(m.name.format(False, False))
+            fancyName   = toRtf(m.name.format(True, False))
             termYears   = m.getTermYears()
             summaryList = m.getSummaryList()
             contactInfo = m.address.format(contactFields = True,
@@ -519,6 +523,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@FORENAME@@",    forename)
                                    .replace("@@SURNAME@@",     surname)
                                    .replace("@@MEMBERNAME@@",  memberName)
+                                   .replace("@@FANCYNAME@@",   fancyName)
                                    .replace("@@TERMYEARS@@",   termYears)
                                    .replace("@@SUMMARYLIST@@", summaryList)
                                    .replace("@@CONTACTINFO@@", contactInfo))
