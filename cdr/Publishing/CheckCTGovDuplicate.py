@@ -14,10 +14,13 @@
 # Last Modified:    $$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovDuplicate.py,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 #
-# $Id: CheckCTGovDuplicate.py,v 1.2 2009-03-23 17:23:52 venglisc Exp $
+# $Id: CheckCTGovDuplicate.py,v 1.3 2009-03-23 17:47:40 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2009/03/23 17:23:52  venglisc
+# Modifying email list to come from the CDR. (Bug 4429)
+#
 # Revision 1.1  2009/02/26 21:43:43  venglisc
 # Initial version of program to check the CDR if any new protocols with the
 # element CTGovDuplicate have been published. (Bug 4429)
@@ -232,7 +235,7 @@ try:
         --                  FROM pub_proc 
         --                 WHERE status in ('Success', 'Verifying') 
         --                   AND pub_subset like 'Push_%%')
-           ORDER by cg.id""")
+           ORDER by cg.id""", timeout=300)
 
     rows = cursor.fetchall()
     cursor.close()
