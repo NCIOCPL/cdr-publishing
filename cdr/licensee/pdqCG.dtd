@@ -1,6 +1,6 @@
 <!-- PDQ DTD
 
-   $Id: pdqCG.dtd,v 1.2 2008-10-07 17:03:43 venglisc Exp $
+   $Id: pdqCG.dtd,v 1.3 2009-03-23 20:08:41 venglisc Exp $
 
    This DTD defines the external structure of the NCI PDQ XML data
 
@@ -9,6 +9,9 @@
    Preliminary version 
    
    $Log: not supported by cvs2svn $
+   Revision 1.2  2008/10/07 17:03:43  venglisc
+   Fixed typo in RelatedSummaryRef.
+
    Revision 1.1  2008/09/16 21:01:19  venglisc
    Initial copy of DTD used for publishing.  This DTD includes elements that
    can/should go to Cancer.gov but need to be removed for the licensees.
@@ -1203,6 +1206,7 @@
                 Definition*,
                 TermTypeName?,
                 SemanticType*,
+                CTGovInterventionType?,
                 TermRelationship?,
                 RelatedWebsites*,
                 MenuInformation?,
@@ -1233,6 +1237,8 @@
 
 <!ELEMENT SemanticType (#PCDATA)>
 <!ATTLIST SemanticType ref CDATA #IMPLIED>
+
+<!ELEMENT CTGovInterventionType (#PCDATA)>
 
 <!ELEMENT TermRelationship (ParentTerm | RelatedTerm)+>
 
