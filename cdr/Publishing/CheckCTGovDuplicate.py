@@ -14,10 +14,14 @@
 # Last Modified:    $$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovDuplicate.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: CheckCTGovDuplicate.py,v 1.1 2009-02-26 21:43:43 venglisc Exp $
+# $Id: CheckCTGovDuplicate.py,v 1.2 2009-03-23 17:23:52 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2009/02/26 21:43:43  venglisc
+# Initial version of program to check the CDR if any new protocols with the
+# element CTGovDuplicate have been published. (Bug 4429)
+#
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
@@ -108,7 +112,12 @@ def parseArguments(args):
 # ---------------------------------------------------------------------
 def getLastProtocolList(directory = cdr.BASEDIR + '/Output/CTGovDuplicate'):
     os.chdir(directory)
-    fileList = glob.glob('CTGovDuplicate_*.txt')
+    if testMode:
+        searchFor = '*.test.txt'
+    else:
+        searchFor = 'CTGovDuplicate_??????????????.txt'
+
+    fileList = glob.glob(searchFor)
     if not fileList: return
     fileList.sort()
     fileList.reverse()
@@ -137,6 +146,9 @@ else:
     useFile = getLastProtocolList(OUTPUTBASE)
     l.write("Comparing output to file: %s" % useFile, stdout = True)
 
+if testMode:
+    outputFile = outputFile.replace('.txt', '.test.txt')
+
 path = OUTPUTBASE + '/%s'
 l.write("    New protocol list is: %s" % outputFile, stdout = True)
  
@@ -164,7 +176,7 @@ try:
         # Read the list of previously published protocols
         # ------------------------------------------------
         for row in protocols:
-            oldIds.append(row.split('\t')[0])
+            oldIds.append(int(row.split('\t')[0]))
 
 
     # Connect to the database to get the full list of protocols with
@@ -177,7 +189,8 @@ try:
         
     cursor.execute("""\
         SELECT cg.id as "CDR-ID", pid.value as "Primary ID", 
-               nid.value as "NCT-ID", o.value as "Lead Org Name"
+               nid.value as "NCT-ID", o.value as "Lead Org Name",
+               v.comment
                --,cg.pub_proc, p.value, pp.started, pp.completed, pp.status
           FROM pub_proc_cg cg
           JOIN query_term_pub p
@@ -207,11 +220,18 @@ try:
             ON oid.int_val = o.doc_id
            AND o.path = '/Organization/OrganizationNameInformation' + 
                         '/OfficialName/Name'
+        -- Get the Version comment
+          JOIN doc_version v
+            ON v.id = p.doc_id
+           AND v.publishable = 'Y'
+           AND v.num = (SELECT MAX(num) 
+                          FROM doc_version i 
+                         WHERE i.id = v.id)
          WHERE p.path = '/InScopeProtocol/CTGovDuplicate'
-           AND pp.id = (SELECT MAX(id) 
-                          FROM pub_proc 
-                         WHERE status in ('Success', 'Verifying') 
-                           AND pub_subset like 'Push_%%')
+        --   AND pp.id = (SELECT MAX(id) 
+        --                  FROM pub_proc 
+        --                 WHERE status in ('Success', 'Verifying') 
+        --                   AND pub_subset like 'Push_%%')
            ORDER by cg.id""")
 
     rows = cursor.fetchall()
@@ -224,17 +244,17 @@ try:
     f = open(path % outputFile, 'w')
     newIds = []
     l.write("", stdout = True)
-    l.write("List of CTGovDuplicate protocols", stdout = True)
-    l.write("--------------------------------",   stdout = True)
-    for (cdrId, protocolId, nctId, orgName) in rows:
+    l.write("List of CTGovDuplicate protocols", stdout = False)
+    l.write("--------------------------------",   stdout = False)
+    for (cdrId, protocolId, nctId, orgName, comment) in rows:
         l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-                                    stdout = True)
+                                    stdout = False)
 
-        if str(cdrId) not in oldIds:
-            f.write("%s\t%s\t%s\tNew\n" % (cdrId, protocolId, nctId))
+        if cdrId not in oldIds:
+            f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, protocolId, nctId))
             newIds.append(cdrId)
         else:
-            f.write("%s\t%s\t%s\n" % (cdrId, protocolId, nctId))
+            f.write("%10s\t%25s\t%12s\n" % (cdrId, protocolId, nctId))
     f.close()
 
     # Create the message body and display the query results
@@ -246,13 +266,13 @@ try:
         mailBody = """\
 <html>
  <head>
-  <title>New CTGovDuplicate Protocols</title>
+  <title>Transfer Ownership to NCI</title>
   <style type='text/css'>
    th      { background-color: #f0f0f0; }
   </style>
  </head>
  <body>
-  <h2>New CTGovDuplicate Protocols</h2>
+  <h2>Transfer Ownership to NCI</h2>
   <h3>Date: %s</h3>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
@@ -261,10 +281,11 @@ try:
     <th>Primary ID</th>
     <th>NCT-ID</th>
     <th>Lead Org Name</th>
+    <th>Comments</th>
    </tr>
 """ % (time.strftime("%m/%d/%Y", now))
 
-        for (cdrId, protocolId, nctId, orgName) in rows:
+        for (cdrId, protocolId, nctId, orgName, comment) in rows:
             if cdrId in newIds:
                 mailBody += """\
    <tr>
@@ -274,8 +295,9 @@ try:
      <a href="http://www.clinicaltrials.gov/ct2/show/%s">%s</a>
     </td>
     <td>%s</td>
+    <td>%s</td>
    </tr>
-""" % (cdrId, protocolId, nctId, nctId, orgName)
+""" % (cdrId, protocolId, nctId, nctId, orgName, comment)
 
         mailBody += """\
   </table>
@@ -294,22 +316,19 @@ try:
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
     strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
     if testMode:
-        strTo    = ["VE Test <***REMOVED***>"]
+        strTo    = cdr.getEmailList('Test Publishing Notification')
     else:
-        strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
-                    "William Osei-Poku <william.osei-poku@lmco.com>", 
-                    "Kimberly Eckley <***REMOVED***>",
-                    "Judy Morris <judith.morris@lmco.com>",
-                    "Mark Leech <mark.j.leech@lmco.com>",
-                    "James Silk <james.d.silk@lmco.com", 
-                    "Cherryl Villanueva <***REMOVED***>"]
+        strTo    = cdr.getEmailList('CTGov Duplicate Notification')
+        strTo.append(u'Mark Leech <mark.j.leech@lmco.com>')
+        strTo.append(u'James Silk <james.d.silk@lmco.com>') 
+        strTo.append(u'Cherryl Villanueva <***REMOVED***>')
 
     mailHeader   = """\
 From: %s
 To: %s
 Subject: %s: %s
 """ % (strFrom, ", ".join(strTo), cdr.PUB_NAME.capitalize(),
-       'Protocols listed as "CTGov Duplicate"')
+       'Transfer Ownership to NCI')
 
     mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
 
