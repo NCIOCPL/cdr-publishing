@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.84 2009-03-09 19:35:58 bkline Exp $
+# $Id: cdrlatexlib.py,v 1.85 2009-03-24 13:02:36 bkline Exp $
 #
 # Rules for generating CDR mailer LaTeX.
 #
@@ -13,6 +13,9 @@
 # *************************** END WARNING *****************************
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.84  2009/03/09 19:35:58  bkline
+# Added mailer ID at top of each summary mailer page (request #4520).
+#
 # Revision 1.83  2008/06/03 21:28:06  bkline
 # Replaced StandardError with Exception objects.
 #
@@ -2996,6 +2999,10 @@ END_TABLE=r"""
 ENDSUMMARYPREAMBLE=r"""
   %% ENDSUMMARYPREAMBLE %%
   %% ------------------ %%
+  % Force header to appear on the first page.
+  \fancypagestyle{plain}{%
+      \fancyhead[R]{\RightHdr}
+      \fancyfoot[C]{\thepage}}
   \setlength{\parskip}{3.0mm}
   \setlength{\parindent}{0mm}
   \setlength{\headheight}{28pt}
@@ -4097,19 +4104,19 @@ TestInstructions = \
 #       Key = tuple of (output format, output format subtype)
 #     Value = tuple of (XProc list name, number of reqd. LaTeX passes)
 #------------------------------------------------------------------
-ControlTable = {\
-    ("Protocol",         ""):(ProtocolInstructions, 2),\
-    ("Protocol",  "initial"):(ProtocolInstructions, 2),\
-    ("InScopeProtocol",  ""):(ProtocolInstructions, 2),\
-    ("InScopeProtocol", "initial"):(ProtocolInstructions, 2),\
-    ("Summary",          ""):(SummaryInstructions, 2),\
-    ("Summary",   "initial"):(SummaryInstructions, 2),\
-    ("Organization",     ""):(OrgInstructions, 2),\
-    ("Person",           ""):(PersonInstructions, 3),\
-    ("StatusCheck",      ""):(StatusCheckInstructions, 2),\
-    ("InScopeProtocol", "StatusCheck"):(StatusCheckInstructions, 2),\
-    ("StatusCheckCCOP",  ""):(StatusCheckCCOPInstructions, 2),\
-    ("Test",             ""):(TestInstructions, 2)\
+ControlTable = {
+    ("Protocol",         ""):(ProtocolInstructions, 2),
+    ("Protocol",  "initial"):(ProtocolInstructions, 2),
+    ("InScopeProtocol",  ""):(ProtocolInstructions, 2),
+    ("InScopeProtocol", "initial"):(ProtocolInstructions, 2),
+    ("Summary",          ""):(SummaryInstructions, 3),
+    ("Summary",   "initial"):(SummaryInstructions, 3),
+    ("Organization",     ""):(OrgInstructions, 2),
+    ("Person",           ""):(PersonInstructions, 3),
+    ("StatusCheck",      ""):(StatusCheckInstructions, 2),
+    ("InScopeProtocol", "StatusCheck"):(StatusCheckInstructions, 2),
+    ("StatusCheckCCOP",  ""):(StatusCheckCCOPInstructions, 2),
+    ("Test",             ""):(TestInstructions, 2)
 }
 
 
