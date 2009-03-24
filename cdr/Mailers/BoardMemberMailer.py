@@ -1,11 +1,15 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.8 2009-03-10 19:08:50 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.9 2009-03-24 13:09:24 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2009/03/10 19:08:50  bkline
+# Added professional suffixes to name below signature line on conflict
+# of interest form.
+#
 # Revision 1.7  2009/03/05 21:29:38  bkline
 # Added code to fill in @@CONFLICTOFINTERESTFORM@@ placeholder.
 #
@@ -451,6 +455,8 @@ class BoardMember:
                        FROM query_term t
                        JOIN query_term b
                          ON b.doc_id = t.doc_id
+                       JOIN active_doc a
+                         ON a.id = b.doc_id
                       WHERE t.int_val = ?
                         AND t.path = '/Summary/SummaryTitle'
                         AND b.path = '/Summary/SummaryMetaData/PDQBoard'
