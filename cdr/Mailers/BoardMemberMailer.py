@@ -1,11 +1,14 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardMemberMailer.py,v 1.9 2009-03-24 13:09:24 bkline Exp $
+# $Id: BoardMemberMailer.py,v 1.10 2009-03-26 19:08:25 bkline Exp $
 #
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
 #
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2009/03/24 13:09:24  bkline
+# Restricted summary list to non-blocked summaries (request #4537).
+#
 # Revision 1.8  2009/03/10 19:08:50  bkline
 # Added professional suffixes to name below signature line on conflict
 # of interest form.
@@ -620,6 +623,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                          ON board.doc_id = topic.doc_id
                        JOIN query_term audience
                          ON audience.doc_id = topic.doc_id
+                       JOIN active_doc a
+                         ON a.id = topic.doc_id
                       WHERE topic.path = '/Summary/SummaryTitle'
                         AND board.path = '/Summary/SummaryMetaData/PDQBoard'
                                        + '/Board/@cdr:ref'
