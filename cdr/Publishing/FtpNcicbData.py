@@ -10,13 +10,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2009-03-06        Volker Englisch
-# Last Modified:    $Date: 2009-03-26 19:35:40 $
+# Last Modified:    $Date: 2009-03-26 20:11:37 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/FtpNcicbData.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: FtpNcicbData.py,v 1.1 2009-03-26 19:35:40 venglisc Exp $
+# $Id: FtpNcicbData.py,v 1.2 2009-03-26 20:11:37 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2009/03/26 19:35:40  venglisc
+# Initial copy of program to ftp the NCICB data to the FTP server. (Bug 4497)
+#
 #
 # *********************************************************************
 import os, sys, cdr, optparse, ftplib, time, glob
@@ -216,8 +219,11 @@ try:
             l.write("Creating tar file for %s ..." % lastDir, stdout = True)
             os.chdir(lastDir)
 
-            orgDoctypeData = '%s_%s_%s' % (lastDir, org, DATASETS[org])
-            result = createArchive(orgDoctypeData, path)
+            orgDoctypeName = '%s_%s_%s' % (lastDir, org, DATASETS[org])
+
+            if testMode:
+                orgDoctypeName += '.test'
+            result = createArchive(orgDoctypeName, path)
         
             if result:
                 l.write("*** Error creating %s tar file ***" % lastDir,
@@ -264,7 +270,7 @@ try:
             if org == '':
                 continue
 
-            ftpFile = '%s_%s_%s%s' % (lastDir, org, DATASETS[org], TARGZ)
+            ftpFile = '%s%s' % (orgDoctypeName, TARGZ)
             l.write("Transfer file %s..." % ftpFile, stdout = True)
             ftp.storbinary('STOR %s' % ftpFile, open(ftpFile, 'rb'))
             l.write("Bytes transfered %d" % ftp.size(ftpFile))
