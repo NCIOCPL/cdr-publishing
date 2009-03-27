@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009-02-27 23:28:05 $
+# Last Modified:    $Date: 2009-03-27 20:13:18 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.13 $
+# $Revision: 1.14 $
 #
-# $Id: Jobmaster.py,v 1.13 2009-02-27 23:28:05 venglisc Exp $
+# $Id: Jobmaster.py,v 1.14 2009-03-27 20:13:18 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.13  2009/02/27 23:28:05  venglisc
+# Added new step to run CheckRepublishWithdrawn.py. (Bug 4450)
+#
 # Revision 1.12  2009/01/23 19:26:19  venglisc
 # Added new step to run the Media report for Visual OnLine. (Bug 4402)
 #
@@ -295,7 +298,7 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CG2Public Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CG2Public.py %s' % (runmode)) 
+        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s' % (runmode, pubmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         myCmd = cdr.runCommand(cmd)
@@ -339,6 +342,35 @@ if fullUpdate:
             raise
     except:
         l.write('Submitting FtpExportData Job failed', stdout = True)
+        sys.exit(1)
+
+
+    # FTP the NCICB Terminolofy data to CIPSFTP
+    # This data contains an extra element not intended for licensees
+    # Note: Step only needed for weekly publishing
+    # --------------------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
+        cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode, 
+                                                                pubmode)) 
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        myCmd = cdr.runCommand(cmd)
+
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                     stdout = True)
+            l.write('Code: %s' % myCmd.code, stdout = True)
+            subject = '*** Error in FtpOtherData.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+    except:
+        l.write('Submitting FtpOtherData Job failed', stdout = True)
         sys.exit(1)
 
 
@@ -446,7 +478,7 @@ except StandardError, info:
 
 # Check for protocols that were re-activated (i.e. published, 
 # then withdrawn, and now published again).
-# --------------------------------------------------------
+# -----------------------------------------------------------
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
@@ -473,32 +505,63 @@ except StandardError, info:
     sys.exit(1)
 
 
-# # Check for protocols with the CTGovDuplicate flag
-# # --------------------------------------------------------
-# try:
-#     istep += 1
-#     l.write('--------------------------------------------', stdout = True)
-#     l.write('Step %d: Submitting CheckCTGovDuplicate Job' % istep, 
-#                                                             stdout = True)
-#     cmd = os.path.join(PUBPATH, 'CheckCTGovDuplicate.py "%s"' % runmode)
-#     
-#     l.write('Submitting command...\n%s' % cmd, stdout = True)
-#     myCmd = cdr.runCommand(cmd)
-#     
-#     if myCmd.code:
-#         l.write('*** Error submitting command:\n%s' % myCmd.output,
-#              stdout = True)
-#         subject = '*** Error in CheckCTGovDuplicate.py'
-#         message = 'Program returned with error code.  Please see logfile.'
-#         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-#                                                      (subject, message))
-#         myCmd = cdr.runCommand(cmd)
-#         raise
-# except StandardError, info:
-#     l.write('Submitting CheckCTGovDuplicate Job failed\n%s' % str(info), 
-#                                                          stdout = True)
-#     sys.exit(1)
-# 
+# Check for protocols with the CTGovDuplicate flag
+# --------------------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: Submitting CheckCTGovDuplicate Job' % istep, 
+                                                            stdout = True)
+    cmd = os.path.join(PUBPATH, 'CheckCTGovDuplicate.py "%s"' % runmode)
+    
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
+    
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+             stdout = True)
+        subject = '*** Error in CheckCTGovDuplicate.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                                     (subject, message))
+        myCmd = cdr.runCommand(cmd)
+        raise
+except StandardError, info:
+    l.write('Submitting CheckCTGovDuplicate Job failed\n%s' % str(info), 
+                                                         stdout = True)
+    sys.exit(1)
+
+
+
+# Check for protocols that have been transferred to the 
+# respective responsible party and will soon be blocked on PDQ
+# ------------------------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: Submitting CheckCTGovTransfer Job' % istep, 
+                                                            stdout = True)
+    cmd = os.path.join(PUBPATH, 'CheckCTGovTransfer.py "%s"' % \
+                                                                runmode)
+    
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
+    
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+             stdout = True)
+        subject = '*** Error in CheckCTGovTransfer.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                                       (subject, message))
+        myCmd = cdr.runCommand(cmd)
+        raise
+except StandardError, info:
+    l.write('Submitting CheckCTGovTransfer Job failed\n%s' % str(info), 
+                                                         stdout = True)
+    sys.exit(1)
+
+
 
 if fullUpdate:
     # Submit the job to count the # of studies with Arms info
