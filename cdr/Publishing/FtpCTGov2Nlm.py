@@ -4,8 +4,12 @@
 #            ==============
 # Submit the CTGovExport data to the NLM's FTP Server.
 # 
-# $Id: FtpCTGov2Nlm.py,v 1.3 2008-06-03 21:43:05 bkline Exp $
+# $Id: FtpCTGov2Nlm.py,v 1.4 2009-04-30 20:19:54 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2008/06/03 21:43:05  bkline
+# Replaced StandardError (slated to be removed in the future) with
+# Exception objects.
+#
 # Revision 1.2  2007/11/14 19:39:39  venglisc
 # Modified program to push data to NLM's ftp site. (Bug 3536)
 #
@@ -79,7 +83,7 @@ def getLatestFile(baseDir = FTPDIR, dirName = None):
 # -------------------------------------------------------------------
 def copyNlmFtpFile(localDirectory = 'd:/cdr/output/NLMExport', 
                    localFile      = 'study_collection.xml', 
-                   ftpDirectory   = '/export/home/NCI', 
+                   ftpDirectory   = '/', 
                    ftpName        = 'clinical.txt'):
 
     FTPSERVER  = "clinftpp.nlm.nih.gov"
@@ -212,18 +216,18 @@ parseArgs(sys.argv)
 # ---------------------------------------------------------
 if testMode:
     runmode = '--testmode'
-    print "Running in testmode"
+    l.write("Running in testmode")
 else:
     runmode = '--livemode'
-    print "Running in livemode"
+    l.write("Running in livemode")
 
 try:
     if exportDir:
-        print "Using specified Directory ..."
-        print "DirName: %s" % exportDir
+        l.write("Using specified Directory ...")
+        l.write("DirName: %s" % exportDir)
         latestFile = getLatestFile(dirName = exportDir)
     else:
-        print "Selecting Directory with latest timestamp..."
+        l.write("Selecting Directory with latest timestamp...")
         latestFile = getLatestFile()
 
     lDir       = os.path.join(FTPDIR, latestFile[1])
