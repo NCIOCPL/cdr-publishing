@@ -11,10 +11,14 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.1 2009-03-27 20:38:12 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.2 2009-05-12 22:10:48 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.1  2009/03/27 20:38:12  venglisc
+# New email notification to NLM for ownership transferring to responsible
+# party. (Bug 4529)
+#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
 
@@ -229,7 +233,7 @@ SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID",
  where q.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
                 '/CTGovOwnershipTransferDate'
 --   and active_status <> 'A'
-           ORDER by q.doc_id""")
+           ORDER by q.doc_id""", timeout = 300)
 
     rows = cursor.fetchall()
     cursor.close()
