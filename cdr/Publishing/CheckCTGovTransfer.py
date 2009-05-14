@@ -11,10 +11,13 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.3 2009-05-12 22:35:39 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.4 2009-05-14 15:20:49 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2009/05/12 22:35:39  venglisc
+# Changed the email body to a Unicode string.
+#
 # Revision 1.2  2009/05/12 22:10:48  venglisc
 # The SQL query frequently timed out.  Increasing timeout value. (Bug 4529)
 #
@@ -187,54 +190,54 @@ try:
     cursor = conn.cursor()
         
     cursor.execute("""\
-SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID", 
-       nid.value as "NCTID", o.value as "OrgName", 
-       t.value as "Transfer Org", prs.value as "PRS Name",
-       c.value
-  FROM query_term q
+         SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID", 
+                nid.value as "NCTID", o.value as "OrgName", 
+                t.value as "Transfer Org", prs.value as "PRS Name",
+                c.value
+           FROM query_term q
 -- Find the blocked documents (active_status)
 --  JOIN document d
 --    ON d.id = q.doc_id
 -- Get the Primar Protocol ID
-  JOIN query_term qid
-    ON q.doc_id = qid.doc_id
-   AND qid.path = '/InScopeProtocol/ProtocolIds/PrimaryID/IDString'
+           JOIN query_term qid
+             ON q.doc_id = qid.doc_id
+            AND qid.path = '/InScopeProtocol/ProtocolIds/PrimaryID/IDString'
 -- Get Other-ID/NCTID
-  JOIN query_term_pub nid
-    ON q.doc_id = nid.doc_id
-   AND nid.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDString'
-  JOIN query_term_pub nt
-    ON q.doc_id = nt.doc_id
-   AND nt.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDType'
-   AND nt.value = 'ClinicalTrials.gov ID'
-   AND LEFT(nt.node_loc, 8) = LEFT(nid.node_loc, 8)
+           JOIN query_term_pub nid
+             ON q.doc_id = nid.doc_id
+            AND nid.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDString'
+           JOIN query_term_pub nt
+             ON q.doc_id = nt.doc_id
+            AND nt.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDType'
+            AND nt.value = 'ClinicalTrials.gov ID'
+            AND LEFT(nt.node_loc, 8) = LEFT(nid.node_loc, 8)
 -- Get Lead Org ID
-  JOIN query_term_pub oid
-    ON q.doc_id = oid.doc_id
-   AND oid.path = '/InScopeProtocol/ProtocolAdminInfo' + 
-                  '/ProtocolLeadOrg/LeadOrganizationID/@cdr:ref'
+           JOIN query_term_pub oid
+             ON q.doc_id = oid.doc_id
+            AND oid.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                           '/ProtocolLeadOrg/LeadOrganizationID/@cdr:ref'
 -- Get Lead Org Name
-  JOIN query_term_pub o
-    ON oid.int_val = o.doc_id
-   AND o.path = '/Organization/OrganizationNameInformation' + 
-                '/OfficialName/Name'
+           JOIN query_term_pub o
+             ON oid.int_val = o.doc_id
+            AND o.path = '/Organization/OrganizationNameInformation' + 
+                         '/OfficialName/Name'
 -- Get the Transfer Org Name
-  JOIN query_term t
-    ON t.doc_id = q.doc_id
-   AND t.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                '/CTGovOwnerOrganization'
+           JOIN query_term t
+             ON t.doc_id = q.doc_id
+            AND t.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
+                         '/CTGovOwnerOrganization'
 -- Get the PRS Name
-  JOIN query_term prs
-    ON prs.doc_id = q.doc_id
-   AND prs.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                  '/PRSUserName'
+           JOIN query_term prs
+             ON prs.doc_id = q.doc_id
+            AND prs.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
+                           '/PRSUserName'
 -- Get the Ownership Comment
-  JOIN query_term c
-    ON c.doc_id = q.doc_id
-   AND c.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                  '/Comment'
- where q.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                '/CTGovOwnershipTransferDate'
+LEFT OUTER JOIN query_term c
+             ON c.doc_id = q.doc_id
+            AND c.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
+                           '/Comment'
+          where q.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
+                         '/CTGovOwnershipTransferDate'
 --   and active_status <> 'A'
            ORDER by q.doc_id""", timeout = 300)
 
