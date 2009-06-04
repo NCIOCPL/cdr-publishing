@@ -12,13 +12,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2009-03-09 18:00:23 $
+# Last Modified:    $Date: 2009-06-04 21:44:10 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.9 $
+# $Revision: 1.10 $
 #
-# $Id: CheckWithdrawn.py,v 1.9 2009-03-09 18:00:23 venglisc Exp $
+# $Id: CheckWithdrawn.py,v 1.10 2009-06-04 21:44:10 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.9  2009/03/09 18:00:23  venglisc
+# Replaced deprecated string exception.
+#
 # Revision 1.8  2009/01/30 18:53:58  venglisc
 # Modifications to also include the display of protocols for which an NCT-ID
 # might not yet exist.
@@ -356,7 +359,7 @@ SELECT dv.id, dv.num, comment
                     "Kimberly Eckley <***REMOVED***>",
                     "Judy Morris <judith.morris@lmco.com>",
                     "Mark Leech <mark.j.leech@lmco.com>",
-                    "James Silk <james.d.silk@lmco.com", 
+                    "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
 
     mailHeader   = """\

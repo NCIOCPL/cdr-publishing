@@ -10,13 +10,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2009-01-28        Volker Englisch
-# Last Modified:    $Date: 2009-02-27 23:23:02 $
+# Last Modified:    $Date: 2009-06-04 21:44:10 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckRepublishWithdrawn.py,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 #
-# $Id: CheckRepublishWithdrawn.py,v 1.2 2009-02-27 23:23:02 venglisc Exp $
+# $Id: CheckRepublishWithdrawn.py,v 1.3 2009-06-04 21:44:10 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2009/02/27 23:23:02  venglisc
+# Added comment and reset the test email DL. (Bug 4450)
+#
 # Revision 1.1  2009/02/26 22:05:55  venglisc
 # Initial copy of program to identify protocols previously withdrawn and now
 # published again.
@@ -316,7 +319,7 @@ SELECT MIN(pub_proc)
                     "Kimberly Eckley <***REMOVED***>",
                     "Judy Morris <judith.morris@lmco.com>",
                     "Mark Leech <mark.j.leech@lmco.com>",
-                    "James Silk <james.d.silk@lmco.com", 
+                    "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
 
     mailHeader   = """\

@@ -14,10 +14,13 @@
 # Last Modified:    $$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovDuplicate.py,v $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 #
-# $Id: CheckCTGovDuplicate.py,v 1.3 2009-03-23 17:47:40 venglisc Exp $
+# $Id: CheckCTGovDuplicate.py,v 1.4 2009-06-04 21:44:10 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.3  2009/03/23 17:47:40  venglisc
+# Needed to increase the default time for the SQL query to run. (Bug 4429)
+#
 # Revision 1.2  2009/03/23 17:23:52  venglisc
 # Modifying email list to come from the CDR. (Bug 4429)
 #
@@ -323,8 +326,8 @@ try:
     else:
         strTo    = cdr.getEmailList('CTGov Duplicate Notification')
         strTo.append(u'Mark Leech <mark.j.leech@lmco.com>')
-        strTo.append(u'James Silk <james.d.silk@lmco.com>') 
         strTo.append(u'Cherryl Villanueva <***REMOVED***>')
+        strTo.append(u'Alexandra Valentine <***REMOVED***>')
 
     mailHeader   = """\
 From: %s
