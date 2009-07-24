@@ -11,10 +11,13 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.4 2009-05-14 15:20:49 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.5 2009-07-24 18:50:25 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.4  2009/05/14 15:20:49  venglisc
+# Modified SQL query to remove mandatory Comment from a record. (Bug 4529)
+#
 # Revision 1.3  2009/05/12 22:35:39  venglisc
 # Changed the email body to a Unicode string.
 #
@@ -221,6 +224,14 @@ try:
              ON oid.int_val = o.doc_id
             AND o.path = '/Organization/OrganizationNameInformation' + 
                          '/OfficialName/Name'
+-- Get the primary Lead Org
+           JOIN query_term_pub poid
+             ON oid.doc_id = poid.doc_id
+            AND poid.path  = '/InScopeProtocol/ProtocolAdminInfo'     +
+                             '/ProtocolLeadOrg/LeadOrgRole'
+            AND poid.value = 'Primary'
+            AND left(oid.node_loc, 8) = left(poid.node_loc, 8)
+
 -- Get the Transfer Org Name
            JOIN query_term t
              ON t.doc_id = q.doc_id
