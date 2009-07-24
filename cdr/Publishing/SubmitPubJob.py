@@ -5,15 +5,19 @@
 #            ===============
 # Program to submit the interim and full export publishing job.
 # ---------------------------------------------------------------------
-# $Author: bkline $
+# $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2008-06-03 21:43:05 $
+# Last Modified:    $Date: 2009-07-24 22:50:26 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.8 $
+# $Revision: 1.9 $
 #
-# $Id: SubmitPubJob.py,v 1.8 2008-06-03 21:43:05 bkline Exp $
+# $Id: SubmitPubJob.py,v 1.9 2009-07-24 22:50:26 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2008/06/03 21:43:05  bkline
+# Replaced StandardError (slated to be removed in the future) with
+# Exception objects.
+#
 # Revision 1.7  2008/01/30 19:53:53  venglisc
 # Preventing nightly job to be started id weekly job is still processing
 #
@@ -155,7 +159,8 @@ def checkJobStatus(jobId):
         row = cursor.fetchone()
 
     except cdrdb.Error, info:
-        l.write("Failure finding status for Job%d: %s" % (jobId, info[1][0]))
+        l.write("Failure finding status for Job%d: %s" % (int(jobId), 
+                                                          info[1][0]))
     return row
  
 
