@@ -11,10 +11,13 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.5 $
+# $Revision: 1.6 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.5 2009-07-24 18:50:25 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.6 2009-07-24 20:18:35 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.5  2009/07/24 18:50:25  venglisc
+# Modified SQL query to only display primary lead org information. (Bug 4529)
+#
 # Revision 1.4  2009/05/14 15:20:49  venglisc
 # Modified SQL query to remove mandatory Comment from a record. (Bug 4529)
 #
@@ -353,7 +356,7 @@ Subject: %s: %s
 """ % (strFrom, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
        'Transfer of Protocol(s) from NCI to Responsible Party')
 
-    mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
+    mailHeader   += "Content-type: text/html; charset=utf-8\n"
 
     # Add a Separator line + body
     # ---------------------------
@@ -365,7 +368,10 @@ Subject: %s: %s
     # ---------------------
     server = smtplib.SMTP(SMTP_RELAY)
     if emailMode:
-        server.sendmail(strFrom, strTo, message)
+        try:
+            server.sendmail(strFrom, strTo, message.encode('utf-8'))
+        except Exception, info:
+            sys.exit("*** Error sending message: %s" % str(info))
     else:
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
     server.quit()
