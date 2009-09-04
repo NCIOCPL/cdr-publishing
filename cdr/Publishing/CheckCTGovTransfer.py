@@ -11,10 +11,13 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.6 $
+# $Revision: 1.7 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.6 2009-07-24 20:18:35 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.7 2009-09-04 21:48:57 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.6  2009/07/24 20:18:35  venglisc
+# Modified the email message to be converted to UTF-8. (Bug 4611)
+#
 # Revision 1.5  2009/07/24 18:50:25  venglisc
 # Modified SQL query to only display primary lead org information. (Bug 4529)
 #
@@ -37,6 +40,8 @@ import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
 OUTPUTBASE     = cdr.BASEDIR + "/Output/CTGovTransfer"
 DOC_FILE       = "CTGovTransfer"
 LOGNAME        = "CTGovTransfer.log"
+SMTP_RELAY     = "MAILFWD.NIH.GOV"
+STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
 
 now            = time.localtime()
 outputFile     = '%s_%s.txt' % (DOC_FILE, time.strftime("%Y%m%d%H%M%S", now))
@@ -131,6 +136,34 @@ def getLastProtocolList(directory = cdr.BASEDIR + '/Output/CTGovTransfer'):
     fileList.reverse()
     return (fileList[0])
     
+
+# --------------------------------------------------------------------
+# Module to submit an email message if the program fails
+# --------------------------------------------------------------------
+def sendErrorMessage(msg):
+    # We want to send an email so that the query doesn't silently fail
+    # ----------------------------------------------------------------
+    mailHeader   = """\
+From: %s
+To: %s
+Subject: %s: %s
+""" % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
+       '*** Error: Program CheckCTGovTransfer failed!')
+
+    mailHeader   += "Content-type: text/html; charset=utf-8\n"
+    mailBody      = "<b>Error running CheckCTGovTransfer.py</b><br>"
+    mailBody     += "Most likely %s<br>" % msg
+    mailBody     += "See log file for details."
+
+    # Add a Separator line + body
+    # ---------------------------
+    message = mailHeader + "\n" + mailBody
+
+    server = smtplib.SMTP(SMTP_RELAY)
+    server.sendmail(STR_FROM, '***REMOVED***', message.encode('utf-8'))
+    server.quit()
+
+
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
@@ -195,7 +228,8 @@ try:
     conn = cdrdb.connect()
     cursor = conn.cursor()
         
-    cursor.execute("""\
+    try:
+        cursor.execute("""\
          SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID", 
                 nid.value as "NCTID", o.value as "OrgName", 
                 t.value as "Transfer Org", prs.value as "PRS Name",
@@ -255,8 +289,13 @@ LEFT OUTER JOIN query_term c
 --   and active_status <> 'A'
            ORDER by q.doc_id""", timeout = 300)
 
-    rows = cursor.fetchall()
-    cursor.close()
+        rows = cursor.fetchall()
+        cursor.close()
+    except cdrdb.Error, info:
+        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+                 stdout = True)
+        sendErrorMessage('SQL query timeout error')
+        raise
 
     # Create the new manifest file and identify those records that
     # are new since the last time this job ran (by comparing to the
@@ -265,25 +304,39 @@ LEFT OUTER JOIN query_term c
     f = open(path % outputFile, 'w')
     newIds = []
     l.write("", stdout = True)
-    l.write("List of CTGovTransfer protocols", stdout = True)
-    l.write("--------------------------------",   stdout = True)
+    l.write("List of new CTGovTransfer protocols", stdout = True)
+    l.write("-----------------------------------",   stdout = True)
     for (cdrId, protocolId, nctId, orgName, transferOrg,
          prsName, comment) in rows:
-        l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-                                    stdout = True)
+        # l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
+        #                             stdout = True)
 
-        if cdrId not in oldIds:
-            f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, protocolId, nctId))
-            newIds.append(cdrId)
-        else:
-            f.write("%10s\t%25s\t%12s\n" % (cdrId, protocolId, nctId))
+        try:
+            if cdrId not in oldIds:
+                l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
+                                            stdout = True)
+                f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, 
+                                                    protocolId.encode('utf-8'), 
+                                                    nctId.encode('utf-8')))
+                newIds.append(cdrId)
+            else:
+                f.write("%10s\t%25s\t%12s\n" % (cdrId, 
+                                                protocolId.encode('utf-8'), 
+                                                nctId.encode('utf-8')))
+        except Exception, info:
+            l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+                     stdout = True)
+            sendErrorMessage('writing Unicode convertion error')
+            raise
+
     f.close()
 
     # Create the message body and display the query results
     # -----------------------------------------------------
     if newIds:
         l.write("", stdout = True)
-        l.write('List of CTGovTransfer protocols', stdout = True)
+        l.write('List of transferred protocol IDs', stdout = True)
+        l.write('--------------------------------', stdout = True)
         l.write('%s' % newIds, stdout = True)
         mailBody = u"""\
 <html>
@@ -309,10 +362,11 @@ LEFT OUTER JOIN query_term c
    </tr>
 """ % (time.strftime("%m/%d/%Y", now))
 
-        for (cdrId, protocolId, nctId, orgName, transOrgName,
-             PRSName, comment) in rows:
-            if cdrId in newIds:
-                mailBody += u"""\
+        try:
+            for (cdrId, protocolId, nctId, orgName, transOrgName,
+                 PRSName, comment) in rows:
+                if cdrId in newIds:
+                    mailBody += u"""\
    <tr>
     <td>CDR%010d</td>
     <td>%s</td>
@@ -326,6 +380,12 @@ LEFT OUTER JOIN query_term c
    </tr>
 """ % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
        PRSName, comment)
+        except Exception, info:
+            l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+                     stdout = True)
+            sendErrorMessage('Unicode convertion error')
+            raise
+
 
         mailBody += u"""\
   </table>
@@ -341,8 +401,6 @@ LEFT OUTER JOIN query_term c
     # ---------------------------------------------------------------
     # Email constants
     # ---------------
-    SMTP_RELAY   = "MAILFWD.NIH.GOV"
-    strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
     if testMode:
         strTo    = cdr.getEmailList('Test Publishing Notification')
     else:
@@ -353,7 +411,7 @@ LEFT OUTER JOIN query_term c
 From: %s
 To: %s
 Subject: %s: %s
-""" % (strFrom, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
+""" % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
        'Transfer of Protocol(s) from NCI to Responsible Party')
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
@@ -369,7 +427,7 @@ Subject: %s: %s
     server = smtplib.SMTP(SMTP_RELAY)
     if emailMode:
         try:
-            server.sendmail(strFrom, strTo, message.encode('utf-8'))
+            server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
         except Exception, info:
             sys.exit("*** Error sending message: %s" % str(info))
     else:
