@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009-03-27 20:13:18 $
+# Last Modified:    $Date: 2009-09-15 17:35:34 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.14 $
+# $Revision: 1.15 $
 #
-# $Id: Jobmaster.py,v 1.14 2009-03-27 20:13:18 venglisc Exp $
+# $Id: Jobmaster.py,v 1.15 2009-09-15 17:35:34 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.14  2009/03/27 20:13:18  venglisc
+# Adding new production steps (Bug 4429, 4497, 4529)
+#
 # Revision 1.13  2009/02/27 23:28:05  venglisc
 # Added new step to run CheckRepublishWithdrawn.py. (Bug 4450)
 #
@@ -345,33 +348,35 @@ if fullUpdate:
         sys.exit(1)
 
 
-    # FTP the NCICB Terminolofy data to CIPSFTP
-    # This data contains an extra element not intended for licensees
-    # Note: Step only needed for weekly publishing
-    # --------------------------------------------------------------
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode, 
-                                                                pubmode)) 
+# FTP the NCICB Terminolofy data to CIPSFTP
+# This data contains an extra element not intended for licensees
+# Note: Step only needed for weekly publishing
+# Note: As of 2009-09-13 the NCICB data should be transferred
+#       nightly.
+# --------------------------------------------------------------
+try:
+    istep += 1
+    l.write('--------------------------------------------', stdout = True)
+    l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
+    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode, 
+                                                            pubmode)) 
 
-        l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    myCmd = cdr.runCommand(cmd)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
-                     stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
-            subject = '*** Error in FtpOtherData.py'
-            message = 'Program returned with error code.  Please see logfile.'
-            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-                                        (subject, message))
-            myCmd   = cdr.runCommand(cmd)
-            raise
-    except:
-        l.write('Submitting FtpOtherData Job failed', stdout = True)
-        sys.exit(1)
+    if myCmd.code:
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
+                 stdout = True)
+        l.write('Code: %s' % myCmd.code, stdout = True)
+        subject = '*** Error in FtpOtherData.py'
+        message = 'Program returned with error code.  Please see logfile.'
+        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                    (subject, message))
+        myCmd   = cdr.runCommand(cmd)
+        raise
+except:
+    l.write('Submitting FtpOtherData Job failed', stdout = True)
+    sys.exit(1)
 
 
 # Create the CTGovExport data with every nightly job and the full export
