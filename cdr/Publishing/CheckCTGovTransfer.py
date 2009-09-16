@@ -11,10 +11,15 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.7 $
+# $Revision: 1.8 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.7 2009-09-04 21:48:57 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.8 2009-09-16 19:22:02 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.7  2009/09/04 21:48:57  venglisc
+# Modified program to submit an error message in case the unicode convertion
+# failed when writing to file and if the SQL query fails due to a DB timeout.
+# (Bug 4633)
+#
 # Revision 1.6  2009/07/24 20:18:35  venglisc
 # Modified the email message to be converted to UTF-8. (Bug 4611)
 #
@@ -232,7 +237,7 @@ try:
         cursor.execute("""\
          SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID", 
                 nid.value as "NCTID", o.value as "OrgName", 
-                t.value as "Transfer Org", prs.value as "PRS Name",
+                t.value as "Transfer Org", q.value as "PRS Name",
                 c.value
            FROM query_term q
 -- Find the blocked documents (active_status)
@@ -274,18 +279,19 @@ try:
              ON t.doc_id = q.doc_id
             AND t.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
                          '/CTGovOwnerOrganization'
--- Get the PRS Name
-           JOIN query_term prs
-             ON prs.doc_id = q.doc_id
-            AND prs.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                           '/PRSUserName'
 -- Get the Ownership Comment
 LEFT OUTER JOIN query_term c
              ON c.doc_id = q.doc_id
             AND c.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
                            '/Comment'
+-- Get the transfer date
+--         JOIN query_term prs
+--           ON prs.doc_id = q.doc_id
+--          AND prs.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
+--                         '/CTGovOwnershipTransferDate'
+-- Get the PRS Name
           where q.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
-                         '/CTGovOwnershipTransferDate'
+                         '/PRSUserName'
 --   and active_status <> 'A'
            ORDER by q.doc_id""", timeout = 300)
 
