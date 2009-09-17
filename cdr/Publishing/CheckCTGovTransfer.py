@@ -11,10 +11,14 @@
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.8 $
+# $Revision: 1.9 $
 #
-# $Id: CheckCTGovTransfer.py,v 1.8 2009-09-16 19:22:02 venglisc Exp $
+# $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.8  2009/09/16 19:22:02  venglisc
+# Modified SQL query to also pick up protocols without transfer date.
+# (Bug 4638)
+#
 # Revision 1.7  2009/09/04 21:48:57  venglisc
 # Modified program to submit an error message in case the unicode convertion
 # failed when writing to file and if the SQL query fails due to a DB timeout.
@@ -411,7 +415,7 @@ LEFT OUTER JOIN query_term c
         strTo    = cdr.getEmailList('Test Publishing Notification')
     else:
         strTo    = cdr.getEmailList('CTGov Transfer Notification')
-        strTo.append(u'register@clinicaltrials.gov')
+        #strTo.append(u'register@clinicaltrials.gov')
 
     mailHeader   = """\
 From: %s
