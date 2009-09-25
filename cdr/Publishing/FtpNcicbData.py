@@ -10,13 +10,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2009-03-06        Volker Englisch
-# Last Modified:    $Date: 2009-03-26 20:11:37 $
+# Last Modified:    $Date: 2009-09-25 18:39:53 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/FtpNcicbData.py,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 #
-# $Id: FtpNcicbData.py,v 1.2 2009-03-26 20:11:37 venglisc Exp $
+# $Id: FtpNcicbData.py,v 1.3 2009-09-25 18:39:53 venglisc Exp $
 # $Log: not supported by cvs2svn $
+# Revision 1.2  2009/03/26 20:11:37  venglisc
+# Modified to indicate a TEST run in file name.
+#
 # Revision 1.1  2009/03/26 19:35:40  venglisc
 # Initial copy of program to ftp the NCICB data to the FTP server. (Bug 4497)
 #
@@ -69,10 +72,10 @@ def parseArguments(args):
                       help = 'running in LIVE mode')
     parser.add_option('-f', '--export',
                       action = 'store_true', dest = 'fullMode',
-                      help = 'running in TEST mode')
+                      help = 'running in EXPORT mode')
     parser.add_option('-i', '--interim',
                       action = 'store_false', dest = 'fullMode',
-                      help = 'running in LIVE mode')
+                      help = 'running in INTERIM mode')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
