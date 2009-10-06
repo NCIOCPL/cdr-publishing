@@ -1,10 +1,13 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.8 2008-09-25 12:50:04 bkline Exp $
+# $Id: cdrlatextables.py,v 1.8 2008/09/25 12:50:04 bkline Exp $
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
-# $Log: not supported by cvs2svn $
+# $Log: cdrlatextables.py,v $
+# Revision 1.8  2008/09/25 12:50:04  bkline
+# Exception cleanup.
+#
 # Revision 1.7  2008/06/03 21:28:07  bkline
 # Replaced StandardError with Exception objects.
 #
@@ -40,7 +43,7 @@ IN_THEAD    = 2
 IN_TFOOT    = 3
 WIDTH_EXPR  = re.compile(r"(\d*\.?\d*)([^\d.]+)")
 
-TABLE_DEBUG = 0
+TABLE_DEBUG = False
 tableStack = []
 tableCellDepth = 0
 
@@ -87,19 +90,21 @@ class Group:
 
     # Recursively assemble the LaTeX for a block of cells.
     #def assembleRows(self, startRow, startCol, numRows, numCols, outer = 0):
-    def assembleRows(self, block, outer = 0, endOfParent = 0):
+    def assembleRows(self, block, outer = False, endOfParent = False):
         if TABLE_DEBUG:
-            sys.stderr.write("outer=%d endOfParent=%d\n" % (outer,
+            sys.stderr.write(" ***** TOP OF assembleRows() *****\n")
+            sys.stderr.write("outer=%s endOfParent=%s\n" % (outer,
                                                             endOfParent))
         if not block: return ""
         output      = ""
         curRow      = 0
-        lastRow     = 0
+        lastRow     = False
         rowsLeft    = len(block)
         while rowsLeft > 0:
             row = block[curRow]
             if TABLE_DEBUG:
-                sys.stderr.write("curRow=%d rowsLeft = %d numCols=%d\n" % 
+                sys.stderr.write("TOP OF LOOP IN assembleRows(): ")
+                sys.stderr.write("curRow=%d rowsLeft=%d numCols=%d\n" % 
                                  (curRow, rowsLeft, len(row)))
             if not row:
                 raise cdr.Exception("Internal Error: "
@@ -113,16 +118,18 @@ class Group:
                     maxCellHeight = cell.numRows
                 if minCellHeight > cell.numRows:
                     minCellHeight = cell.numRows
+            if TABLE_DEBUG:
+                sys.stderr.write("maxCellHeight: %s\n" % maxCellHeight)
+                sys.stderr.write("rowsLeft: %s\n" % rowsLeft)
             if maxCellHeight > rowsLeft:
                 if TABLE_DEBUG:
                     sys.stderr.write("cell content: %s\n" % cell.content)
                 raise cdr.Exception("Row ranges for spanning cells "
                                     "cannot overlap")
             if maxCellHeight == rowsLeft:
-                lastRow = 1
+                lastRow = True
             if minCellHeight == maxCellHeight:
-                latex, allHline = self.setEvenRow(row, 
-                        lastRow and endOfParent and 1 or 0)
+                latex, allHline = self.setEvenRow(row, lastRow and endOfParent)
                 output += latex + "\\setcounter{qC}{0}\\tabularnewline\n"
 
                 if outer:
@@ -134,7 +141,7 @@ class Group:
                     # occurs; that is, the extra \hline does not cause a
                     # doubly-thick line to appear.
                     if TABLE_DEBUG:
-                        sys.stderr.write("lastRow=%d allHline=%d\n" %
+                        sys.stderr.write("lastRow=%s allHline=%d\n" %
                                          (lastRow, allHline))
                     if allHline and (not lastRow or not endOfParent):
                         output += "\\hline\n"
@@ -158,7 +165,8 @@ class Group:
         numCells    = len(topRow)
         i           = 0
         if TABLE_DEBUG:
-            sys.stderr.write("setMixedRow: %d rows\n" % len(topRow))
+            sys.stderr.write("setMixedRow: %d rows %d cols\n" % (len(rows),
+                                                                  numCells))
         while i < numCells:
             cell = topRow[i]
             if cell.numRows == len(rows):
@@ -202,8 +210,8 @@ class Group:
                     if newRow:
                         newBlock.append(newRow)
                 
-                assembledRows = self.assembleRows(newBlock, endOfParent = 
-                        i >= numCells and 1 or 0)
+                assembledRows = self.assembleRows(newBlock,
+                                                  endOfParent = i >= numCells)
                 output += "@{}l@{}"
                 content += "%s\\begin{tabular}[t]{@{}l@{}}%s"\
                            "\\end{tabular}" % (ampersand, assembledRows)
@@ -537,12 +545,12 @@ def openGroup(pp):
 
     # Tell the caller what to put in the output stream.
     if len(tableStack) > 1 or len(table.groupStack) > 0:
-        outer     = 0
+        outer     = False
         tableType = "tabular"
         sideFrame = ""
         hline     = ""
     else:
-        outer     = 1
+        outer     = True
         tableType = "longtable"
         sideFrame = framing.sides and "|" or ""
         hline     = framing.top and "  \\hline\n" or ""
@@ -573,29 +581,30 @@ def closeGroup(pp):
     if not table.groupStack:
         raise cdr.Exception("Internal error: empty Group stack")
     group = table.groupStack.pop()
-    headEnds = 1
-    bodyEnds = 1
-    footEnds = 1
+    headEnds = bodyEnds = footEnds = True
     if TABLE_DEBUG:
+        stars = 70 * "*"
+        label = "CLOSE GROUP"
+        sys.stderr.write("\n%s\n*%39s%30s\n%s\n\n" % (stars, label, "*", stars))
         sys.stderr.write("len(group.head)=%d\n" % len(group.head))
         sys.stderr.write("len(group.body)=%d\n" % len(group.body))
         sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
     if group.body: 
-        headEnds = 0
+        headEnds = False
     if group.foot:
-        headEnds = 0
-        bodyEnds = 0
+        headEnds = False
+        bodyEnds = False
     if not group.outer:
         hline    = ""
         tabEnd   = "  \\end{tabular}}\n"
         vspace   = ""
-        headEnds = bodyEnds = footEnds = 0
+        headEnds = bodyEnds = footEnds = False
     else:
         hline    = group.framing.bottom and "\\hline\n" or ""
         tabEnd   = "  \\end{longtable}}\n"
         vspace   = "  \\vspace{6pt}\n"
     if TABLE_DEBUG:
-        sys.stderr.write("headEnds=%d bodyEnds=%d footEnds=%d\n" % (headEnds,
+        sys.stderr.write("headEnds=%s bodyEnds=%s footEnds=%s\n" % (headEnds,
                                                                     bodyEnds,
                                                                     footEnds))
     endHead = group.head and "  \\endhead\n" or ""       
@@ -692,12 +701,6 @@ def openRow(pp):
     else:
         raise cdr.Exception("openRow(): group doesn't know what section "
                             "it's in")
-    return
-
-    # XXX
-    if group.rowBuf:
-        pp.setOutput(group.rowBuf)
-        group.rowBuf = ""
 
 #----------------------------------------------------------------------
 # Finish up a table row.
@@ -720,68 +723,7 @@ def closeRow(pp):
             col.moreRows -= 1
         i += col.colSpan
 
-    # XXX
     group.currentCellRow = None
-    return
-
-    row = group.row
-    if not row:
-        raise cdr.Exception("Internal error: no current row found")
-
-    # Do we have any pending cells (that is, cells which span multiple
-    # rows, for which we haven't yet seen all the row data yet)?
-    # If so, just keep going until we get all the row data we need.
-    pendingRows = len(group.block)
-    for cell in group.block[0]:
-        if cell.numRows > pendingRows:
-            return
-
-    # We have all the row data we need.  Create a composite row.
-    group.assembleRows(0, 0, len(group.block), len(group.cols))
-    return
-
-    # XXX
-    # Finish off multi-row leftovers
-    output = ""
-    i = group.currentColumn
-    leftMark = group.framing.sides and "|" or ""
-    while i < len(group.cols):
-        col = group.cols[i]
-        if col.moreRows > 0:
-            col.moreRows -= 1
-            if i + col.colSpan >= len(group.cols):
-                rightMark = group.framing.sides and "|" or ""
-            else:
-                rightMark = col.colSep and "|" or ""
-            output += " & \\multicolumn{%d}{%sp{%fin}%s}{}\n" % \
-                  (col.colSpan, leftMark, col.spanWidth, rightMark)
-        i += col.colSpan
-        leftMark = ""
-    pp.setOutput(output + "  \\\\\n")
-
-    # Save the rest to be flushed later; replaced by frame at end of group.
-    rowBuf = ""
-
-    # Mark the first column that still needs to have a line underneath it.
-    colStart = 0
-    moreCols = 0
-    for i in range(len(group.cols)):
-        col = group.cols[i]
-
-        # Any of the following causes the column *not* to get a gridline.
-        if col.moreRows > 0 or moreCols or not col.rowSep:
-            if colStart < i:
-                rowBuf += "  \\cline{%d-%d}\n" % (colStart + 1, i)
-            colStart = i + 1
-            if moreCols:
-                moreCols -= 1
-            else:
-                moreCols = col.colSpan - 1
-    if colStart == 0:
-        rowBuf += "  \\hline\n"
-    elif colStart < len(group.cols):
-        rowBuf += "  \\cline{%d-%d}\n" % (colStart + 1, len(group.cols))
-    group.rowBuf = rowBuf + "\n"
 
 #----------------------------------------------------------------------
 # Start a table cell.
@@ -798,129 +740,6 @@ def openCell(pp):
     tableCellDepth += 1
     group = table.groupStack[-1]
     group.currentCellRow.append(Cell(group, pp))
-    return
-
-    # XXX
-    leftMark = group.framing.sides and "|" or ""
-    output = "  "
-    i = group.currentColumn
-    if i >= len(group.cols):
-        raise cdr.Exception("Too many table cells, Herr Mozart!")
-    col = group.cols[i]
-    if i > 0:
-        output += "& "
-        leftMark = ""
-
-    # Skip past any columns spanning additional rows.
-    while i < len(group.cols) and col.moreRows > 0:
-        col.moreRows -= 1
-        if i + col.colSpan >= len(group.cols):
-            rightMark = group.framing.sides and "|" or ""
-        else:
-            rightMark = col.colSep and "|" or ""
-        output += "\\multicolumn{%d}{%sp{%fin}%s}{}\n  & " % \
-                  (col.colSpan, leftMark, col.spanWidth, rightMark)
-        i += col.colSpan
-        if i >= len(group.cols):
-            raise cdr.Exception("Too many table cells, Herr Mozart!")
-        col = group.cols[i]
-        leftMark = ""
-
-    # Pull out the attributes for this cell.
-    cellNode = pp.getCurNode()
-    moreRows = cellNode.getAttribute("MoreRows")
-    nameSt   = cellNode.getAttribute("NameSt")
-    nameEnd  = cellNode.getAttribute("NameEnd")
-    colSep   = cellNode.getAttribute("ColSep")
-    rowSep   = cellNode.getAttribute("RowSep")
-    try: col.colSep = int(colSep)
-    except: col.colSep = group.colSep
-    try: col.rowSep = int(rowSep)
-    except: col.rowSep = group.rowSep
-
-    # See if we are spanning multiple rows with this cell.
-    col.moreRows = 0
-    if moreRows:
-        try:
-            moreRows = int(moreRows)
-            if moreRows > 0:
-                col.moreRows = moreRows
-            if moreRows < 0:
-                raise cdr.Exception("Invalid value for MoreRows: %s" %
-                                    moreRows)
-        except:
-            raise cdr.Exception("Invalid value for MoreRows: %s" % moreRows)
-        
-    # See if we are spanning multiple columns with this cell.
-    col.colSpan   = 1
-    col.spanWidth = col.width
-    if nameSt and not nameEnd:
-        raise cdr.Exception("NameSt attribute must be accompanied by NameEnd")
-    if nameEnd and not nameSt:
-        raise cdr.Exception("NameEnd attribute must be accompanied by NameSt")
-    if nameSt:
-        if nameSt != col.name:
-            raise cdr.Exception("NameSt (%s) does not match name of current "
-                                "column (%s)" % (nameSt, col.name))
-        spanEnd  = -1
-        for j in range(i, len(group.cols)):
-            if j > i:
-                col.spanWidth += group.cols[j].width
-            if nameEnd == group.cols[j].name:
-                spanEnd = j
-                break
-        if spanEnd == -1:
-            raise cdr.Exception("No column with name %s follows %s" % 
-                                (nameEnd, nameSt))
-        col.colSpan = spanEnd + 1 - i
-    else:
-        spanEnd = i
-
-    # Create the output for the cell.
-    if i + col.colSpan >= len(group.cols):
-        rightMark = group.framing.sides and "|" or ""
-    else:
-        rightMark = col.colSep and "|" or ""
-    if col.colSpan > 1:
-        col.spanWidth += (RULE_WIDTH + TAB_COL_SEP * 2) * (col.colSpan - 1)
-    output += "\\multicolumn{%d}{%sp{%fin}%s}{" % \
-               (col.colSpan, leftMark, col.spanWidth, rightMark)
-    group.tail = "}"
-    if col.moreRows > 0:
-        output += "\\multirow{%d}{%fin}{" % (col.moreRows + 1, col.spanWidth)
-        group.tail = "}}"
-
-    # Adjust the font if we're in the header or footer.
-    if group.where == IN_THEAD:
-        output += "\\bf "
-    elif group.where == IN_TFOOT:
-        output += "\\it "
-    elif group.where != IN_TBODY:
-        raise cdr.Exception("Entry must be contained within THead, TBody, "
-                            "or TFoot")
-
-    # Adjust the horizontal alignment of the cell's contents.
-    align = cellNode.getAttribute("Align")
-    if align == "Center":
-        output += "\\centering "
-    elif align == "Right":
-        output += "\\raggedleft "
-    elif align == "Left":
-        output += "\\raggedright "
-    elif align == "Justify":
-        pass
-    elif align == "Char":
-        raise cdr.Exception("No current support for Char alignment")
-    elif align:
-        raise cdr.Exception("Invalid alignment request: %s" % align)
-    elif group.where == IN_THEAD:
-        output += "\\centering "
-    else:
-        output += "\\raggedright "
-
-    # Pump it out and move to the next position on the row.
-    pp.setOutput(output)
-    group.currentColumn = spanEnd + 1
 
 #----------------------------------------------------------------------
 # Finish up a table cell.
@@ -941,4 +760,3 @@ def closeCell(pp):
     tableCellDepth -= 1
     if TABLE_DEBUG:
         sys.stderr.write("CONTENT: %s\n" % group.currentCellRow[-1].content)
-    #pp.setOutput("%s\n" % group.tail)
