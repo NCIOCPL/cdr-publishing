@@ -18,33 +18,6 @@
 # $Revision: 1.10 $
 #
 # $Id: CheckWithdrawn.py,v 1.10 2009-06-04 21:44:10 venglisc Exp $
-# $Log: not supported by cvs2svn $
-# Revision 1.9  2009/03/09 18:00:23  venglisc
-# Replaced deprecated string exception.
-#
-# Revision 1.8  2009/01/30 18:53:58  venglisc
-# Modifications to also include the display of protocols for which an NCT-ID
-# might not yet exist.
-#
-# Revision 1.7  2009/01/05 16:09:37  venglisc
-# Added Kim Eckley back to the distribution list.
-#
-# Revision 1.6  2008/10/29 22:30:01  venglisc
-# Removed Kim's email address since her email account has been disabled.
-#
-# Revision 1.5  2008/09/17 17:57:04  venglisc
-# Added two more addresses for the distribution and removed Sheri per her
-# request.
-#
-# Revision 1.4  2008/06/03 21:43:05  bkline
-# Replaced StandardError (slated to be removed in the future) with
-# Exception objects.
-#
-# Revision 1.3  2007/12/20 16:23:52  venglisc
-# Modified one email address removing a comma. (Bug 3761)
-#
-# Revision 1.2  2007/12/14 15:20:47  venglisc
-# Replaced email DL for testing with the correct group. (Bug 3761)
 #
 # Revision 1.1  2007/12/12 18:00:44  venglisc
 # Initial version of program to take two directories created by the
@@ -243,7 +216,7 @@ SELECT dv.id, dv.num, comment, nct.value
    AND LEFT(qt.node_loc, 8) = LEFT(nct.node_loc, 8)
  WHERE dv.id in (%s)
    AND qt.value = 'ClinicalTrials.gov ID'
-""" % CdrIds)
+""" % CdrIds, timeout = 300)
 
             rows = cursor.fetchall()
             cursor.close()
@@ -261,7 +234,7 @@ SELECT dv.id, dv.num, comment
     ON dv.id  = dvmax.id
    AND dv.num = dvmax.maxnum
  WHERE dv.id in (%s)
-""" % NoNctCdrIds)
+""" % NoNctCdrIds, timeout = 300)
 
             noNctRows = cursor.fetchall()
             cursor.close()
@@ -355,9 +328,9 @@ SELECT dv.id, dv.num, comment
         strTo    = ["VE Test <***REMOVED***>"]
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
-                    "William Osei-Poku <william.osei-poku@lmco.com>", 
+                    "William Osei-Poku <***REMOVED***>", 
                     "Kimberly Eckley <***REMOVED***>",
-                    "Judy Morris <judith.morris@lmco.com>",
+                    "Judy Morris <***REMOVED***>",
                     "Mark Leech <mark.j.leech@lmco.com>",
                     "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
