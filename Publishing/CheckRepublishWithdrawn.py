@@ -315,9 +315,9 @@ SELECT MIN(pub_proc)
                     #"Kimberly Eckley <***REMOVED***>"]
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
-                    "William Osei-Poku <william.osei-poku@lmco.com>", 
+                    "William Osei-Poku <***REMOVED***>", 
                     "Kimberly Eckley <***REMOVED***>",
-                    "Judy Morris <judith.morris@lmco.com>",
+                    "Judy Morris <***REMOVED***>",
                     "Mark Leech <mark.j.leech@lmco.com>",
                     "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
