@@ -14,30 +14,8 @@
 # $Revision: 1.9 $
 #
 # $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
-# $Log: not supported by cvs2svn $
-# Revision 1.8  2009/09/16 19:22:02  venglisc
-# Modified SQL query to also pick up protocols without transfer date.
-# (Bug 4638)
 #
-# Revision 1.7  2009/09/04 21:48:57  venglisc
-# Modified program to submit an error message in case the unicode convertion
-# failed when writing to file and if the SQL query fails due to a DB timeout.
-# (Bug 4633)
-#
-# Revision 1.6  2009/07/24 20:18:35  venglisc
-# Modified the email message to be converted to UTF-8. (Bug 4611)
-#
-# Revision 1.5  2009/07/24 18:50:25  venglisc
-# Modified SQL query to only display primary lead org information. (Bug 4529)
-#
-# Revision 1.4  2009/05/14 15:20:49  venglisc
-# Modified SQL query to remove mandatory Comment from a record. (Bug 4529)
-#
-# Revision 1.3  2009/05/12 22:35:39  venglisc
-# Changed the email body to a Unicode string.
-#
-# Revision 1.2  2009/05/12 22:10:48  venglisc
-# The SQL query frequently timed out.  Increasing timeout value. (Bug 4529)
+# BZIssue::4687
 #
 # Revision 1.1  2009/03/27 20:38:12  venglisc
 # New email notification to NLM for ownership transferring to responsible
@@ -71,6 +49,93 @@ class NothingFoundError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
+
+# ---------------------------------------------------------------
+# PUP class to identify the protocol update person information
+# If the personRole is specified as 'Protocol chair' the chair's
+# information is selected instead.
+# ---------------------------------------------------------------
+class PUP:
+    def __init__(self, id, persRole = 'Update person'):
+        self.cdrId       = id
+        self.persId      = None
+        self.persFname   = None
+        self.persLname   = None
+        self.persPhone   = None
+        self.persEmail   = None
+        self.persContact = None
+        self.persRole    = persRole
+
+        conn = cdrdb.connect()
+        cursor = conn.cursor()
+
+        # Get the person name
+        # -------------------
+        cursor.execute("""\
+          SELECT q.doc_id, u.int_val, 
+                 g.value as "FName", l.value as "LName", 
+                 c.value as Contact  
+            FROM query_term_pub q
+            JOIN query_term_pub u
+              ON q.doc_id = u.doc_id
+             AND u.path   = '/InScopeProtocol/ProtocolAdminInfo' +
+                            '/ProtocolLeadOrg/LeadOrgPersonnel'  +
+                            '/Person/@cdr:ref'
+             AND left(q.node_loc, 12) = left(u.node_loc, 12)
+            JOIN query_term g
+              ON u.int_val = g.doc_id
+             AND g.path   = '/Person/PersonNameInformation/GivenName'
+            JOIN query_term l
+              ON g.doc_id = l.doc_id
+             AND l.path   = '/Person/PersonNameInformation/SurName'
+            JOIN query_term c
+              ON g.doc_id = c.doc_id
+             AND c.path   = '/Person/PersonLocations/CIPSContact'
+           WHERE q.doc_id = %s
+             AND q.value  = '%s'
+        """ % (self.cdrId, self.persRole))
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            self.cdrId       = row[0]
+            self.persId      = row[1]
+            self.persFname   = row[2]
+            self.persLname   = row[3]
+            self.persContact = row[4]
+
+        # Get the person's email and phone if a PUP was found
+        # ---------------------------------------------------
+        if self.persId:
+            cursor.execute("""\
+          SELECT q.doc_id, c.value, p.value, e.value
+            FROM query_term q
+            JOIN query_term c
+              ON c.doc_id = q.doc_id
+             AND c.path = '/Person/PersonLocations' +
+                          '/OtherPracticeLocation/@cdr:id'
+ LEFT OUTER JOIN query_term p
+              ON c.doc_id = p.doc_id
+             AND p.path = '/Person/PersonLocations' +
+                          '/OtherPracticeLocation/SpecificPhone'
+             AND LEFT(c.node_loc, 8) = LEFT(p.node_loc, 8)
+ LEFT OUTER JOIN query_term e
+              ON c.doc_id = e.doc_id
+             AND e.path = '/Person/PersonLocations' +
+                          '/OtherPracticeLocation/SpecificEmail'
+             AND LEFT(c.node_loc, 8) = LEFT(e.node_loc, 8)
+           WHERE q.path = '/Person/PersonLocations/CIPSContact'
+             AND q.value = c.value
+             AND q.doc_id = %s
+            """ % self.persId)
+
+            rows = cursor.fetchall()
+
+            for row in rows:
+                self.persPhone   = row[2]
+                self.persEmail   = row[3]
+
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -171,6 +236,35 @@ Subject: %s: %s
     server = smtplib.SMTP(SMTP_RELAY)
     server.sendmail(STR_FROM, '***REMOVED***', message.encode('utf-8'))
     server.quit()
+
+
+# -------------------------------------------
+# Getting the Protocol Grant information
+# -------------------------------------------
+def getGrantNo(id):
+    conn = cdrdb.connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""\
+        SELECT t.value, g.value
+          FROM query_term g
+          JOIN query_term t
+            on t.doc_id = g.doc_id
+           AND t.path = '/InScopeProtocol/FundingInfo' +
+                        '/NIHGrantContract/NIHGrantContractType'
+           AND left(g.node_loc, 8) = left(t.node_loc, 8)
+         WHERE g.doc_id = %s
+           AND g.path = '/InScopeProtocol/FundingInfo' +
+                        '/NIHGrantContract/GrantContractNo'
+    """ % id)
+    rows = cursor.fetchall()
+    grantNo = []
+    for row in rows:
+        grantNo.append(u'%s-%s' % (row[0], row[1]))
+
+    grantNo.sort()
+
+    return ", ".join(["%s" % g for g in grantNo])
 
 
 # ---------------------------------------------------------------------
@@ -369,12 +463,16 @@ LEFT OUTER JOIN query_term c
     <th>Transfer Org</th>
     <th>PRS Username</th>
     <th>Comment</th>
+    <th>Grant No</th>
+    <th>PUP Name</th>
+    <th>PUP Email</th>
    </tr>
 """ % (time.strftime("%m/%d/%Y", now))
 
         try:
             for (cdrId, protocolId, nctId, orgName, transOrgName,
                  PRSName, comment) in rows:
+
                 if cdrId in newIds:
                     mailBody += u"""\
    <tr>
@@ -387,9 +485,23 @@ LEFT OUTER JOIN query_term c
     <td>%s</td>
     <td>%s</td>
     <td>%s</td>
-   </tr>
 """ % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
        PRSName, comment)
+
+                    # Populate the PUP information
+                    pup = PUP(cdrId)
+
+                    if not pup.persId:
+                        pup = PUP(cdrId, 'Protocol chair')
+
+                    mailBody += u"""\
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+   </tr>
+""" % (getGrantNo(cdrId), '%s %s' % (pup.persFname, pup.persLname), 
+                                                              pup.persEmail)
+
         except Exception, info:
             l.write("Failure retrieving protocols: \n%s" % info[1][0], 
                      stdout = True)
