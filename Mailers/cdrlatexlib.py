@@ -374,15 +374,22 @@ class XProc:
                        ORDER_TOP, now deprecated, will act like
                           ORDER_TOP_FRONT until the first node ruled by
                           ORDER_DOCUMENT is encountered, after that it
-                          works like ORDER_TOP_BACK.
+                          works like ORDER_TOP_BACK.  Use _FRONT and _BACK
+                          to make instructions clearer and easier to read.
 
-                      ORDER_TOP rules which should be processed first at the
-                      beginning of the list of rules.  These rules will be
-                      processed in their order of appearance in the list.
+                      Elements specified with ORDER_TOP are always processed
+                      in their order of appearance in the list of rules, not
+                      in the order of appearance in the document.  If there
+                      are multiple occurrences of an element specified with
+                      ORDER_TOP, the individual occurrences are processed in
+                      document order within their ORDER_TOP position.
+
                       Place all ORDER_TOP rules which should be processed
                       last at the end of the list of rules.  These, too,
                       will be processed in their order of appearance in the
-                      list.
+                      list after all ORDER_TOP_FRONT and ORDER_DOCUMENT rules
+                      have been processed.  ORDER_TOP_BACK is a more readable
+                      way of specifying this.
 
                     XProc.ORDER_PARENT:
                       This mode of ordering behaves similarly to ORDER_TOP,
@@ -403,19 +410,42 @@ class XProc:
                       rule within the set of rules which match this set of
                       siblings).
 
+                      All of this processing is within the ordering of the
+                      parent.  If the parent element is the Nth node in the
+                      order of processing and it has five subelements, then
+                      the first ORDER_PARENT (or ORDER_PARENT_TOP) will be
+                      the N+1th element processed, the last ORDER_PARENT_BACK
+                      will be the N+5th element, and then processing will
+                      continue with N+6, whatever that is.
+
+                      _TOP and _BACK versions of ORDER_PARENT are available
+                      to make the processing rules more explicit and easier
+                      to read.
+
                    Example showing how XProc.ORDER_DOCUMENT works:
                     Instructions:
-                      Element='A', order=XProc.ORDER_TOP
-                      Element='B', order=XProc.ORDER_TOP
+                      Element='A', order=XProc.ORDER_TOP (or ORDER_TOP_FRONT)
+                      Element='B', order=XProc.ORDER_TOP (or ORDER_TOP_FRONT)
                       Element='C', order=XProc.ORDER_DOCUMENT
                       Element='D', order=XProc.ORDER_DOCUMENT
-                      Element='E', order=XProc.ORDER_TOP
+                      Element='E', order=XProc.ORDER_TOP (or ORDER_TOP_BACK)
                     Input record has elements in following order:
-                      C1 C2 D3 A4 B5 C6 E7 C8 D9
+                      C1 C2 D3 A4 B5 A6 C7 E8 C9 D10
                     Output record gets:
-                      A4 B5 C1 C2 D3 C6 C8 D9 E7
+                      A4 A6 B5 C1 C2 D3 C7 C9 D10 E8
+                    The order is determined as follows:
+                       A4  - First in the list of elements ordered ORDER_TOP.
+                       A6  - A's come before anything, doc order within A's.
+                       B5  - Next in order of element instructions.
+                       C1  - All TOP_FRONTs done, now use document order.
+                       C2  - Next in doc order.
+                       D3  -   "
+                       C7  -   " even though it appeared after a D.
+                       C9  -   "  "
+                       D10 -   "
+                       E8  - Pushed to the back by ORDER_TOP_BACK processing.
                     (That's perfectly clear, isn't it?)
-                    Only used if there is an element tag.
+
        prefix    - Latex constant string to output prior to processing
        preProcs  - List of routines+parms to call before textOut output
        textOut   - True=Output the text of this element
