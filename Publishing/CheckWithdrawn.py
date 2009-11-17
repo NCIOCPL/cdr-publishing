@@ -14,10 +14,9 @@
 # Created:          2007-12-03        Volker Englisch
 # Last Modified:    $Date: 2009-06-04 21:44:10 $
 # 
-# $Source: /usr/local/cvsroot/cdr/Publishing/CheckWithdrawn.py,v $
-# $Revision: 1.10 $
-#
 # $Id: CheckWithdrawn.py,v 1.10 2009-06-04 21:44:10 venglisc Exp $
+# 
+# BZIssue::4627
 #
 # Revision 1.1  2007/12/12 18:00:44  venglisc
 # Initial version of program to take two directories created by the
@@ -32,6 +31,9 @@ import sys, cdr, cdrdb, os, time, optparse, smtplib
 OUTPUTBASE     = cdr.BASEDIR + "/Output/NLMExport"
 WITHDRAWN_LIST = "WithdrawnFromPDQ.txt"
 LOGNAME        = "CheckWithdrawn.log"
+SMTP_RELAY     = "MAILFWD.NIH.GOV"
+STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
+STR_TO         = "***REMOVED***"
 
 now            = time.localtime(time.time())
 
@@ -102,6 +104,33 @@ def parseArguments(args):
         l.write("Directories to diff: %s" % dirs, stdout = True)
 
     return parser
+
+
+# --------------------------------------------------------------------
+# Module to submit an email message if the program fails
+# --------------------------------------------------------------------
+def sendErrorMessage(msg, recipient = STR_TO):
+    # We want to send an email so that the query doesn't silently fail
+    # ----------------------------------------------------------------
+    mailHeader   = """\
+From: %s
+To: %s
+Subject: %s: %s
+""" % (STR_FROM, recipient, cdr.PUB_NAME.capitalize(),
+       '*** Error: Program CheckWithdrawn failed!')
+
+    mailHeader   += "Content-type: text/html; charset=utf-8\n"
+    mailBody      = "<b>Error running CheckWithdrawn.py</b><br>"
+    mailBody     += "Most likely %s<br>" % msg
+    mailBody     += "See log file for details."
+
+    # Add a Separator line + body
+    # ---------------------------
+    message = mailHeader + "\n" + mailBody
+
+    server = smtplib.SMTP(SMTP_RELAY)
+    server.sendmail(STR_FROM, recipient, message.encode('utf-8'))
+    server.quit()
 
 
 # ---------------------------------------------------------------------
@@ -200,44 +229,57 @@ try:
         # be reported.
         # -----------------------------------------------------
         if CdrIds:
-            cursor.execute("""\
-SELECT dv.id, dv.num, comment, nct.value
-  FROM doc_version dv
-  JOIN (SELECT id, MAX(num) AS maxnum
-          FROM doc_version
-         GROUP BY id) dvmax
-    ON dv.id  = dvmax.id
-   AND dv.num = dvmax.maxnum
-  JOIN query_term_pub nct
-    ON dv.id = nct.doc_id
-   AND nct.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDString'
-  JOIN query_term_pub qt
-    ON qt.doc_id = nct.doc_id
-   AND LEFT(qt.node_loc, 8) = LEFT(nct.node_loc, 8)
- WHERE dv.id in (%s)
-   AND qt.value = 'ClinicalTrials.gov ID'
-""" % CdrIds, timeout = 300)
+            try:
+                cursor.execute("""\
+    SELECT dv.id, dv.num, comment, nct.value
+      FROM doc_version dv
+      JOIN (SELECT id, MAX(num) AS maxnum
+              FROM doc_version
+             GROUP BY id) dvmax
+        ON dv.id  = dvmax.id
+       AND dv.num = dvmax.maxnum
+      JOIN query_term_pub nct
+        ON dv.id = nct.doc_id
+       AND nct.path = '/InScopeProtocol/ProtocolIDs/OtherID/IDString'
+      JOIN query_term_pub qt
+        ON qt.doc_id = nct.doc_id
+       AND LEFT(qt.node_loc, 8) = LEFT(nct.node_loc, 8)
+     WHERE dv.id in (%s)
+       AND qt.value = 'ClinicalTrials.gov ID'
+    """ % CdrIds, timeout = 300)
 
-            rows = cursor.fetchall()
-            cursor.close()
+                rows = cursor.fetchall()
+                cursor.close()
+            except cdrdb.Error, info:
+                l.write("Failure retrieving protocols with NCT-ID: \n%s" % 
+                         info[1][0], stdout = True)
+                sendErrorMessage('SQL query timeout error: Query 1')
+                raise
+
 
         # Query the database with the information that needs to
         # be reported for records without an NCTID
         # -----------------------------------------------------
         if NoNctCdrIds:
-            cursor.execute("""\
-SELECT dv.id, dv.num, comment
-  FROM doc_version dv
-  JOIN (SELECT id, MAX(num) AS maxnum
-          FROM doc_version
-         GROUP BY id) dvmax
-    ON dv.id  = dvmax.id
-   AND dv.num = dvmax.maxnum
- WHERE dv.id in (%s)
-""" % NoNctCdrIds, timeout = 300)
+            try:
+                cursor.execute("""\
+    SELECT dv.id, dv.num, comment
+      FROM doc_version dv
+      JOIN (SELECT id, MAX(num) AS maxnum
+              FROM doc_version
+             GROUP BY id) dvmax
+        ON dv.id  = dvmax.id
+       AND dv.num = dvmax.maxnum
+     WHERE dv.id in (%s)
+    """ % NoNctCdrIds, timeout = 300)
 
-            noNctRows = cursor.fetchall()
-            cursor.close()
+                noNctRows = cursor.fetchall()
+                cursor.close()
+            except cdrdb.Error, info:
+                l.write("Failure retrieving protocols without NCT-ID: \n%s" % 
+                         info[1][0], stdout = True)
+                sendErrorMessage('SQL query timeout error: Query 2')
+                raise
 
     # If there are no new records that need to be reported we can
     # stop here.  No messages are being send.
