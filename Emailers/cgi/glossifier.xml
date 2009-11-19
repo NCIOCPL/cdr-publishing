@@ -49,23 +49,26 @@
           pass is ignore by subsequent masking passes when looking for
           these markup constructs.  The first pass masks out all
           substrings which look like HTML comments (everything
-          beginning with "<!--" up to and including the next
-          occurrence of "-->"); the second pass ignores substrings
-          which match the pattern for HTML anchor elements, including
-          text or mixed content (that is, everything between "<a\s+",
-          where "\s+" represents a sequence of one or more whitespace
-          characters, and the next occurrence of "</a>"; this pass
-          also masks out everything between "{{" and the next
-          occurrence of "}}" (inclusive); the third pass masks out
-          substrings which match the pattern for HTML tags (but not
-          the text content of the elements delimited by those tags),
-          looking for everything not already masked out which begins
-          with the character "<" through the next occurrence of the
-          ">" character.  Although this approach risks masking out too
-          much in the event of an unescaped "<" appearing in the
-          middle of text content, that risk is balanced by the
-          decreased likelihood of presenting attribute values inside
-          element tags for glossary markup.
+          beginning with "<!" followed by two hyphen characters up to
+          and including the next two hyphen characters followed
+          immediately by ">" [this comment can't show those tokens in
+          a more straightforward manner because the sequence of two
+          hyphens is not allowed inside an XML comment]); the second
+          pass ignores substrings which match the pattern for HTML
+          anchor elements, including text or mixed content (that is,
+          everything between "<a\s+", where "\s+" represents a
+          sequence of one or more whitespace characters, and the next
+          occurrence of "</a>"; this pass also masks out everything
+          between "{{" and the next occurrence of "}}" (inclusive);
+          the third pass masks out substrings which match the pattern
+          for HTML tags (but not the text content of the elements
+          delimited by those tags), looking for everything not already
+          masked out which begins with the character "<" through the
+          next occurrence of the ">" character.  Although this
+          approach risks masking out too much in the event of an
+          unescaped "<" appearing in the middle of text content, that
+          risk is balanced by the decreased likelihood of presenting
+          attribute values inside element tags for glossary markup.
 
       dictionaries
 
