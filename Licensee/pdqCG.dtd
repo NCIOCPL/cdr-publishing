@@ -8,7 +8,8 @@
   
    Preliminary version 
    
-   $Log: not supported by cvs2svn $
+   BZIssue::4707
+
    Revision 1.4  2009/05/15 20:35:34  venglisc
    Added optional DrugInfoType Combination attribute for DrugInfo Summaries.
    (Bug 4568)
@@ -25,165 +26,6 @@
    can/should go to Cancer.gov but need to be removed for the licensees.
    (Bug 4123)
 
-   Revision 1.73  2008/04/02 22:09:55  venglisc
-   Reverting the change of v1.72.
-
-   Revision 1.72  2008/02/06 22:25:55  venglisc
-   Making DateFirstPublished optional element
-
-   Revision 1.71  2007/12/21 16:08:59  venglisc
-   Adding the optional Safety attribute needed so that publish preview on
-   BACH will work until the new filters (eliminating the attribute from
-   the vendor output) will be in place. (Bug 3787)
-
-   Revision 1.70  2007/11/30 22:04:42  venglisc
-   Additional modification re CompletionDate.
-
-   Revision 1.69  2007/11/30 22:00:36  venglisc
-   Added new element CompletionDate and made top level AltTitle mandatory
-   (Bug 3742).
-
-   Revision 1.68  2007/06/20 18:11:18  venglisc
-   Added optional id attribute to GENETICSPROFESSIONAL root element.
-
-   Revision 1.67  2007/03/30 20:53:06  venglisc
-   Added DrugRef for common text elements and TermRef as additional
-   GlossaryTerm element.  (Bug 2857)
-
-   Revision 1.66  2007/03/21 21:59:21  venglisc
-   DTD changes to
-     - add AltTitle to supplement the SummaryTitle
-     - add TitleType attribute to AltTitle element
-     - add url attribute to SummaryRef element
-     - add Gender element
-     - make LeadOrgProtocolID element optional
-     - add RelatedInformation wrapper element
-     - modify definition of CTGovDisclaimer element
-   (Bug 2857)
-
-   Revision 1.65  2006/09/29 15:58:54  venglisc
-   Reverted former change for DateLastModified.  Element will stay an optional
-   element. (Bug 2099)
-
-   Revision 1.64  2006/09/14 15:38:42  venglisc
-   Per request from Cancer.gov added Media element to internal section.
-
-   Revision 1.63  2006/09/12 16:37:40  venglisc
-   Modified DateLastModified to be mandatory for DrugInfoSummary.
-   Added tags for processing of DTD to strip internal data. (Bug 2099)
-
-   Revision 1.62  2006/06/23 23:07:05  venglisc
-   Adding log message for previous commit:
-   Added DrugInfoDisclaimer element and changed SummarySection to Section
-   element. (Bug 2099)
-
-   Revision 1.61  2006/06/23 23:04:42  venglisc
-   *** empty log message *** 
-
-   Revision 1.60  2006/06/15 15:44:35  venglisc
-   Created wrapper elements for Manufacturer, USBrandName, and Synonym
-   elements per request from Cancer.gov staff. (Bug 2099)
-
-   Revision 1.59  2006/06/06 14:42:23  venglisc
-   Changed SummarySection from optional to mandatory.
-   Changed DateFirstPublished from mandatory to optional to mimic the
-   definition of the Summary DTD. (Bug 2099)
-
-   Revision 1.58  2006/06/02 19:03:39  venglisc
-   Added new document type DrugInformationSummary.
-   Minor white space formatting. (Bug 2099)
-
-   Revision 1.57  2005/12/27 21:45:19  venglisc
-   Added the missing RegistryEntry container element. (Bug 1916)
-
-   Revision 1.56  2005/11/28 21:28:12  venglisc
-   Updated DTD to add PDQProtocolTitle, DateLastVerified, StartDate,
-   StudyDesign, etc. (Bug 1870)
-
-   Revision 1.55  2005/10/25 19:15:09  venglisc
-   Added new elements RelatedPublications, ExpectedEnrollment, Outcome,
-   StartDate, and VerificationDate. (Bug 1870)
-
-   Revision 1.54  2005/09/15 22:28:38  venglisc
-   Added the id attribute for the QandAEntry element. (Bug 1841)
-
-   Revision 1.53  2005/08/02 15:41:35  venglisc
-   Reverted back to the version 1.51 to include the SummaryDescription and
-   SummaryURL previously removed since vendors were not ready at the time to
-   accept these. (Bug 1796)
-
-   Revision 1.51  2005/03/25 16:29:38  bkline
-   Added RelatedWebsites element to Term element definition.
-
-   Revision 1.50  2005/03/24 13:49:26  bkline
-   New elements SummaryDescription and SummaryURL moved to follow
-   SummaryLanguage at Lakshmi's request.
-
-   Revision 1.49  2005/03/23 19:53:16  bkline
-   Added new NCIThesaurusConceptID attribute to Term element.  Added new
-   elements SummaryDescription and SummaryURL to SummaryMetadata element.
-
-   Revision 1.48  2004/10/14 17:56:35  ameyer
-   Replace placeholder Multimedia element with new MediaLink.
-   Added definitions and positioning for MediaLink.
-   Added MediaRef as an internal reference to a MediaLink.
-
-   Revision 1.47  2004/01/29 20:59:52  bkline
-   Added 'None' as a valid value for the Frame attribute of the Table
-   element.
-
-   Revision 1.46  2003/10/08 12:43:25  bkline
-   Added definitions for new CTGovProtocol document type.
-
-   Revision 1.45  2003/08/15 13:55:36  bkline
-   Made ProtocolSpecialCategory multiply-occurring.
-
-   Revision 1.44  2003/08/12 18:18:23  bkline
-   Added definitions for Audience and Dictionary (GlossaryTerm section).
-
-   Revision 1.43  2003/07/15 20:11:05  bkline
-   Removed duplicate declaration for DefinitionText.
-
-   Revision 1.42  2003/07/09 21:04:40  pzhang
-   Expanded TermDefinition in GlossaryTerm to include new elements for
-   Audience and Dictionary, with the definition text moved to a separate
-   DefinitionText child element.
-
-   Revision 1.41  2003/04/09 18:56:15  bkline
-   Altered GlossaryTerm definition:
-    * made TermDefinition and SpanishTermDefinition multiply occurring;
-    * added optional Dictionary attribute to GlossaryTerm element; and
-    * added optional Audience attribute to (Spanish)TermDefinition.
-
-   Revision 1.40  2003/04/01 19:25:07  bkline
-   Added optional ReplacementFor attribute to top-level Summary element.
-
-   Revision 1.37  2003/03/14 14:44:02  bkline
-   Added menu information elements for Term documents.
-
-   Revision 1.36  2003/03/14 14:25:59  bkline
-   Added FormerName child to OrganizationNameInformation element.
-
-   Revision 1.35  2003/03/10 22:25:47  bkline
-   Added Compact attribute for OrderedList element.
-
-   Revision 1.33  2002/09/09 17:21:05  arkd
-   Protocol:
-
-   In ProtocolSite attribute ref moved from SiteName to ProtocolSite.
-   Attribute sitetype move from SiteName to ProtocolSite
-   and changed from CDATA to Person|Organization.
-
-   Revision 1.31  2002/08/22 21:25:34  arkd 
-   Common Elements:
-   OrganizationName (optional, multiple, PCDATA) added to Entity.
-
-   Summary:
-   In SummarySection:
-   (%ParaLevelElements;)*,SummarySection*
-     changed to:
-   ((%ParaLevelElements;)*|SummarySection*)*
-   
 -->
 
 <!-- =============================================================
@@ -670,11 +512,12 @@
      Protocols  Start element Protocol. 
      =============================================================== -->
 
-<!-- For Internal use onle:
+<!-- For Internal use only:
                     RegulatoryInformation
                     OfficialProtocolTitle  -->
 
 <!ELEMENT Protocol (ProtocolIDs,
+                    UrlInfo,
                     FundingInfo?,
                     RegulatoryInformation?,
                     ProtocolSponsor*,
@@ -707,6 +550,12 @@
 <!ELEMENT OtherID (IDType,IDString)>
 
 <!ELEMENT IDType (#PCDATA)>
+
+<!ELEMENT UrlInfo (PrimaryUrlID, SecondaryUrlID?)>
+
+<!ELEMENT PrimaryUrlID (#PCDATA)>
+
+<!ELEMENT SecondaryUrlID (#PCDATA)>
 
 <!ELEMENT FundingInfo (NIHGrantContract*, OtherGrantContractInfo*)>
 
@@ -1431,6 +1280,7 @@
 
 <!ELEMENT CTGovProtocol        (RequiredHeader,
                                 IDInfo,
+                                UrlInfo,
                                 BriefTitle,
                                 OfficialTitle?,
                                 Sponsors,
@@ -1444,6 +1294,7 @@
                                 ProtocolPhase+,
                                 ProtocolDetail,
                                 Eligibility,
+                                ProtocolSpecialCategory*,
                                 Location*,
                                 VerificationDate,
                                 LastChangedDate?)>
