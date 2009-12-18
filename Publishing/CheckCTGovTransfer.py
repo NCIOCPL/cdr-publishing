@@ -249,10 +249,10 @@ def getGrantNo(id):
         SELECT t.value, g.value
           FROM query_term g
           JOIN query_term t
-            on t.doc_id = g.doc_id
+            ON t.doc_id = g.doc_id
            AND t.path = '/InScopeProtocol/FundingInfo' +
                         '/NIHGrantContract/NIHGrantContractType'
-           AND left(g.node_loc, 8) = left(t.node_loc, 8)
+           AND LEFT(g.node_loc, 8) = LEFT(t.node_loc, 8)
          WHERE g.doc_id = %s
            AND g.path = '/InScopeProtocol/FundingInfo' +
                         '/NIHGrantContract/GrantContractNo'
@@ -260,7 +260,10 @@ def getGrantNo(id):
     rows = cursor.fetchall()
     grantNo = []
     for row in rows:
-        grantNo.append(u'%s-%s' % (row[0], row[1]))
+        if row[0][:3] == row[1][:3]: 
+            grantNo.append(u'%s' % row[1])
+        else:
+            grantNo.append(u'%s-%s' % (row[0], row[1]))
 
     grantNo.sort()
 
