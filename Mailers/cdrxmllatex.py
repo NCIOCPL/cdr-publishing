@@ -32,6 +32,14 @@ G_debug = 0         # True=output debugging info
 EXEC_OK   = 0       # Everything fine, keep working
 EXEC_DONE = 1       # Stop executing chain, we're done
 
+# A constant node number used in place of an instruction ordinal
+#   for nodes which are ORDER_DOCUMENT.
+# This constant forces all ORDER_DOCUMENT and text nodes to appear
+#   after any ORDER_PARENT nodes, and among themselves, to appear
+#   in the order that the DOM nodes appeared in the XML.
+# It is just an arbitrarily high number
+DOC_ORDER = 100000
+
 ####################################################################
 # Classes
 ####################################################################
@@ -391,7 +399,14 @@ class Ctl:
             #   to preserve lengths for matching in the tree build
             #   (Really only there for debugging)
             else:
-                nodeOrder = (order, 0)
+                tmpOrder = order
+                if xp.order == XProc.ORDER_TOP_BACK:
+                    # Force ORDER_TOP_BACK to come after document ordered
+                    # instructions.
+                    # NOTE: Only supporting ORDER_TOP_BACK, not deprecated
+                    #       ORDER_TOP with no FRONT/BACK qualifier.
+                    tmpOrder = order + DOC_ORDER
+                nodeOrder = (tmpOrder, 0)
                 self.procNodeList.append (ProcNode (None, xp, nodeOrder))
 
             # Next instruction object gets the next ordinal number
@@ -432,14 +447,6 @@ class Ctl:
     #---------------------------------------------------------------
     def createProcessingNodes (self, domNode, parentOrder, \
                                occPath, namePath, addToInstNum):
-
-        # A constant node number used in place of an instruction ordinal
-        #   for nodes which are ORDER_DOCUMENT.
-        # This constant forces all ORDER_DOCUMENT and text nodes to appear
-        #   after any ORDER_PARENT nodes, and among themselves, to appear
-        #   in the order that the DOM nodes appeared in the XML.
-        # It is just an arbitrarily high number
-        DOC_ORDER = 100000
 
         # When processing children of a node, the first child we see with
         #   order == ORDER_DOCUMENT, causes all ORDER_DOCUMENT siblings
