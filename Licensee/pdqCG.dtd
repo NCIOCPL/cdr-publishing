@@ -414,6 +414,12 @@
 
 <!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
 
+<!ELEMENT UrlInfo (PrimaryUrlID, SecondaryUrlID?)>
+
+<!ELEMENT PrimaryUrlID (#PCDATA)>
+
+<!ELEMENT SecondaryUrlID (#PCDATA)>
+
 <!-- End Common Elements -->
 
 <!-- ================================================================
@@ -550,12 +556,6 @@
 <!ELEMENT OtherID (IDType,IDString)>
 
 <!ELEMENT IDType (#PCDATA)>
-
-<!ELEMENT UrlInfo (PrimaryUrlID, SecondaryUrlID?)>
-
-<!ELEMENT PrimaryUrlID (#PCDATA)>
-
-<!ELEMENT SecondaryUrlID (#PCDATA)>
 
 <!ELEMENT FundingInfo (NIHGrantContract*, OtherGrantContractInfo*)>
 
@@ -858,7 +858,7 @@
      ========================================================= -->
 
 <!-- ProfessionalInformation only when IncludeInDirectory has value Include -->
-
+<!--
 <!ELEMENT Person (PersonNameInformation,
                   ProfessionalInformation?, 
                   PersonLocations,
@@ -878,9 +878,11 @@
                            )>
 
 <!ELEMENT PhysicianSpecialtyInformation (BoardCertifiedSpecialty | OtherSpecialty)+>
+-->
 
 <!-- These are board certified specialties that PDQ verifies -->
 
+<!--
 <!ELEMENT BoardCertifiedSpecialty (BoardCertifiedSpecialtyName,
                                    Certified, Verified?
                                   )>
@@ -896,10 +898,12 @@
 <!ELEMENT PhysicianMembershipInformation (MemberOfCooperativeGroup
                                           | MemberOfMedicalSociety
                                          )*>
+-->
 
 <!ELEMENT MemberOfCooperativeGroup (#PCDATA)>
 <!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
 
+<!--
 <!ELEMENT MemberOfMedicalSociety (#PCDATA)>
 
 <!ELEMENT PersonLocations (Home?,
@@ -922,6 +926,7 @@
 
 <!ELEMENT PersonOrganizationLocation (%Location;)>
 <!ATTLIST PersonOrganizationLocation ref CDATA #IMPLIED>
+-->
 
 <!-- End Persons -->
 
