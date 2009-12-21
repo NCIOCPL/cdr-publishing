@@ -12,310 +12,20 @@
 # below under the comment SUPPRESS THESE ELEMENTS.
 # *************************** END WARNING *****************************
 #
-# $Log: not supported by cvs2svn $
-# Revision 1.84  2009/03/09 19:35:58  bkline
-# Added mailer ID at top of each summary mailer page (request #4520).
-#
-# Revision 1.83  2008/06/03 21:28:06  bkline
-# Replaced StandardError with Exception objects.
-#
-# Revision 1.82  2008/04/08 15:40:38  bkline
-# Added support for ProtocolRef elements (request #4027).
-#
-# Revision 1.81  2008/01/07 17:38:46  bkline
-# Adjustment for US letter paper size for the other mailers.
-#
-# Revision 1.80  2007/11/28 15:38:45  bkline
-# Changed \topmargin to \voffset in summary mailer preamble.
-#
-# Revision 1.79  2007/11/14 15:47:28  bkline
-# Fixed problem with changed page layout after upgrade to MiKTeX 2.6.
-#
-# Revision 1.78  2006/07/25 20:54:40  bkline
-# Modified collection of protocol titles to work around the fact that
-# the vendor filter no longer preserves the original title in all cases.
-#
-# Revision 1.77  2006/06/27 20:10:01  bkline
-# Additional changes tacked on to issue #2230.
-#
-# Revision 1.76  2006/06/15 13:03:15  bkline
-# Changes requested by Sheri in issue #2230.
-#
-# Revision 1.75  2006/06/09 20:03:17  venglisc
-# Changed addres from CIPS to OCCM.
-#
-# Revision 1.74  2006/06/09 19:52:20  venglisc
-# Modified code to adjust for DTD change of ProtocolTitle element to
-# PDQProtocolTitle and moving the OriginalTitle element to the
-# RegistryInfo block. (Bug 2200)
-#
-# Revision 1.73  2005/06/20 13:28:00  bkline
-# Replace \emph with \it.
-#
-# Revision 1.72  2004/11/18 21:22:47  ameyer
-# Added code to the organization mailers to perform the Yes/No circle
-# marking for public email addresses as is done for persons.  It's the
-# same code as for persons, just called from two additional locations.
-#
-# Revision 1.71  2004/11/12 15:45:56  bkline
-# Extended code for stripping trailing space from protocol IDs to
-# handle primary IDs as well.
-#
-# Revision 1.70  2004/11/12 15:44:30  bkline
-# Added code to strip trailing space for other protocol IDs.
-#
-# Revision 1.69  2004/11/12 15:28:37  bkline
-# Adjusted room at the bottom of the page for summary mailers.
-#
-# Revision 1.68  2004/11/03 17:11:48  bkline
-# Added \par instruction to ensure break between paragraphs; increased
-# paragraph spacing from 1.2mm to 3.0mm; fixed problem with list spacing
-# (code wasn't restoring spacing when leaving a nested list).  See
-# issue #1364.
-#
-# Revision 1.67  2004/08/02 17:32:39  bkline
-# Extended timeouts on SQL queries to 5 minutes (request #1286).
-#
-# Revision 1.66  2004/04/15 20:04:58  ameyer
-# Added support for marking the "Email" vs. "Mail" circles under "how
-# would you prefer to be contactd?"
-# Removed math symbol bracketing ($...$) from textcircled macro - it
-# worked but was incorrect and generated warnings that I hadn't
-# noticed before.
-#
-# Revision 1.65  2004/03/03 22:06:47  bkline
-# Modified display of Protocol Personnel section of abstract mailer to
-# use the person pointed to by the MailAbstractTo element (request
-# #1103 from Sheri).
-#
-# Revision 1.64  2003/12/10 19:55:53  bkline
-# Fixed code to generate the PDQ/Cancer.gov Clinical Trial Listing
-# in the Person mailers (the denormalization output had replaced
-# the DocId element with an "id" attribute on the top-level element).
-#
-# Revision 1.63  2003/10/14 21:53:21  ameyer
-# Added ORDER_TOP_FRONT/BACK, ORDER_PARENT_FRONT/BACK.  Plain old ORDER_TOP
-# and ORDER_PARENT will continue to work as before, but are deprecated.
-# All future modifications should use FRONT or BACK qualifiers to guarantee
-# that the expected placement of data is what is actually seen.
-# Modified all Summary XProcs and some Protocol XProcs to use the new
-# ordering specifiers.
-#
-# Revision 1.62  2003/10/08 15:42:10  bkline
-# Added support for LOERef elements.
-#
-# Revision 1.61  2003/10/08 10:38:43  bkline
-# Modifications to adapt to changes in Summary filters.
-#
-# Revision 1.60  2003/09/04 21:37:26  bkline
-# Added space before itemized list following a Para element.
-#
-# Revision 1.59  2003/08/21 18:08:50  ameyer
-# Fixed mistaken deletion of a \item command in the enumerated list of
-# other organization addresses.
-#
-# Revision 1.58  2003/08/19 13:55:32  ameyer
-# Made significant new modifications to TrialGroups handling - simplifying
-# the logic for Physicians in accord with what was done for Organization -
-# made possible by the new, simpler, XML format we are now reading.
-#
-# Revision 1.57  2003/08/08 00:42:57  ameyer
-# Fixed duplication of OrgName in other locations.
-# Left original code commented out in place because I don't know if I've
-# tested enough cases to be sure this is right everywhere.
-#
-# Revision 1.56  2003/08/07 20:54:27  ameyer
-# Removed unused getState() function.
-# Removed MemberOfCooperativeGroup processing, replacing it with
-# much simpler logic that processes the new, much simpler XML structure
-# adopted after changing the denormalization filter.
-#
-# Revision 1.55  2003/08/06 18:17:32  bkline
-# Changed \newcommand(\ewidth ... to \renewcommand ... (because Alan added
-# another \newcommand for this variable last month).
-#
-# Revision 1.54  2003/07/15 20:55:14  bkline
-# Fixed bug in state-plus-zipcode formatting.  Adjusted to accomodate
-# changes in vendor representation of lead org personnel in protocols.
-#
-# Revision 1.53  2003/07/15 15:53:35  ameyer
-# Modified new and renew command definitions for ewidth to insure that it
-# is only made "new" once.
-# Modified organization address handling to use OrganizationLocation
-# instead of OrganizationNameInformation to get full hierarchy of
-# organization and parent names.
-# Made minor Latex line break tweaks to get this to format right.
-#
-# Revision 1.52  2003/07/15 12:46:31  bkline
-# Adjusted status & participant mailer to handle multiple non-PUP
-# lead org persons (issue #815).
-#
-# Revision 1.51  2003/07/12 01:16:58  ameyer
-# Numerous changes for new denormalization filters, and for consolidation
-# of name/address XML parsing.
-#
-# Revision 1.50  2003/07/03 18:11:21  ameyer
-# Checking Status attribute on address before printing it.
-# Modified statPersonnel() to use Location class.
-#
-# Revision 1.49  2003/07/02 22:00:56  bkline
-# Implemented request #797 (shrink margins for Summary mailers).
-#
-# Revision 1.48  2003/07/02 02:02:07  ameyer
-# Various fixes based on further testing of the new code.
-# Removed more of the old, now redundant, location and formatting code.
-#
-# Revision 1.47  2003/07/01 21:58:19  ameyer
-# Modifications to Person mailers for new denormalization/mailer filters.
-# All address handling was revised plus other minor changes.
-#
-# Revision 1.46  2003/07/01 14:21:36  bkline
-# Fixed missing brace in macro for protocol title.
-#
-# Revision 1.45  2003/06/26 19:49:32  bkline
-# Switched protocol abstract mailer to use vendor filter output.
-#
-# Revision 1.44  2003/06/02 14:29:08  bkline
-# Added handling of SummaryFragmentRef.
-#
-# Revision 1.43  2003/05/27 18:22:02  bkline
-# Fixed a problem with the protocol title handling (didn't do the right
-# thing with markup).
-#
-# Revision 1.42  2003/05/19 18:41:57  bkline
-# Modified handling of citations in table cells to allow line breaking
-# after a comma in a series of citation numbers (request #735)
-#
-# Revision 1.41  2003/05/13 20:01:24  bkline
-# Implemented changes to Physician mailers requested in issue #730.
-#
-# Revision 1.40  2003/05/09 03:44:06  ameyer
-# Added support for PersonTitle field in physician directory output.
-#
-# Revision 1.39  2003/04/09 14:33:21  bkline
-# Fixed problem with trial group membership (mismatch between integer and
-# string version of document ID).
-#
-# Revision 1.38  2003/03/18 16:37:00  bkline
-# Added support for multiple site contacts on S&P mailers (Request #591).
-#
-# Revision 1.37  2003/03/14 01:32:28  bkline
-# Added an extra line for the Physician mailer so the Organization name
-# can be provided for new OtherPracticeLocation information.
-#
-# Revision 1.36  2003/03/03 20:08:23  bkline
-# Implemented changes requested by Sheri in issue #591.
-#
-# Revision 1.35  2003/02/19 16:49:48  bkline
-# Removed "Principal Investigator" from label for Contact column of
-# S&P mailers.  Set \footskip to 60pt for S&P mailers.
-#
-# Revision 1.34  2003/02/11 21:28:47  bkline
-# Added code to pick up CitySuffix.
-#
-# Revision 1.33  2003/02/10 17:23:07  bkline
-# Changed fax number for protocol summary mailer.
-#
-# Revision 1.32  2003/02/06 23:00:44  ameyer
-# Trimmed whitespace from text retrieved via getText function.
-# Resolved some pychecker warnings.
-#
-# Revision 1.31  2003/02/06 19:36:19  ameyer
-# Made modifications designed by Volker to significantly reduce the problem
-# of blank pages in the person directory mailers.
-#
-# Revision 1.30  2003/01/28 14:23:33  bkline
-# Added code to handle protocols with no PI for status and participant
-# check.
-#
-# Revision 1.29  2003/01/23 19:28:49  ameyer
-# Changed handling of Publish Email address circles again.
-#
-# Revision 1.28  2003/01/16 23:35:42  ameyer
-# Added \YESno and \yesNO macros to centralize handling of default values
-# for check circles.
-# Added default handling for three more check circles in the form.
-#
-# Revision 1.27  2003/01/15 04:52:34  ameyer
-# Added 'x' in circles for public email Yes or No for each email address.
-#
-# Revision 1.26  2003/01/15 03:12:44  bkline
-# Added code to handle multiple roles for LeadOrgPerson elements; changed
-# code to get the MailAbstractTo value to avoid calling UnicodeToLatex().
-#
-# Revision 1.25  2002/12/30 19:55:47  bkline
-# Suppressed DRAFT marking.
-#
-# Revision 1.24  2002/12/27 02:11:19  ameyer
-# Added ability to output an 'x' in the directory include circle.
-#
-# Revision 1.23  2002/12/26 13:53:23  bkline
-# Modifications made for issue #551: moved protocol information before
-# practice information.  Added a fourth question to the practice
-# information section, with additional instructions.
-#
-# Revision 1.22  2002/12/03 17:04:28  bkline
-# Fixed several bugs in list handling reported by Margaret.
-#
-# Revision 1.21  2002/11/14 21:42:40  ameyer
-# Added number of latex passes to ControlTable.
-# Cleaned up some errors revealed by pychecker.
-#
-# Revision 1.20  2002/11/08 21:40:46  bkline
-# Inserted newline between bibliographic items to prevent TeX from
-# choking on monstrously long lines.
-#
-# Revision 1.19  2002/11/08 16:11:45  bkline
-# Added spacing changes requested by Lakshmi (issue #511).
-#
-# Revision 1.18  2002/11/07 21:21:20  bkline
-# Improved table support.
-#
-# Revision 1.17  2002/11/06 03:09:27  ameyer
-# Changed initial values of address lines from None to "", to avoid
-# rare cases where xxx.strip() would fail because address line named xxx
-# didn't exist.
-#
-# Revision 1.16  2002/10/31 20:00:23  bkline
-# Added stripLines filter for table cells.
-#
-# Revision 1.15  2002/10/23 22:05:54  bkline
-# Added rule for StatusCheck.
-#
-# Revision 1.14  2002/10/14 12:47:44  bkline
-# Removed unwanted comma from CIPS address.
-#
-# Revision 1.13  2002/10/10 13:44:43  bkline
-# Mods to final page of prot abstract mailer.
-#
-# Revision 1.12  2002/10/07 21:33:51  bkline
-# Added aliases for protocol abstract mailer.
-#
-# Revision 1.11  2002/10/02 20:51:03  bkline
-# Added code to find the counts of active and closed protocols with
-# which a physician is involved.  Cleaned up the indentenation in the
-# older code.
-#
-# Revision 1.10  2002/09/30 14:25:25  bkline
-# Second draft for protocol summary and status mailers.
-#
-# Revision 1.9  2002/09/26 22:05:29  bkline
-# Second draft for person and org mailers.
-#
-# Revision 1.8  2002/09/25 18:30:42  bkline
-# First working status and participant site check mailers.
-#
-# Revision 1.7  2002/09/17 22:10:23  bkline
-# Cleaned up, added comments.
+# BZIssue::4676 (add images for HP summary mailers)
 #
 #----------------------------------------------------------------------
 import sys, re, xml.dom.minidom, UnicodeToLatex, cdrlatextables, time
 
 #----------------------------------------------------------------------
-# Module-level variables.
+# Module-level variables (and 'constants').
 #----------------------------------------------------------------------
 personLists = None
 listStack   = []
+imageSet    = set()
+imageConn   = None
+MAX_IMAGE_WIDTH = 500
+MAX_IMAGE_HEIGHT = 500
 
 # Pattern for checking attribute name =/!= value
 _attrPat = re.compile(r'([A-Za-z_]+)\s*(!?)=\s*(.*)')
@@ -1098,6 +808,73 @@ def findControls (docFmt, fmtType):
         cdrlatextables.TEXT_WIDTH = 6.5 # See request #797.
     return ctl
 
+def media(pp):
+    "Processes an image and its caption."
+
+    # We need some additional modules.
+    import Image, cdr, cdrdb, cStringIO
+
+    # Extract the image ID and the caption.
+    imageNode = pp.getCurNode()
+    imageIdString = imageNode.getAttribute('ref')
+    if not imageIdString:
+        raise XmlLatexException("Image node has no CDR link")
+    imageId = cdr.exNormalize(imageIdString)[1]
+
+    # If we haven't already processed this image, do so now.
+    if imageId not in imageSet:
+
+        # We use our own DB connection/cursor.
+        global imageConn
+        if not imageConn:
+            imageConn = cdrdb.connect('CdrGuest')
+        cursor = imageConn.cursor()
+
+        # Fetch the bytes for the image.
+        cursor.execute("""\
+            SELECT b.data
+              FROM doc_blob b
+              JOIN doc_blob_usage u
+                ON u.blob_id = b.id
+             WHERE u.doc_id = ?""", imageId)
+        rows = cursor.fetchall()
+        if not rows:
+            raise XmlLatexException("Unable to find image for CDR%d" % imageId)
+        imageBytes = rows[0][0]
+
+        # Build an object for the image.
+        imageFile = cStringIO.StringIO(imageBytes)
+        image = Image.open(imageFile)
+
+        # Make sure it's the right format.
+        if image.mode == 'P':
+            image = image.convert('RGB')
+
+        # Make sure it's not to tall or too wide.
+        imageWidth, imageHeight = image.size
+        newImageWidth = newImageHeight = None
+        ratio = 1.0 * imageHeight / imageWidth
+        if imageWidth > MAX_IMAGE_WIDTH:
+            newImageHeight = int(round(MAX_IMAGE_WIDTH * ratio))
+            if newImageHeight > MAX_IMAGE_HEIGHT:
+                newImageHeight = None
+            else:
+                newImageWidth = MAX_IMAGE_WIDTH
+        if not newImageHeight and imageHeight > MAX_IMAGE_HEIGHT:
+            ratio = 1.0 * imageWidth / imageHeight
+            newImageHeight = MAX_IMAGE_HEIGHT
+            newImageWidth = int(round(MAX_IMAGE_HEIGHT * ratio))
+        if newImageHeight:
+            image = image.resize((newImageWidth, newImageHeight),
+                                 Image.ANTIALIAS)
+
+        # Save it and remember that we've already seen this one.
+        image.save("%d.eps" % imageId)
+        imageSet.add(imageId)
+
+    # Pop in the new image.
+    pp.setOutput('\\includegraphics{%d.eps}\n' % imageId)
+
 def cite (pp):
     "Retrieves the instructions for a given doc format and format type."
 
@@ -1108,7 +885,7 @@ def cite (pp):
     citeNode = pp.getCurNode()
 
     # If it's a sibling to another one, we've already processed it
-    # Don't neeed to do any more
+    # Don't need to do any more
     prevNode = citeNode.previousSibling
     while prevNode and prevNode.nodeType == prevNode.TEXT_NODE:
         if prevNode.data.strip():
@@ -2373,14 +2150,14 @@ def preferredContactMode(pp):
     # Current node should be PreferredContactNode element
     node = pp.getCurNode()
     if node.nodeName != "PreferredContactMode":
-        raise XmlLatexException (\
+        raise XmlLatexException (
             "preferredContactMode() called on wrong element")
     mode = getText (node)
 
     # Redefine command if we know whether to include or not
     if mode == "Electronic":
-        pp.setOutput (\
-            r"  \renewcommand{\mailMode}{\textcircled{x} Email " + \
+        pp.setOutput (
+            r"  \renewcommand{\mailMode}{\textcircled{x} Email "
             r"\qquad $\bigcirc$ Mail}")
 
 def personDirectoryInclude(pp):
@@ -2396,18 +2173,18 @@ def personDirectoryInclude(pp):
     # Current node should be Include element
     node = pp.getCurNode()
     if node.nodeName != "Include":
-        raise XmlLatexException (\
+        raise XmlLatexException (
             "personDirectoryInclude() called on wrong element")
     includeInDirectory = getText (node)
 
     # Redefine command if we know whether to include or not
     if includeInDirectory == "Include":
-        pp.setOutput (\
-            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\YESno}" + \
+        pp.setOutput (
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\YESno}"
             r"\renewcommand{\retiredYesOrNoCircles}{\yesNO}")
     elif includeInDirectory == "Do not include":
-        pp.setOutput (\
-            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\yesNO}" + \
+        pp.setOutput (
+            r"\renewcommand{\directoryIncludeYesOrNoCircles}{\yesNO}"
             r"\renewcommand{\retiredYesOrNoCircles}{\YESno}")
 
     # If value is anything else ("Pending"), do nothing
@@ -3495,6 +3272,15 @@ DocumentSummaryBody = (
     XProc(element   = "Citation",
           order     = XProc.ORDER_PARENT_BACK,
           preProcs  = ( (bibitem, ()), )),
+    XProc(element   = "MediaLink",
+          prefix    = "\\begin{figure}\n\\begin{center}\n",
+          suffix    = "\\end{center}\n\\end{figure}\n",
+          order     = XProc.ORDER_TOP_BACK,
+          preProcs  = ( (media, ()), )),
+    XProc(element   = "Caption",
+          order     = XProc.ORDER_PARENT_BACK,
+          prefix    = "\\caption{",
+          suffix    = "}\n"),
     )
 
 #------------------------------------------------------------------
@@ -4046,7 +3832,8 @@ DocumentProtocolFooter =(
     )
 
 DocumentSummaryFooter =(
-    XProc(prefix=DOCFTR, order=XProc.ORDER_TOP),
+    # Output footer at the end of everything
+    XProc(suffix=DOCFTR, order=XProc.ORDER_TOP_BACK),
     )
 
 DocumentOrgFooter =(
@@ -4166,4 +3953,4 @@ def showVal (val):
         return val
     if type(val) == type(1):
         return '%d' % val
-    raise Exception("showVal with unexpected type: %s" % str(type(val)))
+    raise XmlLatexException("showVal with unexpected type: %s" % str(type(val)))
