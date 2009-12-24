@@ -6,7 +6,8 @@
 # Licensee data.
 # Validate the new licensee data against its DTD.
 #
-# $Log: not supported by cvs2svn $
+# BZIssue::4675 - Create UrlInfo block
+#
 # Revision 1.3  2008/10/14 21:45:03  venglisc
 # Had to fix the glob.glob() pattern since there were folders/files on BACH
 # that matched the regexp used that shouldn't have been picked up.
@@ -38,7 +39,8 @@ warnings      = False
 class documentType:
 
     def __init__(self):
-        self.filters = { 'ProtocolActive':['name:Vendor Filter: CG2Public'],
+        self.filters = { 'CTGovProtocol': ['name:Vendor Filter: CG2Public'],
+                         'ProtocolActive':['name:Vendor Filter: CG2Public'],
                          'ProtocolClosed':['name:Vendor Filter: CG2Public'],
                          'Terminology':   ['name:Vendor Filter: CG2Public']}
         self.sourceBase  = cdr.BASEDIR + "/Output"
