@@ -6,6 +6,8 @@
 
    Original version  2001/12/17  Michael M Rubenstein
   
+   BZIssue::4629 - Vendor filter changes for GenProf publishing
+
    Preliminary version 
    
    Revision 1.73  2008/04/02 22:09:55  venglisc
@@ -402,13 +404,11 @@
 
 <!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
 
-<!--
 <!ELEMENT UrlInfo (PrimaryUrlID, SecondaryUrlID?)>
 
 <!ELEMENT PrimaryUrlID (#PCDATA)>
 
 <!ELEMENT SecondaryUrlID (#PCDATA)>
--->
 
 <!-- End Common Elements -->
 
@@ -1321,6 +1321,7 @@
      DrugInformationSummary start element DrugInformationSummary
      =========================================================== -->
 
+<!--  I think we can remove the DIS DTD from the licensee version (VE)
 <!ELEMENT DrugInformationSummary 
           ( DrugInfoMetaData, 
             DrugInfoTitle,
@@ -1329,10 +1330,12 @@
             DateFirstPublished,
             DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
+-->
 <!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
             used within a DrugInformationSummary will not contain these
             elements:  AltTitle, KeyPoints, nested Section elements -->
 
+<!--
 <!ELEMENT DrugInfoMetaData 
           ( DrugInfoType,
             DrugInfoAudience,
@@ -1346,17 +1349,21 @@
             Synonyms? )>
 
 <!ELEMENT DrugInfoType (#PCDATA)>
+-->
 <!-- Types of DrugInfoType
      Possible values are:
      Brief
      Detailed -->
 
+<!--
 <!ELEMENT DrugInfoAudience (#PCDATA)>
+-->
 <!-- Types of DrugInfoAudience
      Possible values are:
      Patients
      Health professionals -->
 
+<!--
 <!ELEMENT DrugInfoDescription (#PCDATA)>
 
 <!ELEMENT DrugInfoURL (#PCDATA)>
@@ -1386,6 +1393,7 @@
 <!ELEMENT DrugInfoTitle (#PCDATA)>
 
 <!ELEMENT DrugInfoDisclaimer (%TextSectionElements;)*>
+-->
 
 <!-- End DrugInformationSummary -->
 
