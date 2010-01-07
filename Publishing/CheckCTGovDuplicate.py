@@ -325,7 +325,6 @@ try:
         strTo    = cdr.getEmailList('Test Publishing Notification')
     else:
         strTo    = cdr.getEmailList('CTGov Duplicate Notification')
-        strTo.append(u'Mark Leech <mark.j.leech@lmco.com>')
         strTo.append(u'Cherryl Villanueva <***REMOVED***>')
         strTo.append(u'Alexandra Valentine <***REMOVED***>')
 

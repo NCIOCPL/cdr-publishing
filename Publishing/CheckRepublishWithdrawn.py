@@ -318,7 +318,6 @@ SELECT MIN(pub_proc)
                     "William Osei-Poku <***REMOVED***>", 
                     "Kimberly Eckley <***REMOVED***>",
                     "Judy Morris <***REMOVED***>",
-                    "Mark Leech <mark.j.leech@lmco.com>",
                     "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
 
