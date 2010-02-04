@@ -1,42 +1,8 @@
 #----------------------------------------------------------------------
 #
-# $Id: DirectoryMailer.py,v 1.10 2008-06-03 21:28:06 bkline Exp $
+# $Id$
 #
 # Master driver script for processing directory mailers.
-#
-# $Log: not supported by cvs2svn $
-# Revision 1.9  2005/11/29 18:30:00  bkline
-# Modified code to generate cover sheet so the document ID is logged
-# when a name with Unicode characters can't be written.
-#
-# Revision 1.8  2003/08/07 19:33:59  ameyer
-# Changed Organization filter.
-#
-# Revision 1.7  2003/07/01 22:06:06  ameyer
-# Using new filter set for generating Person XML.
-#
-# Revision 1.6  2003/05/09 03:45:24  ameyer
-# Added PersonTitle.
-#
-# Revision 1.5  2002/11/06 03:14:51  ameyer
-# Fully working version.
-# Removed some unnecessary assertions and fixed some syntax errors that
-# somehow crept into the code (my fingers sometimes type while my mind
-# is elsewhere.)
-#
-# Revision 1.4  2002/10/11 03:36:48  ameyer
-# Removed protocol address code - not needed, never tested anyway.
-# It's in the archive if we ever need it.
-#
-# Made cover leter optional.
-#
-# Revision 1.3  2002/10/09 02:00:01  ameyer
-# Myriad changes.  First version to actually produce output.  Not fully tested
-# at all.
-#
-# Revision 1.2  2002/09/17 18:19:57  ameyer
-# Last version from mmdb2.  Still not working yet.
-#
 #
 #----------------------------------------------------------------------
 

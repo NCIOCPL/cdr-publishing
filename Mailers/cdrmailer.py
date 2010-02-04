@@ -1,208 +1,8 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrmailer.py,v 1.63 2008-09-25 12:58:45 bkline Exp $
+# $Id$
 #
 # Base class for mailer jobs
-#
-# $Log: not supported by cvs2svn $
-# Revision 1.62  2008/06/03 21:28:07  bkline
-# Replaced StandardError with Exception objects.
-#
-# Revision 1.61  2006/09/12 16:00:04  bkline
-# Changed default deadline from 2 months to 60 days, and overrode the
-# deadline for S&P mailers (30 days).
-#
-# Revision 1.60  2006/06/08 20:01:29  bkline
-# Extracted out some common classes to cdrdocobject.py module.
-#
-# Revision 1.59  2006/06/08 14:07:39  bkline
-# Pulled out PersonalName and Address classes to cdrdocobject module.
-#
-# Revision 1.58  2005/06/14 12:38:51  bkline
-# Added getAddressLine() and some additional optional parameters for
-# address access.
-#
-# Revision 1.57  2005/03/02 15:42:26  bkline
-# Finished work to support RTF mailers for PDQ board members.
-#
-# Revision 1.56  2004/11/24 05:50:09  bkline
-# Plugged in code to build fresh set of emailer lookup values.
-#
-# Revision 1.55  2004/11/03 17:03:46  bkline
-# Added code to strip trailing and leading whitespace from address
-# strings (to avoid confusing LaTeX processor; see issue #1381).
-#
-# Revision 1.54  2004/11/02 19:50:35  bkline
-# Enhancements to support RTF mailers.
-#
-# Revision 1.53  2004/05/18 18:00:18  bkline
-# Modified tarfile code to match changed API.
-#
-# Revision 1.52  2004/05/18 13:04:30  bkline
-# Added support for electronic mailers.
-#
-# Revision 1.51  2004/05/11 20:52:10  bkline
-# Added comment for protOrgId parameter for addMailerTrackingDoc().
-#
-# Revision 1.50  2004/04/27 15:44:00  bkline
-# Added support for use of PDQBoardMemberInfo documents.
-#
-# Revision 1.49  2004/01/13 21:05:56  bkline
-# Added code to pack up failed mailer jobs.
-#
-# Revision 1.48  2003/08/21 22:08:57  bkline
-# Fixed bug in placement of protOrg when generating XML for
-# mailer tracking document.
-#
-# Revision 1.47  2003/08/21 19:43:06  bkline
-# Added support for ProtocolOrg element in mailer tracking document for
-# S&P mailers.
-#
-# Revision 1.46  2003/06/24 12:23:01  bkline
-# Added code to use local copy of template.tex.
-#
-# Revision 1.45  2003/05/09 03:46:27  ameyer
-# Added support for PersonTitle used in physician directory mailers.
-#
-# Revision 1.44  2003/02/14 17:42:58  bkline
-# Implemented support for printing subsets of a mailer print job (see
-# CDR Issue #594).
-#
-# Revision 1.43  2003/02/14 14:31:24  bkline
-# Added .toc as one of the filename suffixes for support files.
-#
-# Revision 1.42  2003/02/11 21:29:26  bkline
-# Added code to pick up CitySuffix; added mailerCleanup().
-#
-# Revision 1.41  2003/01/28 16:15:33  bkline
-# Replaced gzip and zip with tar/bzip2.
-#
-# Revision 1.40  2002/11/09 16:55:32  bkline
-# Added code to package files after the job has completed.
-#
-# Revision 1.39  2002/11/08 22:41:14  bkline
-# Added utf-8 encoding for mailer tracking document's XML.
-#
-# Revision 1.38  2002/11/08 17:25:49  bkline
-# Fixed error check for return from filterDoc().
-#
-# Revision 1.37  2002/11/05 16:46:40  ameyer
-# Fixed bug in getAddressLines() by removing obsolete reference to org.
-#
-# Revision 1.36  2002/10/31 19:59:09  bkline
-# Fixed AddressLine bug.
-#
-# Revision 1.35  2002/10/25 14:21:53  bkline
-# Fixed typo in method to generate address XML.
-#
-# Revision 1.34  2002/10/24 22:22:42  ameyer
-# Made getOrganizationAddress() public.
-# Fixed bug in call to filterDoc parameter.
-#
-# Revision 1.33  2002/10/24 21:34:15  bkline
-# Pulled throttle, which has been moved to web interface.
-#
-# Revision 1.32  2002/10/24 17:51:35  bkline
-# Adjustment to remailerFor parameter.
-#
-# Revision 1.31  2002/10/24 17:18:44  bkline
-# Added remailerFor to addMailerTrackingDoc().
-#
-# Revision 1.30  2002/10/24 02:37:48  bkline
-# Turned on doc versions; removed org type.
-#
-# Revision 1.29  2002/10/23 22:06:12  bkline
-# Added org type to Org class.
-#
-# Revision 1.28  2002/10/23 11:44:08  bkline
-# Fixed printer opening code.
-#
-# Revision 1.27  2002/10/23 03:33:14  ameyer
-# Added code to get proper Organization address.
-# Replaced some code with calls to new cdr.getQueryTermValueForId().
-#
-# Revision 1.26  2002/10/22 18:10:22  bkline
-# Changed mailing label to use fixed-pitch font and to word-wrap long lines.
-#
-# Revision 1.25  2002/10/18 11:46:08  bkline
-# Moved address formatting to Address object.
-#
-# Revision 1.24  2002/10/16 18:07:36  bkline
-# Fixed typo in tags for state name in XML for address.
-#
-# Revision 1.23  2002/10/14 12:47:23  bkline
-# Made actual mailer printing a separate batch job.
-#
-# Revision 1.22  2002/10/10 17:44:44  bkline
-# Added PrintJob.PLAIN.
-#
-# Revision 1.21  2002/10/10 13:43:41  bkline
-# Added __NONSTAPLE_PROLOG.
-#
-# Revision 1.20  2002/10/09 20:40:09  bkline
-# Dropped obsolete includeCountry argument for assembling address lines.
-#
-# Revision 1.19  2002/10/09 19:41:46  bkline
-# Added code to drop country line for domestic address labels.
-#
-# Revision 1.18  2002/10/09 18:09:15  bkline
-# Added new code for generating LaTeX for address label sheet.
-#
-# Revision 1.17  2002/10/09 02:01:55  ameyer
-# Changes in address generation based on new filters and new XML for
-# addresses returned from the server.
-#
-# Revision 1.16  2002/10/08 13:56:23  ameyer
-# Changes to logging, exception handling, directory creation.
-#
-# Revision 1.15  2002/10/08 01:39:00  bkline
-# Fixed address parsing to match Lakshmi's new rules and to pick up
-# additional information.  Added optional flag to suppress printing.
-#
-# Revision 1.14  2002/09/26 18:28:01  ameyer
-# Replaced "mmdb2" with socket.gethostname().
-#
-# Revision 1.13  2002/09/12 23:29:51  ameyer
-# Removed common routine from individual mailers to cdrmailer.py.
-# Added a few trace statements.
-#
-# Revision 1.12  2002/05/15 01:40:29  ameyer
-# Fixed bugs in new code.
-#
-# Revision 1.11  2002/04/25 15:54:09  ameyer
-# Added formatAddress - Bob's formatter used in several mailers.
-# Added getDocList - to return the list of doc ids plus version numbers.
-#
-# Revision 1.10  2002/02/14 20:21:18  ameyer
-# Removed the block on printing.  Will add a new control for this soon.
-#
-# Revision 1.9  2002/02/06 00:23:30  ameyer
-# Replaced stub latex converter with reference to the real thing.
-#
-# Revision 1.8  2002/01/23 17:13:14  bkline
-# Temporary stubs to work around gaps in cdrxmllatex in Alan's absence.
-#
-# Revision 1.7  2001/10/22 23:57:42  bkline
-# Added member field for subset name; moved core mailer code out to
-# cdr module; added __buildName method.
-#
-# Revision 1.6  2001/10/11 19:48:22  bkline
-# Added Address class; moved common sendMail() code out to cdr module.
-#
-# Revision 1.5  2001/10/09 12:06:25  bkline
-# Changed __STAPLE_PROLOG to self.__STAPLE_PROLOG.
-#
-# Revision 1.4  2001/10/07 15:16:12  bkline
-# Added getDeadline().
-#
-# Revision 1.3  2001/10/07 12:49:44  bkline
-# Reduced use of publicly accessible members.  Enhanced docs.
-#
-# Revision 1.2  2001/10/06 23:43:12  bkline
-# Changed parameters to makeLatex() method.  Added docs for fillQueue().
-#
-# Revision 1.1  2001/10/06 21:50:15  bkline
-# Initial revision
 #
 #----------------------------------------------------------------------
 
@@ -818,9 +618,8 @@ class MailerJob:
         except:
             (eType, eValue) = sys.exc_info()[:2]
             eMsg = eValue or eType
-            raise "failure converting %s.tex to %s.ps: %s" % (basename,
-                                                              basename,
-                                                              eMsg)
+            raise cdr.Exception("failure converting %s.tex to %s.ps: %s" %
+                                (basename, basename, eMsg))
 
     #------------------------------------------------------------------
     # Create the directory for electronic mailers.  Callback used by
@@ -859,14 +658,14 @@ Please do not reply to this message.
                 os.makedirs(self.__emailerDir)
             except:
                 self.log ("Unable to create emailer directory", tback=1)
-                raise "failure creating emailer directory %s" % \
-                      self.__emailerDir
+                raise cdr.Exception("failure creating emailer directory %s" %
+                                    self.__emailerDir)
             try:
                 os.chdir(self.__emailerDir)
             except:
                 self.log ("Unable to change to emailer directory", tback=1)
-                raise "failure setting working directory to %s" % \
-                      self.__emailerDir
+                raise cdr.Exception("failure setting working directory to %s" %
+                                    self.__emailerDir)
 
     #------------------------------------------------------------------
     # Create the directory for RTF mailers.  Callback used by the
@@ -883,14 +682,14 @@ Please do not reply to this message.
                 os.makedirs(self.__rtfMailerDir)
             except:
                 self.log ("Unable to create rtf mailer directory", tback=1)
-                raise "failure creating rtf mailer directory %s" % \
-                      self.__rtfMailerDir
+                raise cdr.Exception("failure creating rtf mailer directory %s"
+                                    % self.__rtfMailerDir)
             try:
                 os.chdir(self.__rtfMailerDir)
             except:
                 self.log ("Unable to change to rtf mailer directory", tback=1)
-                raise "failure setting working directory to %s" % \
-                      self.__rtfMailerDir
+                raise cdr.Exception("failure setting working directory to %s"
+                                    % self.__rtfMailerDir)
         self.__letterLink = """
 You can retrieve the letters at:
 
@@ -951,7 +750,7 @@ You can retrieve the letters at:
         rsp          = cdr.login("cdrmailers", "cdrmailers")
         match        = self.__ERR_PATTERN.search(rsp)
         if match:
-            raise "CDR login failure: %s" % match.group(1)
+            raise cdr.Exception("CDR login failure: %s" % match.group(1))
         self.__session = rsp
 
     #------------------------------------------------------------------
@@ -962,7 +761,7 @@ You can retrieve the letters at:
             self.__conn   = cdrdb.connect("CdrPublishing")
             self.__cursor = self.__conn.cursor()
         except cdrdb.Error, info:
-            raise "database connection failure: %s" % info[1][0]
+            raise cdr.Exception("database connection failure: %s" % info[1][0])
 
     #------------------------------------------------------------------
     # Load the settings for this job from the database.
@@ -983,12 +782,13 @@ You can retrieve the letters at:
                  WHERE id = ?""", (self.__id,))
             row = self.__cursor.fetchone()
             if not row:
-                raise "unable to find job %d" % self.__id
+                raise cdr.Exception("unable to find job %d" % self.__id)
             (self.__outputDir, self.__email, self.__subset) = row
             self.__emailerDir = self.__outputDir + "-e"
             self.__rtfMailerDir = self.__outputDir + "-r"
         except cdrdb.Error, info:
-            raise "database error retrieving pub_proc row: %s" % info[1][0]
+            raise cdr.Exception("database error retrieving pub_proc row: %s" %
+                                info[1][0])
 
     #------------------------------------------------------------------
     # Load the list of document IDs and other descriptive information
@@ -1012,7 +812,8 @@ You can retrieve the letters at:
 
             # Can't continue if there aren't any
             if not docDescriptorList:
-                raise "no documents found for job %d" % self.__id
+                raise cdr.Exception("no documents found for job %d" %
+                                    self.__id)
 
             # Build a list of pure docIds (used by some software)
             #   and of fuller information
@@ -1026,14 +827,15 @@ You can retrieve the letters at:
                     Document (row[0], row[2], row[3], row[1])
 
             if not docDescriptorList:
-                raise "no documents found for job %d" % self.__id
+                raise cdr.Exception("no documents found for job %d" % self.__id)
 
             # Convert the id list to a faster tuple
             # [Not sure why Bob did this]
             self.__docIds = tuple(self.__docIds)
 
         except cdrdb.Error, err:
-            raise "database error retrieving pub_proc_doc rows: %s" % err[1][0]
+            raise cdr.Exception("database error retrieving pub_proc_doc rows: "
+                                "%s" % err[1][0])
 
     #------------------------------------------------------------------
     # Load the parameters stored in the pub_proc_parm table for this job.
@@ -1054,7 +856,8 @@ You can retrieve the letters at:
                     if row[0] == "Printer":
                         self.__printer = row[1]
         except cdrdb.Error, info:
-            raise "database error retrieving job parms: %s" % info[1][0]
+            raise cdr.Exception("database error retrieving job parms: %s" %
+                                info[1][0])
 
     #------------------------------------------------------------------
     # Create and populate the print queue.
@@ -1072,21 +875,22 @@ You can retrieve the letters at:
                 os.makedirs(self.__outputDir)
             except:
                 self.log ("Unable to create working directory", tback=1)
-                raise "failure creating working directory %s" % \
-                      self.__outputDir
+                raise cdr.Exception("failure creating working directory %s" %
+                                    self.__outputDir)
             try:
                 os.chdir(self.__outputDir)
             except:
                 self.log ("Unable to change to working directory", tback=1)
-                raise "failure setting working directory to %s" % \
-                      self.__outputDir
+                raise cdr.Exception("failure setting working directory to %s" %
+                                    self.__outputDir)
         try:
             src = self.__TEMPLATE_FILE
             dst = "./template.tex"
             shutil.copy2(src, dst)
         except Exception, info:
             self.log("Failure copying %s to %s" % (src, dst), tback = 1)
-            raise "Failure copying %s to %s: %s" % (src, dst, str(info))
+            raise cdr.Exception("Failure copying %s to %s: %s" %
+                                (src, dst, str(info)))
 
     #------------------------------------------------------------------
     # Print the jobs in the queue.
@@ -1329,7 +1133,8 @@ class PrintJob:
                     pages = int(match.group(1))
                     break
             if not pages:
-                raise "can't find page count in %s" % self.__filename
+                raise cdr.Exception("can't find page count in %s" %
+                                    self.__filename)
             if pages <= PrintJob.__MAX_STAPLED:
                 self.__staple = 1
             ps.close()

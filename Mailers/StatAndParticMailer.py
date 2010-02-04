@@ -1,63 +1,9 @@
 #----------------------------------------------------------------------
 #
-# $Id: StatAndParticMailer.py,v 1.18 2006-09-12 16:00:04 bkline Exp $
+# $Id$
 #
 # Master driver script for processing initial protocol status and
 # participant verification mailers.
-#
-# $Log: not supported by cvs2svn $
-# Revision 1.17  2006/07/13 13:18:10  bkline
-# Fixed typo (misplaced parenthesis).
-#
-# Revision 1.16  2006/06/08 13:57:33  bkline
-# Added sources to emailer manifest.
-#
-# Revision 1.15  2005/03/02 15:46:06  bkline
-# Removed temporary code to block Brussels mailers.
-#
-# Revision 1.14  2005/02/16 22:44:53  bkline
-# Added PubSubset attribute to EmailerManifest document.
-#
-# Revision 1.13  2004/10/08 12:56:36  bkline
-# Added temporary code to block some brussels mailers.
-#
-# Revision 1.12  2004/06/15 14:25:44  bkline
-# Added tracker attribute to EmailerDocument element in EmailerManifest.
-#
-# Revision 1.11  2004/05/18 17:58:48  bkline
-# Modified emailer manifest element names to match schema.
-#
-# Revision 1.10  2004/05/18 13:09:59  bkline
-# Added support for electronic mailers.
-#
-# Revision 1.9  2003/08/21 19:43:06  bkline
-# Added support for ProtocolOrg element in mailer tracking document for
-# S&P mailers.
-#
-# Revision 1.8  2003/05/05 21:08:08  bkline
-# Restricted mailers to lead orgs with (sort of) active statuses.
-#
-# Revision 1.7  2003/02/07 22:36:23  bkline
-# Added call to UnicodeToLatex.convert() for title.
-#
-# Revision 1.6  2002/10/24 02:39:39  bkline
-# Added code to handle worst-case combinations of protocol/recipient/org.
-#
-# Revision 1.5  2002/10/23 22:05:17  bkline
-# Updated ancient code to prepare for final testing.
-#
-# Revision 1.4  2002/10/23 11:44:08  bkline
-# Removed obsolete code.
-#
-# Revision 1.3  2002/09/12 23:29:51  ameyer
-# Removed common routine from individual mailers to cdrmailer.py.
-# Added a few trace statements.
-#
-# Revision 1.2  2002/01/23 17:14:58  bkline
-# Modifications to accomodate changed requirements.
-#
-# Revision 1.1  2001/12/04 13:38:05  bkline
-# Initial version
 #
 #----------------------------------------------------------------------
 

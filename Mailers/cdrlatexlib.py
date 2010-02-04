@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------
-# $Id: cdrlatexlib.py,v 1.85 2009-03-24 13:02:36 bkline Exp $
+# $Id$
 #
 # Rules for generating CDR mailer LaTeX.
 #

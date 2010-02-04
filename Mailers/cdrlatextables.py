@@ -1,34 +1,8 @@
 #----------------------------------------------------------------------
 #
-# $Id: cdrlatextables.py,v 1.8 2008/09/25 12:50:04 bkline Exp $
+# $Id$
 #
 # Module for generating LaTeX for tables in CDR documents.
-#
-# $Log: cdrlatextables.py,v $
-# Revision 1.8  2008/09/25 12:50:04  bkline
-# Exception cleanup.
-#
-# Revision 1.7  2008/06/03 21:28:07  bkline
-# Replaced StandardError with Exception objects.
-#
-# Revision 1.6  2003/12/16 20:31:11  bkline
-# Added conditional debugging output.
-#
-# Revision 1.5  2003/07/02 21:22:53  bkline
-# Added code to add running head for tables which span multiple pages.
-#
-# Revision 1.4  2003/05/19 18:41:57  bkline
-# Modified handling of citations in table cells to allow line breaking
-# after a comma in a series of citation numbers (request #735)
-#
-# Revision 1.3  2003/01/06 21:01:29  bkline
-# Fixed column width conversion math.
-#
-# Revision 1.2  2002/11/07 21:19:44  bkline
-# Better multirow cell support.
-#
-# Revision 1.1  2002/09/15 15:53:37  bkline
-# Module for generating LaTeX for tables.
 #
 #----------------------------------------------------------------------
 import re, sys, cdr

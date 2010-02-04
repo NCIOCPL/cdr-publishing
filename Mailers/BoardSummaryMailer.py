@@ -1,49 +1,8 @@
 #----------------------------------------------------------------------
 #
-# $Id: BoardSummaryMailer.py,v 1.17 2009-03-09 19:35:58 bkline Exp $
+# $Id$
 #
 # Master driver script for processing PDQ Editorial Board Member mailings.
-#
-# $Log: not supported by cvs2svn $
-# Revision 1.16  2007/04/20 18:28:53  kidderc
-# 3132 add ability to specify particular mailers to send to particular board members.
-#
-# Revision 1.12  2004/04/27 15:44:00  bkline
-# Added support for use of PDQBoardMemberInfo documents.
-#
-# Revision 1.11  2004/04/19 15:54:25  bkline
-# Suppressed creation of mailing labels at Lakshmi's request (#1188).
-#
-# Revision 1.10  2003/05/13 19:57:21  bkline
-# Replaced explitly enumerated filter list with named filter set invocation.
-#
-# Revision 1.9  2003/02/13 20:17:36  bkline
-# Added filter to strip out "Changes to summary" SummarySection elements.
-#
-# Revision 1.8  2003/01/28 15:20:52  bkline
-# Added date and mailer ID to summary mailer cover letters.
-#
-# Revision 1.7  2002/11/08 21:46:08  bkline
-# Ready for user testing.
-#
-# Revision 1.6  2001/10/09 12:07:19  bkline
-# Removed superfluous constructor override.  Removed title truncation
-# from top cover page.  Fixed typo (this -> self).
-#
-# Revision 1.5  2001/10/07 15:16:25  bkline
-# Added call to getDeadline().
-#
-# Revision 1.4  2001/10/07 12:49:12  bkline
-# Reduced use of publicly accessible members.
-#
-# Revision 1.3  2001/10/06 23:42:08  bkline
-# Changed parameters to makeLatex() method.
-#
-# Revision 1.2  2001/10/06 21:52:30  bkline
-# Factored out base class MailerJob.
-#
-# Revision 1.1  2001/10/05 20:38:09  bkline
-# Initial revision
 #
 #----------------------------------------------------------------------
 

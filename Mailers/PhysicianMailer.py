@@ -1,10 +1,9 @@
 #----------------------------------------------------------------------
 #
-# $Id: PhysicianMailer.py,v 1.1 2002-01-28 09:36:24 bkline Exp $
+# $Id$
 #
 # Master driver script for processing physician mailers.
 #
-# $Log: not supported by cvs2svn $
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrmailer, re, sys
