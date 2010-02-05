@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<w:definitions          xmlns:w = 'http://schemas.xmlsoap.org/wsdl/'
+                     xmlns:soap = 'http://schemas.xmlsoap.org/wsdl/soap/'
+                   xmlns:soap12 = 'http://schemas.xmlsoap.org/wsdl/soap12/'
+                        xmlns:s = 'http://www.w3.org/2001/XMLSchema'
+                     xmlns:http = 'http://schemas.xmlsoap.org/wsdl/http/'
+                          xmlns = 'cips.nci.nih.gov/cdr/GPFormValues'
+                targetNamespace = 'cips.nci.nih.gov/cdr/GPFormValues'>
+
+ <!--
+  ======================================================================
+  Types used by the GPFormValues service.
+
+  Passed:
+
+      Nothing.
+
+  Returned:
+
+      String containing serialized XML for the form values, using the
+      following structure:
+
+        ValueSets [top level, wrapper element]
+          ValueSet [multiply-occurring wrapper element]
+            @type [required attribute; e.g., 'Syndromes']
+            Value [multiply-occurring; text content is display value]
+              @ref [optional attribute; unique ID of value]
+
+      For example:
+        <ValueSets>
+          <ValueSet type='Syndromes'>
+            <Value ref='CDR0000042839'>Adenomatous polyposis, familial</Value>
+            <Value ref='CDR0000042838'>Ataxia-telangiectasia</Value>
+            ...
+          </ValueSet>
+          <ValueSet type='ProfessionalTypes'>
+            <Value>Clinical Psychologist (Ph.D., Psy.D.)</Value>
+            <Value>Clinical Social Worker (M.S.W., D.S.W.)</Value>
+            ...
+          </ValueSet>
+          ...
+        </ValueSets>
+
+  ======================================================================
+ -->
+
+ <w:types>
+  <s:schema  elementFormDefault = 'qualified'
+                targetNamespace = 'cips.nci.nih.gov/cdr'>
+   <s:element              name = 'getValueSets'>
+    <s:complexType/>
+     <s:sequence/>
+   </s:element>
+   <s:element              name = 'getValueSetsResponse'>
+    <s:complexType>
+     <s:sequence>
+      <s:element           name = 'valueSets'
+                           type = 's:string'/>
+     </s:sequence>
+    </s:complexType>
+   </s:element>
+  </s:schema>
+ </w:types>
+
+ <!-- Request/response messages exchange for retrieving form values -->
+ <w:message                name = 'getValueSetsSoapIn'>
+  <w:part                  name = 'parameters'
+                        element = 'getValueSets'/>
+ </w:message>
+ <w:message                name = 'getValueSetsSoapOut'>
+  <w:part                  name = 'parameters'
+                        element = 'getValueSetsResponse'/>
+ </w:message>
+
+ <!-- Service bindings (SOAP 1.1 and 1.2 supported). -->
+ <w:portType               name = 'ServiceSoap'>
+  <w:operation             name = 'getValueSets'>
+   <w:input             message = 'getValueSetsSoapIn'/>
+   <w:output            message = 'getValueSetsSoapOut'/>
+  </w:operation>
+ </w:portType>
+ <w:binding                name = 'ServiceSoap'
+                           type = 'ServiceSoap'>
+  <soap:binding       transport = 'http://schemas.xmlsoap.org/soap/http'/>
+  <w:operation             name = 'getValueSets'>
+   <soap:operation   soapAction = 'cips.nci.nih.gov/cdr/getValueSets'
+                          style = 'document'/>
+   <w:input>
+    <soap:body              use = 'literal'/>
+   </w:input>
+   <w:output>
+    <soap:body              use = 'literal'/>
+   </w:output>
+  </w:operation>
+ </w:binding>
+ <w:binding                name = 'ServiceSoap12'
+                           type = 'ServiceSoap'>
+  <soap12:binding     transport = 'http://schemas.xmlsoap.org/soap/http'/>
+  <w:operation             name = 'getValueSets'>
+   <soap12:operation soapAction = 'cips.nci.nih.gov/cdr/getValueSets'
+                          style = 'document'/>
+   <w:input>
+    <soap12:body            use = 'literal'/>
+   </w:input>
+   <w:output>
+    <soap12:body            use = 'literal'/>
+   </w:output>
+  </w:operation>
+ </w:binding>
+
+ <!-- Where the service can be invoked. -->
+ <w:service                name = 'Service'>
+  <w:port                  name = 'ServiceSoap'
+                        binding = 'ServiceSoap'>
+   <soap:address       location = 'http://PDQUpdate.cancer.gov/u/gpformvalues'/>
+  </w:port>
+  <w:port                  name = 'ServiceSoap12'
+                        binding = 'ServiceSoap12'>
+   <soap12:address     location = 'http://PDQUpdate.cancer.gov/u/gpformvalues'/>
+  </w:port>
+ </w:service>
+</w:definitions>
