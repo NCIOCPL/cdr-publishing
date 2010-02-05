@@ -48,8 +48,9 @@
   <s:schema  elementFormDefault = 'qualified'
                 targetNamespace = 'cips.nci.nih.gov/cdr'>
    <s:element              name = 'getValueSets'>
-    <s:complexType/>
+    <s:complexType>
      <s:sequence/>
+    </s:complexType>
    </s:element>
    <s:element              name = 'getValueSetsResponse'>
     <s:complexType>
