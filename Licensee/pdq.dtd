@@ -785,7 +785,6 @@
      ========================================================= -->
 
 <!-- ProfessionalInformation only when IncludeInDirectory has value Include -->
-
 <!-- 
 <!ELEMENT Person (PersonNameInformation,
                   ProfessionalInformation?, 
@@ -1065,7 +1064,7 @@
      No link exists from the genetics directory records to any of the other XML
      document types or vice versa.-->
 
-<!ELEMENT GENETICSPROFESSIONAL (ID,
+<!ELEMENT GENETICSPROFESSIONAL (ID?,
                         NAME,
                         DEGREE+,
                         PRACTICELOCATIONS+,
