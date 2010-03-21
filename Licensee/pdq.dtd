@@ -509,7 +509,6 @@
      =============================================================== -->
 
 <!ELEMENT Protocol (ProtocolIDs,
-                    UrlInfo,
                     FundingInfo?,
                     ProtocolSponsor*,
                     PDQProtocolTitle+,
@@ -1209,7 +1208,6 @@
 
 <!ELEMENT CTGovProtocol        (RequiredHeader,
                                 IDInfo,
-                                UrlInfo,
                                 BriefTitle,
                                 OfficialTitle?,
                                 Sponsors,
