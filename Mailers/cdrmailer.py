@@ -625,12 +625,13 @@ class MailerJob:
     # Create the directory for electronic mailers.  Callback used by
     # the derived class where appropriate.
     #------------------------------------------------------------------
-    def initEmailers(self):
+    def initEmailers(self, loadLookupTables=True):
 
         # Load a fresh copy of the emailer lookup tables.
         try:
-            import EmailerLookupTables
-            EmailerLookupTables.loadTables()
+            if loadLookupTables:
+                import EmailerLookupTables
+                EmailerLookupTables.loadTables()
         except Exception, e:
             try:
                 self.log("unable to build emailer lookup tables: %s" % str(e))
