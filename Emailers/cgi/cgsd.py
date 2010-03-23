@@ -9,7 +9,7 @@
 # BZIssue::4630
 #
 #----------------------------------------------------------------------
-import cgi, lxml.etree as etree, bz2, urllib2, re, util
+import cgi, lxml.etree as etree, bz2, util
 
 def yn(flag): return flag and u'Yes' or u'No'
 
@@ -774,8 +774,8 @@ http://%s%s/ShowGPChanges.py?id=%d
 """ % (gp.trackerId, gp.personId, util.WEB_HOST, util.CGI_BASE, gp.trackerId)
     else:
         markCompletion(gp)
-        message = ("GP mailer %d was reviewed and submitted with no changes" %
-                   gp.trackerId)
+        message = ("GP mailer %d (Person CDR%d) was reviewed and submitted "
+                   "with no changes" % (gp.trackerId, gp.personId))
     recips = ('NCIGENETICSDIRECTORY@ICFI.COM', '***REMOVED***')
     subject = "GP mailer %d" % gp.trackerId
     util.sendMail(util.SENDER, recips, subject, message)
