@@ -1,0 +1,110 @@
+#!/usr/bin/python
+
+#----------------------------------------------------------------------
+#
+# $Id$
+#
+# Import GeneticsProfessional emailer information and notify the GP
+# that he/she needs to review the information.
+#
+# BZIssue::4630
+#
+#----------------------------------------------------------------------
+import util, bz2, lxml.etree as etree
+
+emailBody = """\
+You are listed as a provider of genetics services in the NCI Cancer
+Genetics Services Directory as part of the National Cancer Institute's
+Web site.  Below is a link to an electronic form that shows the
+information about you and your services currently listed in the
+Directory.  Please review and update the information as appropriate.
+
+If you have any questions, please send e-mail to 
+GeneticsDirectory@cancer.gov.
+
+%s
+"""
+testers = ('***REMOVED***',
+           '***REMOVED***'
+           )
+def base36(n):
+    if n == 0:
+        return "0"
+    elif n < 0:
+        return '-' + base36(abs(n))
+    lowestDigit = "0123456789abcdefghijklmnopqrstuvwxyz"[n % 36]
+    higherDigits = n // 36
+    if higherDigits == 0:
+        return lowestDigit
+    else:
+        return base36(higherDigits) + lowestDigit
+
+def loadEmailers():
+    conn = util.getConnection()
+    cursor = conn.cursor()
+    cursor.execute("""\
+        SELECT id, emailers
+          FROM dropbox.gp_emailer_job
+         WHERE imported IS NULL""")
+    rows = cursor.fetchall()
+    for jobId, compressedDoc in rows:
+        tree = etree.XML(bz2.decompress(compressedDoc))
+        for child in tree.findall('GP'):
+            try:
+                loadEmailer(conn, cursor, jobId, child)
+            except Exception, e:
+                msg = (u"failure loading mailer for CDR%s in job %s: %s" %
+                       (child.get('id'), jobId, e)).encode('utf-8')
+                util.log(msg)
+                sys.stderr.write("%s\n" % msg)
+        cursor.execute("""\
+            UPDATE dropbox.gp_emailer_job
+               SET imported = NOW()
+             WHERE id = %s""", jobId)
+        conn.commit()
+        msg = "loaded mailers for job %d" % jobId
+        util.log(msg)
+        print msg
+def loadEmailer(conn, cursor, jobId, node):
+    trackerId = node.get('tracker')
+    docId = node.get('id')
+    name = email = u''
+    for child in node.findall('FullName'):
+        name = child.text
+    for child in node.findall('Contact/Email'):
+        email = child.text
+    if not email:
+        msg = ("no email address for sending emailer %s (CDR%s)" %
+               (trackerId, docId))
+        util.log(msg)
+        sys.stderr.write("%s\n" % msg)
+    doc = etree.tostring(node)
+    cursor.execute("""\
+        INSERT INTO emailers.gp_emailer (id, cdr_id, job, email, name, xml,
+                                         original, mailed)
+             VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())""",
+                   (trackerId, docId, jobId, email, name, doc, doc))
+    conn.commit()
+    print "loaded emailer %s (CDR%s)" % (trackerId, docId)
+    try:
+        subject = 'NCI Cancer Genetics Services Directory update request'
+        subject = "[TEST] %s" % subject
+        address = testers
+        emailerId = base36((int(trackerId) << 32) + int(docId))
+        url = "http://%s%s/cgsd.py?id=%s" % (util.WEB_HOST, util.CGI_BASE, 
+                                             emailerId)
+        message = util.sendMail(util.SENDER, address, subject, emailBody % url)
+    except Exception, e:
+        error = ("Failure emailing %s for batch %s: %s" %
+                 (address, emailerId, e))
+        util.log(error)
+        try:
+            util.sendMail(util.SENDER, util.OPERATOR,
+                          subject + " *** FAILURE ***", error)
+        except:
+            pass
+try:
+    loadEmailers()
+except Exception, e:
+    print "LoadGPEmailers failure: %s" % e
+    util.log("LoadGPEmailers failure: %s" % e)
