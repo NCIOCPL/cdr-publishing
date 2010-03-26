@@ -337,8 +337,7 @@ def showForm(fields):
      directly into the boxes.
     </p>
     <p class='instructions'>
-     If you have any questions, please call the PDQ Directory Desk
-     at (301) 402-6722 or send e-mail to
+     If you have any questions, please send e-mail to
      <a href='mailto:GeneticsDirectory@cancer.gov'
      >GeneticsDirectory@cancer.gov</a>.
     </p>
