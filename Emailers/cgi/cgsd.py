@@ -11,6 +11,8 @@
 #----------------------------------------------------------------------
 import cgi, lxml.etree as etree, bz2, util
 
+SENDER = 'GeneticsDirectory@cancer.gov'
+
 def yn(flag): return flag and u'Yes' or u'No'
 
 class GP:
@@ -777,7 +779,7 @@ http://%s%s/ShowGPChanges.py?id=%d
                    "with no changes" % (gp.trackerId, gp.personId))
     recips = ('NCIGENETICSDIRECTORY@ICFI.COM', '***REMOVED***')
     subject = "GP mailer %d" % gp.trackerId
-    util.sendMail(util.SENDER, recips, subject, message)
+    util.sendMail(SENDER, recips, subject, message)
     sayThankYou()
 
 def main():
