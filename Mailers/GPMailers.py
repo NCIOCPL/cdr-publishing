@@ -111,7 +111,6 @@ class GPMailerJob(cdrmailer.MailerJob):
              WHERE p.id = ?""", self.getId())
         rows = self.getCursor().fetchall()
         self.log("%d rows retrieved for electronic mailers" % len(rows))
-        counter = 0
         for docId, docVer in rows:
             try:
                 gp = GP(self.getCursor(), docId, docVer)
@@ -128,7 +127,7 @@ class GPMailerJob(cdrmailer.MailerJob):
                                                        docTitle=gp.docTitle)
                 root.append(gp.toElement(trackerId, lookupValues))
                 self.log("processed CDR%d" % docId)
-                counter += 1
+                self.bumpCount()
             except Exception, e:
                 msg = "Failure processing CDR%d: %s" % (docId, e)
                 sys.stderr.write("%s\n" % msg)
@@ -158,7 +157,7 @@ class GPMailerJob(cdrmailer.MailerJob):
         fp.write(mailers)
         fp.close()
 
-        self.log("%d emailers successfully generated" % counter)
+        self.log("%d emailers successfully generated" % self.getCount())
 
 class GP:
     filterSet = ['set:Mailer GeneticsProfessional Set']

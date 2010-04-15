@@ -186,7 +186,9 @@ class MailerJob:
     def getIndex     (self): return self.__index
     def getDocuments (self): return self.__documents
     def getJobTime   (self): return self.__now
+    def getCount     (self): return self.__nMailers
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
+    def bumpCount    (self): self.__nMailers += 1
     def printDirect  (self): self.__batchPrinting = 0
     def addToQueue   (self, job):   self.__queue.append(job)
     def commit       (self):        self.__conn.commit()
