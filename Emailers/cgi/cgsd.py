@@ -369,7 +369,8 @@ def showForm(fields):
     <input class='field' name='phone' id='phone' value='%s' />
     <label class='label' for='fax'>Fax:</label>
     <input class='field' name='fax' id='fax' value='%s' />
-    <label class='label' for='email'>E-mail:</label>
+    <label class='label' for='email'><span
+     style='color: red'>*</span> E-mail:</label>
     <input class='field' name='email' id='email' value='%s' />
     <label class='label' for='epub'>Publish email address in directory?</label>
     <select name='epub' id='epub' class='field'>
@@ -415,7 +416,8 @@ def showForm(fields):
     <input class='field' name='inst-%d' id='inst-%d' value='%s' />
     <label class='label' for='addr-%d'>Contact Address:</label>
     <textarea name='addr-%d' class='field' id='addr-%d'>%s</textarea>
-    <label class='label' for='phone-%d'>Telephone:</label>
+    <label class='label' for='phone-%d'><span
+    style='color: red'>*</span> Telephone:</label>
     <input class='field' name='phone-%d' id='phone-%d' value='%s' />
 """ % (locNum,
        locNum, locNum, locNum, clean(loc.institution),
@@ -429,7 +431,8 @@ def showForm(fields):
     <input class='field' name='inst-%d' id='inst-%d' value='' />
     <label class='label' for='addr-%d'>Contact Address:</label>
     <textarea name='addr-%d' class='field' id='addr-%d'></textarea>
-    <label class='label' for='phone-%d'>Telephone:</label>
+    <label class='label' for='phone-%d'><span
+    style='color: red'>*</span> Telephone:</label>
     <input class='field' name='phone-%d' id='phone-%d' value='' />
 """ % (locNum,
        locNum, locNum, locNum,
@@ -646,9 +649,12 @@ def showForm(fields):
      submit your reply.
     </p>
     <br />
-    <input class='button' type='submit' name='Changes' value='Changes'/>
+    <input type='hidden' name='buttontype' />
+    <input class='button' type='button' value='Update My Record'
+           onclick='javascript:doSave("changed");' />
     &nbsp; Please update my profile with the changes I have made.<br /><br />
-    <input class='button' type='submit' name='Unchanged' value='Unchanged'/>
+    <input class='button' type='button' value='No Changes'
+           onclick='javascript:doSave("unchanged");' />
     &nbsp; No changes are required.<br />&nbsp;
    </form>
 """)
@@ -705,7 +711,7 @@ Content-type: text/html; charset=utf-8
 
    /* Set the top background colors across entire page width. */
    #red-stripe, #grey-stripe {
-       position: absolute; z-index: -1; left: 0px; width: 100%%;
+       position: absolute; z-index: -1; left: 0px; width: 100%;
        font-size: 1px;
    }
    #red-stripe  { background: #a80101; top:  0px; height: 79px; }
@@ -722,11 +728,50 @@ Content-type: text/html; charset=utf-8
    .label { float: left; width: 225px; margin-right: 5px;
             text-align: right; font-weight: bold; clear: left; }
    .button { margin-left: 50px; color: white; background: #a80101; 
-             font-weight: bold; width: 8em; }
+             font-weight: bold; width: 11em; }
    .year   { border: none; }
    .error { color: red; font-weight: bold; }
    #syndromes td { padding-left: 50px; }
   </style>
+  <script type='text/javascript'>
+   function hasValue(form, name) {
+       var val = form[name].value;
+       if (val) return true;
+       return false;
+   }
+   function doSave(how) {
+       var form = document.forms[0];
+       if (how == 'changed') {
+           var email = form['email'].value;
+           if (!email) {
+               alert('Contact email address is required.');
+               return;
+           }
+           var pattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+           if (!email.match(pattern)) {
+               alert("Invalid email address '" + email + "'");
+               return;
+           }
+           var nPhones = 0;
+           for (var i = 1; i <= 4; ++i) {
+               if (hasValue(form, 'phone-' + i))
+                   nPhones++;
+               else if (hasValue(form, 'inst-' + i) ||
+                        hasValue(form, 'addr-' + i)) {
+                   alert('Telephone number is required for each ' +
+                         'practice location.');
+                   return;
+               }
+           }
+           if (nPhones == 0) {
+               alert('At least one practice location is required.');
+               return;
+           }
+       }
+       form['buttontype'].value = how;
+       form.submit();
+   }
+  </script>
  </head>
  <body>
   <div id='red-stripe'>&nbsp;</div>
@@ -761,11 +806,11 @@ Content-type: text/html; charset=utf-8
     print util.fillPlaceholders(u"".join(page)).encode('utf-8')
 
 def saving(fields):
-    return fields.getvalue('Changes') or fields.getvalue('Unchanged')
+    return fields.getvalue('buttontype') in ('changed', 'unchanged')
 
 def save(fields):
     gp = GP(fields=fields)
-    if fields.getvalue('Changes'):
+    if fields.getvalue('buttontype') == 'changed':
         saveChanges(gp)
         message = u"""\
 GP mailer %d (Person CDR%d) was reviewed and submitted with changes
