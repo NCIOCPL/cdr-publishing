@@ -306,13 +306,13 @@
 
 <!ELEMENT MediaLink (Caption*)>
 <!ATTLIST MediaLink ref CDATA #REQUIRED
-                    alt CDATA #REQUIRED
-                    inline (Yes|No) "No"
-                    MinWidth CDATA #IMPLIED
-                    language NMTOKENS #IMPLIED
-                    size (full|half|third|quarter|fifth|sixth|as-is) #IMPLIED
-                    thumb (Yes|No) "No"
-                    id CDATA #IMPLIED>
+       alt CDATA #REQUIRED
+       inline (Yes|No) "No"
+       MinWidth CDATA #IMPLIED
+       language NMTOKENS #IMPLIED
+       size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
+       thumb (Yes|No) "No"
+       id CDATA #IMPLIED>
 
 <!ELEMENT Caption (%TextElements;)*>
 <!ATTLIST Caption language NMTOKENS #IMPLIED>
@@ -837,87 +837,10 @@
 
 <!-- End Protocols -->
 
-<!-- =========================================================
-     Persons  Start element Person. 
-     ========================================================= -->
-
-<!-- ProfessionalInformation only when IncludeInDirectory has value Include -->
-<!--
-<!ELEMENT Person (PersonNameInformation,
-                  ProfessionalInformation?, 
-                  PersonLocations,
-                  DateFirstPublished?,
-                  DateLastModified?
-                 )>
-<!ATTLIST Person id CDATA #REQUIRED>
-<!ATTLIST Person LegacyPDQID CDATA #IMPLIED>
-<!ATTLIST Person Status CDATA #IMPLIED>
-
-<!ELEMENT ProfessionalInformation (PDQBoardMembership*,PhysicianDetails?)>
-<!ELEMENT PDQBoardMembership (#PCDATA)>
-<!ATTLIST PDQBoardMembership ref CDATA #REQUIRED>
-
-<!ELEMENT PhysicianDetails (PhysicianSpecialtyInformation*,
-                            PhysicianMembershipInformation?
-                           )>
-
-<!ELEMENT PhysicianSpecialtyInformation (BoardCertifiedSpecialty | OtherSpecialty)+>
--->
-
-<!-- These are board certified specialties that PDQ verifies -->
-
-<!--
-<!ELEMENT BoardCertifiedSpecialty (BoardCertifiedSpecialtyName,
-                                   Certified, Verified?
-                                  )>
-
-<!ELEMENT BoardCertifiedSpecialtyName (#PCDATA)>
-
-<!ELEMENT Certified (#PCDATA)>
-
-<!ELEMENT Verified (#PCDATA)>
-
-<!ELEMENT OtherSpecialty (#PCDATA)>
-
-<!ELEMENT PhysicianMembershipInformation (MemberOfCooperativeGroup
-                                          | MemberOfMedicalSociety
-                                         )*>
--->
-
-<!ELEMENT MemberOfCooperativeGroup (#PCDATA)>
-<!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
-
-<!--
-<!ELEMENT MemberOfMedicalSociety (#PCDATA)>
-
-<!ELEMENT PersonLocations (Home?,
-                           PrivatePracticeLocation*,
-                           OtherPracticeLocation*
-                          )>
-
-<!ELEMENT Home (%Location;)>
-<!ATTLIST Home id CDATA #IMPLIED>
-<!ATTLIST Home Status CDATA #IMPLIED>
-
-<!ELEMENT OtherPracticeLocation (PersonOrganizationName,
-                    PersonTitle?,
-                    PersonOrganizationLocation)>
-<!ATTLIST OtherPracticeLocation id CDATA #REQUIRED>
-<!ATTLIST OtherPracticeLocation Status CDATA #REQUIRED>
-
-<!ELEMENT PersonOrganizationName (#PCDATA)>
-<!ATTLIST PersonOrganizationName ref CDATA #IMPLIED>
-
-<!ELEMENT PersonOrganizationLocation (%Location;)>
-<!ATTLIST PersonOrganizationLocation ref CDATA #IMPLIED>
--->
-
-<!-- End Persons -->
 
 <!-- =========================================
      Organizations Start element Organization. 
      ========================================= -->
-
 <!ELEMENT Organization (OrganizationNameInformation,
                         OrganizationParent?,
                         IncludeInDirectory*,
@@ -983,6 +906,9 @@
 <!ELEMENT CooperativeGroup (#PCDATA)>
 <!ATTLIST CooperativeGroup ref CDATA #IMPLIED>
 -->
+
+<!ELEMENT MemberOfCooperativeGroup (#PCDATA)>
+<!ATTLIST MemberOfCooperativeGroup  ref CDATA #IMPLIED>
 
 <!ELEMENT MemberOfCCOP (#PCDATA)>
 <!ATTLIST MemberOfCCOP ref CDATA #IMPLIED>
