@@ -316,7 +316,7 @@
        inline (Yes|No) "No"
        MinWidth CDATA #IMPLIED
        language NMTOKENS #IMPLIED
-       size (full|three-querters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
+       size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
        thumb (Yes|No) "No"
        id CDATA #IMPLIED>
 
