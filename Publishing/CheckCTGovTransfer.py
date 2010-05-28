@@ -16,13 +16,14 @@
 # $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
 #
 # BZIssue::4687
+# BZIssue::4826  - Modify "Transfer of Protocol(s)..." email report
 #
 # Revision 1.1  2009/03/27 20:38:12  venglisc
 # New email notification to NLM for ownership transferring to responsible
 # party. (Bug 4529)
 #
 # *********************************************************************
-import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
+import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
 
 OUTPUTBASE     = cdr.BASEDIR + "/Output/CTGovTransfer"
 DOC_FILE       = "CTGovTransfer"
@@ -270,6 +271,57 @@ def getGrantNo(id):
     return ", ".join(["%s" % g for g in grantNo])
 
 
+# --------------------------------------------------------
+# Checking if any of the documents is checked out by users
+# --------------------------------------------------------
+def checkedOutByUser(cdrIds):
+    try:
+        conn = cdrdb.connect()
+        cursor = conn.cursor()
+        query  = """\
+            SELECT d.id, d.title, c.dt_out, u.name
+              FROM usr u
+              JOIN checkout c
+                ON c.usr = u.id
+              JOIN document d
+                ON d.id = c.id
+             WHERE dt_in IS NULL
+               AND d.id in (%s)
+""" % ",".join(['%s' % x for x in cdrIds])
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if not rows:
+            return ""
+        else:
+            html  = """\
+      <br/>
+      <br/>
+      <br/>
+      <h2>Documents Checked out by User(s)</h2>
+      <table>
+       <tr>
+        <th><B>CDR-ID</B></th>
+        <th><B>Title</B></th>
+        <th><B>Username</B></th>
+       </tr>
+"""
+
+        for row in rows:
+            html += """\
+       <tr>
+        <td VALIGN='top'>CDR%010d</td>
+        <td VALIGN='top'>%s</td>
+        <td VALIGN='top'>%s</td>
+       </tr>
+    """ % (row[0], cdrcgi.unicodeToLatin1(row[1]), row[3])
+    except cdrdb.Error, info:
+        cdrcgi.bail('Database failure: %s' % info[1][0])
+
+    return html
+
+
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
@@ -336,10 +388,10 @@ try:
         
     try:
         cursor.execute("""\
-         SELECT q.doc_id as "CDR-ID", qid.value as "Primary ID", 
-                nid.value as "NCTID", o.value as "OrgName", 
-                t.value as "Transfer Org", q.value as "PRS Name",
-                c.value
+         SELECT q.doc_id AS "CDR-ID", qid.value AS "Primary ID", 
+                nid.value AS "NCTID", o.value AS "OrgName", 
+                t.value AS "Transfer Org", q.value AS "PRS Name",
+                c.value AS "Comment", s.value AS "Protocol Status"
            FROM query_term q
 -- Find the blocked documents (active_status)
 --  JOIN document d
@@ -367,6 +419,10 @@ try:
              ON oid.int_val = o.doc_id
             AND o.path = '/Organization/OrganizationNameInformation' + 
                          '/OfficialName/Name'
+-- Get the protocol status
+           JOIN query_term_pub s
+             ON s.doc_id = q.doc_id
+            AND s.path = '/InScopeProtocol/ProtocolAdminInfo/CurrentProtocolStatus'
 -- Get the primary Lead Org
            JOIN query_term_pub poid
              ON oid.doc_id = poid.doc_id
@@ -414,7 +470,7 @@ LEFT OUTER JOIN query_term c
     l.write("List of new CTGovTransfer protocols", stdout = True)
     l.write("-----------------------------------",   stdout = True)
     for (cdrId, protocolId, nctId, orgName, transferOrg,
-         prsName, comment) in rows:
+         prsName, comment, pStatus) in rows:
         # l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
         #                             stdout = True)
 
@@ -466,6 +522,7 @@ LEFT OUTER JOIN query_term c
     <th>Transfer Org</th>
     <th>PRS Username</th>
     <th>Comment</th>
+    <th>Protocol Status</th>
     <th>Grant No</th>
     <th>PUP Name</th>
     <th>PUP Email</th>
@@ -474,7 +531,7 @@ LEFT OUTER JOIN query_term c
 
         try:
             for (cdrId, protocolId, nctId, orgName, transOrgName,
-                 PRSName, comment) in rows:
+                 PRSName, comment, pStatus) in rows:
 
                 if cdrId in newIds:
                     mailBody += u"""\
@@ -488,8 +545,9 @@ LEFT OUTER JOIN query_term c
     <td>%s</td>
     <td>%s</td>
     <td>%s</td>
+    <td>%s</td>
 """ % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
-       PRSName, comment)
+       PRSName, comment, pStatus)
 
                     # Populate the PUP information
                     pup = PUP(cdrId)
@@ -514,7 +572,14 @@ LEFT OUTER JOIN query_term c
 
         mailBody += u"""\
   </table>
+"""
+        # User request to display the document IDs for protocols that
+        # are currently checked out.
+        # -----------------------------------------------------------
+        attachment = checkedOutByUser(newIds)
+        mailBody += attachment
 
+        mailBody += u"""\
  </body>
 </html>
 """
@@ -560,11 +625,11 @@ Subject: %s: %s
     server.quit()
 
 except NothingFoundError, arg:
-    msg  = "No documents found with 'CTGovDuplicate' element"
+    msg  = "No documents found with 'CTGovTransfer' element"
     l.write("   %s" % msg, stdout = True)
     l.write("   %s" % arg, stdout = True)
 except NoNewDocumentsError, arg:
-    msg  = "No new documents found with 'CTGovDuplicate' element"
+    msg  = "No new documents found with 'CTGovTransfer' element"
     l.write("", stdout = True)
     l.write("   %s" % msg, stdout = True)
     l.write("   %s" % arg, stdout = True)
