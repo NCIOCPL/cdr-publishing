@@ -13,55 +13,8 @@
 # $Revision: 1.15 $
 #
 # $Id: Jobmaster.py,v 1.15 2009-09-15 17:35:34 venglisc Exp $
-# $Log: not supported by cvs2svn $
-# Revision 1.14  2009/03/27 20:13:18  venglisc
-# Adding new production steps (Bug 4429, 4497, 4529)
 #
-# Revision 1.13  2009/02/27 23:28:05  venglisc
-# Added new step to run CheckRepublishWithdrawn.py. (Bug 4450)
-#
-# Revision 1.12  2009/01/23 19:26:19  venglisc
-# Added new step to run the Media report for Visual OnLine. (Bug 4402)
-#
-# Revision 1.11  2008/10/06 19:52:26  venglisc
-# Fixed typo in len() function. (Bug 4123)
-#
-# Revision 1.10  2008/09/26 22:23:35  venglisc
-# Including the ArmsCount script in publishing schedule.
-#
-# Revision 1.9  2008/09/16 18:10:09  venglisc
-# Added code to create licensee output from CG output.  The data is then
-# revalidated with the pdq.dtd. (Bug 4123)
-#
-# Revision 1.8  2008/02/19 23:49:19  venglisc
-# Fixed directory name format error to identify the directories to be
-# checked for CheckWithdrawn.py.
-#
-# Revision 1.7  2007/12/12 20:41:11  venglisc
-# Added additional production step to check the WithdrawnFromPDQ.txt file
-# for newly added protocols. (Bug 3761)
-#
-# Revision 1.6  2007/11/14 19:38:09  venglisc
-# Modified program to run the CTGovExport as part of the nightly job
-# and push the data to NLM's ftp site.
-#
-# Revision 1.5  2007/09/07 22:29:53  venglisc
-# Removed backup option.
-#
-# Revision 1.4  2007/08/22 00:50:04  venglisc
-# Added code to only run the CTGovExport creation on Wednesdays and
-# Fridays per NLM request.
-#
-# Revision 1.3  2007/08/14 00:04:40  venglisc
-# Final version of Jobmaster.py.  For production the NightlyRefresh
-# to update the CDR database on FRANCK has been removed.
-#
-# Revision 1.2  2007/08/10 16:44:37  venglisc
-# Finalized initial version of submission program.
-#
-# Revision 1.1  2007/07/06 16:41:23  venglisc
-# Initial copy of Jobmaster script used to run all nightly publishing
-# steps for MFP.
+# BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 #
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
@@ -624,6 +577,35 @@ if fullUpdate:
         sys.exit(1)
 
 
+    # Submit the job to check for documents that will need to
+    # be removed manually from Cancer.gov.
+    # Only blocked documents are being removed but for 
+    # document types for which the status is being set to 
+    # remove or withdrawn, for instance the document won't 
+    # necessarily be removed as part of the publishing job.
+    # -------------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: CheckHotfixRemove Job' % istep, stdout = True)
+        cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode)) 
+
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        myCmd = cdr.runCommand(cmd)
+
+        if myCmd.code:
+            l.write('*** Error submitting command:\n%s' % myCmd.output,
+                     stdout = True)
+            l.write('Code: %s' % myCmd.code, stdout = True)
+            subject = '*** Error in CheckHotfixRemove.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                        (subject, message))
+            myCmd   = cdr.runCommand(cmd)
+            raise
+    except:
+        l.write('Submitting CheckHotfixRemove Job failed', stdout = True)
+        sys.exit(1)
 
 
 # Send final Notification that publishing on CDR servers has finished
