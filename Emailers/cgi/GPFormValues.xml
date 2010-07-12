@@ -17,36 +17,20 @@
 
   Returned:
 
-      String containing serialized XML for the form values, using the
-      following structure:
+      Array of ValueSet objects.  Each ValueSet contains the following
+      members:
 
-        ValueSets [top level, wrapper element]
-          ValueSet [multiply-occurring wrapper element]
-            @type [required attribute; e.g., 'Syndromes']
-            Value [multiply-occurring; text content is display value]
-              @ref [optional attribute; unique ID of value]
-
-      For example:
-        <ValueSets>
-          <ValueSet type='Syndromes'>
-            <Value ref='CDR0000042839'>Adenomatous polyposis, familial</Value>
-            <Value ref='CDR0000042838'>Ataxia-telangiectasia</Value>
-            ...
-          </ValueSet>
-          <ValueSet type='ProfessionalTypes'>
-            <Value>Clinical Psychologist (Ph.D., Psy.D.)</Value>
-            <Value>Clinical Social Worker (M.S.W., D.S.W.)</Value>
-            ...
-          </ValueSet>
-          ...
-        </ValueSets>
+          Name   - string identifying which set is represented
+                   (e.g., "Syndromes")
+          Values - array of strings for the values allowed for
+                   the set (e.g., "Ataxia-telangiectasia")
 
   ======================================================================
  -->
 
  <w:types>
   <s:schema  elementFormDefault = 'qualified'
-                targetNamespace = 'cips.nci.nih.gov/cdr'>
+                targetNamespace = 'cips.nci.nih.gov/cdr/GPFormValues'>
    <s:element              name = 'getValueSets'>
     <s:complexType>
      <s:sequence/>
@@ -56,10 +40,32 @@
     <s:complexType>
      <s:sequence>
       <s:element           name = 'valueSets'
-                           type = 's:string'/>
+                           type = 'ArrayOfValueSet'/>
      </s:sequence>
     </s:complexType>
    </s:element>
+   <s:complexType          name = 'ArrayOfValueSet'>
+    <s:sequence>
+     <s:element            name = 'ValueSet'
+                           type = 'ValueSet'
+                      maxOccurs = 'unbounded'/>
+    </s:sequence>
+   </s:complexType>
+   <s:complexType          name = 'ValueSet'>
+    <s:sequence>
+     <s:element            name = 'name'
+                           type = 's:string'/>
+     <s:element            name = 'values'
+                           type = 'ArrayOfString'/>
+    </s:sequence>
+   </s:complexType>
+   <s:complexType          name = 'ArrayOfString'>
+    <s:sequence>
+     <s:element            name = 'string'
+                           type = 's:string'
+                      maxOccurs = 'unbounded'/>
+    </s:sequence>
+   </s:complexType>
   </s:schema>
  </w:types>
 
@@ -84,7 +90,7 @@
                            type = 'ServiceSoap'>
   <soap:binding       transport = 'http://schemas.xmlsoap.org/soap/http'/>
   <w:operation             name = 'getValueSets'>
-   <soap:operation   soapAction = 'cips.nci.nih.gov/cdr/getValueSets'
+   <soap:operation   soapAction = 'cips.nci.nih.gov/cdr/GPFormValues/getValueSets'
                           style = 'document'/>
    <w:input>
     <soap:body              use = 'literal'/>
@@ -98,7 +104,7 @@
                            type = 'ServiceSoap'>
   <soap12:binding     transport = 'http://schemas.xmlsoap.org/soap/http'/>
   <w:operation             name = 'getValueSets'>
-   <soap12:operation soapAction = 'cips.nci.nih.gov/cdr/getValueSets'
+   <soap12:operation soapAction = 'cips.nci.nih.gov/cdr/GPFormValues/getValueSets'
                           style = 'document'/>
    <w:input>
     <soap12:body            use = 'literal'/>
