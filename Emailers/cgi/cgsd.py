@@ -9,7 +9,7 @@
 # BZIssue::4630
 #
 #----------------------------------------------------------------------
-import cgi, lxml.etree as etree, bz2, util
+import cgi, lxml.etree as etree, bz2, util, datetime
 
 SENDER = 'GeneticsDirectory@cancer.gov'
 
@@ -37,6 +37,7 @@ class GP:
             if value:
                 valueSet.add(value)
     def __init__(self, trackerId=None, personId=None, fields=None):
+        self.expired = False
         self.trackerId = trackerId
         self.personId = personId
         self.name = self.contact = self.publish = self.teamMember = None
@@ -87,6 +88,8 @@ class GP:
                 raise Exception("unable to find mailer document")
             (docXml, self.email, self.fullName, self.mailed, self.job,
              self.completed, self.bounced) = rows[0]
+            if (datetime.datetime.now() - self.mailed).days >= 30:
+                self.expired = True
             tree = etree.XML(docXml)
             for child in tree:
                 if child.tag == 'PersonNameInformation':
@@ -321,6 +324,9 @@ def showForm(fields):
     elif gp.bounced:
         bail("This mailer has been marked as 'Return To Sender'")
         return
+    elif gp.expired:
+        bail("This mailer is no longer available")
+        return
     form = [u"""\
    <form action='cgsd.py' method='POST'>
     <input type='hidden' name='tid' value='%d' />
@@ -339,7 +345,7 @@ def showForm(fields):
      directly into the boxes.
     </p>
     <p class='instructions'>
-     If you have any questions, please send e-mail to
+     If you have any questions, please send an email to
      <a href='mailto:GeneticsDirectory@cancer.gov'
      >GeneticsDirectory@cancer.gov</a>.
     </p>
@@ -680,7 +686,16 @@ def markCompletion(gp):
     
 def sayThankYou():
     sendPage(u"""\
-   <p id='payload'>Thanks!</p>
+
+   <p id='payload'>
+    This completes the updates to your directory record for this
+    year. Changes that you have made will be displayed on the NCI
+    Cancer Genetics Services Directory Web site within a few days. If
+    you need to make changes before our next annual update prompt,
+    please email <a href='mailto:GeneticsDirectory@cancer.gov'
+    >GeneticsDirectory@cancer.gov</a>.  Thank you for helping us
+    keep NCI's Cancer Genetics Services Directory current.
+   </p>
 """)
 
 def bail(why):
