@@ -110,10 +110,10 @@ def loadEmailer(conn, cursor, jobId, node):
     print "loaded emailer %s (CDR%s)" % (trackerId, docId)
     try:
         subject = 'NCI Cancer Genetics Services Directory update request'
-        subject = "[TEST] %s" % subject
-        address = testers
-        if email.lower() == 'klem@kadiddlehopper.org':
+        if util.isProductionHost():
             address = [email]
+        else:
+            address = testers
         emailerId = base36((int(trackerId) << 32) + int(docId))
         url = "http://%s%s/cgsd.py?id=%s" % (util.WEB_HOST, util.CGI_BASE, 
                                              emailerId)
