@@ -32,12 +32,6 @@ try:
     print "dropbox.gp_emailer_job table dropped"
 except:
     pass
-try:
-    cursor.execute('DROP TABLE dropbox.gp_lookup_values')
-    conn.commit()
-    print "dropbox.gp_lookup_values table dropped"
-except:
-    pass
 
 #----------------------------------------------------------------------
 # One row for a set of emailer batches generated at the same time.
@@ -49,12 +43,13 @@ except:
 #     imported: date/time job was imported into the emailers database
 #----------------------------------------------------------------------
 cursor.execute("""\
-CREATE TABLE dropbox.gp_emailer_job
-         (id INTEGER      NOT NULL PRIMARY KEY,
-    emailers MEDIUMBLOB   NOT NULL,
- mailer_type VARCHAR(128) NOT NULL,
-    uploaded DATETIME     NOT NULL,
-    imported DATETIME         NULL)
+ CREATE TABLE dropbox.gp_emailer_job
+          (id INTEGER      NOT NULL PRIMARY KEY,
+     emailers MEDIUMBLOB   NOT NULL,
+  mailer_type VARCHAR(128) NOT NULL,
+     uploaded DATETIME     NOT NULL,
+     imported DATETIME         NULL,
+lookup_values MEDIUMBLOB   NOT NULL)
       ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci""")
 conn.commit()
 print "dropbox.gp_emailer_job table created"
@@ -88,20 +83,3 @@ CREATE TABLE emailers.gp_emailer
       ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci""")
 conn.commit()
 print "emailers.gp_emailer table created"
-
-#----------------------------------------------------------------------
-# Holding location for fresh sets of values for lookup lists used by
-# the GP emailer system.
-#
-#           id: primary key (auto-generated)
-#   value_sets: compressed document for lookup values
-#     uploaded: date/time set of values was inserted in the table
-#----------------------------------------------------------------------
-cursor.execute("""\
-CREATE TABLE dropbox.gp_lookup_values
-         (id INTEGER     NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  value_sets MEDIUMBLOB  NOT NULL,
-    uploaded DATETIME    NOT NULL)
-      ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci""")
-conn.commit()
-print "dropbox.gp_lookup_values created"
