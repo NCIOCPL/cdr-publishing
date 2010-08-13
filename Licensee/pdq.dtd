@@ -7,6 +7,7 @@
    Original version  2001/12/17  Michael M Rubenstein
   
    BZIssue::4629 - Vendor filter changes for GenProf publishing
+   BZIssue::4881 - Include DrugInfoSummary document type
 
    Preliminary version 
    
@@ -1236,15 +1237,10 @@
 
 <!-- End CTGovProtocol -->
 
-<!-- [@@INTERNAL] =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
-<!-- Begin DTD for Internal Use Only                             -->
-<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
-
 <!-- ===========================================================
      DrugInformationSummary start element DrugInformationSummary
      =========================================================== -->
 
-<!--  I think we can remove the DIS DTD from the licensee version (VE)
 <!ELEMENT DrugInformationSummary 
           ( DrugInfoMetaData, 
             DrugInfoTitle,
@@ -1253,40 +1249,37 @@
             DateFirstPublished,
             DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
--->
+
 <!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
             used within a DrugInformationSummary will not contain these
             elements:  AltTitle, KeyPoints, nested Section elements -->
 
-<!--
 <!ELEMENT DrugInfoMetaData 
           ( DrugInfoType,
             DrugInfoAudience,
             DrugInfoDescription,
             DrugInfoURL,
             Manufacturers?,
-            FDAApproved,
+            FDAApproved?,
             TerminologyLink,
             GlossaryLink,
             USBrandNames?,
             Synonyms? )>
 
 <!ELEMENT DrugInfoType (#PCDATA)>
--->
 <!-- Types of DrugInfoType
      Possible values are:
      Brief
      Detailed -->
+<!ATTLIST DrugInfoType Combination (Yes) #IMPLIED>
 
-<!--
 <!ELEMENT DrugInfoAudience (#PCDATA)>
--->
+
 <!-- Types of DrugInfoAudience
      Possible values are:
      Patients
      Health professionals -->
 
-<!--
 <!ELEMENT DrugInfoDescription (#PCDATA)>
 
 <!ELEMENT DrugInfoURL (#PCDATA)>
@@ -1316,10 +1309,13 @@
 <!ELEMENT DrugInfoTitle (#PCDATA)>
 
 <!ELEMENT DrugInfoDisclaimer (%TextSectionElements;)*>
--->
 
 <!-- End DrugInformationSummary -->
 
+
+<!-- [@@INTERNAL] =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+<!-- Begin DTD for Internal Use Only                             -->
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
 
 <!-- Media element requested by Cancer.gov -->
 <!ELEMENT Media                (#PCDATA)>
