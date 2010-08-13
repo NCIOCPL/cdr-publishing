@@ -7,6 +7,7 @@
 # Validate the new licensee data against its DTD.
 #
 # BZIssue::4675 - Create UrlInfo block
+# BZIssue::4881 - Modify publishing to include Drug Info Summary
 #
 # Revision 1.3  2008/10/14 21:45:03  venglisc
 # Had to fix the glob.glob() pattern since there were folders/files on BACH
@@ -30,7 +31,7 @@ SOURCEBASE    = cdr.BASEDIR + "/Output"
 # DTDPUBLIC   = "d:\\home\\venglisch\\cdr\\Licensee\\pdqPublic_test.dtd"
 DTDPUBLIC     = "d:\\cdr\\Licensee\\pdq.dtd"
 LOGNAME       = "Jobmaster.log"
-EXCLUDEDIRS   = ('DrugInfoSummary', 'InvalidDocs', 'media_catalog.txt')
+EXCLUDEDIRS   = ('InvalidDocs', 'media_catalog.txt')
 AUXFILES      = ('media_catalog.txt',)
 warnings      = False
 
