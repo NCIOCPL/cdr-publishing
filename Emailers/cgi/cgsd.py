@@ -837,7 +837,7 @@ http://%s%s/ShowGPChanges.py?id=%d
         markCompletion(gp)
         message = ("GP mailer %d (Person CDR%d) was reviewed and submitted "
                    "with no changes" % (gp.trackerId, gp.personId))
-    recips = ('NCIGENETICSDIRECTORY@ICFI.COM', '***REMOVED***')
+    recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)# '***REMOVED***')
     subject = "GP mailer %d" % gp.trackerId
     util.sendMail(SENDER, recips, subject, message)
     sayThankYou()
