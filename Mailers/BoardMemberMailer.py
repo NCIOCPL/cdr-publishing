@@ -509,6 +509,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             fp = open(name, "wb")
             fp.write(letter)
             fp.close()
+            self.bumpCount()
     
     #------------------------------------------------------------------
     # Prepare a template to be used by all letters in this batch.
