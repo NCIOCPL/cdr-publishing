@@ -333,7 +333,7 @@ try:
         SELECT q.doc_id AS "CDR-ID", p.value AS "Primary ID", 
                n.value AS "NCT ID", o.value AS "Lead Sponsor",
                q.value AS "Transfer Owner", u.value AS "PRS User",
-               c.value, v.dt
+               c.value AS "Comment", s.value AS "Protocol Status", v.dt
           FROM query_term q
           JOIN query_term p
             ON p.doc_id = q.doc_id
@@ -346,6 +346,9 @@ try:
            AND t.path = '/CTGovProtocol/PDQAdminInfo'            +
                         '/CTGovOwnershipTransferInfo'            +
                         '/CTGovOwnerOrganization'
+          JOIN query_term s
+            ON s.doc_id = q.doc_id
+           AND s.path   = '/CTGovProtocol/OverallStatus'
           LEFT JOIN query_term u
             ON u.doc_id = t.doc_id
            AND u.path = '/CTGovProtocol/PDQAdminInfo'            +
@@ -453,6 +456,7 @@ LEFT OUTER JOIN query_term c
     <th>Transfer Org</th>
     <th>PRS Username</th>
     <th>Comment</th>
+    <th>Protocol Status</th>
     <th>Grant No</th>
     <th>PUP Name</th>
     <th>PUP Email</th>
@@ -461,7 +465,7 @@ LEFT OUTER JOIN query_term c
 
         try:
             for (cdrId, protocolId, nctId, orgName, transOrgName,
-                 PRSName, comment, updDate) in rows:
+                 PRSName, comment, pStatus, updDate) in rows:
                 l.write('%s' % cdrId, stdout = True)
 
                 mailBody += u"""\
@@ -475,9 +479,9 @@ LEFT OUTER JOIN query_term c
     <td>%s</td>
     <td>%s</td>
     <td>%s</td>
+    <td>%s</td>
 """ % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
-       PRSName, comment)
-
+       PRSName, comment, pStatus)
                 # Populate the PUP information
                 pup = PUP(cdrId)
 
