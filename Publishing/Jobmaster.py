@@ -15,6 +15,7 @@
 # $Id: Jobmaster.py,v 1.15 2009-09-15 17:35:34 venglisc Exp $
 #
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
+# BZIssue::4903 - Transfer Protocols without transfer date
 #
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
@@ -32,9 +33,6 @@ testMode   = None
 fullUpdate = None
 refresh    = True
 istep      = 0
-
-EmailError = 'oops'
-CTGovError = 'oops'
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -201,19 +199,16 @@ try:
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    try:
-        myCmd = cdr.runCommand(cmd)
-        print "Code: ", myCmd.code
-        print "Outp: ", myCmd.output.find('Failure')
-        print "--------------"
-        if myCmd.code or myCmd.output.find('Failure') > 0:
-            raise EmailError
-    except EmailError:
-        l.write('*** Error submitting email\n%s' % myCmd.output, 
+
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
+
+    if myCmd.error:
+        l.write('*** Error submitting email\n%s' % myCmd.error, 
                  stdout = True)
-        raise
+        raise Exception
 except:
-    l.write('Sending Initial Email failed', stdout = True)
+    l.write('*** Error: Sending Initial Email failed', stdout = True)
     sys.exit(1)
 
 try:
@@ -224,11 +219,12 @@ try:
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)
 
+    # cmd = 'ls'
     myCmd = cdr.runCommand(cmd)
     
     print "Code: ", myCmd.code
     print "Outp: ", myCmd.output.find('Failure')
-    print "--------------"
+    
     if myCmd.code or myCmd.output.find('Failure') > 0:
         l.write('*** Error submitting command:\n%s' % myCmd.output, 
                  stdout = True)
@@ -236,11 +232,12 @@ try:
         message = 'Program returned with error code.  Please see logfile.'
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+        # cmd = 'ls'
         myCmd   = cdr.runCommand(cmd)
-        raise
+        raise Exception
 
 except:
-    l.write('Submitting Publishing Job failed', stdout = True)
+    l.write('*** Error: Submitting Publishing Job failed', stdout = True)
     sys.exit(1)
 
 # Process the licensee data that's running on weekends only
@@ -257,21 +254,22 @@ if fullUpdate:
         cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s' % (runmode, pubmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                      stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
             subject = '*** Error in CG2Public.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
-            raise
+            raise Exception
     except:
-        l.write('Submitting CG2Public Job failed', stdout = True)
-        sys.exit(1)
+        l.write('*** Error: Submitting CG2Public Job failed', stdout = True)
+        pass
 
     # FTP the publishing data (Vendor output) to CIPSFTP
     # Note: Step only needed for weekly publishing
@@ -284,21 +282,22 @@ if fullUpdate:
                                                                 pubmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                      stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
             subject = '*** Error in FtpExportData.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
-            raise
+            raise Exception
     except:
-        l.write('Submitting FtpExportData Job failed', stdout = True)
-        sys.exit(1)
+        l.write('*** Error: Submitting FtpExportData Job failed', stdout = True)
+        pass
 
 
 # FTP the NCICB Terminolofy data to CIPSFTP
@@ -315,21 +314,23 @@ try:
                                                             pubmode)) 
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
                  stdout = True)
         l.write('Code: %s' % myCmd.code, stdout = True)
         subject = '*** Error in FtpOtherData.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                     (subject, message))
+        # cmd = 'ls'
         myCmd   = cdr.runCommand(cmd)
-        raise
+        raise Exception
 except:
-    l.write('Submitting FtpOtherData Job failed', stdout = True)
-    sys.exit(1)
+    l.write('*** Error: Submitting FtpOtherData Job failed', stdout = True)
+    pass
 
 
 # Create the CTGovExport data with every nightly job and the full export
@@ -357,20 +358,22 @@ try:
                          #   Specifying maxtest option for testing only
     
     l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
                  stdout = True)
         subject = '*** Error in CTGovExport.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+        # cmd = 'ls'
         myCmd   = cdr.runCommand(cmd)
-        raise
+        raise Exception
 except:
-    l.write('Submitting CTGovExport Job failed', stdout = True)
-    sys.exit(1)
+    l.write('*** Error: Submitting CTGovExport Job failed', stdout = True)
+    pass
     
     
 # Ftp the FtpCTGovData to the CIPSFTP server
@@ -382,20 +385,22 @@ try:
     cmd = os.path.join(PUBPATH, 'FtpCTGov2Nlm.py %s' % runmode)
     
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
                  stdout = True)
         subject = '*** Error in FtpCTGov2Nlm.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                     (subject, message))
+        # cmd = 'ls'
         myCmd = cdr.runCommand(cmd)
-        raise
+        raise Exception
 except:
-    l.write('Submitting FtpCTGov2Nlm Job failed', stdout = True)
-    sys.exit(1)
+    l.write('*** Error: Submitting FtpCTGov2Nlm Job failed', stdout = True)
+    pass
 
 
 # Check for new protocols with status 'Withdrawn from PDQ'
@@ -412,26 +417,28 @@ try:
                                                (runmode, dirs[0], dirs[1]))
     
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                  stdout = True)
             subject = '*** Error in CheckWithdrawn.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' \
                                     (subject, message))
+            # cmd = 'ls'
             myCmd = cdr.runCommand(cmd)
-            raise
+            raise Exception
     else:
         l.write('*** Warning: Unable to submit CheckWithdrawn.py',
                  stdout = True)
         l.write('             Nothing to compare to!',
                  stdout = True)
-except StandardError, info:
-    l.write('Submitting CheckWithdrawn Job failed\n%s' % str(info), 
+except Exception, info:
+    l.write('*** Error: Submitting CheckWithdrawn Job failed\n%s' % str(info), 
                                                          stdout = True)
-    sys.exit(1)
+    pass
 
 
 # Check for protocols that were re-activated (i.e. published, 
@@ -446,21 +453,23 @@ try:
                                                                 runmode)
     
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
              stdout = True)
         subject = '*** Error in CheckRepublishWithdrawn.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                                        (subject, message))
+        # cmd = 'ls'
         myCmd = cdr.runCommand(cmd)
-        raise
-except StandardError, info:
-    l.write('Submitting CheckRepublishWithdrawn Job failed\n%s' % str(info), 
-                                                         stdout = True)
-    sys.exit(1)
+        raise Exception
+except Exception, info:
+    l.write('*** Error: Submitting CheckRepublishWithdrawn Job failed\n%s' % \
+                                             str(info), stdout = True)
+    pass
 
 
 # Check for protocols with the CTGovDuplicate flag
@@ -473,21 +482,23 @@ try:
     cmd = os.path.join(PUBPATH, 'CheckCTGovDuplicate.py "%s"' % runmode)
     
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
              stdout = True)
         subject = '*** Error in CheckCTGovDuplicate.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                                      (subject, message))
+        # cmd = 'ls'
         myCmd = cdr.runCommand(cmd)
-        raise
-except StandardError, info:
-    l.write('Submitting CheckCTGovDuplicate Job failed\n%s' % str(info), 
+        raise Exception
+except Exception, info:
+    l.write('*** Error: Submitting CheckCTGovDuplicate Job failed\n%s' % str(info), 
                                                          stdout = True)
-    sys.exit(1)
+    pass
 
 
 
@@ -503,25 +514,61 @@ try:
                                                                 runmode)
     
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    myCmd = cdr.runCommand(cmd)
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
     
-    if myCmd.code:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
+    if myCmd.error:
+        l.write('*** Error submitting command:\n%s' % myCmd.error,
              stdout = True)
         subject = '*** Error in CheckCTGovTransfer.py'
         message = 'Program returned with error code.  Please see logfile.'
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                                        (subject, message))
+        # cmd = 'ls'
         myCmd = cdr.runCommand(cmd)
-        raise
-except StandardError, info:
-    l.write('Submitting CheckCTGovTransfer Job failed\n%s' % str(info), 
+        raise Exception
+except Exception, info:
+    l.write('*** Error: Submitting CheckCTGovTransfer Job failed\n%s' % str(info), 
                                                          stdout = True)
-    sys.exit(1)
+    pass
 
 
 
 if fullUpdate:
+    # If, for some reason, the CheckCTGovTransfer.py fails and can 
+    # not be rerun before the InScopeProtocols are being transferred
+    # to CTGovProtocols, Kim likes this job to be run to identify
+    # documents that may have been missed with the other program.
+    # ------------------------------------------------------------
+    try:
+        istep += 1
+        l.write('--------------------------------------------', stdout = True)
+        l.write('Step %d: Submitting CTGovTransferEmail Job' % istep, 
+                                                                stdout = True)
+        cmd = os.path.join(PUBPATH, 'CTGovTransferEmail.py "%s"' % \
+                                                                    runmode)
+        
+        l.write('Submitting command...\n%s' % cmd, stdout = True)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
+        
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
+                 stdout = True)
+            subject = '*** Error in CTGovTransferEmail.py'
+            message = 'Program returned with error code.  Please see logfile.'
+            cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                                           (subject, message))
+            # cmd = 'ls'
+            myCmd = cdr.runCommand(cmd)
+            raise Exception
+    except Exception, info:
+        l.write('*** Error: Submitting CTGovTransferEmail Job failed\n%s' % str(info), 
+                                                             stdout = True)
+        pass
+
+
+
     # Submit the job to count the # of studies with Arms info
     # Note: Step only needed for weekly publishing
     # -------------------------------------------------------
@@ -532,21 +579,22 @@ if fullUpdate:
         cmd = os.path.join(UTIL, 'CountArmsLabel.py %s' % (runmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                      stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
             subject = '*** Error in CountArmsLabel.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
-            raise
+            raise Exception
     except:
-        l.write('Submitting CountArmsLabel Job failed', stdout = True)
-        sys.exit(1)
+        l.write('*** Error: Submitting CountArmsLabel Job failed', stdout = True)
+        pass
 
 
     # Submit the job to check for newly published media 
@@ -560,28 +608,29 @@ if fullUpdate:
         cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                      stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
             subject = '*** Error in Notify_VOL.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
-            raise
+            raise Exception
     except:
-        l.write('Submitting Notify_VOL Job failed', stdout = True)
-        sys.exit(1)
+        l.write('*** Error: Submitting Notify_VOL Job failed', stdout = True)
+        pass
 
 
     # Submit the job to check for documents that will need to
     # be removed manually from Cancer.gov.
     # Only blocked documents are being removed but for 
     # document types for which the status is being set to 
-    # remove or withdrawn, for instance the document won't 
+    # remove or withdrawn, for instance, the document won't 
     # necessarily be removed as part of the publishing job.
     # -------------------------------------------------------
     try:
@@ -591,21 +640,22 @@ if fullUpdate:
         cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        myCmd = cdr.runCommand(cmd)
+        # cmd = 'ls'
+        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
-        if myCmd.code:
-            l.write('*** Error submitting command:\n%s' % myCmd.output,
+        if myCmd.error:
+            l.write('*** Error submitting command:\n%s' % myCmd.error,
                      stdout = True)
-            l.write('Code: %s' % myCmd.code, stdout = True)
             subject = '*** Error in CheckHotfixRemove.py'
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
+            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
-            raise
+            raise Exception
     except:
-        l.write('Submitting CheckHotfixRemove Job failed', stdout = True)
-        sys.exit(1)
+        l.write('*** Error: Submitting CheckHotfixRemove Job failed', stdout = True)
+        pass
 
 
 # Send final Notification that publishing on CDR servers has finished
@@ -627,20 +677,18 @@ try:
         cmd = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                     (subject, message))
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    try:
-        myCmd = cdr.runCommand(cmd)
-        print "Code: ", myCmd.code
-        print "Outp: ", myCmd.output.find('Failure')
-        print "--------------"
-        if myCmd.code or myCmd.output.find('Failure') > 0:
-            raise EmailError
-    except EmailError:
-        l.write('*** Error submitting email\n%s' % myCmd.output,
+
+    # cmd = 'ls'
+    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
+
+    if myCmd.error:
+        l.write('*** Error submitting email\n%s' % myCmd.error,
                  stdout = True)
-        raise
+        raise Exception
 except:
-    l.write('Submitting Final Email failed', stdout = True)
-    sys.exit(1)
+    # No need to interrupt the program if the email doesn't go out
+    l.write('*** Error: Submitting Final Email failed', stdout = True)
+    pass
 
 # All done, going home now
 # ------------------------
