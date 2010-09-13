@@ -16,6 +16,7 @@
 # $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
 #
 # BZIssue::4796 - Transfer notification email
+# BZIssue::4903 - Transfer Protocols without Transfer Date
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
@@ -194,23 +195,6 @@ def parseArguments(args):
     return parser
 
 
-# ---------------------------------------------------------------------
-# Selecting the protocol list created last time this program ran
-# ---------------------------------------------------------------------
-def getLastProtocolList(directory = cdr.BASEDIR + '/Output/CTGovTransfer'):
-    os.chdir(directory)
-    if testMode:
-        searchFor = '*.test.txt'
-    else:
-        searchFor = 'CTGovTransfer_??????????????.txt'
-
-    fileList = glob.glob(searchFor)
-    if not fileList: return
-    fileList.sort()
-    fileList.reverse()
-    return (fileList[0])
-    
-
 # --------------------------------------------------------------------
 # Module to submit an email message if the program fails
 # --------------------------------------------------------------------
@@ -282,17 +266,6 @@ options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
-# If no file name is specified (the default) we're picking the last
-# file created.
-# -----------------------------------------------------------------
-### if options.values.file:
-###     useFile = options.values.file
-###     oldFile = getLastProtocolList(OUTPUTBASE)
-###     l.write("  Last protocol list was: %s" % oldFile, stdout = True)
-### else:
-###     useFile = getLastProtocolList(OUTPUTBASE)
-###     l.write("Comparing output to file: %s" % useFile, stdout = True)
-
 try:
     # Open the latest manifest file (or the one specified) and read 
     # the content
@@ -300,26 +273,8 @@ try:
     protocols = {}
     oldFile = []
     oldIds = []
-    # A) If the file name has been passed as a parameter and the file 
-    #    doesn't exist, exit.
-    # B) If no file exists in the directory this is the first time the 
-    #    process is run and we continue
+
     # --------------------------------------------------------------------
-###     if options.values.file and not os.access(path % useFile, os.F_OK):
-###         sys.exit('Invalid File Name: %s' % useFile)
-###     elif not options.values.file and not os.access(path % useFile, os.F_OK):
-###         l.write("No files found.  Assuming new directory", stdout = True)
-###     else:
-###         f = open(path % useFile, 'r')
-###         protocols = f.readlines()
-###         f.close()
-### 
-###         # Read the list of previously published protocols
-###         # ------------------------------------------------
-###         for row in protocols:
-###             oldIds.append(int(row.split('\t')[0]))
-
-
     # Connect to the database and get all protocols without a 
     # TransferDate.
     # --------------------------------------------------------------
@@ -395,40 +350,6 @@ LEFT OUTER JOIN query_term c
         sendErrorMessage('SQL query timeout error')
         raise
 
-###    # Create the new manifest file and identify those records that
-###    # are new since the last time this job ran (by comparing to the
-###    # file created last time).
-###    # -------------------------------------------------------------
-###    f = open(path % outputFile, 'w')
-###    newIds = []
-###    l.write("", stdout = True)
-###    l.write("List of new CTGovTransfer protocols", stdout = True)
-###    l.write("-----------------------------------",   stdout = True)
-###    for (cdrId, protocolId, nctId, orgName, transferOrg,
-###         prsName, comment) in rows:
-###        # l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-###        #                             stdout = True)
-###
-###        try:
-###            if cdrId not in oldIds:
-###                l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-###                                            stdout = True)
-###                f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, 
-###                                                    protocolId.encode('utf-8'), 
-###                                                    nctId.encode('utf-8')))
-###                newIds.append(cdrId)
-###            else:
-###                f.write("%10s\t%25s\t%12s\n" % (cdrId, 
-###                                                protocolId.encode('utf-8'), 
-###                                                nctId.encode('utf-8')))
-###        except Exception, info:
-###            l.write("Failure retrieving protocols: \n%s" % info[1][0], 
-###                     stdout = True)
-###            sendErrorMessage('writing Unicode convertion error')
-###            raise
-###
-###    f.close()
-
     # Create the message body and display the query results
     # -----------------------------------------------------
     if len(rows):
@@ -438,13 +359,13 @@ LEFT OUTER JOIN query_term c
         mailBody = u"""\
 <html>
  <head>
-  <title>Transfer Ownership to Responsible Party</title>
+  <title>Former InScopeProtocol(s) without Transfer Date</title>
   <style type='text/css'>
    th      { background-color: #f0f0f0; }
   </style>
  </head>
  <body>
-  <h2>Transfer Ownership to Responsible Party</h2>
+  <h2>Former InScopeProtocol(s) without Transfer Date</h2>
   <h3>Date: %s</h3>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
@@ -528,7 +449,7 @@ From: %s
 To: %s
 Subject: %s: %s
 """ % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
-       'Transfer of Protocol(s) from NCI to Responsible Party')
+       'Former InScopeProtocol(s) without Transfer Date')
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
 
