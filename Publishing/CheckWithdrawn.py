@@ -371,10 +371,11 @@ try:
     else:
         strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
                     "William Osei-Poku <***REMOVED***>", 
-                    "Kimberly Eckley <***REMOVED***>",
+                    "Diana Bitenas <Diana.bitenas@lmco.com>",
                     "Judy Morris <***REMOVED***>",
                     "Alexandra Valentine <***REMOVED***>",
                     "Cherryl Villanueva <***REMOVED***>"]
+                    #"Kimberly Eckley <***REMOVED***>",
 
     mailHeader   = """\
 From: %s
