@@ -26,6 +26,7 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
 UTIL       = os.path.join('d:\\cdr', 'Utilities')
+UBIN       = os.path.join('d:\\cdr', 'Utilities', 'bin')
 LOGFILE    = 'Jobmaster.log'
 
 weekDay    = time.strftime("%a")
@@ -576,7 +577,7 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CountArmsLabel Job' % istep, stdout = True)
-        cmd = os.path.join(UTIL, 'CountArmsLabel.py %s' % (runmode)) 
+        cmd = os.path.join(UBIN, 'CountArmsLabel.py %s' % (runmode)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
