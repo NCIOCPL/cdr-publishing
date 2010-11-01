@@ -28,7 +28,8 @@ def lookupLetterTitle(letter):
         "ed-invitation" : "Editorial Board Invitation",
         "ed-welcome"    : "Editorial Board Welcome",
         "ed-renewal"    : "Editorial Board Renewal",
-        "ed-goodbye"    : "Editorial Board Goodbye"
+        "ed-goodbye"    : "Editorial Board Goodbye",
+        "ed-thankyou"   : "Editorial Board Thank-You"
     }
     title = titles.get(letter.lower(), "PDQ Board")
     return "%s Letter" % title
