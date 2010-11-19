@@ -9,6 +9,7 @@
   
    BZIssue::4707
    BZIssue::4629 - Vendor filter changes for Genetics Professionals
+   BZIssue::4949 - Changes for Display of DIS information
 
 -->
 
@@ -1328,7 +1329,10 @@
             TerminologyLink,
             GlossaryLink,
             USBrandNames?,
-            Synonyms? )>
+            Synonyms?,
+            TermPronunciation?,
+            FDAExternalRef? )>
+
 
 <!ELEMENT DrugInfoType (#PCDATA)>
 <!-- Types of DrugInfoType
@@ -1368,6 +1372,9 @@
 <!ELEMENT Synonyms ( Synonym* )>
 
 <!ELEMENT Synonym (#PCDATA)>
+
+<!ELEMENT FDAExternalRef                  (#PCDATA)>
+<!ATTLIST FDAExternalRef xref       CDATA  #REQUIRED>
 
 <!ELEMENT DrugInfoTitle (#PCDATA)>
 
