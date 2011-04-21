@@ -1,8 +1,15 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.21 2007-12-31 16:33:01 venglisc Exp $
-# $Log: not supported by cvs2svn $
+# $Id: PublishingService.py,v 1.21 2007/12/31 16:33:01 venglisc Exp $
+# $Log: PublishingService.py,v $
+#
+# BZIssue::5009 Fix PublishingService.py
+#
+# Revision 1.21  2007/12/31 16:33:01  venglisc
+# Added a new group for email notification so that we don't send an email
+# to the users if we're testing on the dev system. (Bug 3678)
+#
 # Revision 1.20  2007/09/27 20:57:35  venglisc
 # Modified GateKeeperStatus report link to only display documents with
 # errors or warnings instead of the full report.
@@ -67,15 +74,33 @@
 # Revision 1.2  2002/02/06 16:22:39  pzhang
 # Added Log. Don't want to change SCRIPT here; change cdr.py.
 #
-#
-
+# ========================================================================
 import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk
 
 # Sleep time between checks for things to do
 sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
 
 # Script and log file for publishing
-PUBSCRIPT   = cdr.BASEDIR + "/publishing/publish.py"
+PUBSCRIPT = cdr.BASEDIR + "/publishing/publish.py"
+LOGNAME   = "publish.log"
+BANNER    = "*************** Starting Publishing Service ***************"
+SENDER    = "operator@cips.nci.nih.gov"
+emailDL   = cdr.getEmailList('Developers Notification')
+SUBJECT   = "*** Error Starting Publishing Service ***"
+BODY      = """
+<html>
+ <head>
+  <title>Publishing Error Notification</title>
+ </head>
+ <body>
+  <h3>Publishing Error Notification</h3>
+   The CDR publishing software is unable to open the log file. <br/>
+   Please check permissions for d:\cdr\log\%s
+""" % LOGNAME
+FOOTER    = """
+ </body>
+</html>"""
+
 PUBLOG      = cdr.PUBLOG
 LOGFLAG     = cdr.DEFAULT_LOGDIR + "/LogLoop.on"
 VERIFYFLAG  = cdr.DEFAULT_LOGDIR + "/VerifyPushJobsLoop.on"
@@ -98,6 +123,16 @@ UPDATE pub_proc
 # Query for batch job initiation
 batchQry = "SELECT id, command FROM batch_job WHERE status='%s'" %\
            cdrbatch.ST_QUEUED
+
+# If we can't open the log file it's most likely due to permission problems
+# (This typically only happens when the server has been rebuild).
+# Submit an email because we're unable to log any problems.
+# -------------------------------------------------------------------------
+try:
+    l = cdr.Log(LOGNAME, banner = BANNER)
+except IOError, info:
+    body = BODY + "<br/><br/>Error Message:<br/>%s" % info + FOOTER
+    cdr.sendMail(SENDER, emailDL, SUBJECT, body, html=1)
 
 #----------------------------------------------------------------------
 # Check to see whether we should check the disposition of documents
@@ -130,8 +165,7 @@ def logLoop():
     try:
         if os.path.isfile(LOGFLAG):
             if not LogDelay:
-                cdr.logwrite('CDR Publishing Service: Top of processing loop',
-                             PUBLOG)
+                l.write('CDR Publishing Service: Top of processing loop')
                 file = open(LOGFLAG)
                 try:
                     LogDelay = int(file.readline().strip())
@@ -151,7 +185,7 @@ def logLoop():
 #----------------------------------------------------------------------
 def verifyLoad(jobId, pushFinished, cursor, conn):
 
-    cdr.logwrite("verifying push job %d" % jobId, PUBLOG)
+    l.write("verifying push job %d" % jobId)
     
     # Local values.
     failures = []
@@ -238,7 +272,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
         then = time.strftime("%Y-%m-%d %H:%M:%S", then)
 
         # If it's been longer than 8 hours, the job is probably stuck.
-        cdr.logwrite("verifying push job: then=%s pushFinished=%s" %
+        l.write("verifying push job: then=%s pushFinished=%s" %
                      (then, str(pushFinished)))
         if then > str(pushFinished):
             reportLoadProblems(jobId, stalled = True)
@@ -324,7 +358,7 @@ while True:
         cursor.close()
         cursor = None
         for row in rows:
-            cdr.logwrite("PublishingService starting job %d" % row[0], PUBLOG)
+            l.write("PublishingService starting job %d" % row[0])
             print "publishing job %d" % row[0]
             os.spawnv(os.P_NOWAIT, cdr.PYTHON, ("CdrPublish", PUBSCRIPT,
                                                 str(row[0])))
@@ -360,11 +394,11 @@ while True:
                         script = ""
 
                     # Indicate that we are initiating job
-                    cdr.logwrite ("Daemon: about to show initiation of %s" %\
+                    l.write ("Daemon: about to show initiation of %s" %\
                                   script, cdrbatch.LF)
                     cdrbatch.sendSignal (conn, jobId, cdrbatch.ST_INITIATING,
                                          cdrbatch.PROC_DAEMON)
-                    cdr.logwrite ("Daemon: back from initiation", cdrbatch.LF)
+                    l.write ("Daemon: back from initiation", cdrbatch.LF)
 
                     # Done with cursor
                     conn.commit()
@@ -374,19 +408,19 @@ while True:
                     # Haven't found a good way to find out if it worked
                     # Return code doesn't help much
                     # Called job should update status to cdrbatch.ST_INPROCESS
-                    cdr.logwrite ("Daemon: about to spawn: %s %s" % \
+                    l.write ("Daemon: about to spawn: %s %s" % \
                                   (cmd, script), cdrbatch.LF)
                     os.spawnv (os.P_NOWAIT, cmd, (cmd, script))
 
                     # Record it
-                    cdr.logwrite ("Daemon: spawned: %s %s" % (cmd, script),
+                    l.write ("Daemon: spawned: %s %s" % (cmd, script),
                                   cdrbatch.LF)
         # Log any errors
         except cdrbatch.BatchException, be:
-            cdr.logwrite ("Daemon - batch execution error: %s", str(be),
+            l.write ("Daemon - batch execution error: %s", str(be),
                           cdrbatch.LF)
         except cdrdb.Error, info:
-            cdr.logwrite ("Daemon - batch database error: %s" % info[1][0],
+            l.write ("Daemon - batch database error: %s" % info[1][0],
                           cdrbatch.LF)
             conn = None
 
@@ -402,7 +436,7 @@ while True:
                     verifyLoad(row[0], row[1], cursor, conn)
             except Exception, e:
                 try:
-                    cdr.logwrite("failure verifying push jobs: %s" % e)
+                    l.write("failure verifying push jobs: %s" % e)
                 except:
                     pass
                 
@@ -410,18 +444,17 @@ while True:
         # Log publishing job initiation errors
         try:
             conn = None
-            cdr.logwrite ('Database failure: %s' % info[1][0], PUBLOG)
+            l.write ('Database failure: %s' % info[1][0])
         except:
             pass
     except Exception, e:
         try:
-            cdr.logwrite('Failure: %s' % str(e), logfile = PUBLOG,
-                         tback = True)
+            l.write('Failure: %s' % str(e), tback = True)
         except:
             pass
     except:
         try:
-            cdr.logwrite('Unknown failure', logfile = PUBLOG, tback = True)
+            l.write('Unknown failure', tback = True)
         except:
             pass
 
