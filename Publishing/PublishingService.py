@@ -86,7 +86,8 @@ LOGNAME   = "publish.log"
 BANNER    = "*************** Starting Publishing Service ***************"
 SENDER    = "operator@cips.nci.nih.gov"
 emailDL   = cdr.getEmailList('Developers Notification')
-SUBJECT   = "*** Error Starting Publishing Service ***"
+SUBJECT   = "%s: *** Error Starting Publishing Service ***" % \
+                                          cdr.PUB_NAME.capitalize()
 BODY      = """
 <html>
  <head>
