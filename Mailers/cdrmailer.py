@@ -4,6 +4,8 @@
 #
 # Base class for mailer jobs
 #
+# BZIssue::5018
+#
 #----------------------------------------------------------------------
 
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
@@ -13,6 +15,7 @@ debugCtr = 1
 
 _LOGFILE = "d:/cdr/log/mailer.log"
 _DEVELOPER = "***REMOVED***"
+_STAPLE_NAME = "duplex-stapled"
 
 #------------------------------------------------------------------
 # Constants for adding a person's title to his address
@@ -606,12 +609,13 @@ class MailerJob:
             open(filename, "w").write(latex)
 
             # Convert it to PostScript.
+            # Give the PostScript some header commands for stapling, duplex.
             for unused in range(passCount):
                 rc = os.system("latex %s %s" % (self.__LATEX_OPTS, filename))
                 if rc:
                     raise cdr.Exception("failure running LaTeX processor "
                                         "on %s" % filename)
-            rc = os.system("dvips -q %s" % basename)
+            rc = os.system("dvips -q -h %s %s" % (_STAPLE_NAME, basename))
             if rc:
                 raise cdr.Exception("failure running dvips processor "
                                     "on %s.dvi" % basename)
@@ -895,6 +899,16 @@ You can retrieve the letters at:
             raise cdr.Exception("Failure copying %s to %s: %s" %
                                 (src, dst, str(info)))
 
+        # New method for turning on duplex printing (BZIssue::5018)
+        try:
+            fp = open("./%s" % _STAPLE_NAME, "w")
+            fp.write("<< /Duplex true >> setpagedevice\n")
+            fp.write("<< /Staple 3 >> setpagedevice\n")
+            fp.close()
+        except Exception, e:
+            self.log("Failure creating duplex file", tback=1)
+            raise cdr.Exception("Failure creating duplex file: %s" % e)
+
     #------------------------------------------------------------------
     # Print the jobs in the queue.
     #------------------------------------------------------------------
@@ -911,7 +925,6 @@ You can retrieve the letters at:
             return
         
         if batchPrint:
-            PrintJob(0, PrintJob.DUMMY).writePrologFiles()
             outputFile = open("PrintJob.cmd", "w")
             outputFile.write("@echo off\n")
             outputFile.write("if %1. == . goto usage\n")
@@ -1091,37 +1104,14 @@ class PrintJob:
         PLAIN
             Used for non-PostScript which should not be stapled.
 
-        DUMMY
-            Used to make a dummy object for writing prolog PCL files.
-
         Print()
             Writes the current print job to the specified printer.
     """
-    DUMMY            = 0
     MAINDOC          = 1
     COVERPAGE        = 2
     PLAIN            = 3
-    __STAPLE_NAME    = "StapleProlog.pcl"
-    __NONSTAPLE_NAME = "NonStapleProlog.pcl"
-    __PLAIN_NAME     = "PlainProlog.pcl"
     __PAGES_PATTERN  = re.compile("%%Pages: (\\d+)")
-    __MAX_STAPLED    = 25
-    __STAPLE_PROLOG  = """\
-\033%-12345X@PJL
-@PJL SET FINISH=STAPLE
-@PJL SET STAPLEOPTION=ONE
-@PJL SET OUTBIN=OPTIONALOUTBIN2
-@PJL ENTER LANGUAGE=POSTSCRIPT
-"""
-    __NONSTAPLE_PROLOG = """\
-\033%-12345X@PJL
-@PJL SET OUTBIN=OPTIONALOUTBIN2
-@PJL ENTER LANGUAGE=POSTSCRIPT
-"""
-    __PLAIN_PROLOG = """\
-\033%-12345X@PJL
-@PJL SET OUTBIN=OPTIONALOUTBIN2
-"""
+    __MAX_STAPLED    = 100
     def __init__(self, filename, filetype):
         self.__filename = filename
         self.__filetype = filetype
@@ -1139,16 +1129,8 @@ class PrintJob:
                 raise cdr.Exception("can't find page count in %s" %
                                     self.__filename)
             if pages <= PrintJob.__MAX_STAPLED:
-                self.__staple = 1
+                self.__staple = True
             ps.close()
-
-    #------------------------------------------------------------------
-    # Create copies of the prolog PCL files in the job directory.
-    #------------------------------------------------------------------
-    def writePrologFiles(self):
-        open(self.__STAPLE_NAME,    "w").write(self.__STAPLE_PROLOG)
-        open(self.__NONSTAPLE_NAME, "w").write(self.__NONSTAPLE_PROLOG)
-        open(self.__PLAIN_NAME,     "w").write(self.__PLAIN_PROLOG)
 
     #------------------------------------------------------------------
     # Send the current print job to the specified printer.
@@ -1161,21 +1143,13 @@ class PrintJob:
             self.__staple and "(stapled)" or ""))
 
         if batch:
-            if self.__staple                  : prolog = self.__STAPLE_NAME
-            elif self.__filetype != self.PLAIN: prolog = self.__NONSTAPLE_NAME
-            else                              : prolog = self.__PLAIN_NAME
             outFile.write(":L%d\n" % n)
             outFile.write("if %%3. == %d. goto :done\n" % (n - 1))
-            outFile.write("copy %s+%s %%1\n" % (prolog, self.__filename))
+            outFile.write("copy %s %%1\n" % self.__filename)
         else:
             prn = open(outFile, "w")
             doc = open(self.__filename).read()
-            if self.__staple:
-                prn.write(self.__STAPLE_PROLOG + doc)
-            elif self.__filetype != PrintJob.PLAIN:
-                prn.write(self.__NONSTAPLE_PROLOG + doc)
-            else:
-                prn.write(self.__PLAIN_PROLOG + doc)
+            prn.write(doc)
             prn.close()
 
 #----------------------------------------------------------------------
