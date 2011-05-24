@@ -307,6 +307,7 @@
 
 <!ELEMENT MediaLink (Caption*)>
 <!ATTLIST MediaLink ref CDATA #REQUIRED
+       type CDATA #IMPLIED
        alt CDATA #REQUIRED
        inline (Yes|No) "No"
        MinWidth CDATA #IMPLIED
