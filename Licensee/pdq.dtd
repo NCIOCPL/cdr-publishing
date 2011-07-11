@@ -9,13 +9,6 @@
    BZIssue::4629 - Vendor filter changes for GenProf publishing
    BZIssue::4881 - Include DrugInfoSummary document type
 
-   Preliminary version 
-   
-   Revision 1.73  2008/04/02 22:09:55  venglisc
-   Reverting the change of v1.72.
-
-   Revision 1.72  2008/02/06 22:25:55  venglisc
-   Making DateFirstPublished optional element
 
 -->
 
@@ -313,6 +306,7 @@
 
 <!ELEMENT MediaLink (Caption*)>
 <!ATTLIST MediaLink ref CDATA #REQUIRED
+       type CDATA #IMPLIED
        alt CDATA #REQUIRED
        inline (Yes|No) "No"
        MinWidth CDATA #IMPLIED
@@ -510,6 +504,7 @@
      =============================================================== -->
 
 <!ELEMENT Protocol (ProtocolIDs,
+                    UrlInfo,
                     FundingInfo?,
                     ProtocolSponsor*,
                     PDQProtocolTitle+,
@@ -895,9 +890,9 @@
 <!ELEMENT Dictionary (#PCDATA)>
 <!ELEMENT Audience (#PCDATA)>
 
-<!ELEMENT RelatedInformation (RelatedExternalRef,
-                              RelatedSummaryRef,
-                              RelatedDrugSummaryRef)>
+<!ELEMENT RelatedInformation (RelatedExternalRef |
+                              RelatedSummaryRef  |
+                              RelatedDrugSummaryRef)+>
 
 <!ELEMENT RelatedExternalRef                  (#PCDATA)>
 <!ATTLIST RelatedExternalRef xref       CDATA  #REQUIRED>
@@ -1264,7 +1259,9 @@
             TerminologyLink,
             GlossaryLink,
             USBrandNames?,
-            Synonyms? )>
+            Synonyms?,
+            PronunciationInfo?,
+            FDAExternalRef? )>
 
 <!ELEMENT DrugInfoType (#PCDATA)>
 <!-- Types of DrugInfoType
@@ -1305,6 +1302,13 @@
 <!ELEMENT Synonyms ( Synonym* )>
 
 <!ELEMENT Synonym (#PCDATA)>
+
+<!-- Only MediaLink elements of type="audio/mpeg" are allowed here -->
+<!ELEMENT PronunciationInfo ( TermPronunciation?,
+                              MediaLink* )>   
+
+<!ELEMENT FDAExternalRef                  (#PCDATA)>
+<!ATTLIST FDAExternalRef xref       CDATA  #REQUIRED>
 
 <!ELEMENT DrugInfoTitle (#PCDATA)>
 

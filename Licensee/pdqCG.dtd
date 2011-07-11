@@ -305,9 +305,15 @@
 
 <!ELEMENT Note (%TextElements;)*>
 
+<!-- Making the type attribute mandatory
+     The type attribute needs to exist for Gatekeeper to being able
+     and properly process the MediaLink elements.  This attribute is
+     optional in the vendor DTD but we want to ensure that it exists
+     when the documents are being pushed to Gatekeeper
+     =============================================================== -->
 <!ELEMENT MediaLink (Caption*)>
 <!ATTLIST MediaLink ref CDATA #REQUIRED
-       type CDATA #IMPLIED
+       type CDATA #REQUIRED
        alt CDATA #REQUIRED
        inline (Yes|No) "No"
        MinWidth CDATA #IMPLIED
@@ -504,9 +510,9 @@
      Protocols  Start element Protocol. 
      =============================================================== -->
 
-<!-- For Internal use only:
+<!-- [@@INTERNAL] For Internal use only:
                     RegulatoryInformation
-                    OfficialProtocolTitle  -->
+                    OfficialProtocolTitle [INTERNAL@@] -->
 
 <!ELEMENT Protocol (ProtocolIDs,
                     UrlInfo,
@@ -557,6 +563,8 @@
 
 <!ELEMENT ProtocolSponsor (#PCDATA)>
 
+<!-- [@@INTERNAL] For Internal use only: RegulatoryInformation, 
+                            OfficialProtocolTitle -->
 <!ELEMENT RegulatoryInformation (FDARegulated,
                                  Section801?,
                                  DelayedPosting?,
@@ -591,6 +599,7 @@
 
 <!ELEMENT ResponsibleOrganizationName (#PCDATA)>
 <!ATTLIST ResponsibleOrganizationName ref CDATA #IMPLIED>
+<!-- End: For internal use only [INTERNAL@@] -->
 
 <!ELEMENT PDQProtocolTitle (%TitleData;)*>
 <!ATTLIST PDQProtocolTitle Audience (Professional | Patient) #REQUIRED>
@@ -598,12 +607,14 @@
 <!ELEMENT ProtocolTitle (%TitleData;)*>
 <!ATTLIST ProtocolTitle Type (Official | Short) #REQUIRED>
 
+<!-- [@@INTERNAL] For Internal use only -->
 <!ELEMENT OfficialProtocolTitle (%TitleData;)*>
+<!-- End: For internal use only [INTERNAL@@] -->
 
 <!ELEMENT ProtocolAbstract (Professional, Patient)>
 
-<!-- For internal use only
-                        ArmsOrGroups -->
+<!-- [@@INTERNAL] For internal use only
+                        ArmsOrGroups [INTERNAL@@] -->
 
 <!ELEMENT Professional (Objectives,
                         Outcome*,
@@ -627,8 +638,7 @@
 
 <!ELEMENT Outline (%TextSectionElements;)*>
 
-<!-- ArmsOrGroups is for internal use only -->
-<!-- ===================================== -->
+<!-- [@@INTERNAL] ArmsOrGroups is for internal use only -->
 <!ELEMENT ArmsOrGroups (ArmOrGroup*)>
 <!ATTLIST ArmsOrGroups SingleArmOrGroupStudy (Yes | No) #IMPLIED>
 
@@ -642,6 +652,7 @@
 <!ELEMENT ArmOrGroupType        (#PCDATA)>
 
 <!ELEMENT ArmOrGroupDescription (#PCDATA)>
+<!-- End: For internal use only [INTERNAL@@] -->
 
 <!ELEMENT EntryCriteria (DiseaseCharacteristics?,
                          PatientCharacteristics?,
@@ -954,9 +965,9 @@
 <!ELEMENT Dictionary (#PCDATA)>
 <!ELEMENT Audience (#PCDATA)>
 
-<!ELEMENT RelatedInformation (RelatedExternalRef,
-                              RelatedSummaryRef,
-                              RelatedDrugSummaryRef)>
+<!ELEMENT RelatedInformation (RelatedExternalRef |
+                              RelatedSummaryRef  |
+                              RelatedDrugSummaryRef)+>
 
 <!ELEMENT RelatedExternalRef                  (#PCDATA)>
 <!ATTLIST RelatedExternalRef xref       CDATA  #REQUIRED>
@@ -975,6 +986,8 @@
      Terminology  Start element Term. 
      ========================================= -->
 
+<!-- [@@INTERNAL] For Internal Use Only: CTGovInterventionType [INTERNAL@@] -->
+                          
 <!ELEMENT Term (PreferredName,
                 OtherName*,
                 Definition*,
@@ -1012,7 +1025,9 @@
 <!ELEMENT SemanticType (#PCDATA)>
 <!ATTLIST SemanticType ref CDATA #IMPLIED>
 
+<!-- [@@INTERNAL] For Internal Use Only -->
 <!ELEMENT CTGovInterventionType (#PCDATA)>
+<!-- End: For Internal Use Only [INTERNAL@@] -->
 
 <!ELEMENT TermRelationship (ParentTerm | RelatedTerm)+>
 
@@ -1195,6 +1210,8 @@
                                 PhoneExt?,
                                 Email?">
 
+<!-- [@@INTERNAL] For Internal Use Only: UrlInfo [INTERNAL@@] -->
+
 <!ELEMENT CTGovProtocol        (RequiredHeader,
                                 IDInfo,
                                 UrlInfo,
@@ -1300,10 +1317,6 @@
 
 <!-- End CTGovProtocol -->
 
-<!-- [@@INTERNAL] =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
-<!-- Begin DTD for Internal Use Only                             -->
-<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
-
 <!-- ===========================================================
      DrugInformationSummary start element DrugInformationSummary
      =========================================================== -->
@@ -1316,6 +1329,7 @@
             DateFirstPublished,
             DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
+
 <!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
             used within a DrugInformationSummary will not contain these
             elements:  AltTitle, KeyPoints, nested Section elements -->
@@ -1331,9 +1345,8 @@
             GlossaryLink,
             USBrandNames?,
             Synonyms?,
-            TermPronunciation?,
+            PronunciationInfo?,
             FDAExternalRef? )>
-
 
 <!ELEMENT DrugInfoType (#PCDATA)>
 <!-- Types of DrugInfoType
@@ -1343,6 +1356,7 @@
 <!ATTLIST DrugInfoType Combination (Yes) #IMPLIED>
 
 <!ELEMENT DrugInfoAudience (#PCDATA)>
+
 <!-- Types of DrugInfoAudience
      Possible values are:
      Patients
@@ -1374,6 +1388,10 @@
 
 <!ELEMENT Synonym (#PCDATA)>
 
+<!-- Only MediaLink elements of type="audio/mpeg" are allowed here -->
+<!ELEMENT PronunciationInfo ( TermPronunciation?,
+                              MediaLink* )>   
+
 <!ELEMENT FDAExternalRef                  (#PCDATA)>
 <!ATTLIST FDAExternalRef xref       CDATA  #REQUIRED>
 
@@ -1383,6 +1401,10 @@
 
 <!-- End DrugInformationSummary -->
 
+
+<!-- [@@INTERNAL] =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
+<!-- Begin DTD for Internal Use Only                             -->
+<!-- -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
 
 <!-- Media element requested by Cancer.gov -->
 <!ELEMENT Media                (#PCDATA)>
