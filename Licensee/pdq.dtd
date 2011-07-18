@@ -504,7 +504,7 @@
      =============================================================== -->
 
 <!ELEMENT Protocol (ProtocolIDs,
-                    UrlInfo,
+                    UrlInfo?,
                     FundingInfo?,
                     ProtocolSponsor*,
                     PDQProtocolTitle+,
