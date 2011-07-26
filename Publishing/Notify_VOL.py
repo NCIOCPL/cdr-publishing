@@ -104,6 +104,12 @@ def checkMediaUpdates(sDate, eDate):
               AND pp.started between '%s' AND '%s'
               AND val_status = 'V'
               AND active_status = 'A'
+              AND NOT exists (
+                   SELECT 'x'
+                     FROM query_term_pub i
+                    WHERE i.doc_id = d.id
+                      AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding'
+                   )
             ORDER BY d.id
         """ % (sDate, eDate))
         rows = cursor.fetchall()
