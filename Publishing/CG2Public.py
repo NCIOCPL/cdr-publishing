@@ -8,6 +8,7 @@
 #
 # BZIssue::4675 - Create UrlInfo block
 # BZIssue::4881 - Modify publishing to include Drug Info Summary
+# BZIssue::5093 - [Media] Adding Audio Files to Vendor Output
 #
 # Revision 1.3  2008/10/14 21:45:03  venglisc
 # Had to fix the glob.glob() pattern since there were folders/files on BACH
@@ -79,9 +80,9 @@ class documentType:
     def copy(self, directory):
         os.chdir('%s/%s' % (self.inputDir, directory))
 
-        # Need to pick up xml, jpg, and gif files
-        # ---------------------------------------
-        allDocs = glob.glob('*.[xjg][mpi][lgf]')
+        # Need to pick up xml, jpg, gif, and mp3 files
+        # --------------------------------------------
+        allDocs = glob.glob('*.[xjgm][mpip][lgf3]')
 
         # Create the output directory or - in test mode - delete
         # and recreate the directory
