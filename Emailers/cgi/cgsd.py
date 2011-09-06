@@ -332,6 +332,24 @@ def showForm(fields):
     <input type='hidden' name='tid' value='%d' />
     <input type='hidden' name='pid' value='%d' />
     <input type='hidden' name='jid' value='%d' />
+    <p class='omb-number'>OMB No. 0925-0639 Expiry Date 08-31-2014</p>
+    <div class='omb-header-wrapper'>
+     <p class='omb-header'>
+      Public reporting burden for this collection of information is
+      estimated to average 15 minutes per response, including the time
+      for reviewing instructions, searching existing data sources,
+      gathering and maintaining the data needed, and completing and
+      reviewing the collection of information. An agency may not
+      conduct or sponsor, and a person is not required to respond to, a
+      collection of information unless it displays a currently valid
+      OMB control number. Send comments regarding this burden estimate
+      or any other aspect of this collection of information, including
+      suggestions for reducing this burden, to: NIH, Project Clearance
+      Branch, 6705 Rockledge Drive, MSC 7974, Bethesda, MD 20892\u20117974,
+      ATTN: PRA (0925-0639). Do not return the completed form to this
+      address.
+     </p>
+    </div>
     <h1>Introduction</h1>
     <p class='instructions'>
      You are listed as a provider of genetics services in the
@@ -747,6 +765,10 @@ Content-type: text/html; charset=utf-8
    .year   { border: none; }
    .error { color: red; font-weight: bold; }
    #syndromes td { padding-left: 50px; }
+   .omb-number { text-align: right; margin-top: 30px; margin-bottom: 5px; }
+   .omb-header { text-align: center; border: 2px black solid; margin: 0px;
+                 padding: 8px; font-size: 1em; }
+   .omb-header-wrapper { border: 2px black solid; padding: 3px; }
   </style>
   <script type='text/javascript'>
    function hasValue(form, name) {
