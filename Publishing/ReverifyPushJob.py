@@ -125,7 +125,7 @@ def updateMessage(message, jobId, docId = 0):
             cursor.execute("""
                 SELECT messages
                   FROM pub_proc
-                 WHERE id = %d""" % jobId)
+                 WHERE id = ?""", jobId)
             row     = cursor.fetchone()
             msg = (row and row[0] or '') + msg
 
@@ -146,8 +146,8 @@ def updateMessage(message, jobId, docId = 0):
             cursor.execute("""
                 SELECT messages
                   FROM pub_proc_doc
-                 WHERE pub_proc = %d
-                   AND doc_id = %d""" % (jobId, docId))
+                 WHERE pub_proc = ?
+                   AND doc_id = ?""", (jobId, docId))
             row     = cursor.fetchone()
             msg = (row and row[0] or '') + msg
 
@@ -196,8 +196,11 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
     # ------------------------------------------------------------
     if host:
         cdr2gk.host = host
+    # cdr2gk.host = 'gatekeeper.cancer.gov'
     l.write("GKServer: %s" % cdr2gk.host, stdout = True)
+    
     response = cdr2gk.requestStatus('Summary', jobId)
+    
     details = response.details
 
     # Check each of the documents in the job.
@@ -233,7 +236,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                   FROM pub_proc_doc
                  WHERE pub_proc = ?""", jobId)
             rows = cursor.fetchall()
-            l.write('Total records for this publishing job:  %d' % rows[0][0],
+            l.write('Total records for this publishing job: %d' % rows[0][0],
                                                                stdout = True)
             cursor.execute("""\
                 SELECT count(*)
@@ -256,8 +259,8 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                     cursor.execute("""\
                         UPDATE pub_proc_doc
                            SET failure = Null
-                         WHERE pub_proc = %d
-                           AND doc_id = %d""" % (jobId, int(row[0])))
+                         WHERE pub_proc = ?
+                           AND doc_id = ?""", (jobId, int(row[0])))
                     conn.commit()
                 except:
                     l.write('Error resetting failure column in pub_proc_doc',
@@ -273,21 +276,25 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
         # ------------------------------------------------
         if failures:
             if testMode:
+                print len(failures)
                 cursor.execute("""\
                     SELECT * 
                       FROM pub_proc_doc
                      WHERE pub_proc = %d
                        AND doc_id in (%s)""" % (jobId, 
-                                      ','.join(["%s" % x for x in failures])))
+                                 ','.join(["%s" % x.cdrId for x in failures])))
                 rows = cursor.fetchall()
-                l.write('Records failed: %s' % rows, stdout = True)
+                l.write('Records failed:', stdout = True)
+                for row in rows:
+                    l.write(repr(row), stdout = True)
+                l.write('', stdout = True)
             else:
                 for doc in failures:
                     cursor.execute("""\
                         UPDATE pub_proc_doc
                            SET failure = 'Y'
                          WHERE pub_proc = ?
-                           AND doc_id = ?""", jobId, doc.cdrId)
+                           AND doc_id = ?""", (jobId, doc.cdrId))
                     conn.commit()
                     updateMessage(u'Setting failure=Y at re-verify.',
                                                              jobId, doc.cdrId)
@@ -299,6 +306,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
             l.write("Job %s" % jobId, stdout = True)
             l.write("Failures: %s" % failures, stdout = True)
             l.write("Warnings: %s" % warnings, stdout = True)
+            l.write("", stdout = True)
 
         # If every document failed the load, mark the status for the
         # entire job as Failure; however, if even 1 document was
@@ -319,13 +327,20 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
             l.write("Test mode: Job status not updated", stdout = True)
         else:
             cursor.execute("""\
+                SELECT status
+                  FROM pub_proc
+                 WHERE id = ?""", jobId)
+            rows = cursor.fetchall()
+            updateMessage(u'Re-verify push job. '
+                           'Old job status = %s' % rows[0][0], jobId, docId = 0)
+            cursor.execute("""\
                 UPDATE pub_proc
                    SET status = ?
                  WHERE id = ?""", (jobStatus, jobId))
             conn.commit()
             updateMessage(u'Re-verify push job. '
                            'New job status = %s' % jobStatus, jobId, docId = 0)
-        l.write("Status of Job %d set to '%s'" % (jobId, jobStatus), 
+        l.write("Status of Job %s set to '%s'" % (jobId, jobStatus), 
                                                         stdout = True)
         return
 
@@ -379,14 +394,21 @@ try:
     # Verify loading of documents pushed to Cancer.gov.
     # -------------------------------------------------
     try:
-        cursor.execute("""\
+        newQuery = u"""\
             SELECT id, completed
               FROM pub_proc
-             WHERE status = 'Stalled'
-          ORDER BY id""")
-        stalledRows = cursor.fetchall()
-        for row in stalledRows:
-            l.write("Stalled Job %d, Completed: %s" % (row[0], row[1]),
+             WHERE status = '%s'""" % status
+
+        if status == 'Stalled':
+            cursor.execute(newQuery)
+        else:
+            newQuery += '   AND id = %d' % int(jobid)
+            cursor.execute(newQuery)
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+            l.write("Job %d, Completed: %s" % (row[0], row[1]),
                                                             stdout = True)
             verifyLoad(row[0], row[1], cursor, conn, testMode)
             l.write("Verification for Job %d done." % row[0], stdout = True)
@@ -404,5 +426,5 @@ except SystemExit:
 except:
     l.write('Unknown failure', tback = True, stdout = True)
 
-l.write("ReverifyPubJob - Finished", stdout = True)
+l.write("\nReverifyPubJob - Finished", stdout = True)
 sys.exit(0)
