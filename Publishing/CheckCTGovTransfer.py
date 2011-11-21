@@ -1,26 +1,26 @@
 #!d:/python/python.exe
 # *********************************************************************
+# $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
 #
 # File Name: $RCSFile:$
 #            ===============
-# Program to identify and notify about protocols that need to be 
-# transferred from PDQ to CTGov.
+# Program to identify and notify about protocols that need to be
+# transferred from PDQ to CTGov and split those into US and Non-US
+# trials.
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2009-03-17        Volker Englisch
 # Last Modified:    $
-# 
+#
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
 # $Revision: 1.9 $
+# $Source: $
 #
 # $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
 #
 # BZIssue::4687
-# BZIssue::4826  - Modify "Transfer of Protocol(s)..." email report
-#
-# Revision 1.1  2009/03/27 20:38:12  venglisc
-# New email notification to NLM for ownership transferring to responsible
-# party. (Bug 4529)
+# BZIssue::4826 - Modify "Transfer of Protocol(s)..." email report
+# BZIssue::5140 - [CTGOV] Scheduled notification for foreign transfers 
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
@@ -36,6 +36,7 @@ outputFile     = '%s_%s.txt' % (DOC_FILE, time.strftime("%Y%m%d%H%M%S", now))
 
 testMode       = None
 emailMode      = None
+repType        = ''
 
 # Create an exception allowing us to break out if there are no new
 # protocols found to report.
@@ -201,9 +202,9 @@ def parseArguments(args):
 def getLastProtocolList(directory = cdr.BASEDIR + '/Output/CTGovTransfer'):
     os.chdir(directory)
     if testMode:
-        searchFor = '*.test.txt'
+        searchFor = 'CTGovTransferUS_??????????????.test.txt'
     else:
-        searchFor = 'CTGovTransfer_??????????????.txt'
+        searchFor = 'CTGovTransferUS_??????????????.txt'
 
     fileList = glob.glob(searchFor)
     if not fileList: return
@@ -242,7 +243,7 @@ Subject: %s: %s
 # -------------------------------------------
 # Getting the Protocol Grant information
 # -------------------------------------------
-def getGrantNo(id):
+def getGrantNo(id, region='US'):
     conn = cdrdb.connect()
     cursor = conn.cursor()
 
@@ -268,7 +269,14 @@ def getGrantNo(id):
 
     grantNo.sort()
 
-    return ", ".join(["%s" % g for g in grantNo])
+    # Users like to display 'None' for the non-US report
+    # --------------------------------------------------
+    if region == 'US':
+        grant = u", ".join(["%s" % g for g in grantNo])
+    else:
+        grant = u", ".join(["%s" % g for g in grantNo]) or u'None'
+
+    return grant
 
 
 # --------------------------------------------------------
@@ -322,6 +330,174 @@ def checkedOutByUser(cdrIds):
     return html
 
 
+# --------------------------------------------------------
+# Creating email message body/report to be submitted
+# --------------------------------------------------------
+def createMessageBody(trialIDs, rows, region='US'):
+    titles = {}
+    titles['US'] = ['List of US transferred protocol IDs',
+                    '-----------------------------------',
+                    'Transfer Ownership to Responsible Party',
+                    ''
+                  ]
+    titles['NonUS'] = ['List of non-US transferred protocol IDs',
+                       '---------------------------------------',
+                       'Transfer of Ownership from NCI - Non-US Trials',
+ """<p>
+  Please transfer the following trial(s) to the Responsible Party. <br>
+  <b>*When you have completed the transfers, notify 
+  Judy Stringer (jstringer@icfi.com) with the date they were done.*</b><br>
+  We need to record this information in our database.
+  </p>"""
+
+                  ]
+    l.write("", stdout = True)
+    l.write(titles[region][0], stdout = True)
+    l.write(titles[region][1], stdout = True)
+    l.write('%s' % trialIDs, stdout = True)
+    mailBody = u"""\
+<html>
+ <head>
+  <title>%s</title>
+  <style type='text/css'>
+   th      { background-color: #f0f0f0; }
+  </style>
+ </head>
+ <body>
+  <h2>%s</h2>
+  <h3>Date: %s</h3>
+
+  %s
+
+  <table border='1px' cellpadding='2px' cellspacing='2px'>
+   <tr>
+    <th>CDR-ID</th>
+    <th>Primary ID</th>
+    <th>NCT-ID</th>
+    <th>Lead Org Name</th>
+    <th>Transfer Org</th>
+    <th>PRS Username</th>
+    <th>Comment</th>
+    <th>Protocol Status</th>
+    <th>Grant No</th>
+    <th>PUP Name</th>
+    <th>PUP Email</th>
+   </tr>
+""" % (titles[region][2], titles[region][2], time.strftime("%m/%d/%Y", now),
+       titles[region][3])
+
+    try:
+        for (cdrId, protocolId, nctId, orgName, transOrgName,
+             PRSName, comment, pStatus, orgId, country) in rows:
+
+            if cdrId in trialIDs:
+                mailBody += u"""\
+   <tr>
+    <td>CDR%010d</td>
+    <td>%s</td>
+    <td>
+     <a href="http://www.clinicaltrials.gov/ct2/show/%s">%s</a>
+    </td>
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+""" % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
+       PRSName, comment, pStatus)
+
+                # Populate the PUP information
+                pup = PUP(cdrId)
+
+                if not pup.persId:
+                    pup = PUP(cdrId, 'Protocol chair')
+
+                mailBody += u"""\
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+   </tr>
+""" % (getGrantNo(cdrId, region), '%s %s' % (pup.persFname, pup.persLname), 
+                                                              pup.persEmail)
+
+    except Exception, info:
+        l.write("Failure retrieving protocols: \n%s" % repr(info), 
+                 stdout = True)
+        # info[1][0], 
+        sendErrorMessage('Unicode convertion error')
+        raise
+
+    mailBody += u"""\
+  </table>
+"""
+    # User request to display the document IDs for protocols that
+    # are currently checked out.
+    # -----------------------------------------------------------
+    attachment = checkedOutByUser(trialIDs)
+    mailBody += attachment
+
+    mailBody += u"""\
+ </body>
+</html>
+"""
+    return mailBody
+
+
+# --------------------------------------------------------
+# Sending email report
+# Note: The name for the foreign list is called '... NoUS'
+#       because the group name is limited to 32 characters
+# --------------------------------------------------------
+def sendEmailReport(messageBody, region='US'):
+    titles = {}
+    titles['US'] = ['Transfer of Protocol(s) from NCI to Responsible '
+                    'Party - US']
+    titles['NonUS'] = ['Transfer of Protocol(s) from NCI to Responsible '
+                       'Party - Non-US']
+
+    # In Testmode we don't want to send the notification to the world
+    # ---------------------------------------------------------------
+    # Email constants
+    # ---------------
+    if testMode:
+        strTo    = cdr.getEmailList('Test Publishing Notification')
+    else:
+        if region == 'US':
+            strTo = cdr.getEmailList('CTGov Transfer Notification')
+        else:
+            strTo = cdr.getEmailList('CTGov Transfer Notification NoUS')
+            strTo.append(u'register@clinicaltrials.gov')
+
+    mailHeader = """\
+From: %s
+To: %s
+Subject: %s: %s
+""" % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
+       titles[region][0])
+
+    cType = "Content-type: text/html; charset=utf-8\n"
+    mailHeader += cType
+
+    # Add a Separator line + body
+    # ---------------------------
+    message = mailHeader + "\n" + messageBody
+
+    # Sending out the email 
+    # ---------------------
+    server = smtplib.SMTP(SMTP_RELAY)
+    if emailMode:
+        try:
+            server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
+        except Exception, info:
+            sys.exit("*** Error sending message (%s): %s" % (region, 
+                                                             str(info)))
+    else:
+        l.write("Running in NOEMAIL mode.  No message send", stdout = True)
+    server.quit()
+
+    return
+
+
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
@@ -348,16 +524,22 @@ else:
 if testMode:
     outputFile = outputFile.replace('.txt', '.test.txt')
 
+outputUS = outputFile.replace('Transfer', 'TransferUS')
+outputNonUS = outputFile.replace('Transfer', 'TransferNonUS')
+
 path = OUTPUTBASE + '/%s'
-l.write("    New protocol list is: %s" % outputFile, stdout = True)
+l.write("    New protocol list (US) is:     %s" % outputUS, stdout = True)
+l.write("    New protocol list (non-US) is: %s" % outputNonUS, stdout = True)
  
 try:
     # Open the latest manifest file (or the one specified) and read 
     # the content
     # -------------------------------------------------------------
-    protocols = {}
+    protocolsUS = {}
+    protocolsNonUS = {}
     oldFile = []
-    oldIds = []
+    oldIdsUS = []
+    oldIdsNonUS = []
     # A) If the file name has been passed as a parameter and the file 
     #    doesn't exist, exit.
     # B) If no file exists in the directory this is the first time the 
@@ -369,17 +551,26 @@ try:
         l.write("No files found.  Assuming new directory", stdout = True)
     else:
         f = open(path % useFile, 'r')
-        protocols = f.readlines()
+        protocolsUS = f.readlines()
         f.close()
 
         # Read the list of previously published protocols
         # ------------------------------------------------
-        for row in protocols:
-            oldIds.append(int(row.split('\t')[0]))
+        for row in protocolsUS:
+            oldIdsUS.append(int(row.split('\t')[0]))
+
+        g = open(path % useFile.replace('US', 'NonUS'), 'r')
+        protocolsNonUS = g.readlines()
+        g.close()
+
+        # Read the list of previously published protocols
+        # ------------------------------------------------
+        for row in protocolsNonUS:
+            oldIdsNonUS.append(int(row.split('\t')[0]))
 
 
-    # Connect to the database to get the full list of protocols with
-    # the CTGovDuplicate element.
+    # Connect to the database to get the list of protocols with the
+    # CTGovTransferInfo block
     # --------------------------------------------------------------
     newWithdrawn = []
 
@@ -388,14 +579,17 @@ try:
         
     try:
         cursor.execute("""\
-         SELECT q.doc_id AS "CDR-ID", qid.value AS "Primary ID", 
+        SELECT q.doc_id AS "CDR-ID", qid.value AS "Primary ID", 
                 nid.value AS "NCTID", o.value AS "OrgName", 
                 t.value AS "Transfer Org", q.value AS "PRS Name",
-                c.value AS "Comment", s.value AS "Protocol Status"
+                c.value AS "Comment", s.value AS "Protocol Status", 
+                o.doc_id AS "OrgID", 
+                CASE us.value
+                  WHEN 'U.S.A.' THEN 'US'
+                  WHEN 'Canada' THEN 'Canada'
+                  ELSE 'Non-US'
+                END AS "Foreign"
            FROM query_term q
--- Find the blocked documents (active_status)
---  JOIN document d
---    ON d.id = q.doc_id
 -- Get the Primar Protocol ID
            JOIN query_term qid
              ON q.doc_id = qid.doc_id
@@ -419,6 +613,20 @@ try:
              ON oid.int_val = o.doc_id
             AND o.path = '/Organization/OrganizationNameInformation' + 
                          '/OfficialName/Name'
+-- Get Country of Org
+           JOIN query_term_pub cips
+             ON cips.doc_id = o.doc_id
+            AND cips.path = '/Organization/OrganizationLocations/CIPSContact'
+           JOIN query_term_pub loc
+             ON loc.doc_id = oid.int_val
+            AND loc.value = cips.value
+            AND loc.path = '/Organization/OrganizationLocations' +
+                           '/OrganizationLocation/Location/@cdr:id'
+           JOIN query_term us
+             ON loc.doc_id = us.doc_id
+            AND us.path = '/Organization/OrganizationLocations' +
+                          '/OrganizationLocation/Location/PostalAddress/Country'
+            AND left(loc.node_loc, 12) = left(us.node_loc, 12)
 -- Get the protocol status
            JOIN query_term_pub s
              ON s.doc_id = q.doc_id
@@ -441,16 +649,11 @@ LEFT OUTER JOIN query_term c
              ON c.doc_id = q.doc_id
             AND c.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
                            '/Comment'
--- Get the transfer date
---         JOIN query_term prs
---           ON prs.doc_id = q.doc_id
---          AND prs.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
---                         '/CTGovOwnershipTransferDate'
 -- Get the PRS Name
           where q.path = '/InScopeProtocol/CTGovOwnershipTransferInfo' +
                          '/PRSUserName'
---   and active_status <> 'A'
-           ORDER by q.doc_id""", timeout = 300)
+           ORDER by us.value, q.doc_id
+""", timeout = 500)
 
         rows = cursor.fetchall()
         cursor.close()
@@ -463,167 +666,82 @@ LEFT OUTER JOIN query_term c
     # Create the new manifest file and identify those records that
     # are new since the last time this job ran (by comparing to the
     # file created last time).
+    # We need to split the output into two buckets: US trials and
+    # non-US trials.
     # -------------------------------------------------------------
-    f = open(path % outputFile, 'w')
-    newIds = []
+    f = open(path % outputUS, 'w')
+    g = open(path % outputNonUS, 'w')
+
+    newIdsUS = []
+    newIdsNonUS = []
+
     l.write("", stdout = True)
     l.write("List of new CTGovTransfer protocols", stdout = True)
-    l.write("-----------------------------------",   stdout = True)
+    l.write("-----------------------------------", stdout = True)
+
+    # Loop through the list of trials found with our SELECT statement
+    # listing ALL trials and identify which are old/new or US/non-US
+    # ---------------------------------------------------------------
     for (cdrId, protocolId, nctId, orgName, transferOrg,
-         prsName, comment, pStatus) in rows:
-        # l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-        #                             stdout = True)
+         prsName, comment, pStatus, orgId, country) in rows:
 
         try:
-            if cdrId not in oldIds:
-                l.write("%s, %s, %s, %s" % (cdrId, protocolId, nctId, orgName), 
-                                            stdout = True)
-                f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, 
+            if country == 'US' or 'Canada':
+                if cdrId not in oldIdsUS:
+                    l.write("%s, %s, %s, %s, %s" % (cdrId, protocolId, nctId, 
+                                                    orgName, country), 
+                                                    stdout = True)
+                    f.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, 
                                                     protocolId.encode('utf-8'), 
                                                     nctId.encode('utf-8')))
-                newIds.append(cdrId)
+                    newIdsUS.append(cdrId)
+                else:
+                    f.write("%10s\t%25s\t%12s\n" % (cdrId, 
+                                                    protocolId.encode('utf-8'), 
+                                                    nctId.encode('utf-8')))
             else:
-                f.write("%10s\t%25s\t%12s\n" % (cdrId, 
-                                                protocolId.encode('utf-8'), 
-                                                nctId.encode('utf-8')))
+                if cdrId not in oldIdsNonUS:
+                    l.write("%s, %s, %s, %s, %s" % (cdrId, protocolId, nctId, 
+                                                    orgName, country), 
+                                                    stdout = True)
+                    g.write("%10s\t%25s\t%12s\tNew\n" % (cdrId, 
+                                                    protocolId.encode('utf-8'), 
+                                                    nctId.encode('utf-8')))
+                    newIdsNonUS.append(cdrId)
+                else:
+                    g.write("%10s\t%25s\t%12s\n" % (cdrId, 
+                                                    protocolId.encode('utf-8'), 
+                                                    nctId.encode('utf-8')))
         except Exception, info:
             l.write("Failure retrieving protocols: \n%s" % info[1][0], 
                      stdout = True)
             sendErrorMessage('writing Unicode convertion error')
             raise
 
+    # Done writing the files
+    # ----------------------
     f.close()
+    g.close()
 
-    # Create the message body and display the query results
-    # -----------------------------------------------------
-    if newIds:
-        l.write("", stdout = True)
-        l.write('List of transferred protocol IDs', stdout = True)
-        l.write('--------------------------------', stdout = True)
-        l.write('%s' % newIds, stdout = True)
-        mailBody = u"""\
-<html>
- <head>
-  <title>Transfer Ownership to Responsible Party</title>
-  <style type='text/css'>
-   th      { background-color: #f0f0f0; }
-  </style>
- </head>
- <body>
-  <h2>Transfer Ownership to Responsible Party</h2>
-  <h3>Date: %s</h3>
-
-  <table border='1px' cellpadding='2px' cellspacing='2px'>
-   <tr>
-    <th>CDR-ID</th>
-    <th>Primary ID</th>
-    <th>NCT-ID</th>
-    <th>Lead Org Name</th>
-    <th>Transfer Org</th>
-    <th>PRS Username</th>
-    <th>Comment</th>
-    <th>Protocol Status</th>
-    <th>Grant No</th>
-    <th>PUP Name</th>
-    <th>PUP Email</th>
-   </tr>
-""" % (time.strftime("%m/%d/%Y", now))
-
-        try:
-            for (cdrId, protocolId, nctId, orgName, transOrgName,
-                 PRSName, comment, pStatus) in rows:
-
-                if cdrId in newIds:
-                    mailBody += u"""\
-   <tr>
-    <td>CDR%010d</td>
-    <td>%s</td>
-    <td>
-     <a href="http://www.clinicaltrials.gov/ct2/show/%s">%s</a>
-    </td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-""" % (cdrId, protocolId, nctId, nctId, orgName, transOrgName,
-       PRSName, comment, pStatus)
-
-                    # Populate the PUP information
-                    pup = PUP(cdrId)
-
-                    if not pup.persId:
-                        pup = PUP(cdrId, 'Protocol chair')
-
-                    mailBody += u"""\
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-   </tr>
-""" % (getGrantNo(cdrId), '%s %s' % (pup.persFname, pup.persLname), 
-                                                              pup.persEmail)
-
-        except Exception, info:
-            l.write("Failure retrieving protocols: \n%s" % info[1][0], 
-                     stdout = True)
-            sendErrorMessage('Unicode convertion error')
-            raise
-
-
-        mailBody += u"""\
-  </table>
-"""
-        # User request to display the document IDs for protocols that
-        # are currently checked out.
-        # -----------------------------------------------------------
-        attachment = checkedOutByUser(newIds)
-        mailBody += attachment
-
-        mailBody += u"""\
- </body>
-</html>
-"""
-    else:
+    # If there aren't any new documents we don't need to send an email
+    # Exit here
+    # ----------------------------------------------------------------
+    if not newIdsUS and not newIdsNonUS:
         raise NoNewDocumentsError('NoNewDocumentsError')
         
+    # Preparing email message to be send out
+    # --------------------------------------
+    region = ''
+    if newIdsUS:
+       region = 'US'
+       reportUS = createMessageBody(newIdsUS, rows)
+       sendEmailReport(reportUS)
 
-    # In Testmode we don't want to send the notification to the world
-    # ---------------------------------------------------------------
-    # Email constants
-    # ---------------
-    if testMode:
-        strTo    = cdr.getEmailList('Test Publishing Notification')
-    else:
-        strTo    = cdr.getEmailList('CTGov Transfer Notification')
-        #strTo.append(u'register@clinicaltrials.gov')
-
-    mailHeader   = """\
-From: %s
-To: %s
-Subject: %s: %s
-""" % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
-       'Transfer of Protocol(s) from NCI to Responsible Party')
-
-    mailHeader   += "Content-type: text/html; charset=utf-8\n"
-
-    # Add a Separator line + body
-    # ---------------------------
-    message = mailHeader + "\n" + mailBody
-
-    #print message
-
-    # Sending out the email 
-    # ---------------------
-    server = smtplib.SMTP(SMTP_RELAY)
-    if emailMode:
-        try:
-            server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
-        except Exception, info:
-            sys.exit("*** Error sending message: %s" % str(info))
-    else:
-        l.write("Running in NOEMAIL mode.  No message send", stdout = True)
-    server.quit()
-
+    if newIdsNonUS:
+       region = 'NonUS'
+       reportNonUS = createMessageBody(newIdsNonUS, rows, region)
+       sendEmailReport(reportNonUS, region)
+        
 except NothingFoundError, arg:
     msg  = "No documents found with 'CTGovTransfer' element"
     l.write("   %s" % msg, stdout = True)
