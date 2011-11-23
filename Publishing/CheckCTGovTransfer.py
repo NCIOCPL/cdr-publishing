@@ -586,7 +586,7 @@ try:
                 o.doc_id AS "OrgID", 
                 CASE us.value
                   WHEN 'U.S.A.' THEN 'US'
-                  WHEN 'Canada' THEN 'Canada'
+                  WHEN 'Canada' THEN 'US'
                   ELSE 'Non-US'
                 END AS "Foreign"
            FROM query_term q
@@ -686,7 +686,7 @@ LEFT OUTER JOIN query_term c
          prsName, comment, pStatus, orgId, country) in rows:
 
         try:
-            if country == 'US' or 'Canada':
+            if country == 'US':
                 if cdrId not in oldIdsUS:
                     l.write("%s, %s, %s, %s, %s" % (cdrId, protocolId, nctId, 
                                                     orgName, country), 
