@@ -466,6 +466,7 @@ def sendEmailReport(messageBody, region='US'):
             strTo = cdr.getEmailList('CTGov Transfer Notification')
         else:
             strTo = cdr.getEmailList('CTGov Transfer Notification NoUS')
+            strTo.append(u'***REMOVED***')
             strTo.append(u'register@clinicaltrials.gov')
 
     mailHeader = """\
