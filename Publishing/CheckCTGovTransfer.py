@@ -21,6 +21,7 @@
 # BZIssue::4687
 # BZIssue::4826 - Modify "Transfer of Protocol(s)..." email report
 # BZIssue::5140 - [CTGOV] Scheduled notification for foreign transfers 
+# BZIssue::5165 - Add new recipient to CTGOV transfer email
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
@@ -464,6 +465,7 @@ def sendEmailReport(messageBody, region='US'):
     else:
         if region == 'US':
             strTo = cdr.getEmailList('CTGov Transfer Notification')
+            strTo.append(u'register@clinicaltrials.gov')
         else:
             strTo = cdr.getEmailList('CTGov Transfer Notification NoUS')
             strTo.append(u'***REMOVED***')
