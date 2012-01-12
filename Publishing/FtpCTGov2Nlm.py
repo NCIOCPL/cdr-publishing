@@ -1,38 +1,20 @@
 #----------------------------------------------------------------------
+# $Id: FtpCTGov2Nlm.py,v 1.4 2009/04/30 20:19:54 venglisc Exp $
 #
 # File Name: $RCSFile:$
 #            ==============
 # Submit the CTGovExport data to the NLM's FTP Server.
 # 
-# $Id: FtpCTGov2Nlm.py,v 1.4 2009-04-30 20:19:54 venglisc Exp $
-# $Log: not supported by cvs2svn $
-# Revision 1.3  2008/06/03 21:43:05  bkline
-# Replaced StandardError (slated to be removed in the future) with
-# Exception objects.
-#
-# Revision 1.2  2007/11/14 19:39:39  venglisc
-# Modified program to push data to NLM's ftp site. (Bug 3536)
-#
-# Revision 1.1  2007/10/29 19:21:31  venglisc
-# Inital copy of FtpCTGov2Nlm.py (a modification of FtpCTGovData.py) to
-# ftp directly to the NLM site instead to go to CIPSFTP. (Bug 3536)
-#
-# Revision 1.2  2007/08/10 16:50:15  venglisc
-# Finalized copy of FTP script to copy vendor/NLM data.
-#
-# Revision 1.1  2007/07/06 22:50:06  venglisc
-# Initial copy of MFP scheduling scripts.
+# BZIssue::5167 - FTP Protocol Data to NLM Failing
 #
 #----------------------------------------------------------------------
 import sys, cdr, os, glob, ftplib, time, getopt
 
 # Setting directory and file names
 # --------------------------------
-# PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 LOGFILE    = 'Jobmaster.log'
 dateStr    = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 FTPDIR     = os.path.join('d:\\cdr', 'Output', 'NLMExport')
-# FTPLOCK    = "sending"
 
 testMode   = None
 exportDir  = None
@@ -106,27 +88,35 @@ def copyNlmFtpFile(localDirectory = 'd:/cdr/output/NLMExport',
 
     # Creating the FTP command file
     # -----------------------------
-    l.write("  LocalDir  = %s" % localDirectory)
-    l.write("  localFile = %s" % localFile)
-    l.write("  FTPDir    = %s" % ftpDir)
-    l.write("  FTP Name  = %s" % ftpName)
+    l.write("   LocalDir  = %s" % localDirectory, stdout = True)
+    l.write("   localFile = %s" % localFile, stdout = True)
+    l.write("   FTPDir    = %s" % ftpDir, stdout = True)
+    l.write("   FTP Name  = %s" % ftpName, stdout = True)
 
     l.write("Copy files to ftp server", stdout = True)
 
     try:
         ftp = ftplib.FTP(FTPSERVER)
         ftp.login(FTPUSER, FTPPWD)
-        chCwd = ftp.cwd(ftpDir)
-        l.write("FTP: %s" % chCwd, stdout = True)
-        l.write("FTPDIR: %s" % ftpDir, stdout = True)
 
-        # ftp.rename(FTPLOCK, FTPLOCK + '.lck')
+        # Don't change the directory on the NLM FTP
+        # They sometimes throw you to the root instead of the login dir
+        # -------------------------------------------------------------
+        if not ftpDir == '/':
+            chCwd = ftp.cwd(ftpDir)
+            l.write("FTP: %s" % chCwd, stdout = True)
+            l.write("FTPDIR: %s" % ftpDir, stdout = True)
+
         l.write("Transfer file %s..." % localFile, stdout = True)
-        ftp.storbinary('STOR ' + localFile, 
-                            open(localDirectory + '\\' + localFile, 'rb'))
+        ftpFile = os.path.join(localDirectory, localFile)
+        ftp.storbinary('STOR ' + localFile, open(ftpFile, 'rb'))
         l.write("Renaming file to %s" % ftpName, stdout = True)
         ftp.rename(localFile, ftpName)
-        l.write("Bytes transfered %d" % ftp.size(ftpDir + '/' + ftpName), 
+        if ftpDir == '/':
+            l.write("Bytes transfered %d" % ftp.size(ftpName), 
+                                                   stdout = True)
+        else:
+            l.write("Bytes transfered %d" % ftp.size(ftpDir + '/' + ftpName), 
                                                    stdout = True)
     except ftplib.Error, msg:
         l.write('*** FTP Error ***\n%s' % msg, stdout=True)
@@ -232,7 +222,6 @@ try:
 
     lDir       = os.path.join(FTPDIR, latestFile[1])
 
-    #print "Last File: ", latestFile
     l.write("   Base Dir: %s" % FTPDIR, stdout = True)
     l.write("   Dir Name: %s" % latestFile[1], stdout = True)
     l.write("   Mod Time: %s\n" % time.strftime('%Y-%b-%d %H:%M:%S', 
