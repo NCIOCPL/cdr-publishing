@@ -821,6 +821,15 @@ def media(pp):
         raise XmlLatexException("Image node has no CDR link")
     imageId = cdr.exNormalize(imageIdString)[1]
 
+    # Start the output string pieces.
+    output = []
+
+    # If this is the first image, flush preceding text.
+    if not imageSet:
+        output.append(r"\clearpage")
+    output.append(r"\begin{figure}")
+    output.append(r"\begin{center}")
+
     # If we haven't already processed this image, do so now.
     if imageId not in imageSet:
 
@@ -873,7 +882,10 @@ def media(pp):
         imageSet.add(imageId)
 
     # Pop in the new image.
-    pp.setOutput('\\includegraphics{%d.eps}\n' % imageId)
+    output.append(r"\includegraphics{%d.eps}" % imageId)
+    output.append(r"\end{center}")
+    output.append(r"\end{figure}")
+    pp.setOutput("\n".join(output))
 
 def cite (pp):
     "Retrieves the instructions for a given doc format and format type."
@@ -3273,8 +3285,6 @@ DocumentSummaryBody = (
           order     = XProc.ORDER_PARENT_BACK,
           preProcs  = ( (bibitem, ()), )),
     XProc(element   = "MediaLink",
-          prefix    = "\\begin{figure}\n\\begin{center}\n",
-          suffix    = "\\end{center}\n\\end{figure}\n",
           order     = XProc.ORDER_TOP_BACK,
           preProcs  = ( (media, ()), )),
     XProc(element   = "Caption",
