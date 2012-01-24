@@ -84,7 +84,9 @@
 <!ATTLIST AltTitle TitleType (Short | Display) #IMPLIED>
 
 <!ELEMENT Para (%ParaElements;)*>
-<!ATTLIST Para id CDATA #IMPLIED>
+<!ATTLIST Para id CDATA #IMPLIED
+               ExcludedDevices CDATA #IMPLIED 
+               IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT LiteralLayout (%ParaElements;)*>
 <!ATTLIST LiteralLayout id CDATA #IMPLIED>
@@ -112,7 +114,9 @@
                    Frame (All | Bottom | Sides | Top | TopBot | None ) #IMPLIED
                    RowSep (0 | 1) #IMPLIED
                    TabStyle CDATA #IMPLIED
-                   id CDATA #IMPLIED>
+                   id CDATA #IMPLIED 
+                   ExcludedDevices CDATA #IMPLIED 
+                   IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT TGroup   (ColSpec*,SpanSpec*,THead?,TFoot?,TBody)>
 <!ATTLIST TGroup   Align (Center | Char | Justify | Left | Right) #IMPLIED
@@ -173,22 +177,28 @@
 <!ELEMENT ItemizedList (ListTitle?,ListItem+)>
 <!ATTLIST ItemizedList Compact (No) #IMPLIED
                        Style (bullet | dash | simple) #IMPLIED
-                       id CDATA #IMPLIED>
+                       id CDATA #IMPLIED
+                       ExcludedDevices CDATA #IMPLIED
+                       IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT ListTitle (%TitleData;)*>
 
 <!ELEMENT ListItem (%TextElements;)*>
 
 <!ELEMENT OrderedList (ListTitle?,ListItem+)>
-<!ATTLIST OrderedList Style
-    (Arabic | LAlpha | LRoman | UAlpha | URoman) #IMPLIED
+<!ATTLIST OrderedList Compact (No) #IMPLIED
+                      Style
+                      (Arabic | LAlpha | LRoman | UAlpha | URoman) #IMPLIED
                       id CDATA #IMPLIED
-                      Compact (No) #IMPLIED>
+                      ExcludedDevices CDATA #IMPLIED
+                      IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT QandASet (MarkedUpTitle?,
                    (QandADiv+ | QandAEntry+)
                    )>
-<!ATTLIST QandASet id CDATA #IMPLIED>
+<!ATTLIST QandASet id CDATA #IMPLIED
+                   ExcludedDevices CDATA #IMPLIED
+                   IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT MarkedUpTitle (%TitleData;)*>
 
@@ -320,7 +330,9 @@
        language NMTOKENS #IMPLIED
        size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
        thumb (Yes|No) "No"
-       id CDATA #IMPLIED>
+       id CDATA #IMPLIED
+       ExcludedDevices CDATA #IMPLIED
+       IncludedDevices CDATA #IMPLIED>
 
 <!ELEMENT Caption (%TextElements;)*>
 <!ATTLIST Caption language NMTOKENS #IMPLIED>
@@ -440,9 +452,14 @@
                            SummaryLanguage,
                            SummaryDescription,
                            SummaryURL,
+                           MobileURL?,
                            MainTopics+,
-                           SecondaryTopics*
+                           SecondaryTopics*,
+                           PermaTargs?
                           )>
+                           <!--
+                           MobileURL+,
+                           -->
 
 <!-- Types of summary
   Possible values are:
@@ -473,6 +490,19 @@
 <!ELEMENT SummaryURL (#PCDATA)>                           
 <!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
+<!-- Used by Cancer.gov website to link to the mobile site. -->
+<!ELEMENT MobileURL (#PCDATA)>                           
+<!ATTLIST MobileURL xref CDATA #REQUIRED>
+
+<!-- Used by Cancer.gov website to create permanent links -->
+<!ELEMENT PermaTargs (PermaTarg+)>
+
+<!ELEMENT PermaTarg EMPTY>
+<!ATTLIST PermaTarg id CDATA #REQUIRED
+                    PermaTargId CDATA #REQUIRED
+                    PermaTargTitle CDATA #REQUIRED
+                    PermaTargUrl CDATA #REQUIRED>
+
 <!ELEMENT SummaryLanguage (#PCDATA)>                           
 
 <!-- Link to original version of translation
@@ -492,6 +522,8 @@
                           ReferenceSection?
                          )>
 <!ATTLIST SummarySection id CDATA #IMPLIED>
+<!ATTLIST SummarySection ExcludedDevices CDATA #IMPLIED>
+<!ATTLIST SummarySection IncludedDevices CDATA #IMPLIED>
 
 <!-- The Diagnosis elements are links to Terminology with contents the
      preferred name. -->     
