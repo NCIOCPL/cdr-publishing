@@ -44,6 +44,7 @@ class documentType:
         self.filters = { 'CTGovProtocol': ['name:Vendor Filter: CG2Public'],
                          'ProtocolActive':['name:Vendor Filter: CG2Public'],
                          'ProtocolClosed':['name:Vendor Filter: CG2Public'],
+                         'Summary':       ['name:Vendor Filter: CG2Public'],
                          'Terminology':   ['name:Vendor Filter: CG2Public']}
         self.sourceBase  = cdr.BASEDIR + "/Output"
         self.jobDir      = self.lastJobDir()
@@ -120,6 +121,7 @@ class documentType:
         # and writing the files, if necessary.  
         # -------------------------------------------------------
         valError = ()
+        # filt_warnings = ''
         for doc in allDocs:
             f = open(doc, "rb")
             xmlDoc = f.read()
@@ -140,7 +142,8 @@ class documentType:
                     break
 
                 newDoc = result[0]
-                if result[1]: warnings += result[1]
+                if result[1]:
+                    l.write("*** Warning: %s" % result[1], stdout = True)
             else:
                 newDoc = xmlDoc
 
