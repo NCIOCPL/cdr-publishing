@@ -7,13 +7,16 @@
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009-07-24 22:50:26 $
+# Last Modified:    $Date: 2009/07/24 22:50:26 $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
 # $Revision: 1.9 $
 #
-# $Id: SubmitPubJob.py,v 1.9 2009-07-24 22:50:26 venglisc Exp $
-# $Log: not supported by cvs2svn $
+# $Id: SubmitPubJob.py,v 1.9 2009/07/24 22:50:26 venglisc Exp $
+# $Log: SubmitPubJob.py,v $
+# Revision 1.9  2009/07/24 22:50:26  venglisc
+# Fixed an error to write a string as an integer.
+#
 # Revision 1.8  2008/06/03 21:43:05  bkline
 # Replaced StandardError (slated to be removed in the future) with
 # Exception objects.
@@ -316,8 +319,12 @@ try:
             l.write("    Status: %s (%d sec)" % (status, counter * wait), 
                                                  stdout=True)
 
-        ### if counter % 1 == 0:
-        ###    l.write("Job running %d seconds..." % (counter * wait), stdout=True)
+            if counter * wait > 23000:
+                l.write("*** Publishing job failed to finish!!!", 
+                                                            stdout=True)
+                l.write("*** Completion expected in under 20,000 sec", 
+                                                            stdout = True)
+                sys.exit(1)
 
         # Once the publishing job completed with status Success
         # we need to find the push job and wait for it to finish
