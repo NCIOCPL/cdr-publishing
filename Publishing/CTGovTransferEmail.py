@@ -3,8 +3,14 @@
 #
 # File Name: $RCSFile:$
 #            ===============
-# Program to identify and notify about protocols that need to be 
+# Program to identify and notify about protocols that needed to be 
 # transferred from PDQ to CTGov.
+# However, if the notification script (CheckCTGovTransfer.py) has
+# failed to list a protocol due to a publishing failure, etc. the 
+# InScopeProtocol probably has already been imported back into the CDR
+# as a CTGovProtocol.  In this case we'll need to identify all 
+# CTGovProtocols that have a transfer-block but the transfer-date is 
+# missing.
 # ---------------------------------------------------------------------
 # $Author: venglisc $
 # Created:          2010-05-03        Volker Englisch
@@ -17,6 +23,7 @@
 #
 # BZIssue::4796 - Transfer notification email
 # BZIssue::4903 - Transfer Protocols without Transfer Date
+# BZIssue::4971 - [CTRP] Modify Transfer reports to skip CTRP trials
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
