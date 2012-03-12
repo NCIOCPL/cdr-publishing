@@ -313,6 +313,11 @@ try:
  <head>
   <title>Document Candidates to be removed from Cancer.gov</title>
   <style type='text/css'>
+   table   { border-spacing: 20px 5px;
+             empty-cells: show; 
+             border-collapse: collapse; }
+
+   table, th, td {border: 1px solid black; }
    th      { background-color: #f0f0f0; }
   </style>
  </head>
