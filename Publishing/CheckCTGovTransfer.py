@@ -361,7 +361,13 @@ def createMessageBody(trialIDs, rows, region='US'):
  <head>
   <title>%s</title>
   <style type='text/css'>
+   table   { border-spacing: 20px 5px;
+             empty-cells: show;
+             border-collapse: collapse; }
+
+   table, th, td {border: 1px solid black; }
    th      { background-color: #f0f0f0; }
+   td      { padding: 1px 10px; }
   </style>
  </head>
  <body>
