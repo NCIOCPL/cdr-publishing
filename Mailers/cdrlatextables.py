@@ -5,7 +5,7 @@
 # Module for generating LaTeX for tables in CDR documents.
 #
 #----------------------------------------------------------------------
-import re, sys, cdr
+import re, sys, cdr, time
 
 TEXT_WIDTH  = 5.5
 TAB_COL_SEP = .05
@@ -449,6 +449,10 @@ def openGroup(pp):
         sys.stderr.write("nCols=%d\n" % nCols)
 
     # Parse the width specifications for each column.
+    usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP + 
+                               (nCols + 1) * RULE_WIDTH)
+    if TABLE_DEBUG:
+        sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
     widthSpecs = []
     for col in cols:
         match = WIDTH_EXPR.match(col.width)
@@ -470,6 +474,9 @@ def openGroup(pp):
                 elif widthType == "mm":
                     widthType = "in"
                     amount /= 25.4
+                elif widthType == "%":
+                    widthType = "in"
+                    amount = usableSpace * amount / 100.1
                 elif widthType != "*":
                     raise cdr.Exception("Illegal ColWidth: %s" % col.width)
             except:
@@ -484,10 +491,6 @@ def openGroup(pp):
 
     # Determine how much space is used by the explicitly specified widths.
     # During this pass we also total up the proportional units.
-    usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP + 
-                               (nCols + 1) * RULE_WIDTH)
-    if TABLE_DEBUG:
-        sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
     propTotal = 0
     propCols  = 0
     for spec in widthSpecs:
@@ -497,8 +500,13 @@ def openGroup(pp):
         else:
             usableSpace -= spec.amount
     if usableSpace < MIN_WIDTH * propCols:
+        ts = time.strftime("%Y%m%d%H%M%S")
+        fp = open("d:/tmp/mailer-table-%s.xml" % ts, "w")
+        fp.write(tGroupNode.toxml("utf-8"))
+        fp.write("\n<!-- %s -->\n" % repr((usableSpace, MIN_WIDTH, propCols)))
+        fp.close()
         raise cdr.Exception("Total of explicit ColWidth too large")
-    propUnit = usableSpace / propTotal
+    propUnit = propTotal and (usableSpace / propTotal) or 0
 
     # Divide up the remaining space proportionally as requested.
     for i in range(len(widthSpecs)):
