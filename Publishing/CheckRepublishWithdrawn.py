@@ -1,29 +1,25 @@
 #!d:/python/python.exe
 # *********************************************************************
 #
-# File Name: $RCSFile:$
-#            ===============
+# $Id$
+# 
 # Program to check if a protocol has been published for the first time
 # after it had previously been removed/withdrawn.
 # These documents need to be reported to the NLM so that they can 
 # change the protocols 'Withdrawn' status and accept updates from PDQ.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
 # Created:          2009-01-28        Volker Englisch
-# Last Modified:    $Date: 2009-06-04 21:44:10 $
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/CheckRepublishWithdrawn.py,v $
-# $Revision: 1.3 $
+# $LastChangedBy$
+# $LastChangedDate$
+# $URL$
+# $Revision$
 #
-# $Id: CheckRepublishWithdrawn.py,v 1.3 2009-06-04 21:44:10 venglisc Exp $
-# $Log: not supported by cvs2svn $
 # Revision 1.2  2009/02/27 23:23:02  venglisc
 # Added comment and reset the test email DL. (Bug 4450)
 #
 # Revision 1.1  2009/02/26 22:05:55  venglisc
-# Initial copy of program to identify protocols previously withdrawn and now
-# published again.
-#
+# Initial copy of program to identify protocols previously withdrawn 
+# and now published again.
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib
