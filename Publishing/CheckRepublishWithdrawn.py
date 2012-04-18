@@ -100,7 +100,7 @@ def parseArguments(args):
 # Instantiate the Log class
 # ---------------------------------------------------------------------
 l   = cdr.Log(LOGNAME)
-l.write("CheckRepublishRemoved - Started", stdout = True)
+l.write("CheckRepublishWithdrawn - Started", stdout = True)
 l.write('Arguments: %s' % sys.argv, stdout=True)
 print ''
 
@@ -152,7 +152,7 @@ SELECT ppd.pub_proc, ppd.doc_id, pp.completed, ppd.doc_version, ppd.removed,
    AND ppd.pub_proc < p.pub_proc
    AND d.active_status = 'A'
  ORDER BY ppd.doc_id
-""")
+""", timeout=300)
 
     rows = cursor.fetchall()
     cursor.close()
