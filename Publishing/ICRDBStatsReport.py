@@ -1,6 +1,6 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id: $
+# $Id$
 #
 # File Name: $RCSFile:$
 #            ===============
@@ -8,11 +8,11 @@
 # previous month) regarding the number of documents published, updated,
 # etc.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2012-02-10        Volker Englisch
 #
 # $Source: $
-# $Revision: $
+# $Revision$
 # $Source: $
 #
 # BZIssue::5173 - ICRDB Stats Report
@@ -784,7 +784,7 @@ LEFT OUTER JOIN query_term_pub s
         l.write('[SQL query submitted:]', stdout=True)
         l.write(query, stdout=True)
 
-    cursor.execute(query)
+    cursor.execute(query, timeout=300)
     rows = cursor.fetchall()
 
     if debug:
@@ -1009,6 +1009,7 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
 <html>
  <head>
   <title>%s</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <style type='text/css'>
    table   { border-spacing: 20px 5px;
              empty-cells: show; 
@@ -1046,16 +1047,16 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
 # --------------------------------------------------------
 def createMessageBody(title='Test Title', startDate=firstOfMonth, 
                                           endDate=lastOfMonth, maxRows=0):
-    sumBoardMember = ''
-    sumBoardMeeting = ''
-    sumDis = ''
-    sumDrugTerms = ''
-    sumGeneticsProf = ''
-    sumGlossaries = ''
-    sumImage = ''
-    sumSummariesNew = ''
-    sumSummariesRev = ''
-    sumSummariesReform = ''
+    sumBoardMember = u''
+    sumBoardMeeting = u''
+    sumDis = u''
+    sumDrugTerms = u''
+    sumGeneticsProf = u''
+    sumGlossaries = u''
+    sumImage = u''
+    sumSummariesNew = u''
+    sumSummariesRev = u''
+    sumSummariesReform = u''
 
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
@@ -1431,18 +1432,18 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # rows should be displayed
     # -------------------------------------------------------------------
     if dispRows:
-        fullAudio = ''
-        fullDrugTerms = ''
-        fullImages = ''
-        fullBoardMember = ''
-        fullBoardMeeting = ''
-        fullSummariesNew = ''
-        fullSummariesRev = ''
-        fullSummariesReform = ''
-        fullDis = ''
-        fullGlossary = ''
-        fullGlossaryGen = ''
-        fullGeneticsProf = ''
+        fullAudio = u''
+        fullDrugTerms = u''
+        fullImages = u''
+        fullBoardMember = u''
+        fullBoardMeeting = u''
+        fullSummariesNew = u''
+        fullSummariesRev = u''
+        fullSummariesReform = u''
+        fullDis = u''
+        fullGlossary = u''
+        fullGlossaryGen = u''
+        fullGeneticsProf = u''
 
         if dispAll or dispSummary:
             fullSummariesNew  = formatFullOutput(summariesNew, 
@@ -1549,7 +1550,7 @@ def sendEmailReport(messageBody, title):
     if testMode:
         strTo    = cdr.getEmailList('Test Publishing Notification')
     else:
-        strTo = cdr.getEmailList('ICRDB Statistics NotificationS')
+        strTo = cdr.getEmailList('ICRDB Statistics Notification')
         #     strTo.append(u'register@clinicaltrials.gov')
 
     mailHeader = """\
@@ -1683,11 +1684,11 @@ except NoNewDocumentsError, arg:
     l.write("", stdout = True)
     l.write("   %s" % msg, stdout = True)
     l.write("   %s" % arg, stdout = True)
-#except Exception, arg:
-#    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
-#except:
-#    l.write("*** Error - Program stopped with failure ***", stdout = True, 
-#                                                            tback = 1)
+except Exception, arg:
+    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+except:
+    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+                                                            tback = 1)
     raise
 
 l.write("ICRDB Stats Report - Finished", stdout = True)
