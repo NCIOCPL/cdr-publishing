@@ -5,14 +5,14 @@
 #            ===============
 # Program to submit the interim and full export publishing job.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009/07/24 22:50:26 $
+# Last Modified:    $Date$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision: 1.9 $
+# $Revision$
 #
-# $Id: SubmitPubJob.py,v 1.9 2009/07/24 22:50:26 venglisc Exp $
+# $Id$
 # $Log: SubmitPubJob.py,v $
 # Revision 1.9  2009/07/24 22:50:26  venglisc
 # Fixed an error to write a string as an integer.
@@ -319,7 +319,8 @@ try:
             l.write("    Status: %s (%d sec)" % (status, counter * wait), 
                                                  stdout=True)
 
-            if counter * wait > 23000:
+            #if counter * wait > 23000:
+            if counter * wait > 28800:
                 l.write("*** Publishing job failed to finish!!!", 
                                                             stdout=True)
                 l.write("*** Completion expected in under 20,000 sec", 
