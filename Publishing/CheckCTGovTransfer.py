@@ -1,6 +1,6 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
+# $Id$
 #
 # File Name: $RCSFile:$
 #            ===============
@@ -8,20 +8,22 @@
 # transferred from PDQ to CTGov and split those into US and Non-US
 # trials.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2009-03-17        Volker Englisch
 # Last Modified:    $
 #
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.9 $
+# $Revision$
 # $Source: $
 #
-# $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
+# $Id$
 #
 # BZIssue::4687
 # BZIssue::4826 - Modify "Transfer of Protocol(s)..." email report
 # BZIssue::5140 - [CTGOV] Scheduled notification for foreign transfers 
 # BZIssue::5165 - Add new recipient to CTGOV transfer email
+# BZIssue::5201 - Update Transfer of Protocol(s) from NCI to 
+#                 Responsible Party - Non-US email
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
@@ -347,7 +349,8 @@ def createMessageBody(trialIDs, rows, region='US'):
  """<p>
   Please transfer the following trial(s) to the Responsible Party. <br>
   <b>*When you have completed the transfers, notify 
-  Judy Stringer (jstringer@icfi.com) with the date they were done.*</b><br>
+  Judy Stringer (jstringer@icfi.com) and  Ning Yu (nyu@icfi.com) with 
+  the date they were done.*</b><br>
   We need to record this information in our database.
   </p>"""
 
@@ -474,6 +477,7 @@ def sendEmailReport(messageBody, region='US'):
             strTo.append(u'register@clinicaltrials.gov')
         else:
             strTo = cdr.getEmailList('CTGov Transfer Notification NoUS')
+            strTo.append(u'***REMOVED***')
             strTo.append(u'***REMOVED***')
             strTo.append(u'register@clinicaltrials.gov')
 
