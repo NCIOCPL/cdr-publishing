@@ -498,10 +498,10 @@
 <!ELEMENT PermaTargs (PermaTarg+)>
 
 <!ELEMENT PermaTarg EMPTY>
-<!ATTLIST PermaTarg id CDATA #REQUIRED
+<!ATTLIST PermaTarg FragmentId CDATA #REQUIRED
                     PermaTargId CDATA #REQUIRED
-                    PermaTargTitle CDATA #REQUIRED
-                    PermaTargUrl CDATA #REQUIRED>
+                    PermaTargTitle CDATA #IMPLIED
+                    PermaTargUrl CDATA #IMPLIED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>                           
 
@@ -1433,6 +1433,38 @@
 
 <!-- End DrugInformationSummary -->
 
+
+<!-- ===========================================================
+     PDQBoardInfo start element PDQBoard
+     =========================================================== -->
+<!-- *** PDQBoardInfo slated for future release ***
+
+<!ELEMENT PDQBoard 
+          ( BoardName,
+            BoardDescription,
+            BoardUrl,
+            BoardMembers)>
+<!ATTLIST PDQBoard id CDATA #REQUIRED>
+
+<!ELEMENT BoardName  (#PCDATA)>
+<!ELEMENT BoardDescription  (#PCDATA)>
+<!ELEMENT BoardUrl  (#PCDATA)>
+<!ATTLIST BoardUrl xref CDATA #REQUIRED>
+
+<!ELEMENT BoardMembers (BoardMember+)>
+
+<!ELEMENT BoardMember (MemberDisplayString,
+                       MemberSortKey,
+                       BoardRole?,
+                       Affiliations)>
+
+<!ELEMENT Affiliations (BoardAMemberffiliation+)>
+
+<!ELEMENT BoardMemberAffiliation (AffiliationName*,
+                                  AffiliationPlace)>
+
+-->
+<!-- End PDQBoard -->
 
 <!-- [@@INTERNAL] =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- -->
 <!-- Begin DTD for Internal Use Only                             -->
