@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 #
-# $Id: Notify_VOL.py,v 1.2 2009-01-23 18:34:54 venglisc Exp $
+# $Id$
 #
 # Script intended to submit an email to the Visuals OnLine (VOL) 
 # manager (Kevin Broun) when a media document has been updated or 
@@ -111,7 +111,7 @@ def checkMediaUpdates(sDate, eDate):
                       AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding'
                    )
             ORDER BY d.id
-        """ % (sDate, eDate))
+        """ % (sDate, eDate), timeout=300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
         l.write("Failure finding updated media documents: %s" % (info[1][0]))
