@@ -1,7 +1,7 @@
 #
 # This script starts the publishing service.
 #
-# $Id: PublishingService.py,v 1.21 2007/12/31 16:33:01 venglisc Exp $
+# $Id$
 # $Log: PublishingService.py,v $
 #
 # BZIssue::5009 Fix PublishingService.py
@@ -268,11 +268,13 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     else:
         now = time.localtime()
         then = list(now)
-        then[3] -= 8
+        then[3] -= 18
         then = time.localtime(time.mktime(then))
         then = time.strftime("%Y-%m-%d %H:%M:%S", then)
 
-        # If it's been longer than 8 hours, the job is probably stuck.
+        # If it's been longer than 18 hours, the job is probably stuck.
+        # Note: This should only happen if very many summaries have to
+        #       be processed.
         l.write("verifying push job: then=%s pushFinished=%s" %
                      (then, str(pushFinished)))
         if then > str(pushFinished):
@@ -305,7 +307,7 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
     if stalled:
         subject = "Push job %d stalled" % jobId
         body = """\
-More than 8 hours have elapsed since completion of the push of CDR
+More than 18 hours have elapsed since completion of the push of CDR
 documents for publishing job %d, and loading of the documents
 has still not completed.
 """ % jobId
