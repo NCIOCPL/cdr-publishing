@@ -10,11 +10,11 @@
 # information so that they can be removed from ClinicalTrials.gov
 # if appropriate.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2007-12-03        Volker Englisch
-# Last Modified:    $Date: 2009-06-04 21:44:10 $
+# Last Modified:    $Date$
 # 
-# $Id: CheckWithdrawn.py,v 1.10 2009-06-04 21:44:10 venglisc Exp $
+# $Id$
 # 
 # BZIssue::4627
 #
@@ -309,14 +309,20 @@ try:
  <head>
   <title>Protocols Removed from PDQ</title>
   <style type='text/css'>
+   table   { border-spacing: 20px 5px;
+             empty-cells: show;
+             border-collapse: collapse; }
+
+   table, th, td {border: 1px solid black; }
    th      { background-color: #f0f0f0; }
+   td      { padding: 1px 10px; }
   </style>
  </head>
  <body>
   <h2>Protocols Removed from PDQ</h2>
   <h3>Date: %s</h3>
 
-  <table border='1px' cellpadding='2px' cellspacing='2px'>
+  <table>
    <tr>
     <th>CDR-ID</th>
     <th>Version</th>
