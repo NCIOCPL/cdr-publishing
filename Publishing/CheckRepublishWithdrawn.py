@@ -11,7 +11,6 @@
 # Created:          2009-01-28        Volker Englisch
 # $LastChangedBy$
 # $LastChangedDate$
-# $URL$
 # $Revision$
 #
 # Revision 1.2  2009/02/27 23:23:02  venglisc
@@ -257,14 +256,20 @@ SELECT MIN(pub_proc)
  <head>
   <title>Protocols with status: Withdrawn from PDQ</title>
   <style type='text/css'>
+   table   { border-spacing: 20px 5px;
+             empty-cells: show;
+             border-collapse: collapse; }
+
+   table, th, td {border: 1px solid black; }
    th      { background-color: #f0f0f0; }
+   td      { padding: 1px 10px; }
   </style>
  </head>
  <body>
   <h2>Published trial(s) (previously removed from PDQ and CT.gov)</h2>
   <h3>Date: %s</h3>
 
-  <table border='1px' cellpadding='2px' cellspacing='2px'>
+  <table>
    <tr>
     <th>CDR-ID</th>
     <th>Primary ID</th>
