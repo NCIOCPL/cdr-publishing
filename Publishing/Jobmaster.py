@@ -5,17 +5,18 @@
 #            ===============
 # Control file to start the publishing scripts.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2009-09-15 17:35:34 $
+# Last Modified:    $Date$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 1.15 $
+# $Revision$
 #
-# $Id: Jobmaster.py,v 1.15 2009-09-15 17:35:34 venglisc Exp $
+# $Id$
 #
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 # BZIssue::4903 - Transfer Protocols without transfer date
+# BZIssue::5215 - Fix Publishing Job to Ignore Warnings
 #
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
@@ -359,19 +360,28 @@ try:
                          #   Specifying maxtest option for testing only
     
     l.write('Submitting CTGovExport Job...\n%s' % cmd, stdout = True)
-    # cmd = 'ls'
-    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
+    myCmd = cdr.runCommand(cmd, joinErr2Out=False, returnNoneOnSuccess=False)
     
     if myCmd.error:
-        l.write('*** Error submitting command:\n%s' % myCmd.error,
-                 stdout = True)
-        subject = '*** Error in CTGovExport.py'
-        message = 'Program returned with error code.  Please see logfile.'
-        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-                                        (subject, message))
-        # cmd = 'ls'
-        myCmd   = cdr.runCommand(cmd)
-        raise Exception
+        # Error code indicates success but a warning message has been
+        # returned
+        if myCmd.code == 0:
+           l.write('Program finished with warnings:\n%s' % myCmd.error,
+                    stdout = True)
+           subject = 'Warning message in CTGovExport.py'
+           message = 'Program finished with warnings.  Please see logfile.'
+           cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                           (subject, message))
+           myCmd   = cdr.runCommand(cmd)
+        else:
+           l.write('*** Error submitting command:\n%s' % myCmd.error,
+                    stdout = True)
+           subject = '*** Error in CTGovExport.py'
+           message = 'Program returned with error code.  Please see logfile.'
+           cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+                                           (subject, message))
+           myCmd   = cdr.runCommand(cmd)
+           raise Exception
 except:
     l.write('*** Error: Submitting CTGovExport Job failed', stdout = True)
     pass
