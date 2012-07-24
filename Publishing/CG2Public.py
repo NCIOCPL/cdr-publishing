@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 #
-# $Id: CG2Public.py,v 1.4 2009-03-03 21:10:02 venglisc Exp $
+# $Id$
 #
 # Take the CDR publishing data (for Gatekeeper use) and convert to 
 # Licensee data.
