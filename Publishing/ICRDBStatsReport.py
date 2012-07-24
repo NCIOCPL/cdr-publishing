@@ -1593,7 +1593,7 @@ l.write('', stdout=True)
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
-testMode = True
+# testMode = True
 emailMode = options.values.emailMode
 dispRows = options.values.listRows
 dispCdrid = options.values.cdrids
