@@ -587,7 +587,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
     # Insert a list of summary topics if appropriate.
     #------------------------------------------------------------------
     def __plugInSummaryTopics(self, template, board):
-        if template.find("@@SUMMARYTOPICS@@") == -1:
+        if "@@SUMMARYTOPICS@@" not in template:
             return template
         self.getCursor().execute("""\
             SELECT DISTINCT topic.value
@@ -598,6 +598,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                          ON audience.doc_id = topic.doc_id
                        JOIN active_doc a
                          ON a.id = topic.doc_id
+                       JOIN pub_proc_cg c
+                         ON c.id = topic.doc_id
                       WHERE topic.path = '/Summary/SummaryTitle'
                         AND board.path = '/Summary/SummaryMetaData/PDQBoard'
                                        + '/Board/@cdr:ref'
