@@ -883,8 +883,6 @@ def media(pp):
 
     # Pop in the new image.
     output.append(r"\includegraphics{%d.eps}" % imageId)
-    output.append(r"\end{center}")
-    output.append(r"\end{figure}")
     pp.setOutput("\n".join(output))
 
 def cite (pp):
@@ -3286,6 +3284,7 @@ DocumentSummaryBody = (
           preProcs  = ( (bibitem, ()), )),
     XProc(element   = "MediaLink",
           order     = XProc.ORDER_TOP_BACK,
+          suffix    = "\\end{center}\n\\end{figure}\n",
           preProcs  = ( (media, ()), )),
     XProc(element   = "Caption",
           order     = XProc.ORDER_PARENT_BACK,
