@@ -476,7 +476,7 @@ def openGroup(pp):
                     amount /= 25.4
                 elif widthType == "%":
                     widthType = "in"
-                    amount = usableSpace * amount / 100.1
+                    amount = usableSpace * amount / 100.0
                 elif widthType != "*":
                     raise cdr.Exception("Illegal ColWidth: %s" % col.width)
             except:
