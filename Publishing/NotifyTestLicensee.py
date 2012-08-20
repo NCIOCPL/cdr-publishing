@@ -8,18 +8,18 @@
 # had been added within the past two weeks and sends an internal 
 # notification to submit the licensee notification, if applicable.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2009-12-07        Volker Englisch
-# Last Modified:    $Date: 2009-06-04 21:44:10 $
+# Last Modified:    $Date$
 # 
-# $Id: CheckWithdrawn.py,v 1.10 2009-06-04 21:44:10 venglisc Exp $
+# $Id$
 # 
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib
 
 OUTPUTBASE     = cdr.BASEDIR + "/Output/NLMExport"
 WITHDRAWN_LIST = "WithdrawnFromPDQ.txt"
-LOGNAME        = "CheckWithdrawn.log"
+LOGNAME        = "CheckLicensees.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
 STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
 STR_TO         = "***REMOVED***"
