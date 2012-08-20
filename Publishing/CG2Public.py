@@ -64,7 +64,7 @@ class documentType:
         # approaching Job5999+
         # jobDirs = glob.glob('Job?????')
         # ------------------------------------------------------------
-        jobDirs = glob.glob('Job????')
+        jobDirs = glob.glob('Job?????')
         if not jobDirs:
             l.write("*** Error: No publishing directory found", 
                                                      stdout = True)
