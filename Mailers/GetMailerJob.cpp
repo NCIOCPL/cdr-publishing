@@ -13,6 +13,11 @@
  *
  * To compile/link (VS2003):
  *  cl /EHa /DWINVER=0x0501 /MD /D_AFXDLL=1 GetMailerJob.cpp /link /OPT:NOREF
+ *
+ * Make sure the client machine has the following DLLs installed:
+ *  MSVCR71.DLL
+ *  MSVCP71.DLL
+ *  MFC71.DLL
  */
 
 // System headers.
