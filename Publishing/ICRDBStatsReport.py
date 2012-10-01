@@ -395,10 +395,10 @@ LEFT OUTER JOIN query_term_pub dlm
           JOIN pub_proc_cg cg
             on d.id = cg.id
          WHERE d.active_status = 'A'
-           AND first_pub BETWEEN '%s' 
+           AND ISNULL(first_pub, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                OR
-               dlm.value BETWEEN '%s' 
+               ISNULL(dlm.value, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
     """ % (selection, startDate, endDate, startDate, endDate,
@@ -420,7 +420,7 @@ LEFT OUTER JOIN query_term_pub dlm
               JOIN pub_proc_cg cg
                 ON cg.id = d.id
              WHERE d.active_status = 'A'
-               AND first_pub BETWEEN '%s' 
+               AND ISNULL(first_pub, 0) BETWEEN '%s' 
                              AND dateadd(DAY, 1, '%s')
                    %s
 """ % (selection, startDate, endDate, orderBy)
@@ -443,7 +443,7 @@ LEFT OUTER JOIN query_term_pub dlm
               JOIN pub_proc_cg cg
                 ON cg.id = d.id
              WHERE d.active_status = 'A'
-               AND dlm.value BETWEEN '%s' 
+               AND ISNULL(dlm.value, 0) BETWEEN '%s' 
                              AND dateadd(DAY, 1, '%s')
                    %s
 """ % (selection, startDate, endDate,
@@ -461,7 +461,7 @@ LEFT OUTER JOIN query_term_pub dlm
           JOIN pub_proc_cg cg
             ON cg.id = d.id
          WHERE d.active_status = 'A'
-           AND first_pub BETWEEN '%s' 
+           AND ISNULL(first_pub, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate, orderBy)
@@ -481,9 +481,9 @@ LEFT OUTER JOIN query_term_pub dlm
                            '/DateLastModified'
          WHERE dt.name = '%s'
            AND d.active_status = 'A'
-           AND gtce.value BETWEEN '%s'
+           AND ISNULL(gtce.value, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
-            or gtcs.value BETWEEN '%s'
+            or ISNULL(gtcs.value, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, docType, startDate, endDate, startDate, endDate,
@@ -507,7 +507,7 @@ LEFT OUTER JOIN query_term_pub dlm
           JOIN pub_proc_cg cg
             ON cg.id = d.id
          WHERE t.path = '/Term/Definition/DefinitionText/@cdr:id'
-           AND d.first_pub BETWEEN '%s'
+           AND ISNULL(d.first_pub, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                %s
         """ % (selection, startDate, endDate,
@@ -530,10 +530,10 @@ LEFT OUTER JOIN query_term dlm
            JOIN pub_proc_cg cg
              ON cg.id = d.id
          WHERE d.active_status = 'A'
-           AND (first_pub BETWEEN '%s'
+           AND (ISNULL(first_pub, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                 OR
-                dlm.value BETWEEN '%s'
+                ISNULL(dlm.value, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                )
                %s
@@ -611,7 +611,7 @@ LEFT OUTER JOIN query_term_pub s
            AND gtc.value = 'Genetics'
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
-           AND d.first_pub BETWEEN '%s' 
+           AND ISNULL(d.first_pub, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -659,7 +659,7 @@ LEFT OUTER JOIN query_term_pub s
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
            AND dlm.value IS NULL
-           AND s.value BETWEEN '%s' 
+           AND ISNULL(s.value, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -691,7 +691,7 @@ LEFT OUTER JOIN query_term_pub s
            AND gtc.value = 'Genetics'
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
-           AND dlm.value BETWEEN '%s' 
+           AND ISNULL(dlm.value, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -715,7 +715,7 @@ LEFT OUTER JOIN query_term_pub s
          WHERE dt.name = 'Person'
            AND i.value ='Include'
            AND s.value = 'Active'
-           AND d.first_pub BETWEEN '%s' 
+           AND ISNULL(d.first_pub, 0) BETWEEN '%s' 
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -743,7 +743,7 @@ LEFT OUTER JOIN query_term_pub s
          WHERE dt.name = 'PDQBoardMemberInfo'
            AND d.active_status = 'A'
            AND a.value = 'Accepted'
-           AND t.value BETWEEN '%s' 
+           AND ISNULL(t.value, 0) BETWEEN '%s' 
                           AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -769,7 +769,7 @@ LEFT OUTER JOIN query_term_pub s
            AND left(w.node_loc, 12) = left(m.node_loc, 12)
          WHERE dt.name = 'Organization'
            AND d.active_status = 'A'
-           AND m.value BETWEEN '%s' 
+           AND ISNULL(m.value, 0) BETWEEN '%s' 
                           AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
