@@ -99,7 +99,7 @@ class PUP:
              AND c.path   = '/Person/PersonLocations/CIPSContact'
            WHERE q.doc_id = %s
              AND q.value  = '%s'
-        """ % (self.cdrId, self.persRole))
+        """ % (self.cdrId, self.persRole), timeout=300)
 
         rows = cursor.fetchall()
 
@@ -133,7 +133,7 @@ class PUP:
            WHERE q.path = '/Person/PersonLocations/CIPSContact'
              AND q.value = c.value
              AND q.doc_id = %s
-            """ % self.persId)
+            """ % self.persId, timeout=300)
 
             rows = cursor.fetchall()
 
