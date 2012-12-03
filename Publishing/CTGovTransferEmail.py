@@ -213,10 +213,10 @@ From: %s
 To: %s
 Subject: %s: %s
 """ % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
-       '*** Error: Program CheckCTGovTransfer failed!')
+       '*** Error: Program CTGovTransferEmail failed!')
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
-    mailBody      = "<b>Error running CheckCTGovTransfer.py</b><br>"
+    mailBody      = "<b>Error running CTGovTransferEmail.py</b><br>"
     mailBody     += "Most likely %s<br>" % msg
     mailBody     += "See log file for details."
 
