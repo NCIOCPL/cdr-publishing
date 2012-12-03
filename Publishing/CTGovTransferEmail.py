@@ -12,14 +12,14 @@
 # CTGovProtocols that have a transfer-block but the transfer-date is 
 # missing.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2010-05-03        Volker Englisch
 # Last Modified:    $
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovTransfer.py,v $
-# $Revision: 1.9 $
+# $Revision$
 #
-# $Id: CheckCTGovTransfer.py,v 1.9 2009-09-17 14:52:40 venglisc Exp $
+# $Id$
 #
 # BZIssue::4796 - Transfer notification email
 # BZIssue::4903 - Transfer Protocols without Transfer Date
@@ -97,7 +97,7 @@ class PUP:
              AND c.path   = '/Person/PersonLocations/CIPSContact'
            WHERE q.doc_id = %s
              AND q.value  = '%s'
-        """ % (self.cdrId, self.persRole))
+        """ % (self.cdrId, self.persRole), timeout=300)
 
         rows = cursor.fetchall()
 
@@ -131,7 +131,7 @@ class PUP:
            WHERE q.path = '/Person/PersonLocations/CIPSContact'
              AND q.value = c.value
              AND q.doc_id = %s
-            """ % self.persId)
+            """ % self.persId, timeout=300)
 
             rows = cursor.fetchall()
 
