@@ -12,6 +12,7 @@ import util, cgi
 
 fields = cgi.FieldStorage()
 bounce = fields.getvalue('bounce')
+debug = fields.getvalue('debug')
 conn = util.getConnection('emailers')
 cursor = conn.cursor()
 if bounce:
@@ -51,7 +52,7 @@ for (mailerId, cdrId, jobId, email, name, mailed,
                    mailerId)
     output.append(u"""\
    <tr>
-    <td><a href='cgsd.py?id=%s'>%d</a></td>
+    <td><a href='cgsd.py?id=%s%s'>%d</a></td>
     <td>%d</td>
     <td>%d</td>
     <td>%s</td>
@@ -60,8 +61,9 @@ for (mailerId, cdrId, jobId, email, name, mailed,
     <td>%s</td>
     <td>%s</td>
    </tr>
-""" % (util.base36((mailerId << 32) + cdrId), mailerId, cdrId, jobId, email,
-       cgi.escape(name), mailed, completed, bounced))
+""" % (util.base36((mailerId << 32) + cdrId), debug and u"&debug=1" or u"",
+       mailerId, cdrId, jobId, email, cgi.escape(name), mailed, completed,
+       bounced))
 output.append(u"""\
   </table>
  </body>
