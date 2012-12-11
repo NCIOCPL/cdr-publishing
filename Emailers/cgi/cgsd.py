@@ -12,6 +12,7 @@
 import cgi, lxml.etree as etree, bz2, util, datetime
 
 SENDER = 'GeneticsDirectory@cancer.gov'
+DEBUGGING = False
 
 def yn(flag): return flag and u'Yes' or u'No'
 
@@ -317,16 +318,17 @@ def showForm(fields):
         trackerId = mailerId >> 32
     #lookupValues = LookupValues()
     gp = GP(trackerId, cdrId)
-    if gp.completed:
-        bail("The review of this set of information has already been "
-             "completed.")
-        return
-    elif gp.bounced:
-        bail("This mailer has been marked as 'Return To Sender'")
-        return
-    elif gp.expired:
-        bail("This mailer is no longer available")
-        return
+    if not DEBUGGING:
+        if gp.completed:
+            bail("The review of this set of information has already been "
+                 "completed.")
+            return
+        elif gp.bounced:
+            bail("This mailer has been marked as 'Return To Sender'")
+            return
+        elif gp.expired:
+            bail("This mailer is no longer available")
+            return
     form = [u"""\
    <form action='cgsd.py' method='POST'>
     <input type='hidden' name='tid' value='%d' />
@@ -814,25 +816,25 @@ Content-type: text/html; charset=utf-8
   <div id='red-stripe'>&nbsp;</div>
   <div id='grey-stripe'>&nbsp;</div>
   <div id='wrapper'>
-   <img src='@@IMAGES@@/nci-cgsd-banner.jpg' />
+   <img src='images/nci-cgsd-banner.jpg' />
 """]
     page.append(payload)
     page.append(u"""\
    <div id='footer'>
     <a href='http://www.cancer.gov/'><img
-       src='http://pdqupdate.cancer.gov/PDQUpdate/ctsimages/footer_nci.gif'
+       src='images/footer_nci.gif'
        width='63' height='31'
        alt='National Cancer Institute' border='0'></a>
     <a href='http://www.dhhs.gov/'><img
-       src='http://pdqupdate.cancer.gov/PDQUpdate/ctsimages/footer_hhs.gif' 
+       src='images/footer_hhs.gif' 
        width='39' height='31'
        alt='Department of Health and Human Services' border='0'></a>
     <a href='http://www.nih.gov/'><img
-       src='http://pdqupdate.cancer.gov/PDQUpdate/ctsimages/footer_nih.gif'
+       src='images/footer_nih.gif'
        width='46' height='31'
        alt='National Institutes of Health' border='0'></a>
     <a href='http://www.usa.gov/'><img
-       src='http://pdqupdate.cancer.gov/PDQUpdate/ctsimages/footer_usagov.gif' 
+       src='images/footer_usagov.gif' 
        width='91' height='31'
        alt='USA.gov' border='0'></a>
     <br />&nbsp;
@@ -840,7 +842,7 @@ Content-type: text/html; charset=utf-8
   </div>
  </body>
 </html>""")
-    print util.fillPlaceholders(u"".join(page)).encode('utf-8')
+    print u"".join(page).encode('utf-8')
 
 def saving(fields):
     return fields.getvalue('buttontype') in ('changed', 'unchanged')
@@ -865,7 +867,10 @@ http://%s%s/ShowGPChanges.py?id=%d
     sayThankYou()
 
 def main():
+    global DEBUGGING
     fields = cgi.FieldStorage()
+    if fields.getvalue('debug'):
+        DEBUGGING = True
     if saving(fields):
         save(fields)
     else:
