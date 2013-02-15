@@ -122,12 +122,15 @@ Access-Control-Allow-Methods: POST, GET, OPTIONS
             lines.append("%s=%s" % (e, os.environ[e]))
         lines.append("")
         try:
-            f = open('d:/cdr/log/WebService.log', 'a')
+            f = open('/weblogs/glossifier/WebService.log', 'a')
         except:
             try:
-                f = open('/tmp/WebService.log', 'a')
+                f = open('d:/cdr/log/WebService.log', 'a')
             except:
-                return
+                try:
+                    f = open('/tmp/WebService.log', 'a')
+                except:
+                    return
         f.write("\n".join(lines) + "\n")
         f.close()
 
