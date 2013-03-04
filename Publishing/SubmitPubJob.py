@@ -66,6 +66,10 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
+if cdr.isProdHost():
+    waitTotal = 32400  #  9.0 hours
+else:
+    waitTotal = 45000  # 12.5 hours
 
 testMode   = None
 fullMode   = None
@@ -320,10 +324,10 @@ try:
                                                  stdout=True)
 
             #if counter * wait > 23000:
-            if counter * wait > 28800:
+            if counter * wait > waitTotal:
                 l.write("*** Publishing job failed to finish!!!", 
                                                             stdout=True)
-                l.write("*** Completion expected in under 20,000 sec", 
+                l.write("*** Completion exceeded maximum time allowed", 
                                                             stdout = True)
                 sys.exit(1)
 
