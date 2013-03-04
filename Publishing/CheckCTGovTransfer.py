@@ -474,6 +474,7 @@ def sendEmailReport(messageBody, region='US'):
     else:
         if region == 'US':
             strTo = cdr.getEmailList('CTGov Transfer Notification')
+            strTo.append(u'***REMOVED***')
             strTo.append(u'register@clinicaltrials.gov')
         else:
             strTo = cdr.getEmailList('CTGov Transfer Notification NoUS')
