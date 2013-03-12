@@ -14,7 +14,7 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: NLMExport.py,v 1.8 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.7  2006/05/22 23:01:28  venglisc
 # Modified the script to run the NlmClinicalStudies.xsl filter from the
