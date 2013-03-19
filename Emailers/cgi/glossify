@@ -10,7 +10,7 @@
 #
 #----------------------------------------------------------------------
 
-import sys, xml.dom.minidom, WebService, time, re, MySQLdb, cgi
+import sys, xml.dom.minidom, WebService, time, re, MySQLdb, cgi, cdrutil
 
 LOG_LEVEL  = 1
 STANDALONE = False
@@ -18,7 +18,10 @@ STANDALONE = False
 def debugWrite(what, logLevel = 1):
     if logLevel <= LOG_LEVEL:
         try:
-            logFile = open('/tmp/glossifier.log', 'a')
+            if cdrutil.getEnvironment() == 'CBIIT':
+                logFile = open('/weblogs/glossifier/glossifier.log', 'a')
+            else:
+                logFile = open('/tmp/glossifier.log', 'a')
             now     = time.strftime("%Y-%m-%d %H:%M:%S")
             logFile.write("%s: %s\n" % (now, what))
             logFile.close()
@@ -70,9 +73,19 @@ def buildRegex(names, languages, dictionaries):
     return u"(?<!\\w)(%s)(?!\\w)" % regexNames
 
 def loadNames():
-    conn = MySQLdb.connect(user = 'glossifier',
-                           passwd = '***REMOVED***',
-                           db = 'glossifier')
+    if cdrutil.getEnvironment() == 'CBIIT':
+        h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier(),
+                            filename = '/etc/cdrapphosts.rc')
+        conn = MySQLdb.connect(user = 'glossifier',
+                               host = h.host['DBNIX'][0], #'***REMOVED***-d',
+                               port = 3600,
+                               passwd = '***REMOVED***',
+                               db = 'glossifier')
+    else:
+        conn = MySQLdb.connect(user = 'glossifier',
+                               passwd = '***REMOVED***',
+                               db = 'glossifier')
+
     cursor = conn.cursor()
     cursor.execute("SELECT terms_dict FROM terms")
     return eval(cursor.fetchall()[0][0].strip())
@@ -249,3 +262,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

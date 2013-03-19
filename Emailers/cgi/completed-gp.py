@@ -6,9 +6,9 @@
 # Returns XML document for GP mailers that need to be recorded.
 #
 #----------------------------------------------------------------------
-import util, lxml.etree as etree
+import cdrutil, lxml.etree as etree
 
-conn = util.getConnection()
+conn = cdrutil.getConnection()
 cursor = conn.cursor()
 cursor.execute("""\
     SELECT id, bounced, completed, xml <> original

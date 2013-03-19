@@ -5,11 +5,12 @@
 # $Id$
 #
 # Genetics Professional electronic mailer interface.
+# cgsd = Cancer Genetics Services Directory
 #
 # BZIssue::4630
 #
 #----------------------------------------------------------------------
-import cgi, lxml.etree as etree, bz2, util, datetime
+import cgi, lxml.etree as etree, bz2, cdrutil, datetime
 
 SENDER = 'GeneticsDirectory@cancer.gov'
 DEBUGGING = False
@@ -52,7 +53,7 @@ class GP:
         self.syndromes = set()
         self.societies = set()
         if fields is not None:
-            fields = util.wrapFieldsInMap(fields)
+            fields = cdrutil.wrapFieldsInMap(fields)
             self.trackerId = int(fields.get('tid'))
             self.personId = int(fields.get('pid'))
             self.job = int(fields.get('jid'))
@@ -77,7 +78,7 @@ class GP:
             GP.getFormValues(self.syndromes, fields, 'syn')
             GP.getFormValues(self.societies, fields, 'memb')
         else:
-            conn = util.getConnection('emailers')
+            conn = cdrutil.getConnection('emailers')
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT xml, email, name, mailed, job, completed, bounced
@@ -283,7 +284,7 @@ class GP:
     class LookupValues:
         def __init__(self, jobId):
             self.values = {}
-            conn = util.getConnection('dropbox')
+            conn = cdrutil.getConnection('dropbox')
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT lookup_values
@@ -688,7 +689,7 @@ def showForm(fields):
 
 def saveChanges(gp):
     serialization = etree.tostring(gp.toElement())
-    conn = util.getConnection('emailers')
+    conn = cdrutil.getConnection('emailers')
     cursor = conn.cursor()
     cursor.execute("""\
         UPDATE gp_emailer
@@ -698,7 +699,7 @@ def saveChanges(gp):
     conn.commit()
 
 def markCompletion(gp):
-    conn = util.getConnection('emailers')
+    conn = cdrutil.getConnection('emailers')
     cursor = conn.cursor()
     cursor.execute("UPDATE gp_emailer SET completed = NOW() WHERE id = %s",
                    gp.trackerId)
@@ -816,25 +817,25 @@ Content-type: text/html; charset=utf-8
   <div id='red-stripe'>&nbsp;</div>
   <div id='grey-stripe'>&nbsp;</div>
   <div id='wrapper'>
-   <img src='images/nci-cgsd-banner.jpg' />
+   <img src='/images/nci-cgsd-banner.jpg' />
 """]
     page.append(payload)
     page.append(u"""\
    <div id='footer'>
     <a href='http://www.cancer.gov/'><img
-       src='images/footer_nci.gif'
+       src='/images/footer_nci.gif'
        width='63' height='31'
        alt='National Cancer Institute' border='0'></a>
     <a href='http://www.dhhs.gov/'><img
-       src='images/footer_hhs.gif' 
+       src='/images/footer_hhs.gif' 
        width='39' height='31'
        alt='Department of Health and Human Services' border='0'></a>
     <a href='http://www.nih.gov/'><img
-       src='images/footer_nih.gif'
+       src='/images/footer_nih.gif'
        width='46' height='31'
        alt='National Institutes of Health' border='0'></a>
     <a href='http://www.usa.gov/'><img
-       src='images/footer_usagov.gif' 
+       src='/images/footer_usagov.gif' 
        width='91' height='31'
        alt='USA.gov' border='0'></a>
     <br />&nbsp;
@@ -851,19 +852,25 @@ def save(fields):
     gp = GP(fields=fields)
     if fields.getvalue('buttontype') == 'changed':
         saveChanges(gp)
+        if cdrutil.getEnvironment() == 'OCE':
+            url = 'http://%s%s/' % (cdrutil.WEB_HOST, cdrutil.CGI_BASE)
+        else:
+            h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier())
+            url = 'https://%s.%s/cgi-bin/' % (h.host['EMAILERSC'][0],
+                                              h.host['EMAILERSC'][1])
         message = u"""\
 GP mailer %d (Person CDR%d) was reviewed and submitted with changes
 which can be reviewed at:
 
-http://%s%s/ShowGPChanges.py?id=%d
-""" % (gp.trackerId, gp.personId, util.WEB_HOST, util.CGI_BASE, gp.trackerId)
+%s/ShowGPChanges.py?id=%d
+""" % (gp.trackerId, gp.personId, url, gp.trackerId)
     else:
         markCompletion(gp)
         message = ("GP mailer %d (Person CDR%d) was reviewed and submitted "
                    "with no changes" % (gp.trackerId, gp.personId))
     recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)# '***REMOVED***')
     subject = "GP mailer %d" % gp.trackerId
-    util.sendMail(SENDER, recips, subject, message)
+    cdrutil.sendMail(SENDER, recips, subject, message)
     sayThankYou()
 
 def main():

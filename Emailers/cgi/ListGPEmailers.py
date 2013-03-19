@@ -8,12 +8,12 @@
 # and to mark mailers which have been returned to sender ("bounced").
 #
 #----------------------------------------------------------------------
-import util, cgi
+import cdrutil, cgi
 
 fields = cgi.FieldStorage()
 bounce = fields.getvalue('bounce')
 debug = fields.getvalue('debug')
-conn = util.getConnection('emailers')
+conn = cdrutil.getConnection('emailers')
 cursor = conn.cursor()
 if bounce:
     cursor.execute("""\
@@ -61,7 +61,7 @@ for (mailerId, cdrId, jobId, email, name, mailed,
     <td>%s</td>
     <td>%s</td>
    </tr>
-""" % (util.base36((mailerId << 32) + cdrId), debug and u"&debug=1" or u"",
+""" % (cdrutil.base36((mailerId << 32) + cdrId), debug and u"&debug=1" or u"",
        mailerId, cdrId, jobId, email, cgi.escape(name), mailed, completed,
        bounced))
 output.append(u"""\
@@ -69,4 +69,4 @@ output.append(u"""\
  </body>
 </html>
 """)
-util.sendPage(u"".join(output))
+cdrutil.sendPage(u"".join(output))

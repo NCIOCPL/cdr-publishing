@@ -261,10 +261,16 @@
   <w:port                  name = 'GlossifierSoap'
                         binding = 'GlossifierSoap'>
    <soap:address       location = 'http://PDQUpdate.cancer.gov/u/glossify'/>
+   <!-- To be replaced with line below in CBIIT DEV environment
+   <soap:address       location = 'http://***REMOVED***-w/cgi-bin/glossify'/>
+   -->
   </w:port>
   <w:port                  name = 'GlossifierSoap12'
                         binding = 'GlossifierSoap12'>
    <soap12:address     location = 'http://PDQUpdate.cancer.gov/u/glossify'/>
+   <!-- To be replaced with line below in CBIIT DEV environment
+   <soap12:address     location = 'http://***REMOVED***-w/cgi-bin/glossify'/>
+   -->
   </w:port>
  </w:service>
 

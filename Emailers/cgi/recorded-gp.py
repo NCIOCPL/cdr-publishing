@@ -6,13 +6,13 @@
 # Sets the recorded column for a row in the gp_emailer table.
 #
 #----------------------------------------------------------------------
-import util, cgi
+import cdrutil, cgi
 
 fields = cgi.FieldStorage()
 mailerId = fields.getvalue('mailerId')
 recorded = fields.getvalue('recorded')
 try:
-    conn = util.getConnection()
+    conn = cdrutil.getConnection()
     cursor = conn.cursor()
     cursor.execute("UPDATE gp_emailer SET recorded = %s WHERE id = %s",
                    (recorded, mailerId))

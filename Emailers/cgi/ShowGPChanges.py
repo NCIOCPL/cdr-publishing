@@ -9,7 +9,7 @@
 # mailer interface by the GP.
 #
 #----------------------------------------------------------------------
-import cgi, util, difflib, lxml.etree as etree
+import cgi, cdrutil, difflib, lxml.etree as etree
 
 def show(me):
     print """\
@@ -28,7 +28,7 @@ def addColor(line, color):
 def main():
     fields = cgi.FieldStorage()
     mailerId = fields.getvalue('id')
-    cursor = util.getConnection('emailers').cursor()
+    cursor = cdrutil.getConnection('emailers').cursor()
     cursor.execute("SELECT original, xml FROM gp_emailer WHERE id = %s",
                    mailerId)
     original, new = cursor.fetchone()
