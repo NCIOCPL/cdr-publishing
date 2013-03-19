@@ -6,14 +6,14 @@
 # Script to submit email notification as part of the automated 
 # publishing.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2007-09-07 22:30:42 $
+# Last Modified:    $Date$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/PubEmail.py,v $
-# $Revision: 1.3 $
+# $Revision$
 #
-# $Id: PubEmail.py,v 1.3 2007-09-07 22:30:42 venglisc Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.2  2007/08/10 16:38:25  venglisc
 # Finished initial version of email notification script.
@@ -46,7 +46,10 @@ emailDL.sort()
 # Set the variables and send the message
 # --------------------------------------
 sender    = "operator@cips.nci.nih.gov"
-subject   = "%s: %s" %(cdr.PUB_NAME.capitalize(), sys.argv[1])
+if cdr.h.org == 'OCE':
+    subject   = "%s: %s" %(cdr.PUB_NAME.capitalize(), sys.argv[1])
+else:
+    subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, sys.argv[1])
 message   = """\
 Automated Publishing Email Notification:
 
