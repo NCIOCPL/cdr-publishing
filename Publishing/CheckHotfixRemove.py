@@ -11,14 +11,14 @@
 # a select group if one (or more) document(s) have been identified
 # to be removed from Cancer.gov.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2010-06-21        Volker Englisch
 # Last Modified:    $
 # 
 # $Source: $
-# $Revision: $
+# $Revision$
 #
-# $Id: $
+# $Id$
 #
 # BZIssue::4732 - Change in logic for pulling documents from Cancer.gov
 #

@@ -57,6 +57,13 @@ elif cdr.PUB_NAME.upper() == "FRANCK":
 else:
     host   = cdr.PROD_HOST
 
+if cdr.h.org == 'OCE':
+    host = '%s.%s' % (cdr.h.host['APP'][0], cdr.h.host['APP'][1])
+    url  = 'http://%s' % host
+else:
+    host = '%s.%s' % (cdr.h.host['APPC'][0], cdr.h.host['APPC'][1])
+    url  = 'https://%s' % host
+
 # Setting directory and file names
 # --------------------------------
 log        = "d:\\cdr\\log\\Jobmaster.log" 
@@ -410,11 +417,11 @@ try:
         # these email messages to the users.  Overwriting the emailDL
         # group to a developers/testers list or recipients
         # -----------------------------------------------------------
-        if not cdr.PUB_NAME.upper() == 'BACH':
+        if not cdr.h.tier == 'PROD':
             emailDL = cdr.getEmailList('Test Publishing Notification')
 
-        subject = '%s: Status and Error Report for %s Publishing' % (
-                                                  cdr.PUB_NAME.capitalize(),
+        subject = '%s-%s: Status and Error Report for %s Publishing' % (
+                                                  cdr.h.org, cdr.h.tier,
                                                   addSubj)
         emailDL.sort()
         if not len(emailDL):
@@ -427,22 +434,22 @@ try:
 Status and Error reports for the latest %s publishing/push jobs:
 
 Publishing Job Summary Report:
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=Report&Session=Guest
+   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=Report&Session=Guest
 
 Error Report of the publishing job:
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=error
+   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=error
 
 Warnings Report of the publishing job
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=warning
+   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=warning
 
 Publishing Job Output:
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s
+   %s/cgi-bin/cdr/PubStatus.py?id=%s
 
 Push Job Output:
-   http://%s/cgi-bin/cdr/PubStatus.py?id=%s
+   %s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (addSubj.lower(), host, pushId, host, submit[0], host, submit[0], 
-                     host, submit[0], host, pushId) 
+""" % (addSubj.lower(), url, pushId, url, submit[0], url, submit[0], 
+                     url, submit[0], url, pushId) 
 
         notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
 
