@@ -323,12 +323,18 @@ SELECT MIN(pub_proc)
                     "Cherryl Villanueva <***REMOVED***>"]
                     #"Kimberly Eckley <***REMOVED***>",
 
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                    'Published Protocols previously removed from PDQ/CT.gov')
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                    'Published Protocols previously removed from PDQ/CT.gov')
+    
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (strFrom, ", ".join(strTo), cdr.PUB_NAME.capitalize(),
-       'Published Protocols previously removed from PDQ/CT.gov')
+%s
+""" % (strFrom, ", ".join(strTo), subject)
 
     mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
 

@@ -222,12 +222,18 @@ def getLastProtocolList(directory = cdr.BASEDIR + '/Output/CTGovTransfer'):
 def sendErrorMessage(msg):
     # We want to send an email so that the query doesn't silently fail
     # ----------------------------------------------------------------
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                    '*** Error: Program CheckCTGovTransfer failed!')
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                    '*** Error: Program CheckCTGovTransfer failed!')
+    
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
-       '*** Error: Program CheckCTGovTransfer failed!')
+%s
+""" % (STR_FROM, '***REMOVED***', subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
     mailBody      = "<b>Error running CheckCTGovTransfer.py</b><br>"

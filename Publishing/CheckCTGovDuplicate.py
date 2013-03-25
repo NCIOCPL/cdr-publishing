@@ -328,12 +328,18 @@ try:
         strTo.append(u'Cherryl Villanueva <***REMOVED***>')
         strTo.append(u'Alexandra Valentine <***REMOVED***>')
 
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                    'Transfer Ownership to NCI')
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                    'Transfer Ownership to NCI')
+    
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (strFrom, ", ".join(strTo), cdr.PUB_NAME.capitalize(),
-       'Transfer Ownership to NCI')
+%s
+""" % (strFrom, ", ".join(strTo), subject)
 
     mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
 

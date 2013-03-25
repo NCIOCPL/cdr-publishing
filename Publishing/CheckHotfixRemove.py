@@ -107,12 +107,18 @@ def parseArguments(args):
 def sendErrorMessage(msg):
     # We want to send an email so that the query doesn't silently fail
     # ----------------------------------------------------------------
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                    '*** Error: Program CheckHotfixRemove failed!')
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                    '*** Error: Program CheckHotfixRemove failed!')
+    
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
-       '*** Error: Program CheckHotfixRemove failed!')
+%s
+""" % (STR_FROM, '***REMOVED***', subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
     mailBody      = "<b>Error running HotfixRemove.py</b><br>"

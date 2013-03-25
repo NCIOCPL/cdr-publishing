@@ -158,7 +158,12 @@ l.write('Media Documents Updated: %s' % mediaChanges, stdout = True)
 machine  = socket.gethostname().split('.')[0]
 server   = '%s.nci.nih.gov' % machine
 sender   = '***REMOVED***'
-subject  = '%s: List of Updated Media Documents' % machine.upper()
+if cdr.h.org == 'OCE':
+    subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                'List of Updated Media Documents')
+else:
+    subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                'List of Updated Media Documents')
 
 body     = """
 <html>
