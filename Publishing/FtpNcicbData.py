@@ -8,14 +8,14 @@
 # This Terminology file contains slightly different data than the 
 # licensee data.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2009-03-06        Volker Englisch
-# Last Modified:    $Date: 2009-09-25 18:39:53 $
+# Last Modified:    $Date$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/FtpNcicbData.py,v $
-# $Revision: 1.3 $
+# $Revision$
 #
-# $Id: FtpNcicbData.py,v 1.3 2009-09-25 18:39:53 venglisc Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.2  2009/03/26 20:11:37  venglisc
 # Modified to indicate a TEST run in file name.

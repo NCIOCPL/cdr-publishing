@@ -9,14 +9,14 @@
 # previously handled by the NLM (ClinicalTrials.gov).
 # Send out a notification about this document.
 # ---------------------------------------------------------------------
-# $Author: venglisc $
+# $Author$
 # Created:          2009-01-07        Volker Englisch
 # Last Modified:    $$
 # 
 # $Source: /usr/local/cvsroot/cdr/Publishing/CheckCTGovDuplicate.py,v $
-# $Revision: 1.4 $
+# $Revision$
 #
-# $Id: CheckCTGovDuplicate.py,v 1.4 2009-06-04 21:44:10 venglisc Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.3  2009/03/23 17:47:40  venglisc
 # Needed to increase the default time for the SQL query to run. (Bug 4429)

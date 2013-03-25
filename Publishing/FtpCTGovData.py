@@ -4,7 +4,7 @@
 #            ==============
 # Submit the CTGovExport data to the CIPSFTP Server.
 # 
-# $Id: FtpCTGovData.py,v 1.3 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.2  2007/08/10 16:50:15  venglisc
 # Finalized copy of FTP script to copy vendor/NLM data.

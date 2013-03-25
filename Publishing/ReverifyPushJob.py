@@ -11,7 +11,7 @@
 #
 # BZIssue::5087 - [Internal] Create Re-Verification Tool
 #
-# $Id: $
+# $Id$
 #
 # ========================================================================
 import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk, optparse
