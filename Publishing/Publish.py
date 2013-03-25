@@ -2,7 +2,7 @@
 #
 # Bridge PublishingService.py to cdrpub.py
 #
-# $Id: Publish.py,v 1.6 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.5  2004/06/01 20:31:56  bkline
 # Caught SystemExit, thrown by the mailers.

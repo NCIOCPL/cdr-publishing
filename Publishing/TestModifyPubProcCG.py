@@ -1,7 +1,7 @@
 #################################################################
 # Modify the pub_proc_cg table to support testing of nightly publishing
 #
-# $Id: TestModifyPubProcCG.py,v 1.2 2007-05-11 03:50:54 ameyer Exp $
+# $Id$
 #
 # $Log: not supported by cvs2svn $
 # Revision 1.1  2007/04/19 23:05:22  ameyer

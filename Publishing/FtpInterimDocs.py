@@ -19,7 +19,7 @@
 # The original name of this program was FtpHotfixDocs.py but got
 # renamed after the update process got named 'Interim Update'.
 #
-# $Id: FtpInterimDocs.py,v 1.4 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.3  2006/06/14 21:30:10  venglisc
 # The FTP process has now been simplified because we are creating a comressed

@@ -16,7 +16,7 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpHotfixDocs.py,v 1.7 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.6  2005/03/04 20:44:51  venglisc
 # Fixed problem of files not being copied correctly because we were sitting

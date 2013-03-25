@@ -12,7 +12,7 @@
 # Once the documents have been packaged and copied to the FTP server 
 # there is a post-process that will have to run on the FTP server.
 #
-# $Id: FtpVendorDocs.py,v 1.2 2008-06-03 21:43:05 bkline Exp $
+# $Id$
 # $Log: not supported by cvs2svn $
 # Revision 1.1  2004/12/16 22:47:44  venglisc
 # Initial version of script to ftp monthly production data to CIPSFTP.
