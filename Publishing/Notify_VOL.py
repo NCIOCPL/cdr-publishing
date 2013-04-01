@@ -156,14 +156,8 @@ l.write('Media Documents Updated: %s' % mediaChanges, stdout = True)
 # Setting up email message to be send to users
 # --------------------------------------------
 machine  = socket.gethostname().split('.')[0]
-server   = '%s.nci.nih.gov' % machine
 sender   = '***REMOVED***'
-if cdr.h.org == 'OCE':
-    subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
-                'List of Updated Media Documents')
-else:
-    subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
-                'List of Updated Media Documents')
+subject = cdr.emailSubject('List of Updated Media Documents')
 
 body     = """
 <html>
@@ -173,7 +167,7 @@ body     = """
  <body>
   <h3>Updated CDR Media Documents</h3>
    Click the link to view the latest 
-   <a href="http://%s.nci.nih.gov/cgi-bin/cdr/""" % machine.lower()
+   <a href="%s/cgi-bin/cdr/""" % cdr.CBIIT_NAMES[2]
 body   += """PubStatsByDate.py?session=cdrguest&VOL=Y&doctype=Media&"""
 body   += """datefrom=%s&dateto=%s">""" % (startDate, endDate)
 body   += """Media Change Report</a> """
