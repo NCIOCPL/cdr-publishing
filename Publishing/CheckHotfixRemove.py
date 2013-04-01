@@ -381,9 +381,9 @@ try:
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(),
-       'Document Candidates to be removed from Cancer.gov')
+Subject: %s
+""" % (STR_FROM, u', '.join(strTo), 
+       cdr.emailSubject('Document Candidates to be removed from Cancer.gov'))
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
 
