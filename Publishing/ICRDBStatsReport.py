@@ -307,8 +307,8 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
         if repType == 'IMG':
             selection = """\
            d.id as "CDR-ID", t.value as "Title",
-           d.first_pub as "Publishing Date", dlm.value AS "DLM" """
-            orderBy = "ORDER BY d.first_pub, dlm.value"
+           d.first_pub as "Publishing Date", pp.started AS "PubDate" """
+            orderBy = "ORDER BY d.first_pub, pp.started"
         elif repType == 'MTG':
             selection = """\
            d.id as "CDR-ID", d.title as "Title",
@@ -521,19 +521,22 @@ LEFT OUTER JOIN query_term_pub dlm
             ON d.id = e.doc_id
            and e.path = '/Media/PhysicalMedia' +
                         '/ImageData/ImageEncoding'
-LEFT OUTER JOIN query_term dlm
-            ON d.id = dlm.doc_id
-           AND dlm.path = '/Media/DateLastModified'
            JOIN query_term t
              ON t.doc_id = d.id
             AND t.path = '/Media/MediaTitle'
            JOIN pub_proc_cg cg
              ON cg.id = d.id
+           JOIN pub_proc pp
+             ON pp.id = cg.pub_proc
+           JOIN pub_proc_doc ppd
+             ON ppd.doc_id = cg.id
+            AND ppd.pub_proc = pp.id
+            AND ppd.failure is NULL
          WHERE d.active_status = 'A'
            AND (ISNULL(first_pub, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                 OR
-                ISNULL(dlm.value, 0) BETWEEN '%s'
+                ISNULL(pp.started, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                )
                %s
@@ -721,6 +724,8 @@ LEFT OUTER JOIN query_term_pub s
 """ % (selection, startDate, endDate,
        orderBy)
     elif docType == 'PDQBoardMemberInfo':
+        # Note: some values of the InvitationDate are formatted wrong
+        #       as MM-DD-YYYY instead of YYYY-MM-DD
         query = """\
         SELECT %s
           FROM document d
@@ -740,13 +745,18 @@ LEFT OUTER JOIN query_term_pub s
            AND n.path = '/PDQBoardMemberInfo/BoardMembershipDetails' +
                         '/BoardName'
            AND left(n.node_loc, 4) = left(a.node_loc, 4)
+          JOIN query_term i
+            ON i.doc_id = a.doc_id
+           AND i.path = '/PDQBoardMemberInfo/BoardMembershipDetails' +
+                        '/InvitationDate'
          WHERE dt.name = 'PDQBoardMemberInfo'
            AND d.active_status = 'A'
            AND a.value = 'Accepted'
            AND ISNULL(t.value, 0) BETWEEN '%s' 
                           AND dateadd(DAY, 1, '%s')
+           AND i.value > dateadd(Day, -1, dateadd(MONTH, -6, '%s'))
                %s
-""" % (selection, startDate, endDate,
+""" % (selection, startDate, endDate, startDate, 
        orderBy)
     elif docType == 'Organization':
         query = """\
@@ -1182,11 +1192,17 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in images:
                 isInTimeFrame = checkTimeFrame(i[2:], startDate, endDate)
 
+                #if (type(i[2]) in (type(u''), type('')) 
+                #    and isInTimeFrame[0]):
+                #    countImage['imgnew'] += 1
+                #if (type(i[3]) in (type(u''), type('')) 
+                #    and isInTimeFrame[1]):
+                #    countImage['imgrev'] += 1
+
                 if (type(i[2]) in (type(u''), type('')) 
                     and isInTimeFrame[0]):
                     countImage['imgnew'] += 1
-                if (type(i[3]) in (type(u''), type('')) 
-                    and isInTimeFrame[1]):
+                else:
                     countImage['imgrev'] += 1
 
     # New Audio Files
