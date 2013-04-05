@@ -92,8 +92,7 @@ def parseArguments(args):
 # --------------------------------------------------
 l = cdr.Log(LOGNAME)
 l.write("ReverifyPubJob - Started", stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout = True)
-print ''
+l.write('Arguments: %s' % sys.argv)
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
