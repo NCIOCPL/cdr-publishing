@@ -172,24 +172,24 @@ try:
     cmd = os.path.join(UBIN, 'ImportCtrpSites.py %s' % runmode)
 
     l.write('Command temporarily disabled...\n%s' % cmd, stdout = True)
-    l.write('Submitting command...\n%s' % cmd, stdout = True)
+    ### l.write('Submitting command...\n%s' % cmd, stdout = True)
 
-    # cmd = 'ls'
-    myCmd = cdr.runCommand(cmd)
+    ### # cmd = 'ls'
+    ### myCmd = cdr.runCommand(cmd)
 
-    print "Code: ", myCmd.code
-    print "Outp: ", myCmd.output.find('Failure')
+    ### print "Code: ", myCmd.code
+    ### print "Outp: ", myCmd.output.find('Failure')
 
-    if myCmd.code or myCmd.output.find('Failure') > 0:
-        l.write('*** Error submitting command:\n%s' % myCmd.output,
-                 stdout = True)
-        subject = '*** Error in ImportCtrpSites.py'
-        message = 'Program returned with error code.  Please see logfile.'
-        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-                                        (subject, message))
-        # cmd = 'ls'
-        myCmd   = cdr.runCommand(cmd)
-        #raise Exception
+    ### if myCmd.code or myCmd.output.find('Failure') > 0:
+    ###     l.write('*** Error submitting command:\n%s' % myCmd.output,
+    ###              stdout = True)
+    ###     subject = '*** Error in ImportCtrpSites.py'
+    ###     message = 'Program returned with error code.  Please see logfile.'
+    ###     cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+    ###                                     (subject, message))
+    ###     # cmd = 'ls'
+    ###     myCmd   = cdr.runCommand(cmd)
+    ###     #raise Exception
 
 except:
     l.write('*** Error: CTRP Import Job failed', stdout = True)
