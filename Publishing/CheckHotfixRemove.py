@@ -378,12 +378,18 @@ try:
         strTo    = cdr.getEmailList('Hotfix Remove Notification')
         #strTo.append(u'register@clinicaltrials.gov')
 
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
+                    'Document Candidates to be removed from Cancer.gov')
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
+                    'Document Candidates to be removed from Cancer.gov')
+    
     mailHeader   = """\
 From: %s
 To: %s
-Subject: %s
-""" % (STR_FROM, u', '.join(strTo), 
-       cdr.emailSubject('Document Candidates to be removed from Cancer.gov'))
+%s
+""" % (STR_FROM, u', '.join(strTo), subject))
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
 
