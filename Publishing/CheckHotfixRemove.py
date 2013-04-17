@@ -117,7 +117,7 @@ def sendErrorMessage(msg):
     mailHeader   = """\
 From: %s
 To: %s
-%s
+Subject: %s
 """ % (STR_FROM, '***REMOVED***', subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
@@ -388,7 +388,7 @@ try:
     mailHeader   = """\
 From: %s
 To: %s
-%s
+Subject: %s
 """ % (STR_FROM, u', '.join(strTo), subject))
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
