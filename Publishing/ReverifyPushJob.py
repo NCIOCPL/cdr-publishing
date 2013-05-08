@@ -425,5 +425,5 @@ except SystemExit:
 except:
     l.write('Unknown failure', tback = True, stdout = True)
 
-l.write("\nReverifyPubJob - Finished", stdout = True)
+l.write("ReverifyPubJob - Finished", stdout = True)
 sys.exit(0)
