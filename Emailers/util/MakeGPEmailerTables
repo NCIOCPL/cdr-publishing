@@ -67,6 +67,8 @@ print "dropbox.gp_emailer_job table created"
 #    mailed: when the emailer notification went out
 #   bounced: when we learned that the mailer was undeliverable
 # completed: when the recipient responded
+#  recorded: when the CDR tracker document was updated to reflect the
+#            GP's response (or failure to respond)
 #----------------------------------------------------------------------
 cursor.execute("""\
 CREATE TABLE emailers.gp_emailer
@@ -79,7 +81,8 @@ CREATE TABLE emailers.gp_emailer
     original MEDIUMTEXT   NOT NULL,
       mailed DATETIME         NULL,
      bounced DATETIME         NULL,
-   completed DATETIME         NULL)
+   completed DATETIME         NULL,
+    recorded DATETIME         NULL)
       ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci""")
 conn.commit()
 print "emailers.gp_emailer table created"
