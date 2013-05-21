@@ -28,8 +28,9 @@ try:
     import msvcrt
     msvcrt.setmode (0, os.O_BINARY) # stdin  = 0
     msvcrt.setmode (1, os.O_BINARY) # stdout = 1
+    WINDOWS = True
 except ImportError:
-    pass
+    WINDOWS = False
 
 #----------------------------------------------------------------------
 # Object representing a client request, extracted from the XML
@@ -149,8 +150,11 @@ class Response:
             self.body = self.body.encode('utf-8')
         sys.stdout.write("Content-Type: %s; charset=utf-8\n" % contentType)
         sys.stdout.write("Content-Length: %d\n" % len(self.body))
-        sys.stdout.write("Access-Control-Allow-Headers: Content-Type,SOAPAction\n")
-        sys.stdout.write("Access-Control-Allow-Origin: *\n\n")
+        if not WINDOWS:
+            sys.stdout.write("Access-Control-Allow-Headers: ")
+            sys.stdout.write("Content-Type,SOAPAction\n")
+            sys.stdout.write("Access-Control-Allow-Origin: *\n")
+        sys.stdout.write("\n")
         sys.stdout.write(self.body)
         sys.exit(0)
 
