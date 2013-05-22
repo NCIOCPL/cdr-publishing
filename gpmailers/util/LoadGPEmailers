@@ -10,8 +10,9 @@
 # BZIssue::4630
 #
 #----------------------------------------------------------------------
-import util, bz2, lxml.etree as etree
+import cdrutil, bz2, sys, lxml.etree as etree
 
+LOGFILE = '/weblogs/gpmailers/gpmailers.log'
 SENDER = 'GeneticsDirectory@cancer.gov'
 emailBody = """\
 <p>Dear Member of the NCI Cancer Genetics Services Directory:</p>
@@ -48,20 +49,14 @@ testers = ('***REMOVED***',
            '***REMOVED***',
            '***REMOVED***'
            )
-def base36(n):
-    if n == 0:
-        return "0"
-    elif n < 0:
-        return '-' + base36(abs(n))
-    lowestDigit = "0123456789abcdefghijklmnopqrstuvwxyz"[n % 36]
-    higherDigits = n // 36
-    if higherDigits == 0:
-        return lowestDigit
-    else:
-        return base36(higherDigits) + lowestDigit
 
+# -------------------------------------------------------------------
+# Pull emailers from job packages in dropbox, load them into the 
+# gp_emailer table, and notify the genetics professional that they
+# need to review their directory information.
+# -------------------------------------------------------------------
 def loadEmailers():
-    conn = util.getConnection()
+    conn = cdrutil.getConnection()
     cursor = conn.cursor()
     cursor.execute("""\
         SELECT id, emailers
@@ -76,7 +71,7 @@ def loadEmailers():
             except Exception, e:
                 msg = (u"failure loading mailer for CDR%s in job %s: %s" %
                        (child.get('id'), jobId, e)).encode('utf-8')
-                util.log(msg)
+                cdrutil.log(msg, logfile=LOGFILE)
                 sys.stderr.write("%s\n" % msg)
         cursor.execute("""\
             UPDATE dropbox.gp_emailer_job
@@ -84,9 +79,12 @@ def loadEmailers():
              WHERE id = %s""", jobId)
         conn.commit()
         msg = "loaded mailers for job %d" % jobId
-        util.log(msg)
+        cdrutil.log(msg, logfile=LOGFILE)
         print msg
 
+# -------------------------------------------------------------------
+#
+# -------------------------------------------------------------------
 def loadEmailer(conn, cursor, jobId, node):
     trackerId = node.get('tracker')
     docId = node.get('id')
@@ -96,9 +94,9 @@ def loadEmailer(conn, cursor, jobId, node):
     for child in node.findall('Contact/Email'):
         email = child.text
     if not email:
-        msg = ("no email address for sending emailer %s (CDR%s)" %
+        msg = ("   no email address for sending emailer %s (CDR%s)" %
                (trackerId, docId))
-        util.log(msg)
+        cdrutil.log(msg, logfile=LOGFILE)
         sys.stderr.write("%s\n" % msg)
     doc = etree.tostring(node)
     cursor.execute("""\
@@ -107,29 +105,44 @@ def loadEmailer(conn, cursor, jobId, node):
              VALUES (%s, %s, %s, %s, %s, %s, %s, NOW())""",
                    (trackerId, docId, jobId, email, name, doc, doc))
     conn.commit()
-    print "loaded emailer %s (CDR%s)" % (trackerId, docId)
+    print "   loaded emailer %s (CDR%s)" % (trackerId, docId)
     try:
         subject = 'NCI Cancer Genetics Services Directory update request'
-        if util.isProductionHost():
+        if cdrutil.isProductionHost():
             address = [email]
         else:
             address = testers
-        emailerId = base36((int(trackerId) << 32) + int(docId))
-        url = "http://%s%s/cgsd.py?id=%s" % (util.WEB_HOST, util.CGI_BASE, 
-                                             emailerId)
-        message = util.sendMail(SENDER, address, subject,
-                                emailBody % (url, url), html=True)
+        emailerId = cdrutil.base36((int(trackerId) << 32) + int(docId))
+        if cdrutil.getEnvironment() == 'OCE':
+            url = "http://%s%s/cgsd.py?id=%s" % (cdrutil.WEB_HOST, 
+                                                 cdrutil.CGI_BASE, 
+                                                 emailerId)
+        else:
+            h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier())
+            url = "https://%s.%s/cgi-bin/cgsd.py?id=%s" % (
+                                                   h.host['EMAILERSC'][0], 
+                                                   h.host['EMAILERSC'][1], 
+                                                   emailerId)
+        message = cdrutil.sendMail(SENDER, address, subject,
+                                   emailBody % (url, url), html=True)
     except Exception, e:
         error = ("Failure emailing %s for batch %s: %s" %
                  (address, emailerId, e))
-        util.log(error)
+        cdrutil.log(error, logfile=LOGFILE)
         try:
-            util.sendMail(SENDER, util.OPERATOR,
-                          subject + " *** FAILURE ***", error)
+            cdrutil.sendMail(SENDER, cdrutil.OPERATOR,
+                             subject + " *** FAILURE ***", error)
         except:
             pass
+
+# -------------------------------------------------------------------
+# Main starts here
+# -------------------------------------------------------------------
+cdrutil.log('*** LoadGPEmailers - Started ***', logfile=LOGFILE)
 try:
     loadEmailers()
 except Exception, e:
     print "LoadGPEmailers failure: %s" % e
-    util.log("LoadGPEmailers failure: %s" % e)
+    cdrutil.log("***Error: LoadGPEmailers failure: %s" % e, logfile=LOGFILE)
+
+cdrutil.log('*** LoadGPEmailers - Finished ***\n', logfile=LOGFILE)
