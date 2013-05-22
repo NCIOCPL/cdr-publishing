@@ -57,8 +57,24 @@ class LookupValues:
     def __init__(self):
         self.__doc = None
         self.values = {}
-        url = 'http://bach.nci.nih.gov/cgi-bin/cdr/GetGPLookupValues.py'
-        reader = urllib2.urlopen(url)
+        if cdr.h.org == 'OCE':
+            myHost = '%s.%s' % (cdr.h.host['APP'][0], 
+                                cdr.h.host['APP'][1])
+            url = 'http://%s/cgi-bin/cdr/GetGPLookupValues.py' % myHost
+                                  
+        else:
+            # The URL to be used from the application server
+            myHost = '%s.%s' % (cdr.h.host['APPWEB'][0], 
+                                cdr.h.host['APPWEB'][1])
+            # The URL to be used from the bastion host
+            # myHost = '%s.%s' % (cdr.h.host['APPC'][0], cdr.h.host['APPC'][1])
+            url = 'https://%s/cgi-bin/cdr/GetGPLookupValues.py' % myHost
+
+        try:
+            reader = urllib2.urlopen(url)
+        except:
+            raise Exception("can't open URL: %s" % url)
+            
         self.__doc = reader.read()
         tree = etree.XML(self.__doc)
         if tree.tag != 'ValueSets':
