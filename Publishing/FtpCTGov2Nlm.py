@@ -12,7 +12,7 @@ import sys, cdr, os, glob, ftplib, time, getopt
 
 # Setting directory and file names
 # --------------------------------
-LOGFILE    = 'Jobmaster.log'
+LOGFILE    = 'FtpCTGov2Nlm.log'
 dateStr    = time.strftime("%Y-%m-%d-%H%M", time.localtime())
 FTPDIR     = os.path.join('d:\\cdr', 'Output', 'NLMExport')
 
@@ -76,6 +76,11 @@ def copyNlmFtpFile(localDirectory = 'd:/cdr/output/NLMExport',
     # Setting path variables for FTP server
     # -------------------------------------
     if testMode:
+        l.write(' *** Warning ***', stdout = True)
+        l.write(' Testmode needs to use paramiko in CBIIT environment',
+                                                            stdout=True)
+        l.write(' This is currently not implemented.', stdout=True)
+        sys.exit(0)
         FTPSERVER  = "cipsftp.nci.nih.gov"
         FTPUSER    = "cdrdev"
         FTPPWD     = "***REMOVED***"
