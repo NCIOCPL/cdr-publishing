@@ -293,9 +293,10 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
 
     # Gather some values needed for the call to cdr.sendMail().
     import cdrcgi
-    sender = "cdr@%s" % cdrcgi.WEBSERVER
-    url = ("http://%s%s/GateKeeperStatus.py?jobId=%d&targetHost=%s&flavor=all" %
-           (cdrcgi.WEBSERVER, cdrcgi.BASE, jobId, cdr2gk.host))
+    # sender = "cdr@%s" % cdrcgi.WEBSERVER
+    sender = "cdr@%s" % cdr.CBIIT_NAMES[1]
+    url = ("%s/GateKeeperStatus.py?jobId=%d&targetHost=%s&flavor=all" %
+           (cdr.CBIIT_NAMES[2], cdrcgi.BASE, jobId, cdr2gk.host))
 
     # Don't send the notification to everyone if we're on the test server
     if cdr2gk.host == 'bach.nci.nih.gov':
@@ -305,7 +306,12 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
 
     # Different message and subject for jobs that are stuck.
     if stalled:
-        subject = "Push job %d stalled" % jobId
+        if cdr.h.org == 'OCE':
+            subject = "%s: Push job %d stalled" % (cdr.PUB_NAME.capitalize(),
+                                                   jobId)
+        else:
+            subject = "%s-%s: Push job %d stalled" % (cdr.h.org, cdr.h.tier,
+                                                      jobId)
         body = """\
 More than 18 hours have elapsed since completion of the push of CDR
 documents for publishing job %d, and loading of the documents
@@ -314,7 +320,13 @@ has still not completed.
 
     # The job finished, but there were problems reported.
     else:
-        subject = "Problems with loading of job %d to Cancer.gov" % jobId
+        # subject = "Problems with loading of job %d to Cancer.gov" % jobId
+        if cdr.h.org == 'OCE':
+            subject = "%s: Problems with loading of job %d to Cancer.gov" % (
+                                             cdr.PUB_NAME.capitalize(), jobId)
+        else:
+            subject = "%s-%s: Problems with loading of job %d to Cancer.gov" % (
+                                             cdr.h.org, cdr.h.tier, jobId)
         body = """\
 %d failures and %d warnings were encountered in the loading of documents
 for job %d to Cancer.gov.
