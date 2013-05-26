@@ -365,9 +365,12 @@ try:
     if myCmd.error:
         # Error code indicates success but a warning message has been
         # returned
-        if myCmd.code == 0:
+        #if myCmd.code == 0:
+        if myCmd.error and len(myCmd.error) > 0 \
+                       and myCmd.error.find('DeprecationWarning') > -1:
            l.write('Program finished with warnings:\n%s' % myCmd.error,
                     stdout = True)
+           l.write('Return Code: %s' % myCmd.code, stdout = True)
            subject = 'Warning message in CTGovExport.py'
            message = 'Program finished with warnings.  Please see logfile.'
            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
@@ -376,6 +379,7 @@ try:
         else:
            l.write('*** Error submitting command:\n%s' % myCmd.error,
                     stdout = True)
+           l.write('Return Code: %s' % myCmd.code, stdout = True)
            subject = '*** Error in CTGovExport.py'
            message = 'Program returned with error code.  Please see logfile.'
            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
