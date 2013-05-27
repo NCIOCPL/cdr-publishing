@@ -12,7 +12,7 @@
 # published media documents. (Bug 4402)
 #
 #----------------------------------------------------------------------
-import os, sys, cdr, time, optparse, socket, cdrdb
+import os, sys, cdr, time, optparse, cdrdb
 
 FILEBASE           = "Notify_VOL"
 LOGNAME            = "%s.log" % FILEBASE
@@ -155,7 +155,7 @@ l.write('Media Documents Updated: %s' % mediaChanges, stdout = True)
 
 # Setting up email message to be send to users
 # --------------------------------------------
-machine  = socket.gethostname().split('.')[0]
+# machine  = socket.gethostname().split('.')[0]
 sender   = '***REMOVED***'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
