@@ -582,35 +582,35 @@ if fullUpdate:
                                                              stdout = True)
         pass
 
-
-
-    # Submit the job to count the # of studies with Arms info
-    # Note: Step only needed for weekly publishing
-    # -------------------------------------------------------
-    try:
-        istep += 1
-        l.write('--------------------------------------------', stdout = True)
-        l.write('Step %d: CountArmsLabel Job' % istep, stdout = True)
-        cmd = os.path.join(UBIN, 'CountArmsLabel.py %s' % (runmode)) 
-
-        l.write('Submitting command...\n%s' % cmd, stdout = True)
-        # cmd = 'ls'
-        myCmd = cdr.runCommand(cmd, joinErr2Out = False)
-
-        if myCmd.error:
-            l.write('*** Error submitting command:\n%s' % myCmd.error,
-                     stdout = True)
-            subject = '*** Error in CountArmsLabel.py'
-            message = 'Program returned with error code.  Please see logfile.'
-            cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-                                        (subject, message))
-            # cmd = 'ls'
-            myCmd   = cdr.runCommand(cmd)
-            raise Exception
-    except:
-        l.write('*** Error: Submitting CountArmsLabel Job failed', stdout = True)
-        pass
-
+# No more protocols with Arms information exist.  Turning off this step.
+#
+#   # Submit the job to count the # of studies with Arms info
+#   # Note: Step only needed for weekly publishing
+#   # -------------------------------------------------------
+#   try:
+#       istep += 1
+#       l.write('--------------------------------------------', stdout = True)
+#       l.write('Step %d: CountArmsLabel Job' % istep, stdout = True)
+#       cmd = os.path.join(UBIN, 'CountArmsLabel.py %s' % (runmode)) 
+#
+#       l.write('Submitting command...\n%s' % cmd, stdout = True)
+#       # cmd = 'ls'
+#       myCmd = cdr.runCommand(cmd, joinErr2Out = False)
+#
+#       if myCmd.error:
+#           l.write('*** Error submitting command:\n%s' % myCmd.error,
+#                    stdout = True)
+#           subject = '*** Error in CountArmsLabel.py'
+#           message = 'Program returned with error code.  Please see logfile.'
+#           cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
+#                                       (subject, message))
+#           # cmd = 'ls'
+#           myCmd   = cdr.runCommand(cmd)
+#           raise Exception
+#   except:
+#       l.write('*** Error: Submitting CountArmsLabel Job failed', stdout = True)
+#       pass
+#
 
     # Submit the job to check for newly published media 
     # documents and send a notification email
