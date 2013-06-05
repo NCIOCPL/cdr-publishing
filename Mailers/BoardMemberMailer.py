@@ -504,6 +504,9 @@ class BoardMemberMailer(cdrmailer.MailerJob):
 
         template = self.__prepareTemplate()
 
+        asstFields = ("Name", "Phone Number", "Fax", "E-mail")
+        asstFields = ["\\tab Assistant %s: %%s\\line" % f for f in asstFields]
+        asstTempl  = "\n".join(asstFields)
         # Pump out one RTF letter for each board member.
         names = {}
         for m in boardMembers:
@@ -517,6 +520,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             asstPhone   = toRtf(m.asstPhone or "")
             asstFax     = toRtf(m.asstFax or "")
             asstEmail   = toRtf(m.asstEmail or "")
+            asstInfo    = asstTempl % (asstName, asstPhone, asstFax, asstEmail)
             termYears   = m.getTermYears()
             summaryList = m.getSummaryList()
             contactInfo = m.address.format(contactFields = True,
@@ -527,10 +531,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@MEMBERNAME@@",  memberName)
                                    .replace("@@FANCYNAME@@",   fancyName)
                                    .replace("@@TERMYEARS@@",   termYears)
-                                   .replace("@@ASSTNAME@@",    asstName)
-                                   .replace("@@ASSTPHONE@@",   asstPhone)
-                                   .replace("@@ASSTFAX@@",     asstFax)
-                                   .replace("@@ASSTEMAIL@@",   asstEmail)
+                                   .replace("@@ASSTINFO@@",    asstInfo)
                                    .replace("@@SUMMARYLIST@@", summaryList)
                                    .replace("@@CONTACTINFO@@", contactInfo))
             name = createRtfFilename(forename, surname, names)
