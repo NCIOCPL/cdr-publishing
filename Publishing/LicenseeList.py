@@ -239,5 +239,5 @@ except:
                                                             tback = 1)
     raise
 
-l.write("Licensee Report - Finished", stdout = True)
+l.write("LicenseeList Report - Finished", stdout = True)
 sys.exit(0)
