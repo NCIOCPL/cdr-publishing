@@ -37,11 +37,17 @@ def parseArguments(args):
     checking.
     """
 
-    usage = "usage: %prog [--email | --noemail]"
+    usage = "usage: %prog [--email | --noemail] [--testmode | --livemode]"
     parser = optparse.OptionParser(usage = usage)
 
     parser.set_defaults(testMode = True)
     parser.set_defaults(emailMode = True)
+    parser.add_option('-t', '--testmode',
+                      action = 'store_true', dest = 'testMode',
+                      help = 'running in TEST mode')
+    parser.add_option('-l', '--livemode',
+                      action = 'store_false', dest = 'testMode',
+                      help = 'running in LIVE mode')
     parser.add_option('-e', '--email',
                       action = 'store_true', dest = 'emailMode',
                       help = 'running in EMAIL mode')
@@ -59,6 +65,11 @@ def parseArguments(args):
 
     # Read and process options, if any
     # --------------------------------
+    if parser.values.testMode:
+        l.write("Running in TEST mode", stdout = True)
+    else:
+        l.write("Running in LIVE mode", stdout = True)
+
     if parser.values.emailMode:
         l.write("Running in EMAIL mode", stdout = True)
     else:
@@ -77,6 +88,7 @@ l.write('Arguments: %s' % sys.argv, stdout=True)
 print ''
 
 options   = parseArguments(sys.argv)
+testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
 # If no file name is specified (the default) we're picking the last
@@ -136,6 +148,14 @@ LEFT OUTER JOIN query_term pdi
           ORDER BY t.value, n.value""" , timeout=300)
 
     rows = cursor.fetchall()
+
+    lCount = {'prod':0, 'test':0}
+    for row in rows:
+        if row[2] == 'Production': 
+            lCount['prod'] += 1
+        else:
+            lCount['test'] += 1
+
     cursor.close()
 
     # Create the message body and display the query results
@@ -153,6 +173,7 @@ LEFT OUTER JOIN query_term pdi
  <body>
   <h2>List of PDQ Licensees</h2>
   <h3>Date: %s</h3>
+  <b>Active Licensees: %d&nbsp;&nbsp;&nbsp;Test Licensees: %s<br></b>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
    <tr>
@@ -165,7 +186,7 @@ LEFT OUTER JOIN query_term pdi
     <th>Prod started</th>
     <th>Prod removed</th>
    </tr>
-""" % (time.strftime("%m/%d/%Y", now))
+""" % (time.strftime("%m/%d/%Y", now), lCount['prod'], lCount['test'])
 
     for (cdrId, orgName, status, testStart, testRenew, testRemove, prodStart, prodRemove) in rows:
         mailBody += """\
@@ -194,10 +215,11 @@ LEFT OUTER JOIN query_term pdi
     # ---------------
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
     strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
-    # strTo    = cdr.getEmailList('Test Publishing Notification')
-    strTo    = cdr.getEmailList('Licensee Report Notification')
+    if testMode:
+        strTo    = cdr.getEmailList('Test Publishing Notification')
+    else:
+        strTo    = cdr.getEmailList('Licensee Report Notification')
 
-    subject = 'Dada'
     if cdr.h.org == 'OCE':
         subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
                     'PDQ Licensee List')
