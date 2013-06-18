@@ -697,11 +697,27 @@ Please do not reply to this message.
                 self.log ("Unable to change to rtf mailer directory", tback=1)
                 raise cdr.Exception("failure setting working directory to %s"
                                     % self.__rtfMailerDir)
+
+        # Specify the hostname based on the environment we're in
+        # ------------------------------------------------------
+        if cdr.h.org == 'OCE':
+            myHost = '%s.%s' % (cdr.h.host['APP'][0], 
+                                cdr.h.host['APP'][1])
+            url  = 'http://%s/cgi-bin/cdr/' % myHost
+        else:
+            myHost = '%s.%s' % (cdr.h.host['EMAILERSC'][0], 
+                                cdr.h.host['EMAILERSC'][1])
+            url  = 'https://%s/cgi-bin/cdr/' % myHost
+
+        # url  = 'http://%s/' % socket.gethostname()
+        url += 'GetBoardMemberLetters.py?job=%d' % self.__id
+
         self.__letterLink = """
 You can retrieve the letters at:
 
-    http://%s.nci.nih.gov/cgi-bin/cdr/GetBoardMemberLetters.py?job=%d
-""" % (socket.gethostname(), self.__id)
+    %s
+""" % url
+#""" % (socket.gethostname(), self.__id)
 
     #------------------------------------------------------------------
     # Retrieve the string for an email address from an XML address
@@ -1073,13 +1089,26 @@ You can retrieve the letters at:
                 self.log("Sending mail to %s" % self.__email)
                 sender  = MailerJob.__CDR_EMAIL
                 subject = "CDR Mailer Job Status"
+                # Specify the hostname based on the environment we're in
+                # ------------------------------------------------------
+                if cdr.h.org == 'OCE':
+                    myHost = '%s.%s' % (cdr.h.host['APP'][0], 
+                                        cdr.h.host['APP'][1])
+                    url  = 'http://%s/cgi-bin/cdr/' % myHost
+                else:
+                    myHost = '%s.%s' % (cdr.h.host['APPC'][0], 
+                                        cdr.h.host['APPC'][1])
+                    url  = 'https://%s/cgi-bin/cdr/' % myHost
+
+                # url  = 'http://%s/' % socket.gethostname()
+                url += 'PubStatus.py?id=%d' % self.__id
                 message = """\
 Job %d has completed.  You can view a status report for this job at:
 
-    http://%s.nci.nih.gov/cgi-bin/cdr/PubStatus.py?id=%d
+    %s
 %s
 Please do not reply to this message.
-""" % (self.__id, socket.gethostname(), self.__id, self.__letterLink)
+""" % (self.__id, url, self.__letterLink)
                 cdr.sendMail(sender, [self.__email], subject, message)
         except:
             self.log("failure sending email to %s: %s" % (self.__email,
