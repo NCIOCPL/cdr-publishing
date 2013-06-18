@@ -337,10 +337,6 @@ class BoardMember:
         self.address          = None
         self.contactId        = None
         self.name             = None
-        self.asstName         = None
-        self.asstPhone        = None
-        self.asstFax          = None
-        self.asstEmail        = None
         self.summaries        = self.__findSummaries(memberId, board.cursor)
         self.renewalFrequency = "**** NO TERM RENEWAL FREQUENCY FOUND!!! ****"
 
@@ -383,8 +379,6 @@ class BoardMember:
                         self.contactId = cdr.getTextContent(child)
             elif node.nodeName == "BoardMembershipDetails":
                 self.__parseBoardMembershipDetails(node)
-            elif node.nodeName == "BoardMemberAssistant":
-                self.__parseBoardMemberAssistant(node)
 
     def __parsePersonDoc(self, id, ver, cursor):
 
@@ -428,17 +422,6 @@ class BoardMember:
         if boardId and frequency:
             self.renewalFrequency = frequency
                 
-    def __parseBoardMemberAssistant(self, node):
-        for child in node.childNodes:
-            if child.nodeName == "AssistantName":
-                self.asstName = cdr.getTextContent(child)
-            elif child.nodeName == "AssistantPhone":
-                self.asstPhone = cdr.getTextContent(child)
-            elif child.nodeName == "AssistantFax":
-                self.asstFax = cdr.getTextContent(child)
-            elif child.nodeName == "AssistantEmail":
-                self.asstEmail = cdr.getTextContent(child)
-
     def __findSummaries(self, id, cursor):
         summaries = []
         cursor.execute("""\
@@ -504,9 +487,6 @@ class BoardMemberMailer(cdrmailer.MailerJob):
 
         template = self.__prepareTemplate()
 
-        asstFields = ("Name", "Phone Number", "Fax", "E-mail")
-        asstFields = ["\\tab Assistant %s: %%s\\line" % f for f in asstFields]
-        asstTempl  = "\n".join(asstFields)
         # Pump out one RTF letter for each board member.
         names = {}
         for m in boardMembers:
@@ -516,11 +496,6 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             surname     = toRtf(m.name.getSurname())
             memberName  = toRtf(m.name.format(False, False))
             fancyName   = toRtf(m.name.format(True, False))
-            asstName    = toRtf(m.asstName or "")
-            asstPhone   = toRtf(m.asstPhone or "")
-            asstFax     = toRtf(m.asstFax or "")
-            asstEmail   = toRtf(m.asstEmail or "")
-            asstInfo    = asstTempl % (asstName, asstPhone, asstFax, asstEmail)
             termYears   = m.getTermYears()
             summaryList = m.getSummaryList()
             contactInfo = m.address.format(contactFields = True,
@@ -531,7 +506,6 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@MEMBERNAME@@",  memberName)
                                    .replace("@@FANCYNAME@@",   fancyName)
                                    .replace("@@TERMYEARS@@",   termYears)
-                                   .replace("@@ASSTINFO@@",    asstInfo)
                                    .replace("@@SUMMARYLIST@@", summaryList)
                                    .replace("@@CONTACTINFO@@", contactInfo))
             name = createRtfFilename(forename, surname, names)
