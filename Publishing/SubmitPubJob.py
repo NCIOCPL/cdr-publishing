@@ -71,6 +71,8 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
+MAX_RETRIES = 10
+RETRY_MULTIPLIER = 1.0
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 if cdr.isProdHost():
@@ -163,18 +165,36 @@ options:
 # job.
 # ---------------------------------------------------------------
 def checkJobStatus(jobId):
-    try:
-        conn = cdrdb.connect("cdr")
-        cursor = conn.cursor()
-        cursor.execute("""\
-            SELECT id, status, started, completed, messages
-              FROM pub_proc
-             WHERE id = %d""" % int(jobId), timeout = 300)
-        row = cursor.fetchone()
+    # Defensive programming.
+    tries = MAX_RETRIES
 
-    except cdrdb.Error, info:
-        l.write("Failure finding status for Job%d: %s" % (int(jobId), 
-                                                          info[1][0]))
+    while tries:
+        try:
+            conn = cdrdb.connect("cdr")
+            cursor = conn.cursor()
+            cursor.execute("""\
+                SELECT id, status, started, completed, messages
+                  FROM pub_proc
+                 WHERE id = %d""" % int(jobId), timeout = 300)
+            row = cursor.fetchone()
+
+            # We can stop trying now, we got it.
+            tries = 0
+
+        except cdrdb.Error, info:
+            l.write("*** Failure connecting to DB ***")
+            l.write("*** Unable to check status for PubJob%d: %s" % (
+                                             int(jobId), info[1][0]))
+            waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
+            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
+                                                               waitSecs))
+            time.sleep(waitSecs)
+            tries -= 1
+
+    if not row:
+        raise Exception("*** (3) Tried to connect %d times. No Pub Job-ID." %
+                        MAX_RETRIES)
+
     return row
  
 
@@ -182,39 +202,57 @@ def checkJobStatus(jobId):
 # Function to find the job ID of the push job.
 # --------------------------------------------------------------
 def getPushJobId(jobId):
+    # Defensive programming.
+    tries = MAX_RETRIES
     time.sleep(15)
-    try:
-        conn = cdrdb.connect()
-        cursor = conn.cursor()
-        cursor.execute("""\
-            SELECT id, status, started, completed
-              FROM pub_proc
-             WHERE id > %d
-               AND pub_system = 178
-               AND (pub_subset LIKE '%%_Interim-Export'
-                    OR
-                    pub_subset LIKE '%%_Export')
-               """ % int(jobId), timeout = 300)
-        row = cursor.fetchone()
 
-        # If the SELECT returns nothing a push job was not submitted
-        # because another job is still pending.
-        # Otherwise the push job may already have completed.
-        # -----------------------------------------------------------
-        if row == None:
-            l.write("*** Error - No push job waiting. Check for pending job",
-                     stdout=True)
+    while tries:
+        try:
+            conn = cdrdb.connect()
+            cursor = conn.cursor()
             cursor.execute("""\
-               SELECT id, messages
-                 FROM pub_proc
-                WHERE id = %d""" % int(jobId), timeout = 300)
+                SELECT id, status, started, completed
+                  FROM pub_proc
+                 WHERE id > %d
+                   AND pub_system = 178
+                   AND (pub_subset LIKE '%%_Interim-Export'
+                        OR
+                        pub_subset LIKE '%%_Export')
+                   """ % int(jobId), timeout = 300)
             row = cursor.fetchone()
-            l.write("%s" % row[1], stdout=True)
-            sys.exit(1)
 
-    except cdrdb.Error, info:
-        l.write("Failure finding push job for Job%d: %s" % (int(jobId), 
-                                                            info[1][0]))
+            # If the SELECT returns nothing a push job was not submitted
+            # because another job is still pending.
+            # Otherwise the push job may already have completed.
+            # -----------------------------------------------------------
+            if row == None:
+                l.write("*** Error - No push job waiting. Check for pending job",
+                         stdout=True)
+                cursor.execute("""\
+                   SELECT id, messages
+                     FROM pub_proc
+                    WHERE id = %d""" % int(jobId), timeout = 300)
+                row = cursor.fetchone()
+                l.write("%s" % row[1], stdout=True)
+                sys.exit(1)
+
+            # We can stop trying now, we got it.
+            tries = 0
+
+        except cdrdb.Error, info:
+            l.write("*** Failure connecting to DB ***")
+            l.write("*** Unable to find status for PushJob%d: %s" % (
+                                           int(jobId), info[1][0]))
+            waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
+            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
+                                                               waitSecs))
+            time.sleep(waitSecs)
+            tries -= 1
+
+    if not row:
+        raise Exception("*** (1) Tried to connect %d times. No Push Job-ID." %
+                        MAX_RETRIES)
+
     return row[0]
 
 
@@ -226,23 +264,42 @@ def getPushJobId(jobId):
 # not be started if a nightly job hasn't finished yet.
 # ---------------------------------------------------------------------
 def checkPubJob():
-    try:
-        conn = cdrdb.connect()
-        cursor = conn.cursor()
-        cursor.execute("""\
-            SELECT id, pub_subset, status, started, completed
-              FROM pub_proc
-             WHERE status not in ('Failure', 'Success')
-               AND pub_system = 178
-               AND pub_subset LIKE '%%Export' """, timeout = 300)
-#              AND pub_subset LIKE '%%_%s' """ % pubType, timeout = 300)
-        row = cursor.fetchone()
+    # Defensive programming.
+    tries = MAX_RETRIES
 
-        if row:
-            return row
-    
-    except cdrdb.Error, info:
-        l.write("Failure checking Interim-Export job queue: %s" % info[1][0])
+    while tries:
+        try:
+            conn = cdrdb.connect()
+            cursor = conn.cursor()
+            cursor.execute("""\
+                SELECT id, pub_subset, status, started, completed
+                  FROM pub_proc
+                 WHERE status not in ('Failure', 'Success')
+                   AND pub_system = 178
+                   AND pub_subset LIKE '%%Export' """, timeout = 300)
+    #              AND pub_subset LIKE '%%_%s' """ % pubType, timeout = 300)
+            row = cursor.fetchone()
+
+            if row:
+                return row
+
+            # We can stop trying now, we got it.
+            tries = 0
+        
+        except cdrdb.Error, info:
+            l.write("*** Failure connecting to DB ***")
+            l.write("*** Unable to find status for PubJob%d: %s" % (int(jobId), 
+                                                              info[1][0]))
+            waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
+            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
+                                                               waitSecs))
+            l.write("waitSecs: %d" % waitSecs)
+            time.sleep(waitSecs)
+            tries -= 1
+
+    if not tries == 0:
+        raise Exception("*** (2) Tried to connect %d times. No Pub Job-ID." %
+                        MAX_RETRIES)
 
     return 0
 
