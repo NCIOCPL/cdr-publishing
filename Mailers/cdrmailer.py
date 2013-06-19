@@ -705,8 +705,8 @@ Please do not reply to this message.
                                 cdr.h.host['APP'][1])
             url  = 'http://%s/cgi-bin/cdr/' % myHost
         else:
-            myHost = '%s.%s' % (cdr.h.host['EMAILERSC'][0], 
-                                cdr.h.host['EMAILERSC'][1])
+            myHost = '%s.%s' % (cdr.h.host['APPC'][0], 
+                                cdr.h.host['APPC'][1])
             url  = 'https://%s/cgi-bin/cdr/' % myHost
 
         # url  = 'http://%s/' % socket.gethostname()
