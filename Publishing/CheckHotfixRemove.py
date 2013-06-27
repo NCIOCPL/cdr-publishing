@@ -389,7 +389,7 @@ try:
 From: %s
 To: %s
 Subject: %s
-""" % (STR_FROM, u', '.join(strTo), subject))
+""" % (STR_FROM, u', '.join(strTo), subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
 
