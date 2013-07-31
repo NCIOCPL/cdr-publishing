@@ -296,10 +296,11 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
     # sender = "cdr@%s" % cdrcgi.WEBSERVER
     sender = "cdr@%s" % cdr.CBIIT_NAMES[1]
     url = ("%s/GateKeeperStatus.py?jobId=%d&targetHost=%s&flavor=all" %
-           (cdr.CBIIT_NAMES[2], cdrcgi.BASE, jobId, cdr2gk.host))
+           (cdr.CBIIT_NAMES[2], jobId, cdr2gk.host))
 
     # Don't send the notification to everyone if we're on the test server
-    if cdr2gk.host == 'bach.nci.nih.gov':
+    # if cdr2gk.host == 'bach.nci.nih.gov':
+    if cdr.h.tier == 'PROD':
         recips = cdr.getEmailList('PushVerificationAlerts')
     else:
         recips = cdr.getEmailList('Test PushVerificationAlerts')
