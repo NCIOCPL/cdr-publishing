@@ -1569,11 +1569,16 @@ def sendEmailReport(messageBody, title):
         strTo = cdr.getEmailList('ICRDB Statistics Notification')
         #     strTo.append(u'register@clinicaltrials.gov')
 
+    if cdr.h.org == 'OCE':
+        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(), title)
+    else:
+        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
+    
     mailHeader = """\
 From: %s
 To: %s
-Subject: %s: %s
-""" % (STR_FROM, u', '.join(strTo), cdr.PUB_NAME.capitalize(), title)
+Subject: %s
+""" % (STR_FROM, u', '.join(strTo), subject)
 
     cType = "Content-type: text/html; charset=utf-8\n"
     mailHeader += cType
