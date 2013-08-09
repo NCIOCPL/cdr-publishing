@@ -89,7 +89,7 @@ fullMode   = None
 credentials = ('CdrGuest', 'never.0n-$undaY')
 pubSystem   = 'Primary'
 
-pubEmail    = ['***REMOVED***', 'operator@cips.nci.nih.gov']
+pubEmail    = cdr.getEmailList('Operator Publishing Notification')
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
