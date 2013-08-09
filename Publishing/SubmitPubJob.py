@@ -72,7 +72,7 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
 MAX_RETRIES = 10
-RETRY_MULTIPLIER = 1.0
+RETRY_MULTIPLIER = 5.0
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 if cdr.isProdHost():
