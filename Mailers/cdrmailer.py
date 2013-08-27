@@ -1371,7 +1371,7 @@ class Address(cdrdocobject.ContactInfo):
         rtfLines += [
             "\\tab Phone:\\tab %s\\line" % phone,
             "\\tab Fax:\\tab %s\\line" % fax,
-            "\\tab E-mail:\\tab %s\\line" % email
+            "\\tab E-mail:\\tab %s\\par" % email
         ]
         return "\n".join(rtfLines)
             

@@ -76,11 +76,11 @@ _boardValues = {
     'PDQ CANCER GENETICS EDITORIAL BOARD':
     BoardValues('cancer genetics', 'Ed Bd Invite Letter - Genetics',
                 """\
-I would like to join the following genetics working group(s):\line
+\\par\\par
+I would like to join the following genetics working group(s):\\line
 [  ] Psychosocial issues   [  ] Breast/Ovarian Cancer  [  ] Colorectal Cancer
 \line
 [  ] Prostate Cancer       [  ] Skin Cancer            [  ] Syndromes (MEN2)
-\par
 """),
     'PDQ PEDIATRIC TREATMENT EDITORIAL ADVISORY BOARD':
     BoardValues('pediatric treatment'),
@@ -532,6 +532,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                           pngName    = imageName,
                                           binImage   = False,
                                           invitePara = self.__board.invitePara)
+        formLetter.defaultFont = formLetter.SANSSERIF
+        formLetter.fSize = 24
         template     = formLetter.getRtf()
         
         date         = friendlyDate(self.__board.today)
