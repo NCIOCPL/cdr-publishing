@@ -81,7 +81,7 @@ if cdr.isProdHost():
     # increasing time out period.
     waitTotal = 64800  # 18.0 hours
 else:
-    waitTotal = 45000  # 12.5 hours
+    waitTotal = 64800  # 18.0 hours
 
 testMode   = None
 fullMode   = None
@@ -260,6 +260,23 @@ def getPushJobId(jobId):
 
 
 # ---------------------------------------------------------------------
+# Function to send an email when the job fails instead of silently 
+# exiting.
+# ---------------------------------------------------------------------
+def sendFailureMessage(text):
+    emailDL = cdr.getEmailList('Test Publishing Notification')
+    subject = '%s-%s: %s' % (cdr.h.org, cdr.h.tier, text)
+    message = """
+The publishing job failed.  It did not finish within the maximum time 
+allowed.
+Please check the log files.
+"""
+    notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
+
+    return
+
+
+# ---------------------------------------------------------------------
 # Function to check if an Interim job is already underway (maybe it runs
 # longer then 24 hours or it has been started manually).
 # Note:
@@ -396,6 +413,9 @@ try:
                                                             stdout=True)
                 l.write("*** Completion exceeded maximum time allowed", 
                                                             stdout = True)
+                l.write("*** Cancelled after %s hours" % (waitTotal/(60 * 60)), 
+                                                            stdout = True)
+                sendFailureMessage("Publishing Failure: Max time exceeded")
                 sys.exit(1)
 
         # Once the publishing job completed with status Success
