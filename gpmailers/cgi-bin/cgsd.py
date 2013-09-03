@@ -90,7 +90,7 @@ class GP:
                 raise Exception("unable to find mailer document")
             (docXml, self.email, self.fullName, self.mailed, self.job,
              self.completed, self.bounced) = rows[0]
-            if (datetime.datetime.now() - self.mailed).days >= 30:
+            if (datetime.datetime.now() - self.mailed).days >= 120:
                 self.expired = True
             tree = etree.XML(docXml)
             for child in tree:

@@ -25,12 +25,12 @@ for id, bounced, completed, modified in cursor.fetchall():
                           modified=m)
     tree.append(child)
 cursor.execute("""\
-    SELECT id, DATE_ADD(mailed, INTERVAL 30 DAY)
+    SELECT id, DATE_ADD(mailed, INTERVAL 120 DAY)
       FROM gp_emailer
      WHERE bounced IS NULL
        AND completed IS NULL
        AND recorded IS NULL
-       AND DATEDIFF(NOW(), mailed) >= 30""")
+       AND DATEDIFF(NOW(), mailed) >= 120""")
 for id, expired in cursor.fetchall():
     child = etree.Element('mailer', id=str(id), expired=str(expired))
     tree.append(child)
