@@ -17,6 +17,9 @@ DEBUGGING = False
 
 def yn(flag): return flag and u'Yes' or u'No'
 
+def normalize(me):
+    return etree.tostring(etree.XML(me)).replace("\r", "")
+
 class GP:
     @staticmethod
     def getBoolean(b):
@@ -163,6 +166,15 @@ class GP:
                 etree.SubElement(root,
                                  'MemberOfGeneticsSociety').text = society
         return root
+    def changed(self, newSerialization):
+        cursor = cdrutil.getConnection('emailers').cursor()
+        cursor.execute("SELECT original FROM gp_emailer WHERE id = %s",
+                       self.trackerId)
+        rows = cursor.fetchall()
+        if not rows:
+            return True
+        original = normalize(rows[0][0])
+        return original != newSerialization.replace("\r", "")
     class Name:
         def __init__(self, node=None, fields=None):
             self.first = self.last = self.middle = self.suffix = None
@@ -687,8 +699,7 @@ def showForm(fields):
 """)
     sendPage(u"".join(form))
 
-def saveChanges(gp):
-    serialization = etree.tostring(gp.toElement())
+def saveChanges(gp, serialization):
     conn = cdrutil.getConnection('emailers')
     cursor = conn.cursor()
     cursor.execute("""\
@@ -781,7 +792,7 @@ Content-type: text/html; charset=utf-8
    }
    function doSave(how) {
        var form = document.forms[0];
-       if (how == 'changed') {
+       if (how == 'changed' || how == 'unchanged') {
            var email = form['email'].value;
            if (!email) {
                alert('Contact email address is required.');
@@ -850,8 +861,10 @@ def saving(fields):
 
 def save(fields):
     gp = GP(fields=fields)
-    if fields.getvalue('buttontype') == 'changed':
-        saveChanges(gp)
+    serialization = etree.tostring(gp.toElement())
+    #if fields.getvalue('buttontype') == 'changed':
+    if gp.changed(serialization):
+        saveChanges(gp, serialization)
         if cdrutil.getEnvironment() == 'OCE':
             url = 'http://%s%s/' % (cdrutil.WEB_HOST, cdrutil.CGI_BASE)
         else:
@@ -868,7 +881,8 @@ which can be reviewed at:
         markCompletion(gp)
         message = ("GP mailer %d (Person CDR%d) was reviewed and submitted "
                    "with no changes" % (gp.trackerId, gp.personId))
-    recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)# '***REMOVED***')
+    recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)
+    #recips = ('***REMOVED***',)
     subject = "GP mailer %d" % gp.trackerId
     cdrutil.sendMail(SENDER, recips, subject, message)
     sayThankYou()
