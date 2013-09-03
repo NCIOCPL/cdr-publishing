@@ -23,16 +23,18 @@ def getNextMonth():
 
 def lookupLetterTitle(letter):
     titles = {
-        "adv-invitation": "Advisory Board Invitation",
-        "adv-thankyou"  : "Advisory Board Thank-You",
-        "ed-invitation" : "Editorial Board Invitation",
-        "ed-welcome"    : "Editorial Board Welcome",
-        "ed-renewal"    : "Editorial Board Renewal",
-        "ed-goodbye"    : "Editorial Board Goodbye",
-        "ed-thankyou"   : "Editorial Board Thank-You",
-        "adv-summ-email": "Advisory Board Summaries (Email)",
-        "adv-summ-fedex": "Advisory Board Summaries (FedEx)",
-        "adv-interested": "Advisory Board Still Interested Letter"
+        "adv-invitation"  : "Advisory Board Invitation",
+        "adv-thankyou"    : "Advisory Board Thank-You",
+        "ed-invitation"   : "Editorial Board Invitation",
+        "ed-welcome"      : "Editorial Board Welcome",
+        "ed-renewal"      : "Editorial Board Renewal",
+        "ed-goodbye"      : "Editorial Board Goodbye",
+        "ed-comp-review"  : "Editorial Board Comprehensive Review",
+        "ed-thankyou"     : "Editorial Board Thank-You",
+        "adv-summ-email"  : "Advisory Board Summaries (Email)",
+        "adv-summ-fedex"  : "Advisory Board Summaries (FedEx)",
+        "adv-interested"  : "Advisory Board Still Interested",
+        "adv-big-thankyou": "Advisory Board BIG Thank You",
     }
     title = titles.get(letter.lower(), "PDQ Board")
     return "%s Letter" % title
