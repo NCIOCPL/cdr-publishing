@@ -339,6 +339,10 @@ class BoardMember:
         self.name             = None
         self.summaries        = self.__findSummaries(memberId, board.cursor)
         self.renewalFrequency = "**** NO TERM RENEWAL FREQUENCY FOUND!!! ****"
+        self.asstName         = None
+        self.asstPhone        = None
+        self.asstFax          = None
+        self.asstEmail        = None
 
         self.__parseMemberDoc(memberId, memberVer)
         self.__parsePersonDoc(personId, personVer, board.cursor)
@@ -379,6 +383,8 @@ class BoardMember:
                         self.contactId = cdr.getTextContent(child)
             elif node.nodeName == "BoardMembershipDetails":
                 self.__parseBoardMembershipDetails(node)
+            elif node.nodeName == "BoardMemberAssistant":
+                self.__parseBoardMemberAssistantInfo(node)
 
     def __parsePersonDoc(self, id, ver, cursor):
 
@@ -422,6 +428,28 @@ class BoardMember:
         if boardId and frequency:
             self.renewalFrequency = frequency
                 
+    def __parseBoardMemberAssistantInfo(self, node):
+        for child in node.childNodes:
+            if child.nodeName == "AssistantName":
+                self.asstName = cdr.getTextContent(child)
+            elif child.nodeName == "AssistantPhone":
+                self.asstPhone = cdr.getTextContent(child)
+            elif child.nodeName == "AssistantFax":
+                self.asstFax = cdr.getTextContent(child)
+            elif child.nodeName == "AssistantEmail":
+                self.asstEmail = cdr.getTextContent(child)
+
+    def formatAsstInfo(self):
+        return """\
+\\tab Asst Name:\\tab %s\\line
+\\tab Asst Phone:\\tab %s\\line
+\\tab Asst Fax:\\tab %s\\line
+\\tab Asst E-mail:\\tab %s\\par""" % (
+            self.asstName and RtfWriter.fix(self.asstName.strip()) or "",
+            self.asstPhone and RtfWriter.fix(self.asstPhone.strip()) or "",
+            self.asstFax and RtfWriter.fix(self.asstFax.strip()) or "",
+            self.asstEmail and RtfWriter.fix(self.asstEmail.strip()) or "")
+
     def __findSummaries(self, id, cursor):
         summaries = []
         cursor.execute("""\
@@ -490,6 +518,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         # Pump out one RTF letter for each board member.
         names = {}
         for m in boardMembers:
+            asstInfo    = m.formatAsstInfo()
             addrBlock   = m.address.format(useRtf = True,
                                            dropUS = True).getBlock()
             forename    = toRtf(m.name.getGivenName())
@@ -507,7 +536,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@FANCYNAME@@",   fancyName)
                                    .replace("@@TERMYEARS@@",   termYears)
                                    .replace("@@SUMMARYLIST@@", summaryList)
-                                   .replace("@@CONTACTINFO@@", contactInfo))
+                                   .replace("@@CONTACTINFO@@", contactInfo)
+                                   .replace("@@ASSTINFO@@",    asstInfo))
             name = createRtfFilename(forename, surname, names)
             print "writing %s" % name
             fp = open(name, "wb")
