@@ -21,7 +21,7 @@
 #    Email [mapped from CEML]
 #    Web [mapped from WebSite/@xref]
 #   PublishInDirectory [mapped from PRACTICELOCATIONS UsedFor='GPMAILER'
-                        CEML/@Public]
+#                       CEML/@Public]
 #   PracticeLocations
 #    PracticeLocation [mapped from PRACTICELOCATIONS UsedFor='GP']
 #     Institution [mapped from INSTITUTION] 
