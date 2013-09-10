@@ -20,8 +20,8 @@
 #    Fax [mapped from Fax]
 #    Email [mapped from CEML]
 #    Web [mapped from WebSite/@xref]
-#   PublishInDirectory [mapped from GeneticsProfessionalDetails/
-#                       AdministrativeInformation/Directory/Include]
+#   PublishInDirectory [mapped from PRACTICELOCATIONS UsedFor='GPMAILER'
+                        CEML/@Public]
 #   PracticeLocations
 #    PracticeLocation [mapped from PRACTICELOCATIONS UsedFor='GP']
 #     Institution [mapped from INSTITUTION] 
@@ -49,6 +49,9 @@
 #                         mapped from FAMILYCANCERSYNDROME/SYNDROMENAME]
 #   MemberOfGeneticsSociety [optional, multiple,
 #                            mapped from MEMBERSHIP/INSTITUTION]
+#
+# BZIssue::5295 (JIRA::OCECDR-3596) - changed source of PublishInDirectory
+#
 #----------------------------------------------------------------------
 import cdr, cdrdb, sys, bz2, cdrmailer, cdrmailcommon, urllib2
 etree = cdr.importEtree()
@@ -212,6 +215,7 @@ class GP:
             self.usedFor = (node.get('UsedFor') or '').split()
             self.inst = self.phone = self.fax = self.email = self.web = u''
             self.address = []
+            self.publicEmail = None
             for child in node:
                 if child.tag == 'INSTITUTION':
                     self.inst = child.text
@@ -223,6 +227,7 @@ class GP:
                     self.fax = child.text
                 elif child.tag == 'CEML':
                     self.email = child.text
+                    self.publicEmail = child.get("Public") != "No"
                 elif child.tag == 'WebSite':
                     self.web = child.get('xref') or u''
         def toElement(self, isContact = False):
@@ -303,10 +308,6 @@ class GP:
                     self.teamMember = True
                 if child.tag == 'ServiceLimitations':
                     self.limitations = child.text
-                if child.tag == 'AdministrativeInformation':
-                    for i in child.findall('Directory/Include'):
-                        if i.text == 'Include':
-                            self.publish = True
                 if child.tag == 'GeneticsSpecialtyInformation':
                     for c in child.findall('GeneticsBoardCertification'):
                         specialty = GP.Specialty(c)
@@ -317,6 +318,8 @@ class GP:
                 self.locations.append(location)
             if 'GPMailer' in location.usedFor:
                 self.contact = location
+                if location.publicEmail:
+                    self.publish = True
         for e in cdrTree.findall('ProfessionalType'):
             self.professionalTypes.add(e.text)
         for e in filterTree.findall('DEGREE'):
