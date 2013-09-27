@@ -76,12 +76,9 @@ RETRY_MULTIPLIER = 5.0
 lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 if cdr.isProdHost():
-    # waitTotal = 32400  #  9.0 hours
-    # CBIIT PROD turns out to be much slower than expected.  Temporarily
-    # increasing time out period.
-    waitTotal = 64800  # 18.0 hours
+    waitTotal = 28800  #  8.0 hours
 else:
-    waitTotal = 64800  # 18.0 hours
+    waitTotal = 36000  # 10.0 hours
 
 testMode   = None
 fullMode   = None
