@@ -1320,8 +1320,8 @@ class Address(cdrdocobject.ContactInfo):
     #------------------------------------------------------------------
     # Create a LaTeX- (or RTF-) ready string representing this address.
     #------------------------------------------------------------------
-    def format(self, upperCase = False, dropUS = False, wrapAt = sys.maxint,
-               useRtf = False, contactFields = False):
+    def format(self, upperCase=False, dropUS=False, wrapAt=sys.maxint,
+               useRtf=False, contactFields=False, useRtfTable=False):
         self.__includeNameAndTitle = not contactFields
         lines = self.getAddressLines(self.__includeNameAndTitle)
         if upperCase:
@@ -1333,7 +1333,7 @@ class Address(cdrdocobject.ContactInfo):
             lines = lines[:-1]
         lines = self.wrapLines(lines, wrapAt)
         if contactFields:
-            return self.__formatContactFields(lines)
+            return self.__formatContactFields(lines, useRtfTable)
         return self.__formatAddressFromLines(lines, useRtf)
 
     #------------------------------------------------------------------
@@ -1353,9 +1353,35 @@ class Address(cdrdocobject.ContactInfo):
         return "".join(xml)
 
     #------------------------------------------------------------------
+    # Assemble an RTF table row for two-column contact information.
+    #------------------------------------------------------------------
+    @staticmethod
+    def formatRtfContactTableRow(label, value):
+        value = value or ""
+        return """\
+{
+\\trowd\\trleft1050\\cellx2500\\cellx10000
+\\pard\\intbl %s:\\cell
+\\pard\\intbl %s\\cell
+\\row
+}""" % (RtfWriter.fix(label),
+        RtfWriter.fix(value.strip()).replace("@@LINE@@", "\\line"))
+
+    #------------------------------------------------------------------
     # Create RTF for contact fields on fax-back form.
     #------------------------------------------------------------------
-    def __formatContactFields(self, lines):
+    def __formatContactFields(self, lines, useRtfTable):
+        if useRtfTable:
+            makeRow = Address.formatRtfContactTableRow
+            rows = [
+                makeRow("Name", self.getAddressee()),
+                makeRow("Title", self.getPersonTitle()),
+                makeRow("Address", "@@LINE@@\n".join(lines)),
+                makeRow("Phone", self.getPhone()),
+                makeRow("Fax", self.getFax()),
+                makeRow("E-mail", self.getEmail()),
+            ]
+            return "\n".join(rows)
         title = RtfWriter.fix(self.getPersonTitle() or "")
         phone = RtfWriter.fix(self.getPhone() or "")
         fax   = RtfWriter.fix(self.getFax() or "")

@@ -442,15 +442,14 @@ class BoardMember:
                 self.asstEmail = cdr.getTextContent(child)
 
     def formatAsstInfo(self):
-        return """\
-\\tab Asst Name:\\tab %s\\line
-\\tab Asst Phone:\\tab %s\\line
-\\tab Asst Fax:\\tab %s\\line
-\\tab Asst E-mail:\\tab %s\\par""" % (
-            self.asstName and RtfWriter.fix(self.asstName.strip()) or "",
-            self.asstPhone and RtfWriter.fix(self.asstPhone.strip()) or "",
-            self.asstFax and RtfWriter.fix(self.asstFax.strip()) or "",
-            self.asstEmail and RtfWriter.fix(self.asstEmail.strip()) or "")
+        makeRow = cdrmailer.Address.formatRtfContactTableRow
+        lines = [
+            makeRow("Asst Name", self.asstName),
+            makeRow("Asst Phone", self.asstPhone),
+            makeRow("Asst Fax", self.asstFax),
+            makeRow("Asst E-mail", self.asstEmail),
+        ]
+        return "\n".join(lines)
 
     def __findSummaries(self, id, cursor):
         summaries = []
@@ -529,8 +528,9 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             fancyName   = toRtf(m.name.format(True, False))
             termYears   = m.getTermYears()
             summaryList = m.getSummaryList()
-            contactInfo = m.address.format(contactFields = True,
-                                           dropUS = True)
+            contactInfo = m.address.format(contactFields=True,
+                                           dropUS=True,
+                                           useRtfTable=True)
             letter      = (template.replace("@@ADDRBLOCK@@",   addrBlock)
                                    .replace("@@FORENAME@@",    forename)
                                    .replace("@@SURNAME@@",     surname)
