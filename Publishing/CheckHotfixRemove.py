@@ -240,7 +240,8 @@ try:
                                'Enrolling by invitation',
                                'Closed', 
                                'Completed', 
-                               'Temporarily closed')
+                               'Temporarily closed',
+                               'Unknown')
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
