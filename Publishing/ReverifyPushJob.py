@@ -19,6 +19,7 @@ import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk, optparse
 # Script and log file for publishing
 LOGNAME = "publish.log"
 PUBLOG  = cdr.PUBLOG
+uid = pw = sessionID = None
 
 # Publishing query
 # ----------------
@@ -63,6 +64,9 @@ def parseArguments(args):
                       action = 'store', dest = 'jobid',
                       help = 'JobID for job to re-verify (must also '
                                                     'provide status)')
+    parser.add_option('-i', '--session',
+                      action = 'store', dest = 'session',
+                      help = 'User SessionID (unless user/pw are specified)')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
@@ -96,8 +100,12 @@ l.write('Arguments: %s' % sys.argv)
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
-uid       = options.values.uid
-pw        = options.values.pw
+
+if options.values.uid:
+    uid       = options.values.uid
+    pw        = options.values.pw
+else:
+    sessionID = options.values.session
 
 if options.values.status and options.values.jobid:
     status = options.values.status
@@ -347,10 +355,24 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
 # -------------------------------------------------------------------
 # MAIN starts here
 # -------------------------------------------------------------------
-# Checking CDR user ID
-# --------------------
-session = cdr.login(uid, pw)
-error   = cdr.checkErr(session)
+# Checking CDR user or session ID
+# (the session ID is passed when running from the Admin interface)
+# ----------------------------------------------------------------
+error = None
+sessionUsr = None
+
+if sessionID:
+     session = sessionID
+     sessionUsr = cdr.idSessionUser('', session)
+else:
+     session = cdr.login(uid, pw)
+     error   = cdr.checkErr(session)
+
+# Exit if the session ID is unknown or the user credentials are invalid
+# ---------------------------------------------------------------------
+if sessionID and not sessionUsr:
+    l.write("*** Invalid or expired session ID: %s" % session, stdout = True)
+    sys.exit(1)
 
 if error:
     l.write("*** Error logging in: %s" % error, stdout = True)
