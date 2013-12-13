@@ -2827,7 +2827,10 @@ ENDSUMMARYPREAMBLE=r"""
   \setlength{\textwidth}{6.5in}
   \setlength{\textheight}{8.5in}
   \setlength{\oddsidemargin}{0in}
-  \setlength{\voffset}{-0.50in}
+
+%% Suppressed, because it cuts off the summary title in the CBIIT environment
+%% (see OCECDR-3681).
+%%  \setlength{\voffset}{-0.50in}
 
   \renewcommand{\thesection}{\hspace{-1.0em}}
 
