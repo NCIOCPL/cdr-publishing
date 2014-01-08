@@ -572,6 +572,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue>Push Interim-Export submitted manually</ParmValue>
    </SubsetParameter>
@@ -1136,6 +1140,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -1715,6 +1723,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue>Push Export submitted manually</ParmValue>
    </SubsetParameter>
@@ -2069,6 +2081,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Yes</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -2159,6 +2175,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>PubType</ParmName>
     <ParmValue>Hotfix (Remove)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
@@ -2516,6 +2536,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -2680,6 +2704,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -2848,6 +2876,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -3007,6 +3039,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -3170,6 +3206,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -3327,6 +3367,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -3490,6 +3534,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -3662,6 +3710,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -3822,6 +3874,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -4022,6 +4078,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -4184,6 +4244,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -4342,6 +4406,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
@@ -4517,6 +4585,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>GKPubTarget</ParmName>
     <ParmValue>Live</ParmValue>
    </SubsetParameter>
@@ -4675,6 +4747,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
