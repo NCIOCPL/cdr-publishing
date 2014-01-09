@@ -25,7 +25,7 @@ OUTPUTBASE  = cdr.BASEDIR + "/reports"
 DOC_FILE    = "ICRDBStats"
 LOGNAME     = "ICRDBStats.log"
 SMTP_RELAY  = "MAILFWD.NIH.GOV"
-STR_FROM    = "PDQ Operator <operator@cips.nci.nih.gov>"
+STR_FROM    = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
 now         = time.localtime()
 today       = time.strftime("%Y-%m-%d", now)

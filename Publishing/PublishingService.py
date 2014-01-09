@@ -84,7 +84,7 @@ sleepSecs = len(sys.argv) > 1 and string.atoi(sys.argv[1]) or 10
 PUBSCRIPT = cdr.BASEDIR + "/publishing/publish.py"
 LOGNAME   = "publish.log"
 BANNER    = "*************** Starting Publishing Service ***************"
-SENDER    = "operator@cips.nci.nih.gov"
+SENDER    = "NCIPDQoperator@mail.nih.gov"
 emailDL   = cdr.getEmailList('Developers Notification')
 SUBJECT   = "%s: *** Error Starting Publishing Service ***" % \
                                           cdr.PUB_NAME.capitalize()
