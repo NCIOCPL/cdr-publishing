@@ -45,7 +45,7 @@ emailDL.sort()
 
 # Set the variables and send the message
 # --------------------------------------
-sender    = "operator@cips.nci.nih.gov"
+sender    = "NCIPDQoperator@mail.nih.gov"
 if cdr.h.org == 'OCE':
     subject   = "%s: %s" %(cdr.PUB_NAME.capitalize(), sys.argv[1])
 else:

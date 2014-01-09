@@ -309,13 +309,13 @@ SELECT MIN(pub_proc)
     # Email constants
     # ---------------
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
-    strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
+    strFrom      = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
     if testMode:
         strTo    = ["VE Test <***REMOVED***>"]
                     #"William Osei-Poku <william.osei-poku@lmco.com>", 
                     #"Kimberly Eckley <***REMOVED***>"]
     else:
-        strTo    = ["PDQ Operator <operator@cips.nci.nih.gov>", 
+        strTo    = ["PDQ Operator <NCIPDQoperator@mail.nih.gov>", 
                     "William Osei-Poku <***REMOVED***>", 
                     "Diana Bitenas <Diana.bitenas@lmco.com>",
                     "Judy Morris <***REMOVED***>",

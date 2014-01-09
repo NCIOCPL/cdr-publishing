@@ -21,7 +21,7 @@ OUTPUTBASE     = cdr.BASEDIR + "/Output/NLMExport"
 WITHDRAWN_LIST = "WithdrawnFromPDQ.txt"
 LOGNAME        = "CheckLicensees.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
-STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
+STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 STR_TO         = "***REMOVED***"
 
 now            = time.localtime(time.time())
@@ -156,7 +156,7 @@ try:
     # Email constants
     # ---------------
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
-    strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
+    strFrom      = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
     strTo        = ["VE Test <***REMOVED***>"]
 
     mailHeader   = """\

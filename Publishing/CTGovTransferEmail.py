@@ -32,7 +32,7 @@ OUTPUTBASE     = cdr.BASEDIR + "/Output/CTGovTransfer"
 DOC_FILE       = "CTGovTransfer"
 LOGNAME        = "CTGovTransfer.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
-STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
+STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
 now            = time.localtime()
 

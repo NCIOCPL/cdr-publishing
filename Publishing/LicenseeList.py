@@ -214,7 +214,7 @@ LEFT OUTER JOIN query_term pdi
     # Email constants
     # ---------------
     SMTP_RELAY   = "MAILFWD.NIH.GOV"
-    strFrom      = "PDQ Operator <operator@cips.nci.nih.gov>"
+    strFrom      = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
     if testMode:
         strTo    = cdr.getEmailList('Test Publishing Notification')
     else:

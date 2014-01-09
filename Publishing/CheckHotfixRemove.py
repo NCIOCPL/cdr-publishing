@@ -29,7 +29,7 @@ OUTPUTBASE     = cdr.BASEDIR + "/Output/HotfixRemove"
 DOC_FILE       = "HotfixRemove"
 LOGNAME        = "HotfixRemove.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
-STR_FROM       = "PDQ Operator <operator@cips.nci.nih.gov>"
+STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
 now            = time.localtime()
 
