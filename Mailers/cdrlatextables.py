@@ -4,6 +4,7 @@
 #
 # Module for generating LaTeX for tables in CDR documents.
 #
+# OCECDR-3730: Mailer Creation Fails with Table Error
 #----------------------------------------------------------------------
 import re, sys, cdr, time
 
@@ -499,7 +500,17 @@ def openGroup(pp):
             propCols  += 1
         else:
             usableSpace -= spec.amount
-    if usableSpace < MIN_WIDTH * propCols:
+
+    if TABLE_DEBUG:
+        sys.stderr.write("usableSpace: %s; MIN_WIDTH: %f; propCols: %d\n" % (
+                             usableSpace, MIN_WIDTH, propCols))
+
+    # Creating a new variable exactSpaceLeft since the comparison of the 
+    # "if" statement can trip us up if the spaceLeft is 0. and the value
+    # is stored as -4.1e-16, for instance.
+    # ------------------------------------------------------------------
+    exactSpaceLeft = int(usableSpace * 10000 + 0.5) / 10000.
+    if exactSpaceLeft < MIN_WIDTH * propCols:
         ts = time.strftime("%Y%m%d%H%M%S")
         fp = open("d:/tmp/mailer-table-%s.xml" % ts, "w")
         fp.write(tGroupNode.toxml("utf-8"))
