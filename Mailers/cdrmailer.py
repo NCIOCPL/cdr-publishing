@@ -147,7 +147,8 @@ class MailerJob:
     #------------------------------------------------------------------
     # Class-level values.
     #------------------------------------------------------------------
-    __CDR_EMAIL     = "cdr@%s.nci.nih.gov" % socket.gethostname()
+    ### __CDR_EMAIL     = "cdr@%s.nci.nih.gov" % socket.gethostname()
+    __CDR_EMAIL     = "PDQ Operator <NCIPDQoperator@mail.nih.gov"
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
     __LOGFILE       = _LOGFILE
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
@@ -642,7 +643,8 @@ class MailerJob:
             try:
                 self.log("unable to build emailer lookup tables: %s" % str(e))
                 sender  = MailerJob.__CDR_EMAIL
-                subject = "Emailer lookup table failure"
+                subject = "%s-%s: Emailer lookup table failure" % (
+                                                        cdr.h.org, cdr.h.tier)
                 message = """\
 Unable to generate a fresh set of lookup values for the electronic
 mailer system (mailer job %s):
@@ -1088,7 +1090,8 @@ You can retrieve the letters at:
             if self.__email:
                 self.log("Sending mail to %s" % self.__email)
                 sender  = MailerJob.__CDR_EMAIL
-                subject = "CDR Mailer Job Status"
+                subject = "%s-%s: CDR Mailer Job Status" % (
+                                                        cdr.h.org, cdr.h.tier)
                 # Specify the hostname based on the environment we're in
                 # ------------------------------------------------------
                 if cdr.h.org == 'OCE':
