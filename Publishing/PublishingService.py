@@ -6,6 +6,8 @@
 #
 # BZIssue::5009 Fix PublishingService.py
 #
+# OCECDR-3727: Bug in Publishing Verification on Lower Tiers
+#
 # Revision 1.21  2007/12/31 16:33:01  venglisc
 # Added a new group for email notification so that we don't send an email
 # to the users if we're testing on the dev system. (Bug 3678)
@@ -204,8 +206,17 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     host = rows and rows[0][0] or None
 
     # Retrieve status information from Cancer.gov for the push job.
+    # Note: If no host has been specified we're using the default host.
+    #       However, without the "else"-statement the default host would
+    #       be redefined to the new host, so we're redefining the default
+    #       again.
+    # -------------------------------------------------------------------
     if host:
         cdr2gk.host = host
+    else:
+        host = "%s.%s" % (cdr.h.host['GK'][0], cdr.h.host['GK'][1])
+        cdr2gk.host = host
+
     response = cdr2gk.requestStatus('Summary', jobId)
     details = response.details
 
