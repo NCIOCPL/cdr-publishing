@@ -7,12 +7,15 @@
 # Tool used by CIAT to review Genetics Professional electronic mailers,
 # and to mark mailers which have been returned to sender ("bounced").
 #
+# JIRA::OCECDR-3734
+#
 #----------------------------------------------------------------------
-import cdrutil, cgi
+import cdrutil, cgi, sys
 
 fields = cgi.FieldStorage()
 bounce = fields.getvalue('bounce')
 debug = fields.getvalue('debug')
+raw = fields.getvalue('raw')
 conn = cdrutil.getConnection('emailers')
 cursor = conn.cursor()
 if bounce:
@@ -21,6 +24,16 @@ if bounce:
            SET bounced = NOW()
          WHERE id = %s""", bounce)
     conn.commit()
+if raw:
+    cursor.execute("""\
+    SELECT id, cdr_id, job, email, name, mailed, completed, bounced, recorded
+      FROM emailers.gp_emailer
+  ORDER BY id""")
+    print "Content-type: text/plain\n"
+    print repr(tuple([col[0] for col in cursor.description]))
+    for row in cursor.fetchall():
+        print repr(tuple(row))
+    sys.exit(0)
 cursor.execute("""\
     SELECT id, cdr_id, job, email, name, mailed, completed, bounced
       FROM emailers.gp_emailer
