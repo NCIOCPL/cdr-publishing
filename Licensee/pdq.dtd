@@ -311,6 +311,7 @@
        inline (Yes|No) "No"
        MinWidth CDATA #IMPLIED
        language NMTOKENS #IMPLIED
+       audience (Patients | Health_professionals) #IMPLIED
        size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
        thumb (Yes|No) "No"
        id CDATA #IMPLIED>
@@ -892,18 +893,22 @@
 
 <!ELEMENT RelatedInformation (RelatedExternalRef |
                               RelatedSummaryRef  |
-                              RelatedDrugSummaryRef)+>
+                              RelatedDrugSummaryRef |
+                              RelatedGlossaryTermRef)+>
 
 <!ELEMENT RelatedExternalRef                  (#PCDATA)>
-<!ATTLIST RelatedExternalRef xref       CDATA  #REQUIRED>
+<!ATTLIST RelatedExternalRef xref      CDATA  #REQUIRED>
 <!ATTLIST RelatedExternalRef UseWith (en | es) #IMPLIED>
 
 <!ELEMENT RelatedSummaryRef                   (#PCDATA)>
-<!ATTLIST RelatedSummaryRef  href       CDATA  #REQUIRED>
+<!ATTLIST RelatedSummaryRef  href      CDATA  #REQUIRED>
 <!ATTLIST RelatedSummaryRef  UseWith (en | es) #IMPLIED>
 
 <!ELEMENT RelatedDrugSummaryRef               (#PCDATA)>
-<!ATTLIST RelatedDrugSummaryRef href    CDATA  #REQUIRED>
+<!ATTLIST RelatedDrugSummaryRef href   CDATA  #REQUIRED>
+
+<!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>
+<!ATTLIST RelatedGlossaryTermRef href  CDATA  #REQUIRED>
 
 <!-- End Glossary -->
 
