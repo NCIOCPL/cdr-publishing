@@ -1,0 +1,2460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
+ 
+ <SystemName>QcFilterSets</SystemName> 
+ <SystemDescription>
+   QC all CDR filter sets: vendor filters, QC report filters, etc.
+ </SystemDescription> 
+  
+ <!--
+ ========================================================================
+ Citation documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>QC Citation Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Citation QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>25000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Citation' 
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Citation Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+
+ <!--
+ ========================================================================
+ CTGovProtocol documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>QC CTGovProtocol Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for CTGovProtocol QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>500</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'CTGovProtocol' 
+       GROUP BY v.id 
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC CTGovProtocol Set</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications>
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+
+ <!--
+ ========================================================================
+ DrugInformationSummary documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>QC DrugInfoSummary Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for DrugInfoSummary QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>25000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'DrugInformationSummary' 
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC DrugInfoSummary Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+
+ <!--
+ ========================================================================
+ InScopeProtocol documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>QC InScopeProtocol Full Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Full InScopeProtocol QC report.
+  </SubsetDescription> 
+  <SubsetParameters>    
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term_pub q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+     <SubsetFilterName>set:QC InScopeProtocol Full Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC InScopeProtocol HP Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for HP InScopeProtocol QC report.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term_pub q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+     <SubsetFilterName>set:QC InScopeProtocol HP Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC InScopeProtocol Patient Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Patient InScopeProtocol QC report.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term_pub q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+     <SubsetFilterName>set:QC InScopeProtocol Patient Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC InScopeProtocol Admin Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for InScopeProtocol Administrative QC report.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term_pub q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC InScopeProtocol Admin Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Media Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Media QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>MaxDocUpdatedDate</ParmName> 
+    <ParmValue>MaxDocUpdatedDate</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Media documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs?  v.id, MAX(v.num)
+        FROM publishable_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = v.doc_type
+       WHERE t.name = 'Media'
+         AND q.path LIKE '%/@cdr:%ref'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND not exists (SELECT 'x'
+                           FROM query_term_pub i
+                          WHERE i.doc_id = v.id
+                            AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding')
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Media Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Organization Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Organization QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>15000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>MaxDocUpdatedDate</ParmName> 
+    <ParmValue>MaxDocUpdatedDate</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = v.doc_type 
+       WHERE t.name = 'Organization' 
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Organization Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Person Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Person QC report.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Person documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/Person/Status/CurrentStatus' 
+         AND (q.value = 'Active' 
+             OR (q.value = 'Inactive' 
+                 AND EXISTS (SELECT q2.int_val 
+                               FROM query_term q2 
+                               JOIN active_doc d2 
+                                 ON d2.id = q2.doc_id 
+                               JOIN publishable_version v2 
+                                 ON v2.id = d2.id 
+                              WHERE q2.int_val = d.id 
+                                AND q2.path LIKE '%@cdr:ref'
+                            )
+                )
+             ) 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Person Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC PoliticalSubUnit Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for PoliticalSubUnit QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>500</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue>
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'PoliticalSubUnit' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications>
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Summary Patient Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for reformatted Patient Summary QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Summary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Summary Patient Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters>
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Summary Patient Set (Bold/Underline)</SubsetName> 
+  <SubsetDescription>
+    Filter set for reformatted Patient Summary QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Summary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Summary Patient Set (Bold/Underline)</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters>
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Summary Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Summary QC report (redline/strikeout and no markup)
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Summary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Summary Set</SubsetFilterName> 
+     </SubsetFilter> 
+    </SubsetFilters>
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Summary Set (Bold/Underline)</SubsetName> 
+  <SubsetDescription>
+    Filter set for Summary QC report (bold/underline)
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Summary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Summary Set (Bold/Underline)</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>QC Term Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Term QC report.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>No</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>10000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>20</ParmValue> 
+   </SubsetParameter> 
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+<!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/Term/TermStatus' 
+         AND q.value IN ('Reviewed-Problematic', 'Reviewed-Retain', 'Unreviewed') 
+       GROUP BY v.id
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:QC Term Set</SubsetFilterName> 
+     </SubsetFilter>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>20</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <!--
+ ========================================================================
+ Country documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>Vendor QC Country Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Country vendor documents.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>500</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Country' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC Country Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <!--
+ ========================================================================
+ CTGovProtocol documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>Vendor QC CTGovProtocol Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for CTGovProtocol QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'CTGovProtocol' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC CTGovProtocol Set</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications>
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+
+ <!--
+ ========================================================================
+ DrugInfoSummary documents.
+ ======================================================================== -->
+ <SystemSubset> 
+  <SubsetName>Vendor QC DrugInfoSummary Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Country vendor documents.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>5000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'DrugInformationSummary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC DrugInfoSummary Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+    <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC GlossaryTerm Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for GlossaryTerm vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/GlossaryTermName/TermNameStatus' 
+         AND q.value = 'Approved' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC GlossaryTerm Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions>
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC InScopeProtocol Set - Full</SubsetName> 
+  <SubsetDescription>
+    Filter set for InScopeProtocol vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC InScopeProtocol Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> <SubsetOption>
+   <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+    </SubsetOption> 
+   <SubsetOption> 
+   <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+    </SubsetOption> 
+   </SubsetOptions>
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC InScopeProtocol Set - Active</SubsetName> 
+  <SubsetDescription>
+    Filter set for InScopeProtocol vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs?  v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Active', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC InScopeProtocol Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC InScopeProtocol Set - Closed</SubsetName> 
+  <SubsetDescription>
+    Filter set for InScopeProtocol vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   InScopeProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs?  v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/InScopeProtocol/ProtocolAdminInfo' + 
+                      '/CurrentProtocolStatus' 
+         AND q.value IN ('Closed', 'Completed', 'Temporarily Closed', 'Approved-Not Yet Active') 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC InScopeProtocol Set</SubsetFilterName>
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/> 
+     </SubsetFilterParm> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC Media Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Media vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Media documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+        FROM publishable_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = v.doc_type
+       WHERE t.name = 'Media'
+         AND q.path LIKE '%/@cdr:%ref'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND not exists (SELECT 'x'
+                           FROM query_term_pub i
+                          WHERE i.doc_id = v.id
+                            AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding')
+    GROUP BY v.id
+    ORDER BY v.id
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC Organization Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Organization vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/Organization/Status/CurrentStatus' 
+         AND (q.value = 'Active' 
+              OR (q.value = 'Inactive' 
+                  AND EXISTS (SELECT q2.int_val 
+                                FROM query_term q2 
+                                JOIN active_doc d2 
+                                  ON d2.id = q2.doc_id 
+                                JOIN publishable_version v2 
+                                  ON v2.id = d2.id 
+                               WHERE q2.int_val = d.id 
+                                 AND q2.path LIKE '%@cdr:ref'
+                             )
+                 )
+             ) 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC Organization Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset>
+  <SubsetName>Vendor QC GeneticsProfessional Set</SubsetName>
+  <SubsetDescription>
+    Filter and validate publishable GeneticsProfessional documents.
+  </SubsetDescription>
+  <SubsetParameters>  
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>20000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>10</ParmValue>
+   </SubsetParameter>   
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>Live</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   GeneticsProfessional documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? d.id, MAX(v.num)
+        FROM publishable_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = v.doc_type
+        JOIN query_term_pub g
+          ON g.doc_id = d.id
+         AND g.path = '/Person/ProfessionalInformation' +
+                      '/GeneticsProfessionalDetails'    +
+                      '/AdministrativeInformation'      +
+                      '/Directory/Include'
+       WHERE t.name = 'Person'
+         AND g.value = 'Include'
+         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+    GROUP BY d.id
+    ORDER BY d.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>     
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor QC GeneticsProfessional Set</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>  
+  </SubsetOptions>
+ </SystemSubset>
+
+
+
+ <SystemSubset> 
+  <SubsetName>Vendor QC Person Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Person vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>50000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Person documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/Person/Status/CurrentStatus' 
+         AND (q.value = 'Active' 
+              OR (q.value = 'Inactive' 
+                  AND EXISTS (SELECT q2.int_val 
+                                FROM query_term q2 
+                                JOIN active_doc d2 
+                                  ON d2.id = q2.doc_id 
+                                JOIN publishable_version v2 
+                                  ON v2.id = d2.id 
+                               WHERE q2.int_val = d.id 
+                                 AND q2.path LIKE '%@cdr:ref'
+                             )
+                 )
+             ) 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC Person Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC PoliticalSubUnit Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for PoliticalSubUnit QC report
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>1000</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>5</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'PoliticalSubUnit' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter> 
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications>
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>5</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC Summary Set </SubsetName> 
+  <SubsetDescription>
+    Filter set for Summary vendor documents.
+  </SubsetDescription>
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>5000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+
+    <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN doc_type t 
+          ON t.id = d.doc_type 
+       WHERE t.name = 'Summary' 
+       GROUP BY v.id 
+       ORDER BY v.id 
+     </SubsetSQL>
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC Summary Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+      <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/> 
+     </SubsetFilterParm>
+    </SubsetFilters> 
+   </SubsetSpecification> 
+  </SubsetSpecifications> 
+  <SubsetOptions>
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+  
+ <SystemSubset> 
+  <SubsetName>Vendor QC Term Set</SubsetName> 
+  <SubsetDescription>
+    Filter set for Term vendor documents.
+  </SubsetDescription> 
+  <SubsetParameters> 
+   <SubsetParameter> 
+    <ParmName>ReportOnly</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>InteractiveMode</ParmName> 
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>ValidateDocs</ParmName> 
+    <ParmValue>Yes</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>    
+    
+   <SubsetParameter> 
+    <ParmName>NumDocs</ParmName> 
+    <ParmValue>5000</ParmValue> 
+   </SubsetParameter> 
+   <SubsetParameter> 
+    <ParmName>AbortOnError</ParmName> 
+    <ParmValue>50</ParmValue>
+   </SubsetParameter> 
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>GateKeeper</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters> 
+  <SubsetSpecifications>
+   <!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification> 
+    <SubsetSelection> 
+     <SubsetSQL> 
+      SELECT TOP ?NumDocs? v.id, MAX(v.num) 
+        FROM publishable_version v 
+        JOIN active_doc d 
+          ON d.id = v.id 
+        JOIN query_term q 
+          ON q.doc_id = d.id 
+       WHERE q.path = '/Term/TermStatus' 
+         AND q.value IN ('Reviewed-Problematic', 'Reviewed-Retain', 'Unreviewed') 
+       GROUP BY v.id
+       ORDER BY v.id 
+     </SubsetSQL> 
+    </SubsetSelection> 
+    <SubsetFilters> 
+     <SubsetFilter> 
+      <SubsetFilterName>set:Vendor QC Term Set</SubsetFilterName> 
+     </SubsetFilter> 
+     <SubsetFilterParm> 
+    <ParmName>DateFirstPub</ParmName> 
+      <ParmValue/>
+     </SubsetFilterParm> 
+    </SubsetFilters> 
+   </SubsetSpecification>
+  </SubsetSpecifications> 
+  <SubsetOptions> 
+   <SubsetOption> 
+    <OptionName>Destination</OptionName> 
+    <OptionValue>d:/cdr/filters/Output</OptionValue> 
+   </SubsetOption> 
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName> 
+    <OptionValue>50</OptionValue>
+   </SubsetOption> 
+   <SubsetOption> 
+    <OptionName>PublishIfWarnings</OptionName> 
+    <OptionValue>Yes</OptionValue> 
+   </SubsetOption> 
+  </SubsetOptions> 
+ </SystemSubset>
+</PublishingSystem>
