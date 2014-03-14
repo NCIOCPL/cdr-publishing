@@ -1,12 +1,5 @@
-<CdrDoc Type='PublishingSystem' Id='CDR0000000178'>
-<CdrDocCtl>
-<DocValStatus readonly="yes">V</DocValStatus>
-<DocActiveStatus readonly="yes">A</DocActiveStatus>
-<DocValDate readonly="yes">2013-09-17T17:31:57.503</DocValDate>
-<DocTitle readonly="yes">Primary</DocTitle>
-<DocComment>Replaced by Volker Englisch</DocComment><ReadyForReview readonly="yes">N</ReadyForReview>
-</CdrDocCtl>
-<CdrDocXml><![CDATA[<?xml version="1.0" encoding="UTF-8"?><PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
+<?xml version="1.0" encoding="utf-8"?>
+<PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
  
  <SystemName>Primary</SystemName>
  <SystemDescription>
@@ -4791,6 +4784,3 @@ LEFT OUTER JOIN query_term_pub u
  </SystemSubset>
 
 </PublishingSystem>
-]]>
-</CdrDocXml>
-</CdrDoc>
