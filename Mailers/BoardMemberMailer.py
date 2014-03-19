@@ -491,7 +491,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
 
         # Gather the information we need for the board.
         self.__loadBoardInfo()
-        
+
         # Collect the information needed to generate the mailers.
         boardMembers = []
         try:
@@ -566,6 +566,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                           invitePara = self.__board.invitePara)
         formLetter.defaultFont = formLetter.SANSSERIF
         formLetter.fSize = 24
+        listId       = formLetter.addList(RtfWriter.List.ARABIC)
         template     = formLetter.getRtf()
         
         date         = friendlyDate(self.__board.today)
@@ -602,7 +603,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                       .replace("@@EDBOARDNAME@@",    edBoardName)
                       .replace("@@ADVBOARDNAME@@",   advBoardName)
                       .replace("@@DATEPLUS1MONTH@@", oneMonthAway)
-                      .replace("@@DATEPLUS2WEEKS@@", twoWeeksAway))
+                      .replace("@@DATEPLUS2WEEKS@@", twoWeeksAway)
+                      .replace("@@LISTID@@",         str(listId)))
 
     #------------------------------------------------------------------
     # Insert a conflict of interest form if appropriate.
