@@ -35,6 +35,7 @@ def lookupLetterTitle(letter):
         "adv-summ-fedex"  : "Advisory Board Summaries (FedEx)",
         "adv-interested"  : "Advisory Board Still Interested",
         "adv-big-thankyou": "Advisory Board BIG Thank You",
+        "ed-ref-summ-rev" : "Editorial Board Reformatted Summary Review",
     }
     title = titles.get(letter.lower(), "PDQ Board")
     return "%s Letter" % title
