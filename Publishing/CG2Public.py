@@ -48,7 +48,6 @@ class documentType:
                          'Terminology':   ['name:Vendor Filter: CG2Public']}
         self.sourceBase  = cdr.BASEDIR + "/Output"
         self.jobDir      = self.lastJobDir()
-        self.credentials = cdr.login('venglisc', 'gimte')
         self.outputDir   = None
         self.inputDir    = None
 
@@ -130,7 +129,7 @@ class documentType:
             # Filter the CG document
             # ----------------------
             if directory in self.filters.keys():
-                result = cdr.filterDoc(self.credentials, 
+                result = cdr.filterDoc('guest', 
                                    filter = ['name:Vendor Filter: Convert' +
                                              ' CG to Public Data'],
                                    doc = xmlDoc)

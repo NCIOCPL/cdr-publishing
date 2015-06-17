@@ -3,14 +3,12 @@
 # $Id$
 #
 # Script intended to submit an email to the Visuals OnLine (VOL) 
-# manager (Kevin Broun) when a media document has been updated or 
-# added to Cancer.gov.
+# team when a media document has been updated or added to Cancer.gov.
+# New addition - an image that has been made publishable should be
+# included as well regardless if it's linked to a document or not.
 #
-# $Log: not supported by cvs2svn $
-# Revision 1.1  2009/01/23 15:59:41  venglisc
-# Initial copy of program to notify the visual online person about newly
-# published media documents. (Bug 4402)
-#
+# OCECDR-3752: Modify Media VOL (Visual Online) Report to include all 
+#              publishable media (images) docs.
 #----------------------------------------------------------------------
 import os, sys, cdr, time, optparse, cdrdb
 
@@ -20,9 +18,6 @@ jobTime            = time.localtime(time.time())
 today              = time.strftime("%Y-%m-%d", jobTime)
 
 testMode   = None
-fullUpdate = None
-pubDir     = None
-
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -80,45 +75,91 @@ def parseArguments(args):
 # ------------------------------------------------------------
 # Function to check the database if media documents where 
 # updated for the given time frame.
+# Note:  This program used to be run as a two step process.
+#        1) Find out if a notification needs to be send
+#        2) Create the report with the information requested
+#        We could probably create a single query to achieve the
+#        same thing what both of these queries are handling
+#        but in the interest of time I'm keeping the original
+#        approach for now.
 # ------------------------------------------------------------
 def checkMediaUpdates(sDate, eDate):
     """
     Assign all input parameters to variables and perform some error
     checking.
     """
+    # Select all Media (Image) documents with a new publishable version
+    # created during the previous week (or the specified time frame)
+    # -----------------------------------------------------------------
     try:
         conn = cdrdb.connect()
         cursor = conn.cursor()
+        # SELECT d.id, d.val_date, d.title, dv.num, dv.dt, 
+        #        dv.val_date, dv.publishable
         cursor.execute("""\
-           SELECT d.id
-             FROM pub_proc_doc ppd
-             JOIN pub_proc pp
-               ON pp.id = ppd.pub_proc
-             JOIN document d
-               ON d.id = ppd.doc_id
-             JOIN doc_type dt
-               ON dt.id = d.doc_type
-              AND dt.name = 'Media'
-            WHERE pub_subset like 'Push_%%'
-              AND status in ('Success', 'Verifying')
-              AND pp.started between '%s' AND '%s'
-              AND val_status = 'V'
-              AND active_status = 'A'
-              AND NOT exists (
+        SELECT d.id
+          FROM document d
+          JOIN doc_type dt
+            ON d.doc_type = dt.id
+           AND dt.name = 'Media'
+          JOIN doc_version dv
+            ON dv.id = d.id
+         WHERE d.val_status = 'V'
+           AND d.active_status = 'A'
+           AND NOT EXISTS (
                    SELECT 'x'
                      FROM query_term_pub i
                     WHERE i.doc_id = d.id
                       AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding'
                    )
-            ORDER BY d.id
-        """ % (sDate, eDate), timeout=300)
-        rows = cursor.fetchall()
+           AND d.id > 750000
+           AND dv.num = (
+                   SELECT MAX(num) 
+                     FROM doc_version 
+                    WHERE id = dv.id
+                   )
+           AND dv.dt between '%s' AND '%s'
+           AND dv.publishable = 'Y'
+         ORDER BY d.id
+""" % (sDate, eDate), timeout=300)
+        ids = cursor.fetchall()
     except cdrdb.Error, info:
         l.write("Failure finding updated media documents: %s" % (info[1][0]))
 
-    if rows:
-        return True
-    return False
+    if ids:
+        # allIds = ', '.join("%s" % x[0] for x in ids)
+        # print allIds
+        try:
+            cursor.execute("""\
+         SELECT distinct m.doc_id, m.value, d.first_pub, dv.dt, 
+                dv.updated_dt, v.value, dv.num, dv.publishable
+           FROM query_term m
+LEFT OUTER JOIN query_term v
+             ON m.doc_id = v.doc_id
+            AND v.path = '/Media/@BlockedFromVOL'
+           JOIN doc_version dv
+             ON m.doc_id = dv.id
+           JOIN document d
+             ON dv.id = d.id
+           JOIN query_term c
+             ON m.doc_id = c.doc_id
+          WHERE m.path = '/Media/MediaTitle'
+            AND c.path = '/Media/MediaContent/Categories/Category'
+            AND c.value not in ('pronunciation', 'meeting recording')
+            AND m.doc_id in (%s)
+            AND dv.num = (
+                          SELECT max(num)
+                            FROM doc_version x
+                           WHERE x.id = dv.id
+                         )
+          ORDER BY m.value
+""" % ', '.join("%s" % x[0] for x in ids))
+            rows = cursor.fetchall()
+        except cdrdb.Error, info:
+            l.write("Failure finding media data: %s" % (info[1][0]))
+
+        return rows
+    return []
 
 # ------------------------------------------------------------
 # *** Main ***
@@ -151,12 +192,12 @@ mediaChanges = checkMediaUpdates(startDate, endDate)
 # Print the result
 # ----------------
 l.write('Time Frame:  %s to %s' % (startDate, endDate), stdout = True)
-l.write('Media Documents Updated: %s' % mediaChanges, stdout = True)
+l.write('Media Documents Updated: \n%s' % mediaChanges, stdout = True)
 
 # Setting up email message to be send to users
 # --------------------------------------------
 # machine  = socket.gethostname().split('.')[0]
-sender   = '***REMOVED***'
+sender   = 'NCIPDQoperator@mail.nih.gov'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
 body     = """
@@ -164,20 +205,69 @@ body     = """
  <head>
   <title>Media List Report</title>
  </head>
+  <style type='text/css'>
+    body         { background-color: white; }
+    H3            { font-weight: bold;
+                    font-family: Arial;
+                    font-size: 16pt; 
+                    margin: 8pt; }
+    TABLE.output  { margin-left: auto;
+                    margin-right: auto; }
+    TABLE.output  TD
+                  { padding: 3px; }
+    td.header     { font-weight: bold; 
+                    text-align: center; }
+    tr.odd        { background-color: #E7E7E7; }
+    tr.even       { background-color: #FFFFFF; }
+    tr.head       { background-color: #D2D2D2; }
+    .link         { color: blue; 
+                    text-decoration: underline; }
+    p             { font-weight: bold;
+                    font-family: Arial;
+                    font-size: 10pt; }
+   </STYLE>
+
  <body>
-  <h3>Updated CDR Media Documents</h3>
-   Click the link to view the latest 
-   <a href="%s/cgi-bin/cdr/""" % cdr.CBIIT_NAMES[2]
-body   += """PubStatsByDate.py?session=cdrguest&VOL=Y&doctype=Media&"""
-body   += """datefrom=%s&dateto=%s">""" % (startDate, endDate)
-body   += """Media Change Report</a> """
-body   += """for documents published <br/>between %s and %s.
-  <br/><br/>
-  For questions or comments please contact
-    <a href="mailto:***REMOVED***">Volker Englisch</a>.
- </body>
-</html>
+  <H3>Updated CDR Media Documents</H3>
+
+     Report includes documents made publishable between
+     <b>%s</b> and <b>%s</b><br/>
+  <table class="output" border="1">
+   <tr class="head">
+    <td class="header">CDR-ID</td>
+    <td class="header">Media Title</td>
+    <td class="header">First Pub Date</td>
+    <td class="header">Version Date</td>
+    <td class="header">Last Version<br/>Publishable</td>
+    <td class="header">Blocked from<br/>VOL</td>
+   </tr>
 """ % (startDate, endDate)
+
+class_ = "even"
+for row in mediaChanges:
+    class_ = class_ == "even" and "odd" or "even"
+    # print row
+    body += """
+   <tr class="%s">
+    <td class="link">
+     <a href="https://cdr.cancer.gov/cgi-bin/cdr/GetCdrImage.py?id=CDR%s.jpg">%s</a>
+    </td>
+    <td>%s</td>
+    <td>%s</td>
+    <td>%s</td>
+    <td align="center">%s</td>
+    <td align="center">%s</td>
+   </tr>
+       """ % (class_, row[0], row[0], row[1], 
+                      row[2] and row[2][:10] or '', 
+                      row[3] and row[3][:16] or '', 
+                      row[7], 
+                      row[5] and 'Y' or '')
+
+body += """
+  </table>
+ </body>
+</html>"""
 
 # Don't send emails to everyone if we're testing 
 # ----------------------------------------------

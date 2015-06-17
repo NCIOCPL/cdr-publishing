@@ -794,7 +794,7 @@ LEFT OUTER JOIN query_term_pub s
         l.write('[SQL query submitted:]', stdout=True)
         l.write(query, stdout=True)
 
-    cursor.execute(query, timeout=300)
+    cursor.execute(query, timeout=600)
     rows = cursor.fetchall()
 
     if debug:
@@ -1649,10 +1649,10 @@ startDate = options.values.start or firstOfMonth
 endDate = options.values.end or lastOfMonth
 
 if startDate == firstOfMonth and endDate == lastOfMonth:
-    title = u'Monthly ICRDB Status Report for %s' % time.strftime("%B %Y", 
+    title = u'Monthly PCIB Status Report for %s' % time.strftime("%B %Y", 
                                                               lastmonth)
 else:
-    title = u'ICRDB Status Report from %s to %s' % (startDate, endDate)
+    title = u'PCIB Status Report from %s to %s' % (startDate, endDate)
 
 # Setting the number of rows to be displayed if the document rows are
 # to be displayed (or no rows to be included)

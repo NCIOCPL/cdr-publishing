@@ -80,11 +80,15 @@ _boardValues = {
     BoardValues('cancer genetics', 'Ed Bd Invite Letter - Genetics',
                 """\
 \\par\\par
+{\\tx1260
 I would like to join the following genetics working group(s):\\line
-[  ] Psychosocial issues   [  ] Breast/Ovarian Cancer  [  ] Colorectal Cancer
-\line
-[  ] Prostate Cancer       [  ] Skin Cancer            [  ] Syndromes (MEN2)
-"""),
+{\\ul\\tab} Breast and Gynecologic Cancer\\line
+{\\ul\\tab} Colorectal Cancer\\line
+{\\ul\\tab} Endocrine and Neuroendocrine Neoplasias\\line
+{\\ul\\tab} Kidney Cancer\\line
+{\\ul\\tab} Prostate Cancer\\line
+{\\ul\\tab} Psychosocial and Behavioral Issues\\line
+{\\ul\\tab} Skin Cancer\\par}"""),
     'PDQ PEDIATRIC TREATMENT EDITORIAL ADVISORY BOARD':
     BoardValues('pediatric treatment'),
     'PDQ PEDIATRIC TREATMENT EDITORIAL BOARD':
@@ -94,7 +98,7 @@ I would like to join the following genetics working group(s):\\line
     'PDQ SCREENING AND PREVENTION EDITORIAL BOARD':
     BoardValues('screening and prevention',
                 'Ed Bd Invite Letter - Screening and Prevention'),
-    'PDQ SUPPORTIVE AND PALLIATIVE CARE EDITORIAL ADVISORY BOARD': 
+    'PDQ SUPPORTIVE AND PALLIATIVE CARE EDITORIAL ADVISORY BOARD':
     BoardValues('supportive care'),
     'PDQ SUPPORTIVE AND PALLIATIVE CARE EDITORIAL BOARD':
     BoardValues('supportive care', 'Ed Bd Invite Letter - Supportive Care')
@@ -107,7 +111,7 @@ class Doc:
     def __init__(self, id, title):
         self.id    = id
         self.title = title
-       
+
 #----------------------------------------------------------------------
 # Object for board information.
 #----------------------------------------------------------------------
@@ -241,7 +245,7 @@ class Board:
         if not rows:
             raise cdr.Exception("Unable to find name for org %s" % id)
         return rows[0][0]
-    
+
     def __findEditorInChief(self, id):
         today = str(self.today)
         self.cursor.execute("""\
@@ -295,7 +299,7 @@ class Board:
                 raise cdr.Exception("Phone required for board manager")
             if not self.email:
                 raise cdr.Exception("Email required for board manager")
-        
+
     class EditorInChief:
         def __init__(self, id):
             self.id   = id
@@ -372,7 +376,7 @@ class BoardMember:
             return "2-year"
         else:
             return self.renewalFrequency
-        
+
     def __parseMemberDoc(self, id, ver):
         doc = cdr.getDoc('guest', id, version = str(ver), getObject = True)
         errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
@@ -430,7 +434,7 @@ class BoardMember:
                 frequency = cdr.getTextContent(child)
         if boardId and frequency:
             self.renewalFrequency = frequency
-                
+
     def __parseBoardMemberAssistantInfo(self, node):
         for child in node.childNodes:
             if child.nodeName == "AssistantName":
@@ -547,7 +551,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             fp.write(letter)
             fp.close()
             self.bumpCount()
-    
+
     #------------------------------------------------------------------
     # Prepare a template to be used by all letters in this batch.
     #------------------------------------------------------------------
@@ -569,7 +573,6 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         formLetter.fSize = 24
         listId       = formLetter.addList(RtfWriter.List.ARABIC)
         template     = formLetter.getRtf()
-        
         date         = friendlyDate(self.__board.today)
         boardName    = toRtf(self.__board.name)
         meetingDate  = self.__board.formatMeetingDate()
@@ -653,7 +656,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         for row in rows:
             lines.append("____ %s\line" % RtfWriter.fix(row[0].strip()))
         return template.replace("@@SUMMARYTOPICS@@", "\n".join(lines))
-                         
+
     #------------------------------------------------------------------
     # Gather information about the board for this mailer.
     #------------------------------------------------------------------

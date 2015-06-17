@@ -1,4 +1,4 @@
-#!d:/python/python.exe
+#
 # *********************************************************************
 #
 # File Name: JobmasterCTRP.py
@@ -26,8 +26,9 @@ import sys, os, cdr, getopt, time
 PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
-UTIL       = os.path.join('d:\\cdr', 'Utilities')
-UBIN       = os.path.join('d:\\cdr', 'Utilities', 'bin')
+UTIL       = os.path.join(cdr.BASEDIR, 'Utilities')
+UBIN       = os.path.join(UTIL, 'Bin')
+OUTPUT     = os.path.join(cdr.BASEDIR, 'Output')
 LOGFILE    = 'JobmasterCTRP.log'
 
 weekDay    = time.strftime("%a")
@@ -138,7 +139,7 @@ try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: Submit Download CTRP Trials Job' % istep, stdout = True)
-    os.chdir(UBIN)
+    os.chdir(OUTPUT)
     cmd = os.path.join(UBIN, 'DownloadCtrpTrials.py')
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)

@@ -279,11 +279,11 @@ def verifyLoad(jobId, pushFinished, cursor, conn):
     else:
         now = time.localtime()
         then = list(now)
-        then[3] -= 18
+        then[3] -= 15
         then = time.localtime(time.mktime(then))
         then = time.strftime("%Y-%m-%d %H:%M:%S", then)
 
-        # If it's been longer than 18 hours, the job is probably stuck.
+        # If it's been longer than 15 hours, the job is probably stuck.
         # Note: This should only happen if very many summaries have to
         #       be processed.
         l.write("verifying push job: then=%s pushFinished=%s" %
@@ -325,7 +325,7 @@ def reportLoadProblems(jobId, failures = None, warnings = None,
             subject = "%s-%s: Push job %d stalled" % (cdr.h.org, cdr.h.tier,
                                                       jobId)
         body = """\
-More than 18 hours have elapsed since completion of the push of CDR
+More than 15 hours have elapsed since completion of the push of CDR
 documents for publishing job %d, and loading of the documents
 has still not completed.
 """ % jobId

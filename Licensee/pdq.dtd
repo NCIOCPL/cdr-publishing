@@ -5,23 +5,24 @@
    This DTD defines the external structure of the NCI PDQ XML data
 
    Original version  2001/12/17  Michael M Rubenstein
-  
+
    BZIssue::4629 - Vendor filter changes for GenProf publishing
    BZIssue::4881 - Include DrugInfoSummary document type
-
+   OCECTS-116 - Add nct_id attribute to ProtocolRef element
+   OCEPROJECT-3147 - Remove Protocol document type
 
 -->
 
 <!-- =============================================================
-     Common Elements 
+     Common Elements
      ============================================================= -->
 
-<!ENTITY % ParaLevelElements   
+<!ENTITY % ParaLevelElements
                      " Contact          | ItemizedList     | LiteralLayout
                      | OrderedList      | QandASet         | Para
                      | MediaLink        | Table ">
 
-<!ENTITY % ParaElements        
+<!ENTITY % ParaElements
                      " #PCDATA          | DrugName         | DrugRef
                      | Emphasis         | ExternalRef      | ForeignWord
                      | GeneName         | GlossaryTermLink | GlossaryTermRef
@@ -30,9 +31,9 @@
                      | ProtocolRef      | ProtocolLink     | Quote
                      | Reference        | ScientificName   | Strong
                      | Subscript        | SummaryLink      | SummaryRef
-                     | Superscript      | TT"> 
+                     | Superscript      | TT">
 
-<!ENTITY % TextElements        
+<!ENTITY % TextElements
                      " #PCDATA          | Contact          | DrugName
                      | DrugRef          | Emphasis         | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
@@ -45,7 +46,7 @@
                      | Subscript        | SummaryLink      | SummaryRef
                      | Superscript      | Table            | TT">
 
-<!ENTITY % TextSectionElements 
+<!ENTITY % TextSectionElements
                      " #PCDATA          | Contact          | DrugName
                      | DrugRef          | Emphasis         | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
@@ -59,7 +60,7 @@
                      | SummaryRef       | Superscript      | Table
                      | TT">
 
-<!ENTITY % TitleData " #PCDATA          |  Emphasis        | ForeignWord
+<!ENTITY % TitleData " #PCDATA          | Emphasis         | ForeignWord
                      | GeneName         | ScientificName   | Strong
                      | Subscript        | Superscript      | TT ">
 
@@ -80,7 +81,7 @@
 <!ELEMENT TitleAbbrev (%TitleData;)*>
 
 <!ELEMENT AltTitle (%TitleData;)*>
-<!ATTLIST AltTitle TitleType (Short | Display) #IMPLIED>
+<!ATTLIST AltTitle TitleType (Short | Display | Navlabel) #IMPLIED>
 
 <!ELEMENT Para (%ParaElements;)*>
 <!ATTLIST Para id CDATA #IMPLIED>
@@ -88,7 +89,7 @@
 <!ELEMENT LiteralLayout (%ParaElements;)*>
 <!ATTLIST LiteralLayout id CDATA #IMPLIED>
 
-<!ELEMENT Section 
+<!ELEMENT Section
           ( Title?,
             AltTitle*,
             KeyPoint*,
@@ -278,7 +279,8 @@
 <!ATTLIST KeyPoint id CDATA #IMPLIED>
 
 <!ELEMENT ProtocolRef (#PCDATA)>
-<!ATTLIST ProtocolRef href CDATA #REQUIRED>
+<!ATTLIST ProtocolRef href CDATA #REQUIRED
+                      nct_id CDATA #REQUIRED>
 
 <!ELEMENT ProtocolLink (#PCDATA)>
 <!ATTLIST ProtocolLink ref CDATA #REQUIRED>
@@ -355,28 +357,7 @@
                    CancerlitID CDATA ""
                    ProtocolID CDATA "" >
 
-<!ELEMENT PersonNameInformation (GivenName?,
-                                 MiddleInitial?,
-                                 SurName,
-                                 Prefix?,
-                                 GenerationSuffix?,
-                                 ProfessionalSuffix?,
-                                 NameFormat?
-                                )>
-
-<!ELEMENT PrivatePracticeLocation (%Location;)>                          
-<!ATTLIST PrivatePracticeLocation id CDATA #IMPLIED>
-<!ATTLIST PrivatePracticeLocation Status CDATA #IMPLIED>
-
-<!ELEMENT PersonRole (#PCDATA)>
-
-<!ELEMENT PersonTitle (#PCDATA)>
-
 <!ELEMENT VerificationDate (#PCDATA)>
-
-<!ELEMENT DateSubmittedtoPDQ (#PCDATA)>
-
-<!ELEMENT DateLastVerified (#PCDATA)>
 
 <!ELEMENT DateLastModified (#PCDATA)>
 
@@ -388,28 +369,14 @@
 
 <!ELEMENT SurName (#PCDATA)>
 
-<!ELEMENT Prefix (#PCDATA)>
-
-<!ELEMENT GenerationSuffix (#PCDATA)>
-
 <!ELEMENT ProfessionalSuffix (#PCDATA)>
 
-<!ELEMENT NameFormat (#PCDATA)>
-
 <!ELEMENT ProfessionalDisclaimer (%TextSectionElements;)*>
-
-<!ELEMENT PatientDisclaimer (%TextSectionElements;)*>
-
-<!ELEMENT UrlInfo (PrimaryUrlID, SecondaryUrlID?)>
-
-<!ELEMENT PrimaryUrlID (#PCDATA)>
-
-<!ELEMENT SecondaryUrlID (#PCDATA)>
 
 <!-- End Common Elements -->
 
 <!-- ================================================================
-     Summaries 
+     Summaries
      ================================================================
   PDQ Summaries on Treatment, Prevention, Screening, Supportive Care,
   Genetics, and Complementary/Alternative Medicine.
@@ -417,7 +384,7 @@
 
 <!ELEMENT Summary (SummaryMetaData,
                    SummaryTitle,
-                   AltTitle,
+                   AltTitle+,
                    SummarySection+,
                    TranslationOf?,
                    PatientVersionOf?,
@@ -447,27 +414,27 @@
     Genetics
     Complementary and Alternative Medicine -->
 
-<!ELEMENT SummaryType (#PCDATA)>                           
+<!ELEMENT SummaryType (#PCDATA)>
 
 <!-- Types of summary audience
   Possible values are:
     Patients
     Health professionals -->
 
-<!ELEMENT SummaryAudience (#PCDATA)>                           
+<!ELEMENT SummaryAudience (#PCDATA)>
 
 <!-- Summary languages
   Possible values are:
     English
     Spanish -->
 
-<!ELEMENT SummaryDescription (#PCDATA)>                           
+<!ELEMENT SummaryDescription (#PCDATA)>
 
 <!-- Used by Cancer.gov website to link to the summary. -->
-<!ELEMENT SummaryURL (#PCDATA)>                           
+<!ELEMENT SummaryURL (#PCDATA)>
 <!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
-<!ELEMENT SummaryLanguage (#PCDATA)>                           
+<!ELEMENT SummaryLanguage (#PCDATA)>
 
 <!-- Link to original version of translation
   The id of the original version of a translated summary -->
@@ -488,7 +455,7 @@
 <!ATTLIST SummarySection id CDATA #IMPLIED>
 
 <!-- The Diagnosis elements are links to Terminology with contents the
-     preferred name. -->     
+     preferred name. -->
 
 <!ELEMENT SectMetaData (SpecificDiagnosis*,
                         SectionType*
@@ -500,285 +467,9 @@
 
 <!-- End Summaries -->
 
-<!-- =============================================================== 
-     Protocols  Start element Protocol. 
-     =============================================================== -->
-
-<!ELEMENT Protocol (ProtocolIDs,
-                    UrlInfo?,
-                    FundingInfo?,
-                    ProtocolSponsor*,
-                    PDQProtocolTitle+,
-                    ProtocolAbstract,
-                    ProtocolDetail+,
-                    Eligibility,
-                    ProtocolRelatedLinks?,
-                    PublishedResults*,
-                    RelatedPublications*,
-                    ProtocolPhase+,
-                    ExpectedEnrollment?,
-                    ProtocolSpecialCategory*,
-                    ProtocolAdminInfo,
-                    RegistryInfo?,
-                    DateFirstPublished?,
-                    DateLastModified?,
-                    DateLastVerified?
-                   )>
-<!ATTLIST Protocol id CDATA #REQUIRED>
-<!ATTLIST Protocol LegacyPDQID CDATA #IMPLIED>
-
-<!ELEMENT ProtocolIDs (PrimaryID,OtherID*)>
-
-<!ELEMENT PrimaryID (IDString)>
-
-<!ELEMENT IDString (#PCDATA)>
-
-<!ELEMENT OtherID (IDType,IDString)>
-
-<!ELEMENT IDType (#PCDATA)>
-
-<!ELEMENT FundingInfo (NIHGrantContract*, OtherGrantContractInfo*)>
-
-<!ELEMENT NIHGrantContract (NIHGrantContractType?, GrantContractNo)>
-
-<!ELEMENT NIHGrantContractType (#PCDATA)>
-
-<!ELEMENT GrantContractNo (#PCDATA)>
-
-<!ELEMENT OtherGrantContractInfo (GrantContractNo)>
-
-<!ELEMENT ReimbursementApproval (#PCDATA)>
-
-<!ELEMENT ProtocolSponsor (#PCDATA)>
-
-<!ELEMENT PDQProtocolTitle (%TitleData;)*>
-<!ATTLIST PDQProtocolTitle Audience (Professional | Patient) #REQUIRED>
-
-<!ELEMENT ProtocolTitle (%TitleData;)*>
-<!ATTLIST ProtocolTitle Type (Official | Short) #REQUIRED>
-
-<!ELEMENT ProtocolAbstract (Professional, Patient)>
-
-<!ELEMENT Professional (Objectives,
-                        Outcome*,
-                        Outline,
-                        EntryCriteria,
-                        ProjectedAccrual?,
-                        EndPoints?,
-                        Stratification?,
-                        SpecialStudyParameters?,
-                        DoseSchedule?,
-                        DosageForm?,
-                        ProfessionalDisclaimer
-                       )>
-
-<!ELEMENT Objectives (%TextSectionElements;)*>
-
-<!ELEMENT Outcome (%TextSectionElements;)*>
-<!ATTLIST Outcome OutcomeType (Primary | Secondary) #REQUIRED>
-<!ATTLIST Outcome Safety      (Yes     | No)        #IMPLIED>
-
-<!ELEMENT Outline (%TextSectionElements;)*>
-
-<!ELEMENT EntryCriteria (DiseaseCharacteristics?,
-                         PatientCharacteristics?,
-                         PriorConcurrentTherapy?,
-                         GeneralEligibilityCriteria?)>
-
-<!ELEMENT DiseaseCharacteristics (%TextSectionElements;)*>
-
-<!ELEMENT PatientCharacteristics (%TextSectionElements;)*>
-
-<!ELEMENT PriorConcurrentTherapy (%TextSectionElements;)*>
-
-<!ELEMENT GeneralEligibilityCriteria (%TextSectionElements;)*>
-
-<!ELEMENT ProjectedAccrual (%TextSectionElements;)*>
-
-<!ELEMENT EndPoints (%TextSectionElements;)*>
-
-<!ELEMENT Stratification (%TextSectionElements;)*>
-
-<!ELEMENT SpecialStudyParameters (%TextSectionElements;)*>
-
-<!ELEMENT DoseSchedule (%TextSectionElements;)*>
-
-<!ELEMENT DosageForm (%TextSectionElements;)*>
-
-<!ELEMENT Patient (Rationale,
-                   Purpose,
-                   EligibilityText,
-                   TreatmentIntervention,
-                   PatientDisclaimer
-                  )>
-
-<!ELEMENT Rationale (%TextSectionElements;)*>
-
-<!ELEMENT Purpose (%TextSectionElements;)*>
-
-<!ELEMENT EligibilityText (%TextSectionElements;)*>
-
-<!ELEMENT TreatmentIntervention (%TextSectionElements;)*>
-
-<!ELEMENT ProtocolDetail (StudyType,
-                          StudyCategory+,
-                          StudyDesign*,
-                          StudyCondition*,
-                          Gene*
-                         )>
-
-<!ELEMENT StudyType (#PCDATA)>
-
-<!ELEMENT StudyCategory (StudyCategoryName,
-                         Intervention*
-                        )>
-
-<!ELEMENT StudyCategoryName (#PCDATA)>
-
-<!ELEMENT Intervention (InterventionType,
-                        InterventionTypeParent*,
-                        InterventionNameLink*
-                       )>
-
-<!ELEMENT InterventionType (#PCDATA)>
-<!ATTLIST InterventionType ref CDATA #IMPLIED>
-
-<!ELEMENT InterventionTypeParent (#PCDATA)>
-<!ATTLIST InterventionTypeParent ref CDATA #IMPLIED>
-
-<!ELEMENT InterventionNameLink (#PCDATA)>
-<!ATTLIST InterventionNameLink ref CDATA #IMPLIED>
-
-<!ELEMENT StudyCondition (SpecificCondition, ConditionParent+)>
-
-<!ELEMENT SpecificCondition (#PCDATA)>
-<!ATTLIST SpecificCondition ref CDATA #IMPLIED>
-
-<!ELEMENT ConditionParent (#PCDATA)>
-<!ATTLIST ConditionParent ref CDATA #IMPLIED>
-
-<!ELEMENT StudyDesign (#PCDATA)>
-
-<!ELEMENT Gene (SpecificGene)>
-
-<!ELEMENT SpecificGene (#PCDATA)>
-<!ATTLIST SpecificGene ref CDATA #IMPLIED>
-
-<!ELEMENT Eligibility (HealthyVolunteers?,
-                       LowAge,
-                       HighAge,
-                       AgeText,
-                       Gender,
-                       Diagnosis*,
-                       ExclusionCriteria*
-                      )>
-
-<!ELEMENT HealthyVolunteers (#PCDATA)>
-
-<!ELEMENT LowAge (#PCDATA)>
-
-<!ELEMENT HighAge (#PCDATA)>
-
-<!ELEMENT AgeText (#PCDATA)>
-
-<!ELEMENT Gender (#PCDATA)>
-
-<!ELEMENT ExclusionCriteria (#PCDATA)>
-<!ATTLIST ExclusionCriteria ref CDATA #IMPLIED>
-
-<!ELEMENT ProtocolRelatedLinks (RelatedProtocols | RelatedWebsites)+>
-
-<!ELEMENT RelatedProtocols (#PCDATA)>
-<!ATTLIST RelatedProtocols ref CDATA #IMPLIED>
-
-<!ELEMENT RelatedWebsites (#PCDATA)>
-<!ATTLIST RelatedWebsites xref CDATA #REQUIRED>
-
-<!ELEMENT PublishedResults (#PCDATA)>
-<!-- The data for published results is a formatted citation.-->
-<!ATTLIST PublishedResults PMID CDATA ""
-                           MedlineID CDATA ""
-                           CancerlitID CDATA "">
-
-<!ELEMENT RelatedPublications (#PCDATA)>
-<!-- The data for published results is a formatted citation.-->
-<!ATTLIST RelatedPublications PMID CDATA ""
-                           MedlineID CDATA ""
-                           CancerlitID CDATA "">
-
-<!ELEMENT ProtocolPhase (#PCDATA)>
-
-<!ELEMENT ExpectedEnrollment (#PCDATA)>
-
-<!ELEMENT ProtocolSpecialCategory (#PCDATA)>
-
-<!ELEMENT ProtocolAdminInfo (StartDate?,
-                             CompletionDate?,
-                             CurrentProtocolStatus,
-                             ProtocolLeadOrg+,
-                             ProtocolSites?
-                            )>                            
-
-
-<!ELEMENT RegistryInfo (ProtocolTitle, 
-                        DateSubmittedtoPDQ, 
-                        ClinicalTrialsGovID)>
-
-<!ELEMENT ClinicalTrialsGovID (#PCDATA)>
-<!ATTLIST ClinicalTrialsGovID xref CDATA #REQUIRED>
-
-<!ELEMENT StartDate (#PCDATA)>
-<!ATTLIST StartDate DateType (Actual|Projected) #REQUIRED>
-
-<!ELEMENT CompletionDate (#PCDATA)>
-<!ATTLIST CompletionDate DateType (Actual|Projected) #REQUIRED>
-
-<!ELEMENT CurrentProtocolStatus (#PCDATA)>
-
-<!ELEMENT ProtocolLeadOrg (LeadOrgName,
-                           LeadOrgRole,
-                           LeadOrgProtocolID*,
-                           LeadOrgProtocolStatus,
-                           LeadOrgPersonnel
-                          )>
-
-<!-- OrgName is the name as it should appear (including parent org name if
-     appropriate -->     
-
-<!ELEMENT LeadOrgName (#PCDATA)>
-<!ATTLIST LeadOrgName ref CDATA #REQUIRED>
-
-<!ELEMENT LeadOrgRole (#PCDATA)>
-<!-- Role can be Primary or Secondary -->
-
-<!ELEMENT LeadOrgProtocolID (#PCDATA)>
-
-<!ELEMENT LeadOrgProtocolStatus (StatusName, StatusDate)>
-
-<!ELEMENT StatusName (#PCDATA)>
-
-<!ELEMENT StatusDate (#PCDATA)>
-
-<!ELEMENT LeadOrgPersonnel (ProtPerson+)>
-
-<!ELEMENT ProtPerson (PersonNameInformation?, PersonRole, Contact)>
-<!ATTLIST ProtPerson ref CDATA #IMPLIED>
-<!ATTLIST ProtPerson status CDATA #IMPLIED>
-
-<!ELEMENT ProtocolSites (ProtocolSite+)>
-
-<!ELEMENT ProtocolSite (SiteName?, ProtPerson+)>
-<!ATTLIST ProtocolSite ref CDATA #REQUIRED>
-<!ATTLIST ProtocolSite sitetype (Person|Organization) #REQUIRED>
-<!-- Sitetype indicates document type for the ref attribute. -->
-
-<!ELEMENT SiteName (#PCDATA)>
-
-<!-- End Protocols -->
-
 
 <!-- =========================================
-     Organizations Start element Organization. 
+     Organizations Start element Organization.
      ========================================= -->
 <!ELEMENT Organization (OrganizationNameInformation,
                         OrganizationParent?,
@@ -860,7 +551,7 @@
 <!-- End Organizations -->
 
 <!-- =========================================
-     Glossary  Start element GlossaryTerm. 
+     Glossary  Start element GlossaryTerm.
      ========================================= -->
 
 <!ELEMENT GlossaryTerm (TermName,
@@ -912,8 +603,8 @@
 
 <!-- End Glossary -->
 
-<!-- ========================================= 
-     Terminology  Start element Term. 
+<!-- =========================================
+     Terminology  Start element Term.
      ========================================= -->
 
 <!ELEMENT Term (PreferredName,
@@ -983,10 +674,10 @@
 <!-- End Terminology -->
 
 <!-- ======================================================
-     Genetics Directory, start element GENETICSPROFESSIONAL 
+     Genetics Directory, start element GENETICSPROFESSIONAL
      ====================================================== -->
 
-<!-- The Genetics directory documents are independent from the other documents.  
+<!-- The Genetics directory documents are independent from the other documents.
      No link exists from the genetics directory records to any of the other XML
      document types or vice versa.-->
 
@@ -1075,7 +766,7 @@
 <!-- End Genetics Directory-->
 
 <!-- ======================================================
-     Country, start element Country 
+     Country, start element Country
      ====================================================== -->
 
 <!ELEMENT Country (CountryFullName,
@@ -1100,7 +791,7 @@
 <!-- End Country -->
 
 <!-- ======================================================
-     PoliticalSubUnit, start element PoliticalSubUnit 
+     PoliticalSubUnit, start element PoliticalSubUnit
      ====================================================== -->
 
 <!ELEMENT PoliticalSubUnit (PoliticalSubUnitFullName,
@@ -1122,7 +813,7 @@
 <!-- End PoliticalSubUnit -->
 
 <!-- ======================================================
-     CTGovProtocol, start element CTGovProtocol 
+     CTGovProtocol, start element CTGovProtocol
      ====================================================== -->
 
 <!ENTITY % CTGovContact        "GivenName?,
@@ -1153,11 +844,11 @@
                                 VerificationDate,
                                 LastChangedDate?)>
 
-<!ELEMENT RequiredHeader       (DownloadDate, 
+<!ELEMENT RequiredHeader       (DownloadDate,
                                 LinkText)>
 
-<!ELEMENT IDInfo               (OrgStudyID, 
-                                SecondaryID*, 
+<!ELEMENT IDInfo               (OrgStudyID,
+                                SecondaryID*,
                                 NCTID)>
 
 <!ELEMENT Sponsors             (PDQSponsorship*,
@@ -1188,6 +879,84 @@
                                 SurName,
                                 ProfessionalSuffix?,
                                 Role?)>
+
+<!ELEMENT ProtocolDetail (StudyType,
+                          StudyCategory+,
+                          StudyDesign*,
+                          StudyCondition*,
+                          Gene*
+                         )>
+
+<!ELEMENT StudyType (#PCDATA)>
+
+<!ELEMENT StudyCategory (StudyCategoryName,
+                         Intervention*
+                        )>
+
+<!ELEMENT StudyCategoryName (#PCDATA)>
+
+<!ELEMENT Intervention (InterventionType,
+                        InterventionTypeParent*,
+                        InterventionNameLink*
+                       )>
+
+<!ELEMENT InterventionType (#PCDATA)>
+<!ATTLIST InterventionType ref CDATA #IMPLIED>
+
+<!ELEMENT InterventionTypeParent (#PCDATA)>
+<!ATTLIST InterventionTypeParent ref CDATA #IMPLIED>
+
+<!ELEMENT InterventionNameLink (#PCDATA)>
+<!ATTLIST InterventionNameLink ref CDATA #IMPLIED>
+
+<!ELEMENT StudyCondition (SpecificCondition, ConditionParent+)>
+
+<!ELEMENT SpecificCondition (#PCDATA)>
+<!ATTLIST SpecificCondition ref CDATA #IMPLIED>
+
+<!ELEMENT ConditionParent (#PCDATA)>
+<!ATTLIST ConditionParent ref CDATA #IMPLIED>
+
+<!ELEMENT StudyDesign (#PCDATA)>
+
+<!ELEMENT Gene (SpecificGene)>
+
+<!ELEMENT SpecificGene (#PCDATA)>
+<!ATTLIST SpecificGene ref CDATA #IMPLIED>
+
+<!ELEMENT Eligibility (HealthyVolunteers?,
+                       LowAge,
+                       HighAge,
+                       AgeText,
+                       Gender,
+                       Diagnosis*,
+                       ExclusionCriteria*
+                      )>
+
+<!ELEMENT HealthyVolunteers (#PCDATA)>
+
+<!ELEMENT LowAge (#PCDATA)>
+
+<!ELEMENT HighAge (#PCDATA)>
+
+<!ELEMENT AgeText (#PCDATA)>
+
+<!ELEMENT Gender (#PCDATA)>
+
+<!ELEMENT ExclusionCriteria (#PCDATA)>
+<!ATTLIST ExclusionCriteria ref CDATA #IMPLIED>
+
+<!ELEMENT RelatedWebsites (#PCDATA)>
+<!ATTLIST RelatedWebsites xref CDATA #REQUIRED>
+
+<!ELEMENT ProtocolPhase (#PCDATA)>
+
+<!ELEMENT ProtocolSpecialCategory (#PCDATA)>
+
+<!ELEMENT StartDate (#PCDATA)>
+<!ATTLIST StartDate DateType (Actual|Projected) #REQUIRED>
+
+<!ELEMENT CurrentProtocolStatus (#PCDATA)>
 
 <!-- CTGov contact elements. -->
 <!ELEMENT CTGovContact         (%CTGovContact;)>
@@ -1241,8 +1010,8 @@
      DrugInformationSummary start element DrugInformationSummary
      =========================================================== -->
 
-<!ELEMENT DrugInformationSummary 
-          ( DrugInfoMetaData, 
+<!ELEMENT DrugInformationSummary
+          ( DrugInfoMetaData,
             DrugInfoTitle,
             Section+,
             DrugInfoDisclaimer,
@@ -1250,11 +1019,11 @@
             DateLastModified?)>
 <!ATTLIST DrugInformationSummary id CDATA #REQUIRED>
 
-<!-- Note:  The CDR Vendor Filter will ensure that the Section elements 
+<!-- Note:  The CDR Vendor Filter will ensure that the Section elements
             used within a DrugInformationSummary will not contain these
             elements:  AltTitle, KeyPoints, nested Section elements -->
 
-<!ELEMENT DrugInfoMetaData 
+<!ELEMENT DrugInfoMetaData
           ( DrugInfoType,
             DrugInfoAudience,
             DrugInfoDescription,
@@ -1310,7 +1079,7 @@
 
 <!-- Only MediaLink elements of type="audio/mpeg" are allowed here -->
 <!ELEMENT PronunciationInfo ( TermPronunciation?,
-                              MediaLink* )>   
+                              MediaLink* )>
 
 <!ELEMENT FDAExternalRef                  (#PCDATA)>
 <!ATTLIST FDAExternalRef xref       CDATA  #REQUIRED>
