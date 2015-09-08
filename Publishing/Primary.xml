@@ -7,6 +7,403 @@
  </SystemDescription>
 
  <SystemSubset>
+  <SubsetName>Hotfix-Export</SubsetName>
+  <SubsetDescription>
+    Filter and validate specified documents together with
+    their recursively linked documents and push them to Cancer.gov for
+    immediate action.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Export)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>ValidateDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DTDFileName</ParmName>
+    <ParmValue>pdqCG.dtd</ParmValue>
+   </SubsetParameter>
+
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>MaxDocUpdatedDate</ParmName>
+    <ParmValue>JobStartDateTime</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>Live</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters>
+
+  <SubsetSpecifications>
+
+   <!--
+   ========================================================================
+   Country documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Country</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   CTGovProtocol documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>CTGovProtocol</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   DrugInformationSummary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   GeneticsProfessional documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Person</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor GeneticsProfessional Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   GlossaryTerm documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Media documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Media</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Organization documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Organization</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   PoliticalSubUnit documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>PoliticalSubUnit</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Summary documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Summary</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+   <!--
+   ========================================================================
+   Term documents.
+   ======================================================================== -->
+   <SubsetSpecification>
+    <SubsetSelection>
+     <UserSelect>
+      <UserSelectDoctype>Term</UserSelectDoctype>
+     </UserSelect>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
+     </SubsetFilter>
+     <SubsetFilterParm>
+      <ParmName>DateFirstPub</ParmName>
+      <ParmValue/>
+     </SubsetFilterParm>
+    </SubsetFilters>
+   </SubsetSpecification>
+
+  </SubsetSpecifications>
+
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>10</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Hotfix-Export licensee documents
+    to Cancer.gov for immediate action.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Hotfix-Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Hotfix (Export)</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>Live</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+         SELECT document.id
+           FROM document
+          WHERE document.id = 0
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
+  <SubsetName>Push_Documents_To_Cancer.Gov_Republish-Export</SubsetName>
+  <SubsetDescription>
+    Push filtered/validated Republish-Export licensee documents
+    to Cancer.gov for immediate action.
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>SubSetName</ParmName>
+    <ParmValue>Republish-Export</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>PubType</ParmName>
+    <ParmValue>Reload</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>CheckPushedDocs</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>RerunFailedPush</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>IgnoreGKJobIDMismatch</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPubTarget</ParmName>
+    <ParmValue>Live</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+  </SubsetParameters>
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+         SELECT document.id
+           FROM document
+          WHERE document.id = 0
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Ask</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+ <SystemSubset>
   <SubsetName>Interim-Export</SubsetName>
   <SubsetDescription>
     Produce daily Cancer.gov updates and push them to Cancer.gov.
@@ -45,10 +442,6 @@
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
     <ParmValue>100000</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>NumDocs</ParmName>
-    <ParmValue>50</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -1568,339 +1961,6 @@ LEFT OUTER JOIN query_term_pub u
  </SystemSubset>
 
  <SystemSubset>
-  <SubsetName>Hotfix-Export</SubsetName>
-  <SubsetDescription>
-    Filter and validate specified documents together with
-    their recursively linked documents and push them to Cancer.gov for
-    immediate action.
-  </SubsetDescription>
-  <SubsetParameters>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Hotfix (Export)</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ReportOnly</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ValidateDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>DTDFileName</ParmName>
-    <ParmValue>pdqCG.dtd</ParmValue>
-   </SubsetParameter>
-
-   <SubsetParameter>
-    <ParmName>AbortOnError</ParmName>
-    <ParmValue>50</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>MaxDocUpdatedDate</ParmName>
-    <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-  </SubsetParameters>
-
-  <SubsetSpecifications>
-
-   <!--
-   ========================================================================
-   Country documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Country</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   CTGovProtocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>CTGovProtocol</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   DrugInformationSummary documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor DrugInfoSummary Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   GeneticsProfessional documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Person</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor GeneticsProfessional Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   GlossaryTerm documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor GlossaryTerm Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Media documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Media</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Organization documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Organization</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor Organization Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   PoliticalSubUnit documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>PoliticalSubUnit</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor PoliticalSubUnit Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Summary documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Summary</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor Summary Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
-   Term documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>Term</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor Term Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-  </SubsetSpecifications>
-
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>AbortOnError</OptionName>
-    <OptionValue>10</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Yes</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
-  <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
-  <SubsetDescription>
-    Push filtered/validated Hotfix-Export licensee documents
-    to Cancer.gov for immediate action.
-  </SubsetDescription>
-  <SubsetParameters>
-   <SubsetParameter>
-    <ParmName>SubSetName</ParmName>
-    <ParmValue>Hotfix-Export</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Hotfix (Export)</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-  </SubsetParameters>
-  <SubsetSpecifications>
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>
-  </SubsetSpecifications>
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
   <SubsetName>Hotfix-Remove</SubsetName>
   <SubsetDescription>
     Create list of CDR document IDs to be removed from
@@ -2266,70 +2326,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
-  <SubsetName>Push_Documents_To_Cancer.Gov_Republish-Export</SubsetName>
-  <SubsetDescription>
-    Push filtered/validated Republish-Export licensee documents
-    to Cancer.gov for immediate action.
-  </SubsetDescription>
-  <SubsetParameters>
-   <SubsetParameter>
-    <ParmName>SubSetName</ParmName>
-    <ParmValue>Republish-Export</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Reload</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>RerunFailedPush</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-  </SubsetParameters>
-  <SubsetSpecifications>
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
-   </SubsetSpecification>
-  </SubsetSpecifications>
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -4017,5 +4013,215 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
+
+ <ParmInfoSet>
+  <ParmInfo>
+   <ParmInfoName>AbortOnError</ParmInfoName>
+   <ParmInfoHelp>
+'Yes' to abort for any error
+'No' to suppress abort on errors
+or an integer to specify how many errors
+can occur before stopping
+   </ParmInfoHelp>
+   <ParmInfoMethod>yes_no_int</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>CheckPushedDocs</ParmInfoName>
+   <ParmInfoHelp>This option appears to be ignored</ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>DTDFileName</ParmInfoName>
+   <ParmInfoHelp>
+DTD to be used to validate each document.
+Assumed to be in /cdr/Licensee on the CDR drive.
+   </ParmInfoHelp>
+   <ParmInfoMethod>dtd</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>GKPubTarget</ParmInfoName>
+   <ParmInfoHelp>
+How far should the documents be pushed? (GateKeeper, Preview, or Live)
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>GateKeeper</ParmInfoValidValue>
+    <ParmInfoValidValue>Preview</ParmInfoValidValue>
+    <ParmInfoValidValue>Live</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>GKPushJobDescription</ParmInfoName>
+   <ParmInfoHelp>
+Brief message indicating the purpose of the publishing job.
+Sent as part of the push job to GateKeeper.
+   </ParmInfoHelp>
+   <ParmInfoPattern>^.{0,1024}$</ParmInfoPattern>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>GKServer</ParmInfoName>
+   <ParmInfoHelp>
+Host name of GateKeeper server to which documents should be pushed.
+If a name which is not a fully qualified domain name (FQDN) is
+entered '.cancer.gov' will be assumed.
+   </ParmInfoHelp>
+   <ParmInfoMethod>server_name</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>IgnoreGKJobIDMismatch</ParmInfoName>
+   <ParmInfoHelp>
+If 'Yes' the job proceeds even if the CDR and GateKeeper
+have different IDs for that last successful job.
+Usually defaults to 'No'.
+Ignored on non-production tiers, where mismatches
+are common and never cause a push job to abort.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>InteractiveMode</ParmInfoName>
+   <ParmInfoHelp>
+This option appears to be ignored by the publishing system.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>MaxDocUpdatedDate</ParmInfoName>
+   <ParmInfoHelp>
+Sent to the filtering module to restrict publication
+to the latest publishable versions of the documents
+saved earlier than the date specified; an ISO date
+or the string 'JobStartDateTime' indicating the value
+in the started column of the job's row in the
+pub_proc table. Examples:
+
+  2015-07-01
+  2015-07-01 14:30
+  2015-07-01 14:33:07
+  JobStartDateTime
+   </ParmInfoHelp>
+   <ParmInfoMethod>job_date</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>NumDocs</ParmInfoName>
+   <ParmInfoHelp>
+Maximum number of documents to be processed for the
+entire job. Used for publishing job types dedicated
+to publishing documents of a single type.
+   </ParmInfoHelp>
+   <ParmInfoMethod>integer</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>NumDocsPerDocType</ParmInfoName>
+   <ParmInfoHelp>
+Maximum number of documents to be processed for each
+document type in a job which can publish documents of
+more than one document type.
+   </ParmInfoHelp>
+   <ParmInfoMethod>integer</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>PubType</ParmInfoName>
+   <ParmInfoHelp>
+Read-only field with one of the following values:
+   Full Load
+   Hotfix (Export)
+   Export
+   Hotfix (Remove)
+   Reload
+
+For more details see PUBTYPES in cdr.py.
+   </ParmInfoHelp>
+   <ParmInfoMethod>pubtype</ParmInfoMethod>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>ReportOnly</ParmInfoName>
+   <ParmInfoHelp>
+If set to 'Yes' the job will be marked with 'Failure' status,
+creating a push job to Cancer.gov will be suppressed, and the
+first_pub column of the document table will not be modified.
+Used for pre-publishing reports.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>RerunFailedPush</ParmInfoName>
+   <ParmInfoHelp>
+If set to 'Yes' the publishing system will attempt to try again
+to push the documents for the most recent push job.
+Used when a push job fails.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>SubSetName</ParmInfoName>
+   <ParmInfoHelp>
+Read-only field identifying the corresponding
+export job's type for a push job.
+   </ParmInfoHelp>
+   <ParmInfoPattern>^[A-Za-z-]+$</ParmInfoPattern>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>ValidateDocs</ParmInfoName>
+   <ParmInfoHelp>
+If set to 'No' the DTD validation of the exported documents will be suppressed.
+Defaults to 'Yes' for regular publishing jobs and vendor QC reports.
+Defaults to 'No' for other QC reports.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <!-- The following parameters appear on the confirmation page for
+       a publishing job request. -->
+  <ParmInfo>
+   <ParmInfoName>notify</ParmInfoName>
+   <ParmInfoHelp>
+Indicate whether you would like to receive email
+notification when the publishing job has completed.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>email</ParmInfoName>
+   <ParmInfoHelp>
+You can provide more than one email address.
+Separate multiple addresses with commas or
+semicolons.
+   </ParmInfoHelp>
+   <ParmInfoPattern>.+@.+[.].+</ParmInfoPattern>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>no-output</ParmInfoName>
+   <ParmInfoHelp>
+"Yes" to have the documents filtered and possibly validated
+but not written to the file system. This option is ignored for
+"push" jobs. Useful to find out if any of the documents to be
+published are invalid or not well-formed.
+   </ParmInfoHelp>
+   <ParmInfoValidValues>
+    <ParmInfoValidValue>Yes</ParmInfoValidValue>
+    <ParmInfoValidValue>No</ParmInfoValidValue>
+   </ParmInfoValidValues>
+  </ParmInfo>
+ </ParmInfoSet>
 
 </PublishingSystem>

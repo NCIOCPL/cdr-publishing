@@ -401,8 +401,11 @@
                            SummaryLanguage,
                            SummaryDescription,
                            SummaryURL,
+                           SummaryEditorialBoard?,
                            MainTopics+,
-                           SecondaryTopics*
+                           SecondaryTopics*,
+                           SummaryAbstract?,
+                           SummaryKeyWords?
                           )>
 
 <!-- Types of summary
@@ -435,6 +438,15 @@
 <!ATTLIST SummaryURL xref CDATA #REQUIRED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>
+
+<!ELEMENT SummaryEditorialBoard (#PCDATA)>
+<!ATTLIST SummaryEditorialBoard ref CDATA #REQUIRED>
+
+<!-- Used to add an abstract for PubMed -->
+<!ELEMENT SummaryAbstract         (Para+)>
+
+<!ELEMENT SummaryKeyWords (SummaryKeyWord+)>
+<!ELEMENT SummaryKeyWord (#PCDATA)>
 
 <!-- Link to original version of translation
   The id of the original version of a translated summary -->

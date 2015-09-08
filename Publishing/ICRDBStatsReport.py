@@ -16,6 +16,8 @@
 # $Source: $
 #
 # BZIssue::5173 - ICRDB Stats Report
+# OCECDR-3890: Possible discrepancies in count of Dictionary Terms in 
+#              PCIB Status Report
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
@@ -506,7 +508,8 @@ LEFT OUTER JOIN query_term_pub dlm
            AND a.path = '/Term/PreferredName'
           JOIN pub_proc_cg cg
             ON cg.id = d.id
-         WHERE t.path = '/Term/Definition/DefinitionText/@cdr:id'
+         WHERE t.path = '/Term/PreferredName'
+           --  t.path = '/Term/Definition/DefinitionText/@cdr:id'
            AND ISNULL(d.first_pub, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                %s
