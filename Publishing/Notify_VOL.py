@@ -112,7 +112,6 @@ def checkMediaUpdates(sDate, eDate):
                     WHERE i.doc_id = d.id
                       AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding'
                    )
-           AND d.id > 750000
            AND dv.num = (
                    SELECT MAX(num) 
                      FROM doc_version 
