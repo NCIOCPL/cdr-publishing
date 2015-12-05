@@ -345,9 +345,10 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
 # --------------------------------------------------------
 # Checking if any of the documents is checked out by users
 # --------------------------------------------------------
-def formatFullOutput(records, recordCount, heading, docType='', repType=''):
+def formatFullOutput(records, heading, docType='', repType=''):
     if not records:
-        html = "<br/><h3>No %s found during this time frame<h3>\n" % heading
+        html  = "<br/>\n<h3>%s<h3>\n" % heading
+        html += "<p style='margin-bottom: 1em;'><b>None</b></p>"
         return html
 
     # Sorting by first element
@@ -362,14 +363,13 @@ def formatFullOutput(records, recordCount, heading, docType='', repType=''):
     # ----------
     html  = """
   <br/>
-  <h3>%d %s</h3>
+  <h3>%s</h3>
+""" % heading
+
+    html += """
   <table class='docstable'>
   <tr>
-""" % (recordCount, heading)
-    html += """\
    <th>Title</th>
-"""
-    html += """\
    <th>CDR-ID</th>
   </tr>
 """
@@ -471,18 +471,12 @@ def createMessageBody(title='Test Title', startDate=startWeek,
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
     textLabels = { 
-                   'hprev':  ['Revised Summaries - (Health Professional)', 
-                              'Revised Summaries (Health Professional)']  ,
-                   'patrev': ['Revised Summaries - (Patient) ', 
-                              'Revised Summaries (Patient)'],
-                   'hpnew':  ['New Summaries - (Health Professional)', 
-                              'New Summaries (Health Professional)']  ,
-                   'patnew': ['New Summaries - (Patient) ', 
-                              'New Summaries (Patient)'],
-                   'disnew': ['New Drug Information Summaries', 
-                              'New Drug Information Summaries']  ,
-                   'disrev': ['Revised Drug Information Summaries', 
-                              'Revised Drug Information Summaries']  ,
+                   'hprev':  'Revised Health Professional Summaries'  ,
+                   'patrev': 'Revised Patient Summaries',
+                   'hpnew':  'New Health Professional Summaries'  ,
+                   'patnew': 'New Patient Summaries',
+                   'disnew': 'New Drug Information Summaries'  ,
+                   'disrev': 'Revised Drug Information Summaries'  ,
                }
 
     conn = cdrdb.connect()
@@ -556,33 +550,29 @@ def createMessageBody(title='Test Title', startDate=startWeek,
     # -------------------------------------------------------------------
     if dispSummary:
         summariesHpNew = formatFullOutput(summariesNew, 
-                                             countSummariesNew['hpnew'], 
-                                             textLabels['hpnew'][1], 
+                                             textLabels['hpnew'], 
                                              docType='Summary',
                                              repType='Health professionals')
         summariesHpRev = formatFullOutput(summariesRevised, 
-                                             countSummariesRev['hprev'], 
-                                             textLabels['hprev'][1], 
+                                             textLabels['hprev'], 
                                              docType='Summary',
                                              repType='Health professionals')
         summariesPatNew = formatFullOutput(summariesNew, 
-                                             countSummariesNew['patnew'], 
-                                             textLabels['patnew'][1], 
+                                             textLabels['patnew'], 
                                              docType='Summary',
                                              repType='Patients')
         summariesPatRev = formatFullOutput(summariesRevised, 
-                                             countSummariesRev['patrev'], 
-                                             textLabels['patrev'][1], 
+                                             textLabels['patrev'], 
                                              docType='Summary',
                                              repType='Patients')
 
     if language == 'English' and dispDis:
-        disNew = formatFullOutput(disNew, countDisNew, 
-                                  textLabels['disnew'][1], 
+        disNew = formatFullOutput(disNew, 
+                                  textLabels['disnew'], 
                                   docType='DrugInformationSummary',
                                   repType='new')
-        disRev = formatFullOutput(disRevised, countDisRev, 
-                                  textLabels['disrev'][1], 
+        disRev = formatFullOutput(disRevised, 
+                                  textLabels['disrev'], 
                                   docType='DrugInformationSummary',
                                   repType='revised')
 
@@ -687,12 +677,8 @@ if not dispDis and not dispSummary:
 startDate = options.values.start or startWeek
 endDate = options.values.end or endWeek
 
-print startDate
-print startWeek
-print endDate
-print endWeek
-
-title = u'GovDelivery Changed Docs Report from %s to %s' % (startDate, endDate)
+title = u'GovDelivery Changed Docs Report (%s) from %s to %s' % (
+                                              language, startDate, endDate)
 
 # If no file name is specified (the default) we're picking the last
 # file created.
