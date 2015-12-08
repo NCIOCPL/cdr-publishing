@@ -653,9 +653,11 @@
 <!ELEMENT RelatedSummaryRef                   (#PCDATA)>
 <!ATTLIST RelatedSummaryRef  href      CDATA  #REQUIRED>
 <!ATTLIST RelatedSummaryRef  UseWith (en | es) #IMPLIED>
+<!ATTLIST RelatedSummaryRef  url       CDATA  #REQUIRED>
 
 <!ELEMENT RelatedDrugSummaryRef               (#PCDATA)>
 <!ATTLIST RelatedDrugSummaryRef href   CDATA  #REQUIRED>
+<!ATTLIST RelatedDrugSummaryRef url    CDATA  #REQUIRED>
 
 <!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>
 <!ATTLIST RelatedGlossaryTermRef href  CDATA  #REQUIRED>
@@ -953,7 +955,7 @@
                        LowAge,
                        HighAge,
                        AgeText,
-                       Gender,
+                       Gender?,
                        Diagnosis*,
                        ExclusionCriteria*
                       )>

@@ -42,6 +42,7 @@ class documentType:
 
     def __init__(self):
         self.filters = { 'CTGovProtocol': ['name:Vendor Filter: CG2Public'],
+                         'GlossaryTerm':  ['name:Vendor Filter: CG2Public'],
                          'ProtocolActive':['name:Vendor Filter: CG2Public'],
                          'ProtocolClosed':['name:Vendor Filter: CG2Public'],
                          'Summary':       ['name:Vendor Filter: CG2Public'],
