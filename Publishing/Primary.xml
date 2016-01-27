@@ -9,9 +9,11 @@
  <SystemSubset>
   <SubsetName>Hotfix-Export</SubsetName>
   <SubsetDescription>
-    Filter and validate specified documents together with
-    their recursively linked documents and push them to Cancer.gov for
-    immediate action.
+    Filter and validate manually entered documents and push them to Cancer.gov.
+    You have the option to interrupt the process by cancelling the push.
+
+    Note:  This option is used for updates only.  Use Hotfix-Remove to delete
+           documents from Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -282,8 +284,11 @@
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Export</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Hotfix-Export licensee documents
-    to Cancer.gov for immediate action.
+    Initiate a push of the documents prepared by the latest Hotfix-Export.
+
+    Use this option if the Hotfix-Export process was unable to create the
+    push job automatically due to an already existing, incomplete push job 
+    or a previously cancelled push job.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -342,8 +347,10 @@
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Republish-Export</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Republish-Export licensee documents
-    to Cancer.gov for immediate action.
+    Initiate a push of the documents prepared by the latest Republish-Export.
+
+    Use this option if the Republish-Export process was unable to create the
+    push job automatically due to an already existing, incomplete push job.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -406,13 +413,15 @@
  <SystemSubset>
   <SubsetName>Interim-Export</SubsetName>
   <SubsetDescription>
-    Produce daily Cancer.gov updates and push them to Cancer.gov.
+    Produce daily, incremental document updates and push them to Cancer.gov.
 
-    Some differences from regular export job include:
-       Produce all active CT.gov protocols and terminology, like Export.
-       Select only new or changed Orgs, GlossaryTerms, Media.
-       Do not publish any Persons or Countries, not used by cancer.gov
-       Push job is always "Yes", not "Ask"
+    Some differences from the regular Export job include:
+    Produce all active CT.gov protocols and terminology, like Export.
+    Select only new documents of the other document types.
+    Documents will be pushed without operator intervention.
+
+    Note:  Run the 'Jobmaster Nightly' scheduled job if you need to run all
+           of the steps of the nightly publishing event.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -873,7 +882,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Interim-Export</SubsetName>
   <SubsetDescription>
-    Push filtered/validated nightly export documents to Cancer.gov.
+    Push documents prepared by the latest Interim-Export job to Cancer.gov.
+    Documents will be pushed without operator intervention.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -940,10 +950,12 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Full-Load</SubsetName>
   <SubsetDescription>
-    Filter and validate all publishable documents to produce
-    licensee documents and push them to Cancer.gov. (Country, CTGovProtocol,
+    Filter, validate and push all publishable documents to produce
+    licensee documents and push all documents to Cancer.gov. (Country, CTGovProtocol,
     DrugInfoSummary, GenProf, Glossary, Media, Org, PoliticalSubUnit,
     Summary, Terminology)
+
+    Note:  This option is only to be used in case of a disaster.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -1380,7 +1392,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Full-Load</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Full-Load licensee documents to Cancer.gov.
+    Push the documents prepared by the latest Full-Load to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -1443,7 +1455,10 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export</SubsetName>
   <SubsetDescription>
-    Produce weekly licensee documents and push them to Cancer.gov.
+    Produce weekly documents for PDQ partners and incremental updates for Cancer.gov.
+
+    Note:  Run the 'Jobmaster Weekly' scheduled job if you need to run all 
+           of the steps of the weekend publishing event.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -1895,8 +1910,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export</SubsetName>
   <SubsetDescription>
-    Push filtered/validated weekly Export licensee
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -1963,8 +1977,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Hotfix-Remove</SubsetName>
   <SubsetDescription>
-    Create list of CDR document IDs to be removed from
-    Cancer.gov.  Push the list to Cancer.gov for immediate action.
+    Remove manually entered documents and push the remove request to Cancer.gov.
+    You have the option to interrupt the process by cancelling the push.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2003,8 +2017,11 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Hotfix-Remove</SubsetName>
   <SubsetDescription>
-    Push list of CDR IDs created under Hotfix-Remove to Cancer.gov for
-    immediate action.
+    Initiate a push of the remove request prepared by the latest Hotfix-Remove.
+
+    Use this option if the Hotfix-Remove process was unable to create the
+    push job due to an already existing, incomplete push job or a previously
+    cancelled push job.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2059,11 +2076,10 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Republish-Export</SubsetName>
   <SubsetDescription>
-    Filter and validate specified documents together with
-    their recursively linked documents and push them to Cancer.gov for
+    Filter and validate specified documents and push them to Cancer.gov for
     immediate action.
-    The republish-export handles documents that have previously been
-    submitted to Cancer.gov but failed to load.
+    The republish-export pushes all documents to Cancer.gov including the ones
+    without changes.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2338,8 +2354,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Country</SubsetName>
   <SubsetDescription>
-    Filter and validate all publishable country documents for
-    licensees and push them to Cancer.gov.
+    Create Country documents for PDQ partners and push changes to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2440,8 +2455,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Country</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-Country
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-Country job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2504,8 +2518,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-CTGovProtocol</SubsetName>
   <SubsetDescription>
-    Filter and validate all publishable CTGovProtocol documents
-    for licensees and push them to Cancer.gov.
+    Create CTGovProtocol documents for PDQ partners and push changes to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2611,8 +2624,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-CTGovProtocol</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-CTGovProtocol
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-CTGovProtocol job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2675,8 +2687,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-DrugInfoSummary</SubsetName>
   <SubsetDescription>
-    Filter and validate all publishable DrugInfoSummary documents.
-    This document type is for Cancer.gov only.
+    Create Drug Information Summary documents for PDQ partners and push changes 
+    to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2777,8 +2789,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-DrugInfoSummary</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-DrugInfoSummary
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-DrugInfoSummary job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2841,7 +2852,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-GENETICSPROFESSIONAL</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable GeneticsProfessional documents.
+    Create Genetics Professional documents for PDQ partners and push changes 
+    to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -2941,8 +2953,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-GENETICSPROFESSIONAL</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-GENETICSPROFESSIONAL
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-GENETICSPROFESSIONAL job 
+    to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3005,8 +3017,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-GlossaryTerm</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable GlossaryTerm documents for
-    licensees (TermNameStatus = "Approved | Revision pending")
+    Create Glossary Term documents for PDQ partners and push changes 
+    to Cancer.gov. (TermNameStatus = "Approved | Revision pending")
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3105,8 +3117,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-GlossaryTerm</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-GlossaryTerm
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-GlossaryTerm job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3169,9 +3180,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Media</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable Media documents
-    for licensees (Media documents linked to by publishable documents only)
-    and push them to Cancer.gov
+    Create Media documents for PDQ partners and push changes 
+    to Cancer.gov. (Media documents linked to by publishable documents only)
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3272,8 +3282,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Media</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-Media
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-Media job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3336,9 +3345,9 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Organization</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable Organization documents for
-    licensees (Orgs with CurrentStatus = "Active | Inactive" and document
-    is referenced by publishable document) and push them to Cancer.gov.
+    Create Organization documents for PDQ partners and push changes 
+    to Cancer.gov.  (Orgs with CurrentStatus = "Active | Inactive" and document
+    is referenced by publishable document)
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3445,8 +3454,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Organization</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-Organization
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-Organization job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3510,8 +3518,8 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-PoliticalSubUnit</SubsetName>
   <SubsetDescription>
-    Filter and validate all publishable PoliticalSubUnit documents for
-    licensees and push them to Cancer.gov.
+    Create PoliticalSubunit documents for PDQ partners and push changes 
+    to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3612,8 +3620,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-PoliticalSubUnit</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-PoliticalSubUnit
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-PoliticalSubUnit job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3676,8 +3683,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Summary</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable summary documents for
-    licensees and push them to Cancer.gov.
+    Create Summary documents for PDQ partners and push changes to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3788,8 +3794,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Summary</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-Summary summary
-    documents to Cancer.gov.
+    Push documents prepared by the latest Export-Summary job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
@@ -3852,7 +3857,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Term</SubsetName>
   <SubsetDescription>
-    Filter and validate publishable Term documents for licensees
+    Create Terminology documents for PDQ partners and push changes to Cancer.gov.
     (TermStatus in ('Reviewed-Problematic', 'Reviewed-Retain', 'Unreviewed'))
     and push them to Cancer.gov.
   </SubsetDescription>
@@ -3954,7 +3959,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-Term</SubsetName>
   <SubsetDescription>
-    Push filtered/validated Export-Term documents to Cancer.gov.
+    Push documents prepared by the latest Export-Term job to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
    <SubsetParameter>
