@@ -9,13 +9,17 @@
 #
 # OCECDR-3752: Modify Media VOL (Visual Online) Report to include all 
 #              publishable media (images) docs.
+# OCECDR-4036: Updated Media Docs Report- Correct Date Range
 #----------------------------------------------------------------------
 import os, sys, cdr, time, optparse, cdrdb
+import datetime
 
 FILEBASE           = "Notify_VOL"
 LOGNAME            = "%s.log" % FILEBASE
 jobTime            = time.localtime(time.time())
-today              = time.strftime("%Y-%m-%d", jobTime)
+# today              = time.strftime("%Y-%m-%d", jobTime)
+today              = datetime.date.today()
+yesterday          = today - datetime.timedelta(1)
 
 testMode   = None
 
@@ -44,7 +48,7 @@ def parseArguments(args):
                       help = 'start date of time frame (default one week)')
     parser.add_option('-e', '--enddate', dest = 'endDate', 
                       metavar = 'ENDDATE',
-                      help = 'end date of time frame (default today)')
+                      help = 'end date of time frame (default yesterday)')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
@@ -117,7 +121,7 @@ def checkMediaUpdates(sDate, eDate):
                      FROM doc_version 
                     WHERE id = dv.id
                    )
-           AND dv.dt between '%s' AND '%s'
+           AND dv.dt BETWEEN '%s' AND '%s'
            AND dv.publishable = 'Y'
          ORDER BY d.id
 """ % (sDate, eDate), timeout=300)
@@ -175,18 +179,23 @@ options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
-# If only the start or end date are specified, the timeframe will
-# be set to one week.  Otherwise it's whatever dates are passed
-# or one week prior to today if no dates are specified.
+# If only the start date is specified, the timeframe will be from
+# the start date until yesterday.  If only the end date is 
+# specified, the timeframe will be the week prior (and including)
+# that date. Otherwise it's whatever dates are passed
+# or the week prior to today if no dates are specified.
 # ---------------------------------------------------------------
-endDate   = options.values.endDate   or today
+endDate    = options.values.endDate   or str(yesterday)
+endDateSql = datetime.datetime.strptime(endDate, "%Y-%m-%d").date() \
+             + datetime.timedelta(1)
 startDate = options.values.startDate \
-            or cdr.calculateDateByOffset(-6, referenceDate = endDate)
+            or datetime.datetime.strptime(endDate, "%Y-%m-%d").date() \
+             - datetime.timedelta(6)
 
 # Checking if Media documents were updated for the given
 # time frame.
 # ----------------------------------------------------------
-mediaChanges = checkMediaUpdates(startDate, endDate)
+mediaChanges = checkMediaUpdates(startDate, endDateSql)
 
 # Print the result
 # ----------------
@@ -242,14 +251,16 @@ body     = """
    </tr>
 """ % (startDate, endDate)
 
+host = "%s.%s" % cdr.h.host["APPC"]
 class_ = "even"
+
 for row in mediaChanges:
     class_ = class_ == "even" and "odd" or "even"
     # print row
     body += """
    <tr class="%s">
     <td class="link">
-     <a href="https://cdr.cancer.gov/cgi-bin/cdr/GetCdrImage.py?id=CDR%s.jpg">%s</a>
+     <a href="https://%s/cgi-bin/cdr/GetCdrImage.py?id=CDR%s.jpg">%s</a>
     </td>
     <td>%s</td>
     <td>%s</td>
@@ -257,11 +268,11 @@ for row in mediaChanges:
     <td align="center">%s</td>
     <td align="center">%s</td>
    </tr>
-       """ % (class_, row[0], row[0], row[1], 
-                      row[2] and row[2][:10] or '', 
-                      row[3] and row[3][:16] or '', 
-                      row[7], 
-                      row[5] and 'Y' or '')
+       """ % (class_, host, row[0], row[0], row[1], 
+                            row[2] and row[2][:10] or '', 
+                            row[3] and row[3][:16] or '', 
+                            row[7], 
+                            row[5] and 'Y' or '')
 
 body += """
   </table>
