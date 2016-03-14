@@ -10,56 +10,55 @@ import os, cgi, sys, time, re
 
 DEFAULT_COUNT = 2000000
 
-try: # Windows needs stdio set for binary mode.
-    import msvcrt
-    msvcrt.setmode (0, os.O_BINARY) # stdin  = 0
-    msvcrt.setmode (1, os.O_BINARY) # stdout = 1
-except ImportError:
-    pass
+LOGDIR = "/weblogs/gpmailers"
+LOGS = ("access_log", "error_log", "gpmailers.log")
 
 def makeAscii(s):
     return re.sub(u"[\x80-\xff%]", lambda m: "%%%02X" % ord(m.group(0)[0]), s)
 
-def showForm(info="", path="", start="", count=""):
+def showForm(info=""):
     print """\
 Content-type: text/html
 
 <html>
  <head>
-  <title>CDR Log Viewer</title>
+  <title>GP Mailers Log Viewer</title>
   <style type="text/css">
    * { font-family: sans-serif }
    label { width: 50px; padding-bottom: 5px; display: inline-block; }
-   #path, #start, #count { width: 300px; }
+   #log, #start, #count { width: 100px; }
   </style>
  </head>
  <body>
-  <h1>CDR Log Viewer</h1>
+  <h1>GP Mailers Log Viewer</h1>
   <p>%s</p>
   <form action="log-tail.py" method="POST">
-   <label for="path">Path: </label>
-   <input id="path" name="p" value="%s"/><br />
+   <label for="path">Log: </label>
+   <select id="log" name="l">%s
+   </select><br>
    <label for="start">Start: </label>
-   <input name="s" id="start" value="%s" /><br />
+   <input name="s" id="start"><br>
    <label for="count">Count: </label>
-   <input name="c" id="count" value="%s"/><br /><br />
-   <input type="submit" />
+   <input name="c" id="count"><br><br>
+   <input type="submit">
   </form>
  </body>
 </html>
-""" % (info, path, start, count)
+""" % (info, 
+       "".join(['<option value="%s">%s</option>' % (l, l) for l in LOGS]))
 
 fields = cgi.FieldStorage()
-p = fields.getvalue("p") or ""
+l = fields.getvalue("l") or ""
 s = fields.getvalue("s") or ""
 c = fields.getvalue("c") or ""
 
-if p:
+if l in LOGS:
     try:
+        p = "%s/%s" % (LOGDIR, l)
         stat = os.stat(p)
         stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(stat.st_mtime))
         info = "%s %s bytes (%s GMT)" % (p, stat.st_size, stamp)
-        count = long(c or "100000")
+        count = long(c or DEFAULT_COUNT)
         start = long(s or "0")
         if count < 0:
             count = 0
@@ -82,7 +81,7 @@ if p:
             if count > available:
                 count = available
         if count:
-            fp = open(p, "rb")
+            fp = open(p)
             if start:
                 fp.seek(start)
             bytes = fp.read(count)
