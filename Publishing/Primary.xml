@@ -521,7 +521,7 @@
           ON s.doc_id = v.id
        WHERE s.path = '/CTGovProtocol/OverallStatus'
          AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Approved-not yet active', 'Temporarily closed')
+                         'Not yet active', 'Temporarily closed')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
     GROUP BY v.id
       HAVING v.id NOT IN (SELECT DISTINCT doc_id FROM published_doc)
@@ -1057,7 +1057,7 @@ LEFT OUTER JOIN query_term_pub u
          AND v.num = p.num
        WHERE s.path = '/CTGovProtocol/OverallStatus'
          AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Approved-not yet active', 'Temporarily closed')
+                         'Not yet active', 'Temporarily closed')
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -1575,7 +1575,7 @@ LEFT OUTER JOIN query_term_pub u
          AND v.num = p.num
        WHERE s.path = '/CTGovProtocol/OverallStatus'
          AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Approved-not yet active', 'Temporarily closed')
+                         'Not yet active', 'Temporarily closed')
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -2589,7 +2589,7 @@ LEFT OUTER JOIN query_term_pub u
           ON s.doc_id = v.id
        WHERE s.path = '/CTGovProtocol/OverallStatus'
          AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Approved-not yet active', 'Temporarily closed')
+                         'Not yet active', 'Temporarily closed')
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
