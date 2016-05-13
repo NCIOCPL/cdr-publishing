@@ -1,19 +1,18 @@
 #!d:/python/python.exe
 # *********************************************************************
+# $Id: $
 #
-# File Name: $RCSFile:$
+# File Name: LicenseeList.py
 #            ===============
 # Program to create a list of active licensees (Production/Test)
 # This job should run as a scheduled job once a month.
 # ---------------------------------------------------------------------
 # $Author: volker $
 # Created:          2013-06-05        Volker Englisch
-# Last Modified:    $$
-# 
-# $Source: $
+# Last Modified:    $Date$
 # $Revision: $
 #
-# $Id: $
+# OCECDR-3898: Modify PDQ Partner Documents
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
@@ -95,7 +94,7 @@ emailMode = options.values.emailMode
 # file created.
 # -----------------------------------------------------------------
 filename = OUTPUTBASE + '/' + outputFile
-l.write("Licensee report is: %s" % outputFile, stdout = True)
+l.write("Content Partner report is: %s" % outputFile, stdout = True)
 l.write("  at path: %s" % filename, stdout=True)
  
 try:
@@ -161,24 +160,24 @@ LEFT OUTER JOIN query_term pdi
     # Create the message body and display the query results
     # -----------------------------------------------------
     l.write("", stdout = True)
-    l.write('List of Current Licensees (active and test)', stdout = True)
+    l.write('List of Current Content Partners (active and test)', stdout = True)
     mailBody = """\
 <html>
  <head>
-  <title>List of PDQ Licensees</title>
+  <title>List of PDQ Content Distribution Partners</title>
   <style type='text/css'>
    th      { background-color: #f0f0f0; }
   </style>
  </head>
  <body>
-  <h2>List of PDQ Licensees</h2>
+  <h2>List of PDQ Distribution Partners</h2>
   <h3>Date: %s</h3>
-  <b>Active Licensees: %d&nbsp;&nbsp;&nbsp;Test Licensees: %s<br></b>
+  <b>Active Partners: %d&nbsp;&nbsp;&nbsp;Test Partners: %s<br></b>
 
   <table border='1px' cellpadding='2px' cellspacing='2px'>
    <tr>
     <th>CDR-ID</th>
-    <th>Licensee</th>
+    <th>Partner Name</th>
     <th>Status</th>
     <th>Test started</th>
     <th>Test renewed</th>
@@ -222,10 +221,10 @@ LEFT OUTER JOIN query_term pdi
 
     if cdr.h.org == 'OCE':
         subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
-                    'PDQ Licensee List')
+                    'PDQ Distribution Partner List')
     else:
         subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
-                    'PDQ Licensee List')
+                    'PDQ Distribution Partner List')
     
     mailHeader   = """\
 From: %s

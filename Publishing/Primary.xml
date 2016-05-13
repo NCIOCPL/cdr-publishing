@@ -279,6 +279,7 @@
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
+
  </SystemSubset>
 
  <SystemSubset>
@@ -287,7 +288,7 @@
     Initiate a push of the documents prepared by the latest Hotfix-Export.
 
     Use this option if the Hotfix-Export process was unable to create the
-    push job automatically due to an already existing, incomplete push job 
+    push job automatically due to an already existing, incomplete push job
     or a previously cancelled push job.
   </SubsetDescription>
   <SubsetParameters>
@@ -300,8 +301,8 @@
     <ParmValue>Hotfix (Export)</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>IgnoreGKJobIDMismatch</ParmName>
@@ -339,7 +340,7 @@
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -362,8 +363,8 @@
     <ParmValue>Reload</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -405,7 +406,7 @@
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -877,6 +878,18 @@ LEFT OUTER JOIN query_term_pub u
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
+
+  <PerDoctypeErrorThresholds>
+   <PerDoctypeErrorThreshold>
+    <Doctype>Summary</Doctype>
+    <MaxErrors>0</MaxErrors>
+   </PerDoctypeErrorThreshold>
+   <PerDoctypeErrorThreshold>
+    <Doctype>CTGovProtocol</Doctype>
+    <MaxErrors>0</MaxErrors>
+   </PerDoctypeErrorThreshold>
+  </PerDoctypeErrorThresholds>
+
  </SystemSubset>
 
  <SystemSubset>
@@ -895,8 +908,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -1315,12 +1328,12 @@ LEFT OUTER JOIN query_term_pub u
                           SELECT doc_id
                             FROM query_term_pub
                            WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
          AND v.id NOT IN (SELECT doc_id
                             FROM query_term_pub
                            WHERE path = '/Summary/@ModuleOnly'
                              AND value = 'Yes'
                          )
-         )
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -1404,8 +1417,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Full Load</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -1447,7 +1460,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -1457,7 +1470,7 @@ LEFT OUTER JOIN query_term_pub u
   <SubsetDescription>
     Produce weekly documents for PDQ partners and incremental updates for Cancer.gov.
 
-    Note:  Run the 'Jobmaster Weekly' scheduled job if you need to run all 
+    Note:  Run the 'Jobmaster Weekly' scheduled job if you need to run all
            of the steps of the weekend publishing event.
   </SubsetDescription>
   <SubsetParameters>
@@ -1905,6 +1918,18 @@ LEFT OUTER JOIN query_term_pub u
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
+
+  <PerDoctypeErrorThresholds>
+   <PerDoctypeErrorThreshold>
+    <Doctype>Summary</Doctype>
+    <MaxErrors>0</MaxErrors>
+   </PerDoctypeErrorThreshold>
+   <PerDoctypeErrorThreshold>
+    <Doctype>CTGovProtocol</Doctype>
+    <MaxErrors>0</MaxErrors>
+   </PerDoctypeErrorThreshold>
+  </PerDoctypeErrorThresholds>
+
  </SystemSubset>
 
  <SystemSubset>
@@ -1922,8 +1947,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -1969,7 +1994,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -2068,7 +2093,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -2467,8 +2492,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -2510,7 +2535,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -2636,8 +2661,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -2679,7 +2704,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -2687,7 +2712,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-DrugInfoSummary</SubsetName>
   <SubsetDescription>
-    Create Drug Information Summary documents for PDQ partners and push changes 
+    Create Drug Information Summary documents for PDQ partners and push changes
     to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
@@ -2801,8 +2826,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -2844,7 +2869,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -2852,7 +2877,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-GENETICSPROFESSIONAL</SubsetName>
   <SubsetDescription>
-    Create Genetics Professional documents for PDQ partners and push changes 
+    Create Genetics Professional documents for PDQ partners and push changes
     to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
@@ -2953,7 +2978,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Push_Documents_To_Cancer.Gov_Export-GENETICSPROFESSIONAL</SubsetName>
   <SubsetDescription>
-    Push documents prepared by the latest Export-GENETICSPROFESSIONAL job 
+    Push documents prepared by the latest Export-GENETICSPROFESSIONAL job
     to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
@@ -2966,8 +2991,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3009,7 +3034,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3017,7 +3042,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-GlossaryTerm</SubsetName>
   <SubsetDescription>
-    Create Glossary Term documents for PDQ partners and push changes 
+    Create Glossary Term documents for PDQ partners and push changes
     to Cancer.gov. (TermNameStatus = "Approved | Revision pending")
   </SubsetDescription>
   <SubsetParameters>
@@ -3129,8 +3154,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3172,7 +3197,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3180,7 +3205,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Media</SubsetName>
   <SubsetDescription>
-    Create Media documents for PDQ partners and push changes 
+    Create Media documents for PDQ partners and push changes
     to Cancer.gov. (Media documents linked to by publishable documents only)
   </SubsetDescription>
   <SubsetParameters>
@@ -3294,8 +3319,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3337,7 +3362,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3345,7 +3370,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-Organization</SubsetName>
   <SubsetDescription>
-    Create Organization documents for PDQ partners and push changes 
+    Create Organization documents for PDQ partners and push changes
     to Cancer.gov.  (Orgs with CurrentStatus = "Active | Inactive" and document
     is referenced by publishable document)
   </SubsetDescription>
@@ -3466,8 +3491,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3509,7 +3534,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3518,7 +3543,7 @@ LEFT OUTER JOIN query_term_pub u
  <SystemSubset>
   <SubsetName>Export-PoliticalSubUnit</SubsetName>
   <SubsetDescription>
-    Create PoliticalSubunit documents for PDQ partners and push changes 
+    Create PoliticalSubunit documents for PDQ partners and push changes
     to Cancer.gov.
   </SubsetDescription>
   <SubsetParameters>
@@ -3632,8 +3657,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3675,7 +3700,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3806,8 +3831,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -3849,7 +3874,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -3971,8 +3996,8 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>Export</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>CheckPushedDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmName>PushAllDocs</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
@@ -4014,7 +4039,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Ask</OptionValue>
+    <OptionValue>Yes</OptionValue>
    </SubsetOption>
   </SubsetOptions>
  </SystemSubset>
@@ -4031,8 +4056,15 @@ can occur before stopping
    <ParmInfoMethod>yes_no_int</ParmInfoMethod>
   </ParmInfo>
   <ParmInfo>
-   <ParmInfoName>CheckPushedDocs</ParmInfoName>
-   <ParmInfoHelp>This option appears to be ignored</ParmInfoHelp>
+   <ParmInfoName>PushAllDocs</ParmInfoName>
+   <ParmInfoHelp>
+'Yes' causes every document in the export set to be pushed to cancer.gov,
+   regardless of whether or not an identical version is already there.
+'No' causes each document to be compared to what's on cancer.gov (using the
+   CDR pub_proc_cg table) and only push those that have changed.
+Note: You must run the Push job manually, not automatically after an Export,
+   in order to modify this parameter value.
+   </ParmInfoHelp>
    <ParmInfoValidValues>
     <ParmInfoValidValue>Yes</ParmInfoValidValue>
     <ParmInfoValidValue>No</ParmInfoValidValue>

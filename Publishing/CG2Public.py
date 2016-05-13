@@ -9,6 +9,8 @@
 # BZIssue::4675 - Create UrlInfo block
 # BZIssue::4881 - Modify publishing to include Drug Info Summary
 # BZIssue::5093 - [Media] Adding Audio Files to Vendor Output
+# OCECDR-3962: Simplify Rerunning Jobmaster Job (Windows)
+# OCECDR-3960: Include current DTD in FTP Data Set
 #
 # Revision 1.3  2008/10/14 21:45:03  venglisc
 # Had to fix the glob.glob() pattern since there were folders/files on BACH
@@ -24,13 +26,13 @@
 #
 #----------------------------------------------------------------------
 import cdr, cdrpub, os, os.path, shutil, sys, re, glob, optparse, time
-###import xml.dom.minidom, cdrdb, socket, cdrcgi, getopt
-###import xml.sax.saxutils
 
 OUTPUTBASE    = cdr.BASEDIR + "/Output/LicenseeDocs"
 SOURCEBASE    = cdr.BASEDIR + "/Output"
-# DTDPUBLIC   = "d:\\home\\venglisch\\cdr\\Licensee\\pdqPublic_test.dtd"
-DTDPUBLIC     = "d:\\cdr\\Licensee\\pdq.dtd"
+DTDDIR        = "d:\\cdr\\Licensee"
+PDQDTD        = "pdq.dtd"
+# DTDPUBLIC     = "d:\\cdr\\Licensee\\pdq.dtd"
+DTDPUBLIC     = "%s\\%s" % (DTDDIR, PDQDTD)
 LOGNAME       = "CG2Public.log"
 EXCLUDEDIRS   = ('InvalidDocs', 'media_catalog.txt')
 AUXFILES      = ('media_catalog.txt',)
@@ -61,7 +63,7 @@ class documentType:
 
         # The glob module is not flexible enough to test for jobs with
         # 4 or 5 digits.  This will have to be modified when we're 
-        # approaching Job5999+
+        # approaching Job99999+
         # jobDirs = glob.glob('Job?????')
         # ------------------------------------------------------------
         jobDirs = glob.glob('Job?????')
@@ -352,8 +354,11 @@ if warnings:
 # A few auxiliary files also need to be copied
 # --------------------------------------------
 if fullMode:
+    l.write("Writing aux files and DTD", stdout = True)
     for auxFile in AUXFILES:
         shutil.copy('%s/%s' % (d.inputDir, auxFile), d.outputDir)
+
+    shutil.copy('%s/%s' % (DTDDIR, PDQDTD), d.outputDir)
 
 l.write('CG2Public.py - Finished', stdout = True)
 sys.exit(0)

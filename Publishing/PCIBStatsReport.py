@@ -18,14 +18,15 @@
 # BZIssue::5173 - ICRDB Stats Report
 # OCECDR-3890: Possible discrepancies in count of Dictionary Terms in 
 #              PCIB Status Report
+# OCDCDR-3867: PCIB Statistics Report
 #
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
 import calendar
 
 OUTPUTBASE  = cdr.BASEDIR + "/reports"
-DOC_FILE    = "ICRDBStats"
-LOGNAME     = "ICRDBStats.log"
+DOC_FILE    = "PCIBStats"
+LOGNAME     = "PCIBStats.log"
 SMTP_RELAY  = "MAILFWD.NIH.GOV"
 STR_FROM    = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
@@ -43,6 +44,7 @@ outputFile     = '%s_%s.html' % (DOC_FILE, time.strftime("%Y-%m-%dT%H%M%S", now)
 
 testMode       = None
 emailMode      = None
+#sendTo         = None
 dispRows       = None
 listNum        = 0
 
@@ -100,6 +102,9 @@ def parseArguments(args):
     parser.add_option('-n', '--noemail',
                       action = 'store_false', dest = 'emailMode',
                       help = 'running in NOEMAIL mode')
+    parser.add_option('-f', '--sendto',
+                      action = 'store', dest = 'sendTo',
+                      help = 'email address receiving the report')
     #parser.add_option('-f', '--filename',
     #                  action = 'store', dest = 'fname',
     #                  help = 'run diff on this file')
@@ -167,6 +172,9 @@ def parseArguments(args):
         l.write("Running in EMAIL mode", stdout = True)
     else:
         l.write("Running in NOEMAIL mode", stdout = True)
+    if parser.values.sendTo:
+        sendTo = parser.values.sendTo
+        l.write("Sending report to: %s" % sendTo, stdout = True)
     if not parser.values.listRows:
         l.write("Listing counts only", stdout = True)
     else:
@@ -224,10 +232,10 @@ From: %s
 To: %s
 Subject: %s: %s
 """ % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
-       '*** Error: Program ICRDB Stats Report failed!')
+       '*** Error: Program PCIB Statistics Report failed!')
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
-    mailBody      = "<b>Error running ICRDBStatsReport.py</b><br>"
+    mailBody      = "<b>Error running PCIBStatsReport.py</b><br>"
     mailBody     += "Most likely %s<br>" % msg
     mailBody     += "See log file for details."
 
@@ -1560,8 +1568,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 # Note: The name for the foreign list is called '... NoUS'
 #       because the group name is limited to 32 characters
 # --------------------------------------------------------
-def sendEmailReport(messageBody, title):
-
+def sendEmailReport(messageBody, title, sendTo=None):
     # In Testmode we don't want to send the notification to the world
     # ---------------------------------------------------------------
     # Email constants
@@ -1572,10 +1579,12 @@ def sendEmailReport(messageBody, title):
         strTo = cdr.getEmailList('ICRDB Statistics Notification')
         #     strTo.append(u'register@clinicaltrials.gov')
 
-    if cdr.h.org == 'OCE':
-        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(), title)
-    else:
-        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
+    # If an email address has been specified send to that person
+    # ----------------------------------------------------------
+    if sendTo:
+        strTo = [u'%s' % sendTo]
+
+    subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
     
     mailHeader = """\
 From: %s
@@ -1611,7 +1620,7 @@ Subject: %s
 # Instantiate the Log class
 # ---------------------------------------------------------------------
 l   = cdr.Log(LOGNAME)
-l.write('ICRDB Stats Report - Started', stdout = True)
+l.write('PCIB Statistics Report - Started', stdout = True)
 l.write('Arguments: %s' % sys.argv, stdout=True)
 l.write('', stdout=True)
 
@@ -1622,6 +1631,7 @@ emailMode = options.values.emailMode
 dispRows = options.values.listRows
 dispCdrid = options.values.cdrids
 debug = options.values.debug
+sendTo = options.values.sendTo
 
 # If we're not running the report for all sections we're setting the 
 # option dispPartial to True
@@ -1652,10 +1662,10 @@ startDate = options.values.start or firstOfMonth
 endDate = options.values.end or lastOfMonth
 
 if startDate == firstOfMonth and endDate == lastOfMonth:
-    title = u'Monthly PCIB Status Report for %s' % time.strftime("%B %Y", 
+    title = u'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y", 
                                                               lastmonth)
 else:
-    title = u'PCIB Status Report from %s to %s' % (startDate, endDate)
+    title = u'PCIB Statistics Report from %s to %s' % (startDate, endDate)
 
 # Setting the number of rows to be displayed if the document rows are
 # to be displayed (or no rows to be included)
@@ -1688,7 +1698,7 @@ try:
     # ----------------------------------------------
     if emailMode:
         l.write("Running in EMAIL mode.  Submitting email.", stdout = True)
-        sendEmailReport(report, title)
+        sendEmailReport(report, title, sendTo)
 
     # We're writing the report to the reports directory but only if the
     # full report is run.  
@@ -1715,5 +1725,5 @@ except:
                                                             tback = 1)
     raise
 
-l.write("ICRDB Stats Report - Finished", stdout = True)
+l.write("PCIB Statistics Report - Finished", stdout = True)
 sys.exit(0)

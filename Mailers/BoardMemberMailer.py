@@ -68,12 +68,13 @@ _boardValues = {
     BoardValues('adult treatment'),
     'PDQ ADULT TREATMENT EDITORIAL BOARD':
     BoardValues('adult treatment', 'Ed Bd Invite Letter - Adult Treatment'),
-    ('PDQ CANCER COMPLEMENTARY AND ALTERNATIVE MEDICINE EDITORIAL '
-     'ADVISORY BOARD'):
-    BoardValues('complementary and alternative medicine'),
-    'PDQ CANCER COMPLEMENTARY AND ALTERNATIVE MEDICINE EDITORIAL BOARD':
-    BoardValues('complementary and alternative medicine',
-                'Ed Bd Invite Letter - CAM'),
+    ('PDQ INTEGRATIVE, ALTERNATIVE, AND COMPLEMENTARY THERAPIES '
+     'EDITORIAL ADVISORY BOARD'):
+    BoardValues('integrative, alternative, and complementary therapies'),
+    ('PDQ INTEGRATIVE, ALTERNATIVE, AND COMPLEMENTARY THERAPIES '
+     'EDITORIAL BOARD'):
+    BoardValues('integrative, alternative, and complementary therapies',
+                'Ed Bd Invite Letter - IACT'),
     'PDQ CANCER GENETICS EDITORIAL ADVISORY BOARD':
     BoardValues('cancer genetics'),
     'PDQ CANCER GENETICS EDITORIAL BOARD':

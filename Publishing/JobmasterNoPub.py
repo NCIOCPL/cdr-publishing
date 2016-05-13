@@ -17,6 +17,7 @@
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 # BZIssue::4903 - Transfer Protocols without transfer date
 # BZIssue::5215 - Fix Publishing Job to Ignore Warnings
+# OCECDR-3962: Simplify Rerunning Jobmaster Job (Windows)
 #
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
@@ -24,7 +25,6 @@ import sys, re, string, os, shutil, cdr, getopt, time, glob
 # Setting directory and file names
 # --------------------------------
 PUBPATH    = os.path.join('d:\\cdr', 'publishing')
-# PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
 UTIL       = os.path.join('d:\\cdr', 'Utilities')
 UBIN       = os.path.join('d:\\cdr', 'Utilities', 'bin')
@@ -45,12 +45,13 @@ def parseArgs(args):
 
     global testMode
     global fullUpdate
+    global jobId
     global refresh
     global l
 
     try:
-        longopts = ["testmode", "livemode", "interim", "export"]
-        opts, args = getopt.getopt(args[1:], "tlie", longopts)
+        longopts = ["testmode", "livemode", "interim", "export", "jobid="]
+        opts, args = getopt.getopt(args[1:], "tliej:", longopts)
     except getopt.GetoptError, e:
         usage(args)
 
@@ -71,6 +72,12 @@ def parseArgs(args):
         elif o in ("-e", "--export"):
             fullUpdate = True
             l.write("running in EXPORT mode")
+        elif o in ("-j", "--jobid"):
+            if a[0:3].lower() == "job":
+                jobId = a[3:]
+            else:
+                jobId = a
+            l.write("processing Job%s" % jobId)
 
     if len(args) > 0:
         usage(args)
@@ -103,59 +110,10 @@ options:
     -l, --livemode
            run in LIVE mode
 
+    -j, --jobid=NNNNN
+           processing JobNNNN data 
 """ % sys.argv[0].split('\\')[-1])
     sys.exit(1)
-
-# ------------------------------------------------------------
-# Function to find the directory names storing the CTGovExport
-# data.
-# The file names are created automatically and represent a 
-# time stamp.  Once the CTGovExport job finished we need to 
-# identify the newly created directory name plus the one 
-# created before this containing the files WithdrawnFromPDQ.txt
-# ------------------------------------------------------------
-def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
-    """
-    Retrieve the directories created by the CTGovExport process
-    for the current month and the month before and sort them 
-    by date.  We want to compare the latest directory content
-    with the one created just before as long as it contains the 
-    file WithdrawnFromPDQ.txt
-    """
-    # Setting variables
-    # -----------------
-    notPDQ  = 'WithdrawnFromPDQ.txt'
-    now     = time.localtime(time.time())
-    fromDir = str(now[0]) + '%02d' % (now[1] - 1)
-    toDir   = str(now[0]) + '%02d' % now[1]
-
-    # Find the directories created during the past two months
-    # -------------------------------------------------------
-    dirs1   = glob.glob(baseDir + '/' + fromDir + '*')
-    dirs2   = glob.glob(baseDir + '/' + toDir   + '*')
-    allDirs = dirs1 + dirs2
-    allDirs.sort()
-    allDirs.reverse()
-    
-    # Find the last two directories that contain the 
-    # WithdrawnFromPDQ.txt file (not all do)
-    # ----------------------------------------------
-    checkDirs = ()
-    dirCount  = 0
-    for dir in allDirs:
-        if os.access(dir + '/' + notPDQ , os.F_OK):
-            dirCount += 1
-            dstart = dir.find('20')      # Change to 21 for year > 2100 
-            checkDirs += (dir[dstart:],)
-            if dirCount == 2: break
-
-    # If there didn't run any full export jobs during this and the last
-    # month, we have nothing to compare and we can't return a tuple
-    # -----------------------------------------------------------------
-    if len(checkDirs) < 2:
-        return None
-
-    return (checkDirs[:2])
 
     
 # ------------------------------------------------------------
@@ -168,6 +126,10 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
 l = cdr.Log(LOGFILE)
 l.write('Jobmaster Publishing - Started', stdout = True)
 l.write('Arguments: %s' % sys.argv, stdout=True)
+jobId  = ''  # export job id
+cg2dir = ''  # cg2public parameter
+expid  = ''  # export parameter
+ftpdir = ''  # ExportOtherData parameter
 
 parseArgs(sys.argv)
 
@@ -183,65 +145,21 @@ if fullUpdate:
 else:
     pubmode = '--interim'
 
+# If the JobmasterNoPub needs to be restarted after another publishing
+# job already ran since the Friday job we'll have to specify the job-id
+# By default the publishing jobs are processing the output from the last
+# publishing job.
+# ----------------------------------------------------------------------
+if jobId:
+    try:
+        myJob = int(jobId)
+        cg2dir = '--inputdir=Job%d' % myJob
+        expid  = '--jobid=%d' % myJob
+        ftpdir = '--dir=Job%d' % myJob
+    except:
+        l.write('Invalid job-id: %s' % repr(jobId))
+        sys.exit()
 
-# Submit initial email notification to indicate process has started
-# -----------------------------------------------------------------
-#try:
-#    istep += 1
-#    l.write('--------------------------------------------', stdout = True)
-#    l.write('Step %d: Initial Email' % istep, stdout = True)
-#    if fullUpdate:
-#        subject = 'Weekly Publishing Started'
-#        message = 'Weekly Job Started Successfully'
-#        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-#                                        (subject, message))
-#    else:
-#        subject = 'Nightly Publishing Started'
-#        message = 'Nightly Job Started Successfully'
-#        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-#                                        (subject, message))
-#    l.write('Submitting command...\n%s' % cmd, stdout = True)
-#
-#    # cmd = 'ls'
-#    myCmd = cdr.runCommand(cmd, joinErr2Out = False)
-#
-#    if myCmd.error:
-#        l.write('*** Error submitting email\n%s' % myCmd.error, 
-#                 stdout = True)
-#        raise Exception
-#except:
-#    l.write('*** Error: Sending Initial Email failed', stdout = True)
-#    sys.exit(1)
-#
-#try:
-#    istep += 1
-#    l.write('--------------------------------------------', stdout = True)
-#    l.write('Step %d: Submit Pub Job' % istep, stdout = True)
-#    cmd = os.path.join(PUBPATH, 'SubmitPubJob.py %s %s' % (runmode, pubmode))
-#
-#    l.write('Submitting command...\n%s' % cmd, stdout = True)
-#
-#    # cmd = 'ls'
-#    myCmd = cdr.runCommand(cmd)
-#    
-#    print "Code: ", myCmd.code
-#    print "Outp: ", myCmd.output.find('Failure')
-#    
-#    if myCmd.code or myCmd.output.find('Failure') > 0:
-#        l.write('*** Error submitting command:\n%s' % myCmd.output, 
-#                 stdout = True)
-#        subject = '*** Error in SubmitPubJob.py'
-#        message = 'Program returned with error code.  Please see logfile.'
-#        cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
-#                                        (subject, message))
-#        # cmd = 'ls'
-#        myCmd   = cdr.runCommand(cmd)
-#        raise Exception
-#
-#except:
-#    l.write('*** Error: Submitting Publishing Job failed', stdout = True)
-#    sys.exit(1)
-#
 # Process the licensee data that's running on weekends only
 # ---------------------------------------------------------
 if fullUpdate:
@@ -253,10 +171,12 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CG2Public Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s' % (runmode, pubmode)) 
+        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s %s' % (runmode, 
+                                                               pubmode,
+                                                               cg2dir)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        # cmd = 'ls'
+        ### cmd = 'ls' ###
         myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
         if myCmd.error:
@@ -266,7 +186,6 @@ if fullUpdate:
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
-            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
             raise Exception
     except:
@@ -280,11 +199,12 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: FtpExportData Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s' % (runmode, 
-                                                                pubmode)) 
+        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s %s' % (runmode, 
+                                                                   pubmode,
+                                                                   expid)) 
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
-        # cmd = 'ls'
+        ### cmd = 'ls' ###
         myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
         if myCmd.error:
@@ -294,7 +214,6 @@ if fullUpdate:
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
-            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
             raise Exception
     except:
@@ -312,11 +231,12 @@ try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
-    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode, 
-                                                            pubmode)) 
+    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s %s' % (runmode, 
+                                                              pubmode,
+                                                              ftpdir)) 
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)
-    # cmd = 'ls'
+    ### cmd = 'ls' ###
     myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
     if myCmd.error:
@@ -333,7 +253,6 @@ try:
 except:
     l.write('*** Error: Submitting FtpOtherData Job failed', stdout = True)
     pass
-
 
 if fullUpdate:
     # Submit the job to check for newly published media 
@@ -357,7 +276,6 @@ if fullUpdate:
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
-            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
             raise Exception
     except:
@@ -389,11 +307,11 @@ if fullUpdate:
             message = 'Program returned with error code.  Please see logfile.'
             cmd     = os.path.join(PUBPATH, 'PubEmail.py "%s" "%s"' % \
                                         (subject, message))
-            # cmd = 'ls'
             myCmd   = cdr.runCommand(cmd)
             raise Exception
     except:
-        l.write('*** Error: Submitting CheckHotfixRemove Job failed', stdout = True)
+        l.write('*** Error: Submitting CheckHotfixRemove Job failed', 
+                                                            stdout = True)
         pass
 
 

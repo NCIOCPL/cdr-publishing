@@ -10,6 +10,8 @@
    BZIssue::4881 - Include DrugInfoSummary document type
    OCECTS-116 - Add nct_id attribute to ProtocolRef element
    OCEPROJECT-3147 - Remove Protocol document type
+   OCECDR-3903: Cancer.gov displaying Patient definitions for terms 
+                in HP Summaries
 
 -->
 
@@ -287,12 +289,16 @@
 
 <!ELEMENT LOERef (#PCDATA)>
 <!ATTLIST LOERef href CDATA #REQUIRED>
+<!ATTLIST LOERef dictionary CDATA #IMPLIED>
+<!ATTLIST LOERef audience CDATA #IMPLIED>
 
 <!ELEMENT LOELink (#PCDATA)>
 <!ATTLIST LOELink ref CDATA #REQUIRED>
 
 <!ELEMENT GlossaryTermRef (#PCDATA)>
 <!ATTLIST GlossaryTermRef href CDATA #REQUIRED>
+<!ATTLIST GlossaryTermRef dictionary CDATA #IMPLIED>
+<!ATTLIST GlossaryTermRef audience CDATA #IMPLIED>
 
 <!ELEMENT GlossaryTermLink (#PCDATA)>
 <!ATTLIST GlossaryTermLink ref CDATA #REQUIRED>
