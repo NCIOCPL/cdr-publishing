@@ -49,7 +49,6 @@ def parseArguments(args):
     Assign all input parameters to variables and perform some error
     checking.
     """
-
     usage = "usage: %prog [--livemode | --testmode] [options]"
     parser = optparse.OptionParser(usage = usage)
 
@@ -141,14 +140,9 @@ Subject: %s: %s
 # -------------------------------------------------------------
 # List the reformatted summaries
 # -------------------------------------------------------------
-def getDocuments(cursor, startDate=startWeek, endDate=endWeek, repType=''):
-    # Debug message listing the document type and report type
-    # -------------------------------------------------------
-    l.write('   repType = %s' % (repType), stdout=True)
-
+def getTrials(cursor, startDate=startWeek, endDate=endWeek):
     # Query for brand new trials - first time published
     # -------------------------------------------------
-    #elif docType == 'CTGovProtocol':
     query = """\
          SELECT c.nlm_id AS "NCT-ID", c.cdr_id AS "CDR-ID", q.value AS "Title",
                 c.became_active, c.title 
@@ -177,6 +171,7 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek, repType=''):
         l.write('********************************************************',
                                                               stdout=True)
 
+    l.write('   Number of trials = %d' % (len(rows)), stdout=True)
     if not rows or rows[0][0] == 0:
         return []
 
@@ -186,7 +181,7 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek, repType=''):
 # --------------------------------------------------------
 # Formatting the report portion listing a table
 # --------------------------------------------------------
-def formatTableOutput(records, heading, repType=''):
+def formatTableOutput(records, heading):
     if not records:
         html  = "<br/>\n<h3>%s<h3>\n" % heading
         html += "<p style='margin-bottom: 1em;'><b>None</b></p>"
@@ -197,9 +192,11 @@ def formatTableOutput(records, heading, repType=''):
     records.sort()
 
     n = 0
-    for i in records:
-        n =+ 1
-        print "%d: %s" % (n, i)
+    for rec in records:
+        n += 1
+        l.write("%d *****" % n, stdout = True)
+        l.write("%s" % rec, stdout = True)
+        l.write('', stdout = True)
 
     # For the full report we print by default the document title
     # and the CDR-ID but some other document types might need to
@@ -207,12 +204,7 @@ def formatTableOutput(records, heading, repType=''):
     # -----------------------------------------------------------
     # Header Row
     # ----------
-#    html  = """
-#  <h3>%s</h3>
-#""" % heading
-
-    html = ""
-    html += """
+    html = """
   <table class='docstable'>
   <tr>
    <th>NCT-ID</th>
@@ -254,7 +246,7 @@ def formatTableOutput(records, heading, repType=''):
 # --------------------------------------------------------
 # Formatting the report portion listing trials as bullets
 # --------------------------------------------------------
-def formatBulletOutput(records, heading, repType=''):
+def formatBulletOutput(records, heading):
     if not records:
         return ''
 
@@ -293,6 +285,7 @@ def formatBulletOutput(records, heading, repType=''):
 """
     return html
 
+
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
@@ -320,7 +313,6 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
  <body>
   <h3>Date: %s</h3>
   <h2>%s</h2>
-
 """ % (title, date, title)
     else:
         html = u"""\
@@ -338,11 +330,12 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
 def createMessageBody(title='Test Title', startDate=startWeek, 
                                           endDate=endWeek):
     # Dictionary to be used for the misc. text labels by doc type
+    # Note: Originally, the report was planned to have different
+    #       sections - new, revised, new after being removed
+    #       previously, etc.  The dictionary was holding headings
+    #       used for the individual sections.
     # -----------------------------------------------------------
-    textLabels = { 
-                   'new':  'New Trials'  ,
-                   'newagain': 'New Trials previously published',
-               }
+    textLabels = { 'new':  'New Trials'  }
 
     conn = cdrdb.connect()
     cursor = conn.cursor()
@@ -350,30 +343,9 @@ def createMessageBody(title='Test Title', startDate=startWeek,
     l.write("", stdout = True)
     l.write(title, stdout = True)
 
-    countNewAll = 0
-    countNewAgainAll = 0
-    countNew = {'new':0}
-    countNewAgain = {'newagain':0}
-    # New Summaries Files
-    # -------------------------------
-    trialsNew = getDocuments(cursor, startDate, endDate, repType='new')
-    if trialsNew:
-        countTrialsNew = len(trialsNew)
-        for i in trialsNew:
-            countNew['new'] += 1
-
-    print countTrialsNew
-    print countNew['new']
-
-    # Revised Summaries Files
-    # -------------------------------
-    #trialsReborn = getDocuments(cursor, startDate, endDate, 
-    #                                repType='reborn')
-    trialsReborn = []
-    if trialsReborn:
-        countTrialsReborn = len(trialsReborn)
-        for i in trialsRevised:
-            countTrialsRev['newagain'] += 1
+    # Select the documents published with status 'active'
+    # ---------------------------------------------------
+    trialsNew = getTrials(cursor, startDate, endDate)
 
     # Put together the email message body
     # -----------------------------------
@@ -382,10 +354,8 @@ def createMessageBody(title='Test Title', startDate=startWeek,
 
     # Prepare the tables to be attached to the report
     # -------------------------------------------------------------------
-    trialsTable = formatTableOutput(trialsNew, textLabels['new'], 
-                                         repType='Trials')
-    trialsBullet = formatBulletOutput(trialsNew, textLabels['new'], 
-                                         repType='Trials')
+    trialsTable = formatTableOutput(trialsNew, textLabels['new'])
+    trialsBullet = formatBulletOutput(trialsNew, textLabels['new'])
 
     mailBody += trialsTable + trialsBullet
 
@@ -475,6 +445,7 @@ if testMode:
     outputFile = outputFile.replace('.html', '.test.html')
 
 path = OUTPUTBASE + '/%s' % outputFile
+l.write('', stdout=True)
 l.write('Writing report to: %s' % path, stdout=True)
  
 try:
@@ -506,6 +477,7 @@ try:
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
+    sendErrorMessage('Standard Exception in GovDelivery Trials Report')
     l.write("*** Error - Program stopped with failure ***", stdout = True, 
                                                             tback = 1)
     raise
