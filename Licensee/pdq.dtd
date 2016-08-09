@@ -407,6 +407,7 @@
                            SummaryLanguage,
                            SummaryDescription,
                            SummaryURL,
+                           SummaryToggleURL?,
                            SummaryEditorialBoard?,
                            MainTopics+,
                            SecondaryTopics*,
@@ -442,6 +443,10 @@
 <!-- Used by Cancer.gov website to link to the summary. -->
 <!ELEMENT SummaryURL (#PCDATA)>
 <!ATTLIST SummaryURL xref CDATA #REQUIRED>
+
+<!-- Used by Cancer.gov website to link to HP/Patient version. -->
+<!ELEMENT SummaryToggleURL (#PCDATA)>
+<!ATTLIST SummaryToggleURL xref CDATA #REQUIRED>
 
 <!ELEMENT SummaryLanguage (#PCDATA)>
 
