@@ -845,14 +845,33 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+     SELECT TOP ?NumDocs? v.id, v.num
         FROM publishable_version v
-        JOIN active_doc d
-          ON d.id = v.id
         JOIN doc_type t
-          ON t.id = d.doc_type
+          ON t.id = v.doc_type
+        JOIN (SELECT v.id, MAX(v.num) AS num
+                FROM publishable_version v
+                JOIN active_doc a
+                  ON a.id = v.id
+               -- WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+               GROUP BY v.id) AS p
+          ON v.id = p.id
+         AND v.num = p.num
+        JOIN query_term a
+          on a.doc_id = v.id
+         and a.path = '/Summary/SummaryMetaData/SummaryAudience'
+         and a.value = 'Patients'
        WHERE t.name = 'Summary'
-       GROUP BY v.id
+         AND v.id NOT IN (
+                          SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@ModuleOnly'
+                             AND value = 'Yes'
+                         )
        ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -915,14 +934,33 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+     SELECT TOP ?NumDocs? v.id, v.num
         FROM publishable_version v
-        JOIN active_doc d
-          ON d.id = v.id
         JOIN doc_type t
-          ON t.id = d.doc_type
+          ON t.id = v.doc_type
+        JOIN (SELECT v.id, MAX(v.num) AS num
+                FROM publishable_version v
+                JOIN active_doc a
+                  ON a.id = v.id
+               -- WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+               GROUP BY v.id) AS p
+          ON v.id = p.id
+         AND v.num = p.num
+        JOIN query_term a
+          on a.doc_id = v.id
+         and a.path = '/Summary/SummaryMetaData/SummaryAudience'
+         and a.value = 'Patients'
        WHERE t.name = 'Summary'
-       GROUP BY v.id
+         AND v.id NOT IN (
+                          SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@ModuleOnly'
+                             AND value = 'Yes'
+                         )
        ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -985,6 +1023,34 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
+     SELECT TOP ?NumDocs? v.id, v.num
+        FROM publishable_version v
+        JOIN doc_type t
+          ON t.id = v.doc_type
+        JOIN (SELECT v.id, MAX(v.num) AS num
+                FROM publishable_version v
+                JOIN active_doc a
+                  ON a.id = v.id
+               -- WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+               GROUP BY v.id) AS p
+          ON v.id = p.id
+         AND v.num = p.num
+        JOIN query_term a
+          on a.doc_id = v.id
+         and a.path = '/Summary/SummaryMetaData/SummaryAudience'
+         and a.value = 'Health professionals'
+       WHERE t.name = 'Summary'
+         AND v.id NOT IN (
+                          SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@ModuleOnly'
+                             AND value = 'Yes'
+                         )
+       ORDER BY v.id
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
         FROM publishable_version v
         JOIN active_doc d
@@ -1055,14 +1121,33 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+     SELECT TOP ?NumDocs? v.id, v.num
         FROM publishable_version v
-        JOIN active_doc d
-          ON d.id = v.id
         JOIN doc_type t
-          ON t.id = d.doc_type
+          ON t.id = v.doc_type
+        JOIN (SELECT v.id, MAX(v.num) AS num
+                FROM publishable_version v
+                JOIN active_doc a
+                  ON a.id = v.id
+               -- WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+               GROUP BY v.id) AS p
+          ON v.id = p.id
+         AND v.num = p.num
+        JOIN query_term a
+          on a.doc_id = v.id
+         and a.path = '/Summary/SummaryMetaData/SummaryAudience'
+         and a.value = 'Health professionals'
        WHERE t.name = 'Summary'
-       GROUP BY v.id
+         AND v.id NOT IN (
+                          SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@ModuleOnly'
+                             AND value = 'Yes'
+                         )
        ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -2329,15 +2414,30 @@
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
-      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+      SELECT TOP ?NumDocs? v.id, v.num
         FROM publishable_version v
-        JOIN active_doc d
-          ON d.id = v.id
         JOIN doc_type t
-          ON t.id = d.doc_type
+          ON t.id = v.doc_type
+        JOIN (SELECT v.id, MAX(v.num) AS num
+                FROM publishable_version v
+                JOIN active_doc a
+                  ON a.id = v.id
+               WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+               GROUP BY v.id) AS p
+          ON v.id = p.id
+         AND v.num = p.num
        WHERE t.name = 'Summary'
-       GROUP BY v.id
-       ORDER BY v.id
+         AND v.id NOT IN (
+                          SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/WillReplace/@cdr:ref'
+                         )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@ModuleOnly'
+                             AND value = 'Yes'
+                         )
+    ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
     <SubsetFilters>
