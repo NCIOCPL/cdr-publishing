@@ -1,7 +1,5 @@
 #----------------------------------------------------------------------
 #
-# $Id$
-#
 # Creates the following structure for a GP mailer job and sends it
 # to the emailer server's database.
 #
@@ -24,7 +22,7 @@
 #                       CEML/@Public]
 #   PracticeLocations
 #    PracticeLocation [mapped from PRACTICELOCATIONS UsedFor='GP']
-#     Institution [mapped from INSTITUTION] 
+#     Institution [mapped from INSTITUTION]
 #     Address [mapped from CADD elements]
 #     Telephone [mapped from CPHN]
 #   ProfessionalType [optional, multiple, mapped from ProfessionalType]
@@ -51,34 +49,25 @@
 #                            mapped from MEMBERSHIP/INSTITUTION]
 #
 # BZIssue::5295 (JIRA::OCECDR-3596) - changed source of PublishInDirectory
+# JIRA::OCECDR-4114 - Python upgrade
 #
 #----------------------------------------------------------------------
-import cdr, cdrdb, sys, bz2, cdrmailer, cdrmailcommon, urllib2
+import cdr, cdrdb, sys, bz2, cdrmailer, cdrmailcommon
+import requests
 etree = cdr.importEtree()
 
 class LookupValues:
     def __init__(self):
         self.__doc = None
         self.values = {}
-        if cdr.h.org == 'OCE':
-            myHost = '%s.%s' % (cdr.h.host['APP'][0], 
-                                cdr.h.host['APP'][1])
-            url = 'http://%s/cgi-bin/cdr/GetGPLookupValues.py' % myHost
-                                  
-        else:
-            # The URL to be used from the application server
-            myHost = '%s.%s' % (cdr.h.host['APPWEB'][0], 
-                                cdr.h.host['APPWEB'][1])
-            # The URL to be used from the bastion host
-            # myHost = '%s.%s' % (cdr.h.host['APPC'][0], cdr.h.host['APPC'][1])
-            url = 'https://%s/cgi-bin/cdr/GetGPLookupValues.py' % myHost
-
+        host = ".".join(cdr.h.host["APPC"])
+        url = "https://%s/cgi-bin/cdr/GetGPLookupValues.py" % host
         try:
-            reader = urllib2.urlopen(url)
+            response = requests.get(url)
         except:
             raise Exception("can't open URL: %s" % url)
-            
-        self.__doc = reader.read()
+
+        self.__doc = response.content
         tree = etree.XML(self.__doc)
         if tree.tag != 'ValueSets':
             raise Exception("can't find lookup values")
@@ -295,7 +284,7 @@ class GP:
         self.teamMember = self.publish = self.providesServices = False
         self.acceptsCalls = False
         self.limitations = None
-        
+
         for details in cdrTree.findall('ProfessionalInformation'
                                        '/GeneticsProfessionalDetails'):
             for child in details:

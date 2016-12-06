@@ -812,7 +812,8 @@ def media(pp):
     "Processes an image and its caption."
 
     # We need some additional modules.
-    import Image, cdr, cdrdb, cStringIO
+    import cdr, cdrdb, cStringIO
+    from PIL import Image
 
     # Extract the image ID and the caption.
     imageNode = pp.getCurNode()
