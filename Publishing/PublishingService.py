@@ -1,81 +1,10 @@
-#
+# ========================================================================
 # This script starts the publishing service.
 #
-# $Id$
-# $Log: PublishingService.py,v $
-#
+# BZIssue::3678 - better control over email recipients on lower tiers
 # BZIssue::5009 Fix PublishingService.py
-#
 # OCECDR-3727: Bug in Publishing Verification on Lower Tiers
-#
-# Revision 1.21  2007/12/31 16:33:01  venglisc
-# Added a new group for email notification so that we don't send an email
-# to the users if we're testing on the dev system. (Bug 3678)
-#
-# Revision 1.20  2007/09/27 20:57:35  venglisc
-# Modified GateKeeperStatus report link to only display documents with
-# errors or warnings instead of the full report.
-#
-# Revision 1.19  2007/09/20 14:54:44  bkline
-# Shortened time we'll wait before declaring a push job stalled.
-#
-# Revision 1.18  2007/05/17 20:18:58  bkline
-# Fixed backward comparison logic for dates.
-#
-# Revision 1.17  2007/05/16 15:56:26  bkline
-# Added code to mark failed docs in the pub_proc_doc table.
-#
-# Revision 1.16  2007/05/11 16:34:06  bkline
-# Fixed a couple of typos.
-#
-# Revision 1.15  2007/05/10 12:21:37  bkline
-# Removed debugging block of recipient list usage for notification of
-# problems with push jobs.
-#
-# Revision 1.14  2007/05/10 11:49:23  bkline
-# Added throttle to push job verification.
-#
-# Revision 1.13  2007/05/10 03:04:06  bkline
-# Plugging in missing SQL query parameter.
-#
-# Revision 1.12  2007/05/10 03:01:50  bkline
-# Fixed a typo and set the host name for the cdr2gk module when
-# appropriate.
-#
-# Revision 1.11  2007/05/10 02:33:51  bkline
-# Added code to verify push jobs.
-#
-# Revision 1.10  2006/10/20 04:22:20  ameyer
-# Added logging to publishing job start.
-#
-# Revision 1.9  2004/07/08 19:16:58  bkline
-# Made the script as bulletproof as possible by catching every possible
-# exception.
-#
-# Revision 1.8  2004/07/08 18:58:48  bkline
-# Cleaned up loop logging.
-#
-# Revision 1.7  2004/06/01 20:34:14  bkline
-# Added code to optionally add a line to the publication log at the top
-# of the processing loop.
-#
-# Revision 1.6  2002/08/02 03:45:29  ameyer
-# Added batch job initiation and logging.
-#
-# Revision 1.5  2002/02/20 22:25:10  Pzhang
-# First version of GOOD publish.py.
-#
-# Revision 1.4  2002/02/20 15:10:14  pzhang
-# Modified SCRIPT to point to /cdr/lib/python/publish.py. Avoided duplicate
-# files in /cdr/publishing/publish.py this way.
-#
-# Revision 1.3  2002/02/19 23:13:33  ameyer
-# Removed SCRIPT and replaced it with BASEDIR in keeping with new decisions
-# about where things are.
-#
-# Revision 1.2  2002/02/06 16:22:39  pzhang
-# Added Log. Don't want to change SCRIPT here; change cdr.py.
-#
+# OCECDR-4096: fix bug which closed cursor prematurely
 # ========================================================================
 import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk
 
@@ -189,7 +118,7 @@ def logLoop():
 def verifyLoad(jobId, pushFinished, cursor, conn):
 
     l.write("verifying push job %d" % jobId)
-    
+
     # Local values.
     failures = []
     warnings = []
@@ -363,7 +292,7 @@ Please visit the following link for further details:
     errors = cdr.sendMail(sender, recips, subject, body)
     if errors:
         raise cdr.Exception("reportLoadProblems(): %s" % errors)
-    
+
 conn = None
 while True:
     try:
@@ -395,6 +324,8 @@ while True:
             cursor = conn.cursor()
             cursor.execute(batchQry)
             rows = cursor.fetchall()
+            cursor.close()
+            cursor = None
 
             if len (rows):
                 # Process each queued job
@@ -427,9 +358,8 @@ while True:
                                          cdrbatch.PROC_DAEMON)
                     l.write ("Daemon: back from initiation", cdrbatch.LF)
 
-                    # Done with cursor
+                    # Close any open transactions.
                     conn.commit()
-                    cursor.close()
 
                     # Spawn the job
                     # Haven't found a good way to find out if it worked
@@ -452,21 +382,24 @@ while True:
             conn = None
 
         # Verify loading of documents pushed to Cancer.gov.
-        if timeToVerifyPushJobs():
+        if conn and timeToVerifyPushJobs():
             try:
+                cursor = conn.cursor()
                 cursor.execute("""\
                     SELECT id, completed
                       FROM pub_proc
                      WHERE status = 'Verifying'
                   ORDER BY id""")
-                for row in cursor.fetchall():
-                    verifyLoad(row[0], row[1], cursor, conn)
+                for jobId, completed in cursor.fetchall():
+                    verifyLoad(jobId, completed, cursor, conn)
+                cursor.close()
+                cursor = None
             except Exception, e:
                 try:
                     l.write("failure verifying push jobs: %s" % e)
                 except:
                     pass
-                
+
     except cdrdb.Error, info:
         # Log publishing job initiation errors
         try:

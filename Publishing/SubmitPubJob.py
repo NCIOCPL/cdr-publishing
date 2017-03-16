@@ -1,50 +1,8 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: $RCSFile:$
-#            ===============
 # Program to submit the interim and full export publishing job.
 # ---------------------------------------------------------------------
-# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date$
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/SubmitPubJob.py,v $
-# $Revision$
-#
-# $Id$
-# $Log: SubmitPubJob.py,v $
-# Revision 1.9  2009/07/24 22:50:26  venglisc
-# Fixed an error to write a string as an integer.
-#
-# Revision 1.8  2008/06/03 21:43:05  bkline
-# Replaced StandardError (slated to be removed in the future) with
-# Exception objects.
-#
-# Revision 1.7  2008/01/30 19:53:53  venglisc
-# Preventing nightly job to be started id weekly job is still processing
-#
-# Revision 1.6  2007/10/15 18:37:36  venglisc
-# Added code to redirect email output to developers/testers if run on a
-# non-production system.
-#
-# Revision 1.5  2007/09/19 17:38:41  venglisc
-# Added option to display a traceback in case of a system error.
-#
-# Revision 1.4  2007/09/07 22:32:03  venglisc
-# Modified program to use multiple groups for receiving email messages.
-# EmailDLs are retrieved from CDR instead from file.
-#
-# Revision 1.3  2007/08/29 21:27:42  venglisc
-# Reducing the time interval for checking if the jobs completed.  Adding
-# additional log messages.
-#
-# Revision 1.2  2007/08/10 16:42:11  venglisc
-# Finalized initial version.  Added log comments.
-#
-# Revision 1.1  2007/07/06 22:50:05  venglisc
-# Initial copy of MFP scheduling scripts.
-#
 # *********************************************************************
 import sys, re, cdr, cdrdb, os, shutil, time, getopt
 
@@ -66,7 +24,7 @@ else:
 
 # Setting directory and file names
 # --------------------------------
-log        = "d:\\cdr\\log\\Jobmaster.log" 
+log        = "d:\\cdr\\log\\Jobmaster.log"
 PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
@@ -77,6 +35,8 @@ lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 if cdr.isProdHost():
     waitTotal = 28800  #  8.0 hours
+elif cdr.isDevHost():
+    waitTotal = 50000  # 13.8 hours
 else:
     waitTotal = 36000  # 10.0 hours
 
@@ -196,7 +156,7 @@ def checkJobStatus(jobId):
                         MAX_RETRIES)
 
     return row
- 
+
 
 # --------------------------------------------------------------
 # Function to find the job ID of the push job.
@@ -257,14 +217,14 @@ def getPushJobId(jobId):
 
 
 # ---------------------------------------------------------------------
-# Function to send an email when the job fails instead of silently 
+# Function to send an email when the job fails instead of silently
 # exiting.
 # ---------------------------------------------------------------------
 def sendFailureMessage(text):
     emailDL = cdr.getEmailList('Test Publishing Notification')
     subject = '%s-%s: %s' % (cdr.h.org, cdr.h.tier, text)
     message = """
-The publishing job failed.  It did not finish within the maximum time 
+The publishing job failed.  It did not finish within the maximum time
 allowed.
 Please check the log files.
 """
@@ -302,10 +262,10 @@ def checkPubJob():
 
             # We can stop trying now, we got it.
             tries = 0
-        
+
         except cdrdb.Error, info:
             l.write("*** Failure connecting to DB ***")
-            l.write("*** Unable to find status for PubJob%d: %s" % (int(jobId), 
+            l.write("*** Unable to find status for PubJob%d: %s" % (int(jobId),
                                                               info[1][0]))
             waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
             l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
@@ -330,7 +290,7 @@ l.write("SubmitPubJob - Started", stdout = True)
 l.write('Arguments: %s' % sys.argv, stdout=True)
 
 parseArgs(sys.argv)
-                    
+
 # Based on the command line parameter passed we are submitting a
 # interim publishing job or a full export
 # ---------------------------------------------------------------
@@ -343,7 +303,7 @@ try:
     # Before we start we need to check if a publishing job is already
     # underway.  It could be in the process of publishing or pushing.
     # We do not allow two jobs of the same job type to run simultanously.
-    # Also, if a publishing job ran but the push job failed the 
+    # Also, if a publishing job ran but the push job failed the
     # initiated push job would fail with a message 'Push job pending'.
     # ---------------------------------------------------------------
     l.write("Checking job queue ...", stdout=True)
@@ -354,13 +314,13 @@ try:
         # currentJobs = checkPubJob(pubSubset)
         currentJobs = checkPubJob()
         if currentJobs:
-            l.write("\n%s job is still running." % pubSubset, 
+            l.write("\n%s job is still running." % pubSubset,
                                                   stdout = True)
-            l.write("Job%s status: %s" % (currentJobs[0], currentJobs[2]), 
+            l.write("Job%s status: %s" % (currentJobs[0], currentJobs[2]),
                                                   stdout = True)
-            l.write("Job%s type  : %s" % (currentJobs[0], currentJobs[1]), 
+            l.write("Job%s type  : %s" % (currentJobs[0], currentJobs[1]),
                                                   stdout = True)
-            raise Exception("Job%s still in process (%s: %s)" % 
+            raise Exception("Job%s still in process (%s: %s)" %
                             (currentJobs[0], pubSubset, currentJobs[2]))
     except:
         raise
@@ -371,10 +331,10 @@ try:
     # we continue.  Otherwise, submitting the job failed and we exit.
     # ---------------------------------------------------------------
     l.write("Submitting publishing job...", stdout=True)
-    jobDescription = "Auto %s, %s" % (pubSubset,  
+    jobDescription = "Auto %s, %s" % (pubSubset,
                                     time.strftime('%Y-%m-%d %H:%M:%S'))
-    submit = cdr.publish(credentials, pubSystem, pubSubset, 
-                         parms = [('GKPushJobDescription', jobDescription)], 
+    submit = cdr.publish(credentials, pubSystem, pubSubset,
+                         parms = [('GKPushJobDescription', jobDescription)],
                          email = pubEmail)
 
     if submit[0] == None:
@@ -386,8 +346,8 @@ try:
         l.write("Waiting for publishing job to complete...", stdout = True)
 
     # We started the publishing job.  Now we need to wait until
-    # publishing (and pushing) is complete before we exit the 
-    # program.  Otherwise the following SQL Server Agent steps 
+    # publishing (and pushing) is complete before we exit the
+    # program.  Otherwise the following SQL Server Agent steps
     # would start without the data being ready.
     # Checking the status every minute
     # ---------------------------------------------------------
@@ -401,16 +361,16 @@ try:
         # Don't print every time we're checking (every 15 minutes)
         # ---------------------------------------------------------
         if counter % 15 == 0:
-            l.write("    Status: %s (%d sec)" % (status, counter * wait), 
+            l.write("    Status: %s (%d sec)" % (status, counter * wait),
                                                  stdout=True)
 
             #if counter * wait > 23000:
             if counter * wait > waitTotal:
-                l.write("*** Publishing job failed to finish!!!", 
+                l.write("*** Publishing job failed to finish!!!",
                                                             stdout=True)
-                l.write("*** Completion exceeded maximum time allowed", 
+                l.write("*** Completion exceeded maximum time allowed",
                                                             stdout = True)
-                l.write("*** Cancelled after %s hours" % (waitTotal/(60 * 60)), 
+                l.write("*** Cancelled after %s hours" % (waitTotal/(60 * 60)),
                                                             stdout = True)
                 sendFailureMessage("Publishing Failure: Max time exceeded")
                 sys.exit(1)
@@ -419,14 +379,14 @@ try:
         # we need to find the push job and wait for it to finish
         # We will continue after both jobs completed with Success.
         # --------------------------------------------------------
-        if status in ('Verifying', 'Success'): 
+        if status in ('Verifying', 'Success'):
            l.write("Publishing job started at %s" % jobInfo[2], stdout=True)
            l.write("         and completed at %s" % jobInfo[3], stdout=True)
            try:
                pushId = getPushJobId(submit[0])
                l.write("Push job started as Job%s" % pushId, stdout=True)
            except:
-               l.write("*** Failed to submit Push job for Job%s" % submit[0], 
+               l.write("*** Failed to submit Push job for Job%s" % submit[0],
                         stdout=True)
                # os.remove(lockFile)
                sys.exit(1)
@@ -442,18 +402,18 @@ try:
                jobInfo = checkJobStatus(pushId)
                pstatus = jobInfo[1]
                if pcounter % 15 == 0:
-                   l.write("    Status: %s (%d sec)" % (pstatus, 
-                                                        pcounter * wait), 
+                   l.write("    Status: %s (%d sec)" % (pstatus,
+                                                        pcounter * wait),
                                                         stdout=True)
 
                if pstatus in ('Verifying', 'Success'):
                    pdone = 1
-                   l.write("   Pushing job started at %s" % jobInfo[2], 
+                   l.write("   Pushing job started at %s" % jobInfo[2],
                                                              stdout=True)
-                   l.write("         and completed at %s" % jobInfo[3], 
+                   l.write("         and completed at %s" % jobInfo[3],
                                                              stdout=True)
                elif pstatus == 'Failure':
-                   l.write("*** Push job failed at %s" % jobInfo[3], 
+                   l.write("*** Push job failed at %s" % jobInfo[3],
                            stdout=True)
                    l.write("         Status:  %s" % pstatus, stdout=True)
                    l.write("%s" % jobInfo[4], stdout=True)
@@ -465,7 +425,7 @@ try:
         elif status == 'Failure':
            l.write("*** Error - Publication job failed", stdout=True)
            sys.exit(1)
-        else: 
+        else:
            done = 0
 
     # The publishing AND pushing job completed.  Add the pub jobID
@@ -525,8 +485,8 @@ Publishing Job Output:
 Push Job Output:
    %s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (addSubj.lower(), url, pushId, url, submit[0], url, submit[0], 
-                     url, submit[0], url, pushId) 
+""" % (addSubj.lower(), url, pushId, url, submit[0], url, submit[0],
+                     url, submit[0], url, pushId)
 
         notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
 
@@ -538,7 +498,7 @@ Push Job Output:
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+    l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)
     raise
 

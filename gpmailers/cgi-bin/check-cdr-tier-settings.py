@@ -1,10 +1,6 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Sanity check for CDR configuration files for a given CBIIT tier.
-#
 #----------------------------------------------------------------------
 import cdrutil
 import socket

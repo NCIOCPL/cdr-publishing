@@ -1,10 +1,6 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
-#
 #----------------------------------------------------------------------
 import cdr, cdrmailer, RtfWriter, xml.dom.minidom, datetime, re, sys, time
 

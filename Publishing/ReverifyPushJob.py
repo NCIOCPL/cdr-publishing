@@ -4,15 +4,12 @@
 # Script to re-verify a job if documents failed processing on Gatekeeper
 # due to a bug at the GK side.  Once the bug has been corrected and the
 # documents have been re-processed successfully, the CDR will still have
-# the picture of the document(s) not being published properly.  This 
+# the picture of the document(s) not being published properly.  This
 # tool will re-ajust the picture between the CDR and GK.
 # This program has been adapted from PublishingService.py.
 #                                           Volker Englisch, 2011-09-22
 #
 # BZIssue::5087 - [Internal] Create Re-Verification Tool
-#
-# $Id$
-#
 # ========================================================================
 import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk, optparse
 
@@ -172,14 +169,14 @@ def updateMessage(message, jobId, docId = 0):
 
 
 #----------------------------------------------------------------------
-# Find out if loading of documents to Cancer.gov has completed (i.e. 
-# all documents "arrived" on live, and whether any of the documents 
+# Find out if loading of documents to Cancer.gov has completed (i.e.
+# all documents "arrived" on live, and whether any of the documents
 # failed the load.
 #----------------------------------------------------------------------
 def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
 
     # l.write("Re-verifying push job %d" % jobId, stdout = True)
-    
+
     # Local values.
     # -------------
     failures = []
@@ -205,9 +202,9 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
         cdr2gk.host = host
     # cdr2gk.host = 'gatekeeper.cancer.gov'
     l.write("GKServer: %s" % cdr2gk.host, stdout = True)
-    
+
     response = cdr2gk.requestStatus('Summary', jobId)
-    
+
     details = response.details
 
     # Check each of the documents in the job.
@@ -255,7 +252,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                                                                stdout = True)
         else:
             cursor.execute("""\
-                SELECT doc_id, failure 
+                SELECT doc_id, failure
                   FROM pub_proc_doc
                  WHERE pub_proc = ?
                    AND failure = 'Y'""", jobId)
@@ -285,10 +282,10 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
             if testMode:
                 print len(failures)
                 cursor.execute("""\
-                    SELECT * 
+                    SELECT *
                       FROM pub_proc_doc
                      WHERE pub_proc = %d
-                       AND doc_id in (%s)""" % (jobId, 
+                       AND doc_id in (%s)""" % (jobId,
                                  ','.join(["%s" % x.cdrId for x in failures])))
                 rows = cursor.fetchall()
                 l.write('Records failed:', stdout = True)
@@ -347,7 +344,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
             conn.commit()
             updateMessage(u'Re-verify push job. '
                            'New job status = %s' % jobStatus, jobId, docId = 0)
-        l.write("Status of Job %s set to '%s'" % (jobId, jobStatus), 
+        l.write("Status of Job %s set to '%s'" % (jobId, jobStatus),
                                                         stdout = True)
         return
 
@@ -387,7 +384,7 @@ try:
     # We're re-verifying all stalled jobs but if we're re-verifying
     # non-stalled jobs we're only doing one at a time.
     # -------------------------------------------------------------
-    newQuery = query % status 
+    newQuery = query % status
     if status == 'Stalled':
         cursor.execute(newQuery)
         rows = cursor.fetchall()

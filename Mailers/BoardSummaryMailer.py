@@ -1,18 +1,13 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Master driver script for processing PDQ Editorial Board Member mailings.
-#
 #----------------------------------------------------------------------
-
 import cdrdb, cdrmailer, re, sys, UnicodeToLatex, time
 
 class SummaryWithVer:
     def __init__(self, Id, Ver):
         self.summaryId = Id
         self.ver = Ver
-    
+
 class MailToList:
     def __init__(self, memberId):
         self.memberId = memberId
@@ -32,13 +27,13 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         try:
             self.__Mailers = {}
             self.__HavePersons = 0
-            personParm = self.getParm("Person")            
+            personParm = self.getParm("Person")
             Person = personParm[0]
 
             if (len(Person)>1):
                 personSplit = Person.split("]")
                 self.__HavePersons = 1
-                
+
                 for person in personSplit:
                     person = person.strip()
                     if ( len(person) > 0 ):
@@ -49,7 +44,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
 
                         personSplit2 = personSplit[1]
                         personSplit3 = personSplit2.split(" ")
-                        
+
                         for summaryTxt in personSplit3:
                             summaryTxt = summaryTxt.strip()
                             if (len(summaryTxt)>0):
@@ -85,7 +80,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
     # Gather the list of board members.
     #----------------------------------------------------------------------
     def __getBoardMembers(self):
-                      		
+
         memberPath = '/Summary/SummaryMetaData/PDQBoard/Board/@cdr:ref'
         boardPath  = '/Summary/SummaryMetaData/PDQBoard/BoardMember/@cdr:ref'
         infoPath   = '/PDQBoardMemberInfo/BoardMemberName/@cdr:ref'
@@ -97,7 +92,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                     sWhere += "%d," % int(memberId)
                 sWhere = sWhere[0:len(sWhere)-1]
                 sWhere += ")"
-                
+
             sQuery = """\
                 SELECT DISTINCT person.id,
                                 person.title,
@@ -128,9 +123,9 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                                 person.id,
                                 summary.title,
                                 summary.id""" % (int(self.__boardId),int(self.getId()),memberPath, boardPath,infoPath,sWhere)
-           
+
             self.getCursor().execute(sQuery)
-                                                 
+
             rows = self.getCursor().fetchall()
             for (personId, personTitle, summaryId, summaryTitle, docVer,
                  memberInfo) in rows:
@@ -149,7 +144,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                                                  "Summary", docVer)
                         self.getDocuments()[summaryId] = doc
                     recipient.getDocs().append(doc)
-                    
+
         except cdrdb.Error, info:
             raise "database error finding board members: %s" % (
                 info[1][0].encode('ascii'))
@@ -179,7 +174,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
                     retval = 1
 
         return retval
-            
+
     #----------------------------------------------------------------------
     # Generate a main cover page and add it to the print queue.
     #----------------------------------------------------------------------
@@ -187,10 +182,10 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         filename = "MainCoverPage.txt"
         f = open(filename, "w")
         f.write("\n\nPDQ Board Member Summary Review Mailer\n\n")
-        f.write("Job Number: %d\n\n" % self.getId())        
+        f.write("Job Number: %d\n\n" % self.getId())
         for key in self.getRecipients().keys():
             recipient = self.getRecipients()[key]
-            f.write("Board Member: %s (CDR%010d)\n" % (recipient.getName(), 
+            f.write("Board Member: %s (CDR%010d)\n" % (recipient.getName(),
                                                            recipient.getId()))
             for doc in recipient.getDocs():
                 if (self.__ShouldIncludeDocInPacket(recipient.getId(), doc.getId())):
@@ -216,7 +211,7 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         sepSheetTemplate    = sepSheetFile.read()
         coverLetterFile.close()
         sepSheetFile.close()
-        
+
         for key in self.getRecipients().keys():
             self.__makePacket(self.getRecipients()[key], coverLetterTemplate,
                                                          sepSheetTemplate)
@@ -233,12 +228,12 @@ class BoardSummaryMailerJob(cdrmailer.MailerJob):
         jobType   = cdrmailer.PrintJob.COVERPAGE
         name      = recipient.getAddress().getAddressee()
         latex     = sepSheetTemplate.replace('@@REVIEWER@@', name)
-        
+
         for doc in recipient.getDocs():
             if (self.__ShouldIncludeDocInPacket(recipient.getId(), doc.getId())):
                 docList += "\\item %d: %s\n" % (doc.getId(),
                         UnicodeToLatex.convert(doc.getTitle().split(';')[0]))
-                
+
         latex     = latex.replace('@@SUMMARYLIST@@', docList)
         self.addToQueue(self.makePS(latex, 1, basename, jobType))
 

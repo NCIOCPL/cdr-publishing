@@ -14,17 +14,8 @@ using the numbering from Margaret's cover letter checklist document.
 3. Reviewer check-list (PDQ Advisory Board):
         ExternalAdvisoryBoardReviewCheckList.tex
 
-4. Protocol Abstract Mailer:
-        ProtInitAbstCoverLetter.tex
+4. Boilerplate Mailer definitions
+        template.tex
 
-5. Protocol Annual Abstract Remail:
-        ProtAbstRemailerCoverLetter.tex
-
-6. Protocol Initial Status/Participant Check (Coop. Group):
-        StatPartCoverLetter.tex
-
-7. Protocol Initial Status/Participant Check (Non-Coop.):
-        StatPartCoverLetterNonCoop.tex
-
-8. Physician--Initial:
-        PhysInitCoverLetter.tex
+The directory also includes RTF template files for letters to board members,
+as well as images files for logos embedded in the mailer output.

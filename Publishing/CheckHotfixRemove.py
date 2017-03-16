@@ -1,27 +1,16 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: $RCSFile:$
-#            ===============
-# Program to identify and notify about documents whose status has 
+# Program to identify and notify about documents whose status has
 # changed resulting in having them pulled from Cancer.gov via a manual
 # Hotfix-Remove request.
-# These are several individual SQL queries (by DocType) based on the 
+# These are several individual SQL queries (by DocType) based on the
 # content of the publishing document.  Submitting an email message to
 # a select group if one (or more) document(s) have been identified
 # to be removed from Cancer.gov.
 # ---------------------------------------------------------------------
-# $Author$
 # Created:          2010-06-21        Volker Englisch
-# Last Modified:    $
-# 
-# $Source: $
-# $Revision$
-#
-# $Id$
 #
 # BZIssue::4732 - Change in logic for pulling documents from Cancer.gov
-#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
 
@@ -113,7 +102,7 @@ def sendErrorMessage(msg):
     else:
         subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
                     '*** Error: Program CheckHotfixRemove failed!')
-    
+
     mailHeader   = """\
 From: %s
 To: %s
@@ -147,14 +136,14 @@ testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
 try:
-    # Open the latest manifest file (or the one specified) and read 
+    # Open the latest manifest file (or the one specified) and read
     # the content
     # -------------------------------------------------------------
     protocols = {}
     oldFile = []
     oldIds = []
 
-    # Connect to the database and get all protocols without a 
+    # Connect to the database and get all protocols without a
     # TransferDate.
     # --------------------------------------------------------------
     newWithdrawn = []
@@ -162,13 +151,13 @@ try:
     conn = cdrdb.connect()
     cursor = conn.cursor()
     allDocs = []
-        
+
 
     # Selecting Hotfix-Remove candidates for Glossary Term
     # ----------------------------------------------------
     try:
         cursor.execute("""\
-        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID", 
+        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
                d.title AS "Title",    p.value AS "Status"
           FROM pub_proc_cg cg
           JOIN document d
@@ -184,7 +173,7 @@ try:
 
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+        l.write("Failure retrieving protocols: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -195,7 +184,7 @@ try:
     # -------------------------------------------
     try:
         cursor.execute("""\
-        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID", 
+        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
                d.title AS "Title",    p.value AS "Status"
           FROM pub_proc_cg cg
           JOIN document d
@@ -206,13 +195,13 @@ try:
             ON d.id  = p.doc_id
          WHERE dt.name = 'Term'
            AND p.path = '/Term/TermStatus'
-           AND p.value NOT IN ('Reviewed-Problematic', 
-                              'Reviewed-Retain', 
+           AND p.value NOT IN ('Reviewed-Problematic',
+                              'Reviewed-Retain',
                               'Unreviewed')
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+        l.write("Failure retrieving protocols: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -223,7 +212,7 @@ try:
     # ------------------------------------------------------
     try:
         cursor.execute("""\
-        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID", 
+        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
                d.title AS "Title",    p.value AS "Status"
           FROM pub_proc_cg cg
           JOIN document d
@@ -235,17 +224,17 @@ try:
          WHERE dt.name = 'InScopeProtocol'
            AND p.path = '/InScopeProtocol/ProtocolAdminInfo' +
                         '/CurrentProtocolStatus'
-           AND p.value NOT IN ('Active', 
-                               'Approved-not yet active', 
+           AND p.value NOT IN ('Active',
+                               'Approved-not yet active',
                                'Enrolling by invitation',
-                               'Closed', 
-                               'Completed', 
+                               'Closed',
+                               'Completed',
                                'Temporarily closed',
                                'Unknown')
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+        l.write("Failure retrieving protocols: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -256,7 +245,7 @@ try:
     # ------------------------------------------------------------
     try:
         cursor.execute("""\
-        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID", 
+        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
                d.title AS "Title",    p.value AS "Status"
           FROM pub_proc_cg cg
           JOIN document d
@@ -273,7 +262,7 @@ try:
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+        l.write("Failure retrieving protocols: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -284,7 +273,7 @@ try:
     # ---------------------------------------------------
     try:
         cursor.execute("""\
-        SELECT DISTINCT dt.name AS "Doc Type", cg.id   AS "CDR-ID", 
+        SELECT DISTINCT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
                d.title AS "Title",    p.value AS "Status"
           FROM pub_proc_cg cg
           JOIN document d
@@ -302,7 +291,7 @@ try:
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+        l.write("Failure retrieving protocols: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -321,7 +310,7 @@ try:
   <title>Document Candidates to be removed from Cancer.gov</title>
   <style type='text/css'>
    table   { border-spacing: 20px 5px;
-             empty-cells: show; 
+             empty-cells: show;
              border-collapse: collapse; }
 
    table, th, td {border: 1px solid black; }
@@ -354,7 +343,7 @@ try:
    </tr>
 """ % (doc[0], doc[1], doc[2], doc[3])
         except Exception, info:
-            l.write("Failure retrieving protocols: \n%s" % info[1][0], 
+            l.write("Failure retrieving protocols: \n%s" % info[1][0],
                      stdout = True)
             sendErrorMessage('Unicode convertion error')
             raise
@@ -367,7 +356,7 @@ try:
 """
     else:
         raise NoNewDocumentsError('NoNewDocumentsError')
-        
+
 
     # In Testmode we don't want to send the notification to the world
     # ---------------------------------------------------------------
@@ -385,7 +374,7 @@ try:
     else:
         subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
                     'Document Candidates to be removed from Cancer.gov')
-    
+
     mailHeader   = """\
 From: %s
 To: %s
@@ -400,7 +389,7 @@ Subject: %s
 
     #print message
 
-    # Sending out the email 
+    # Sending out the email
     # ---------------------
     server = smtplib.SMTP(SMTP_RELAY)
     if emailMode:
@@ -424,7 +413,7 @@ except NoNewDocumentsError, arg:
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+    l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)
     raise
 

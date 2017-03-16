@@ -1,23 +1,12 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: Jobmaster.py
-#            ===============
 # Control file to start the publishing scripts.
 # ---------------------------------------------------------------------
-# $Author: volker $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2013-06-06 15:18:06 -0400 (Thu, 06 Jun 2013) $
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 11857 $
-#
-# $Id: Jobmaster.py 11857 2013-06-06 19:18:06Z volker $
 #
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 # BZIssue::4903 - Transfer Protocols without transfer date
 # BZIssue::5215 - Fix Publishing Job to Ignore Warnings
-#
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
 

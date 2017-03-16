@@ -1,10 +1,6 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Returns XML document for GP mailers that need to be recorded.
-#
 #----------------------------------------------------------------------
 import cdrutil, lxml.etree as etree
 

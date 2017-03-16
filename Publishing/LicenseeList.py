@@ -1,19 +1,11 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id: $
-#
-# File Name: LicenseeList.py
-#            ===============
 # Program to create a list of active licensees (Production/Test)
 # This job should run as a scheduled job once a month.
 # ---------------------------------------------------------------------
-# $Author: volker $
 # Created:          2013-06-05        Volker Englisch
-# Last Modified:    $Date$
-# $Revision: $
 #
 # OCECDR-3898: Modify PDQ Partner Documents
-#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
 

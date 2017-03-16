@@ -1,26 +1,9 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: $RCSFile:$
-#            ===============
-# Script to submit email notification as part of the automated 
+# Script to submit email notification as part of the automated
 # publishing.
 # ---------------------------------------------------------------------
-# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date$
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/PubEmail.py,v $
-# $Revision$
-#
-# $Id$
-# $Log: not supported by cvs2svn $
-# Revision 1.2  2007/08/10 16:38:25  venglisc
-# Finished initial version of email notification script.
-#
-# Revision 1.1  2007/07/06 22:50:06  venglisc
-# Initial copy of MFP scheduling scripts.
-#
 # *********************************************************************
 import cdr, sys, os, os.path
 

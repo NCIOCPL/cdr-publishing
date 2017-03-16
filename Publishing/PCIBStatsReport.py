@@ -1,25 +1,15 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id$
-#
-# File Name: $RCSFile:$
-#            ===============
 # Management report to list a variety of counts (typically run for the
 # previous month) regarding the number of documents published, updated,
 # etc.
 # ---------------------------------------------------------------------
-# $Author$
 # Created:          2012-02-10        Volker Englisch
 #
-# $Source: $
-# $Revision$
-# $Source: $
-#
 # BZIssue::5173 - ICRDB Stats Report
-# OCECDR-3890: Possible discrepancies in count of Dictionary Terms in 
+# OCECDR-3890: Possible discrepancies in count of Dictionary Terms in
 #              PCIB Status Report
 # OCDCDR-3867: PCIB Statistics Report
-#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
 import calendar
@@ -35,9 +25,9 @@ today       = time.strftime("%Y-%m-%d", now)
 lastmonth   = time.localtime(time.mktime(now) - (now[2] + 1) * 24 * 60 * 60)
 firstOfMonth= time.strftime("%Y-%m-01", lastmonth)
 dateRange   = calendar.monthrange(lastmonth[0], lastmonth[1])
-lastOfMonth = time.strftime("%Y-%m-%d", 
-                time.strptime("%d-%d-%d" % (lastmonth[0], 
-                                            lastmonth[1], dateRange[1]), 
+lastOfMonth = time.strftime("%Y-%m-%d",
+                time.strptime("%d-%d-%d" % (lastmonth[0],
+                                            lastmonth[1], dateRange[1]),
                                                                 "%Y-%m-%d"))
 
 outputFile     = '%s_%s.html' % (DOC_FILE, time.strftime("%Y-%m-%dT%H%M%S", now))
@@ -255,18 +245,18 @@ def checkTimeFrame(dates, startDate=firstOfMonth, endDate=lastOfMonth):
     try:
         enDate = time.strptime(dates[0] or '0001-01-01', '%Y-%m-%d')
     except:
-        enDate = time.strptime(dates[0] or '0001-01-01 12:00:00', 
+        enDate = time.strptime(dates[0] or '0001-01-01 12:00:00',
                                                          '%Y-%m-%d %H:%M:%S')
     try:
         esDate = time.strptime(dates[1] or '0001-01-01', '%Y-%m-%d')
     except:
-        esDate = time.strptime(dates[1] or '0001-01-01 12:00:00', 
+        esDate = time.strptime(dates[1] or '0001-01-01 12:00:00',
                                                          '%Y-%m-%d %H:%M:%S')
 
     sTF = time.strptime(startDate, '%Y-%m-%d')
     eTF = time.strptime(endDate, '%Y-%m-%d')
 
-    return (enDate > sTF and enDate < eTF, 
+    return (enDate > sTF and enDate < eTF,
             esDate > sTF and esDate < eTF)
 
 
@@ -274,7 +264,7 @@ def checkTimeFrame(dates, startDate=firstOfMonth, endDate=lastOfMonth):
 # -------------------------------------------------------------
 # List the reformatted summaries
 # -------------------------------------------------------------
-def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth, 
+def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
                          docType='', repType=''):
     # Debug message listing the document type and report type
     # -------------------------------------------------------
@@ -291,22 +281,22 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
     elif docType == 'Summary':
         if repType == 'new':
             selection = """\
-           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language", 
+           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language",
            a.value AS "Audience", d.first_pub """
             orderBy = "ORDER BY d.first_pub"
         elif repType == 'revised':
             selection = """\
-           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language", 
+           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language",
            a.value AS "Audience", dlm.value AS "Date LM" """
             orderBy = "ORDER BY dlm.value"
     elif docType == 'GlossaryTermName':
         selection = """\
-           d.id AS "CDR-ID", gte.value AS "Glossary (EN)", 
+           d.id AS "CDR-ID", gte.value AS "Glossary (EN)",
            gts.value AS "Glossary (ES)", d.first_pub as "Publishing Date" """
         orderBy = "ORDER BY d.first_pub"
     elif docType == 'GlossaryTermConcept':
         selection = """\
-           d.id AS "CDR-ID", gtce.value AS "Glossary (EN)", 
+           d.id AS "CDR-ID", gtce.value AS "Glossary (EN)",
            gtcs.value AS "Glossary (ES)" """
         orderBy = "ORDER BY gtce.value"
     elif docType == 'Terminology':
@@ -332,20 +322,20 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
     elif docType == 'Glossary':
         if repType == 'GeneticsNewGTN':
             selection = """\
-           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]", 
-           gtn.int_val AS "Concept ID", dlm.value AS "DLM", 
+           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]",
+           gtn.int_val AS "Concept ID", dlm.value AS "DLM",
            s.value AS "StatusDate", d.first_pub AS "FirstPub" """
             orderBy = "ORDER BY d.first_pub"
         elif repType == 'GeneticsNewGTC':
             selection = """\
-           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]", 
-           gtn.int_val AS "Concept ID", dlm.value AS "DLM", 
+           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]",
+           gtn.int_val AS "Concept ID", dlm.value AS "DLM",
            s.value AS "StatusDate", d.first_pub AS "FirstPub" """
             orderBy = "ORDER BY s.value"
         elif repType == 'GeneticsRev':
             selection = """\
-           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]", 
-           gtn.int_val AS "Concept ID", dlm.value AS "DLM", 
+           t.doc_id AS "CDR-ID", t.value AS "GlossaryName [EN]",
+           gtn.int_val AS "Concept ID", dlm.value AS "DLM",
            d.first_pub AS "FirstPub" """
             orderBy = "ORDER BY d.first_pub"
 
@@ -357,18 +347,18 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
             return None
     elif docType == 'Person':
         selection = """\
-           d.id AS "CDR-ID", d.title AS "Name", 
-           d.active_status AS "Doc Status", 
+           d.id AS "CDR-ID", d.title AS "Name",
+           d.active_status AS "Doc Status",
            d.first_pub AS "PubDate", s.value AS "Status" """
         orderBy = "ORDER BY d.first_pub"
     elif docType == 'PDQBoardMemberInfo':
         selection = """\
-           d.id AS "CDR-ID", d.title AS "Name", t.value AS "Term Date", 
+           d.id AS "CDR-ID", d.title AS "Name", t.value AS "Term Date",
            n.value AS "Board" """
         orderBy = "ORDER BY d.id, t.value"
     elif docType == 'Organization':
         selection = """\
-           d.id AS "CDR-ID", o.value AS "Board Name", m.value AS "Mtg Date", 
+           d.id AS "CDR-ID", o.value AS "Board Name", m.value AS "Mtg Date",
            w.value AS "WebEx" """
         orderBy = "ORDER BY d.id"
     else:
@@ -377,12 +367,12 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
     #    if docType == 'Summary':
     #        if repType == 'new':
     #            selection = """\
-    #           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language", 
+    #           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language",
     #           a.value AS "Audience", d.first_pub """
     #            orderBy = "ORDER BY d.first_pub"
     #        elif repType == 'revised':
     #            selection = """\
-    #           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language", 
+    #           d.id AS "CDR-ID", t.value AS "Title", l.value AS "Language",
     #           a.value AS "Audience", dlm.value AS "Date LM" """
     #            orderBy = "ORDER BY dlm.value"
     #    else:
@@ -405,10 +395,10 @@ LEFT OUTER JOIN query_term_pub dlm
           JOIN pub_proc_cg cg
             on d.id = cg.id
          WHERE d.active_status = 'A'
-           AND ISNULL(first_pub, 0) BETWEEN '%s' 
+           AND ISNULL(first_pub, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                OR
-               ISNULL(dlm.value, 0) BETWEEN '%s' 
+               ISNULL(dlm.value, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
     """ % (selection, startDate, endDate, startDate, endDate,
@@ -430,7 +420,7 @@ LEFT OUTER JOIN query_term_pub dlm
               JOIN pub_proc_cg cg
                 ON cg.id = d.id
              WHERE d.active_status = 'A'
-               AND ISNULL(first_pub, 0) BETWEEN '%s' 
+               AND ISNULL(first_pub, 0) BETWEEN '%s'
                              AND dateadd(DAY, 1, '%s')
                    %s
 """ % (selection, startDate, endDate, orderBy)
@@ -453,7 +443,7 @@ LEFT OUTER JOIN query_term_pub dlm
               JOIN pub_proc_cg cg
                 ON cg.id = d.id
              WHERE d.active_status = 'A'
-               AND ISNULL(dlm.value, 0) BETWEEN '%s' 
+               AND ISNULL(dlm.value, 0) BETWEEN '%s'
                              AND dateadd(DAY, 1, '%s')
                    %s
 """ % (selection, startDate, endDate,
@@ -471,7 +461,7 @@ LEFT OUTER JOIN query_term_pub dlm
           JOIN pub_proc_cg cg
             ON cg.id = d.id
          WHERE d.active_status = 'A'
-           AND ISNULL(first_pub, 0) BETWEEN '%s' 
+           AND ISNULL(first_pub, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate, orderBy)
@@ -567,7 +557,7 @@ LEFT OUTER JOIN query_term_pub dlm
            AND num = 1
          WHERE dt.name = 'Media'
            AND e.value = 'Meeting Recording'
-           AND v.dt between '%s' 
+           AND v.dt between '%s'
                           AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -588,7 +578,7 @@ LEFT OUTER JOIN query_term_pub dlm
             ON d.id = cg.id
          WHERE e.value = 'pronunciation'
            AND d.active_status = 'A'
-           AND first_pub between '%s' and dateadd(DAY, 1, '%s') 
+           AND first_pub between '%s' and dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
        orderBy)
@@ -625,7 +615,7 @@ LEFT OUTER JOIN query_term_pub s
            AND gtc.value = 'Genetics'
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
-           AND ISNULL(d.first_pub, 0) BETWEEN '%s' 
+           AND ISNULL(d.first_pub, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -633,13 +623,13 @@ LEFT OUTER JOIN query_term_pub s
         elif repType == 'GeneticsNewGTC':
             # We cannot easily identify a new genetics dictionary term
             # from the CDR.  If the concept has been created for a new
-            # GTN we can look at the first_pub date of the GTN.  
+            # GTN we can look at the first_pub date of the GTN.
             # However, if the GTN already exists and we're merely adding
             # a concept for the genetics dictionary we're looking here
-            # at the definition status date.   We only pick it up if the 
-            # DateLastModified is NULL because this date - supposed to 
+            # at the definition status date.   We only pick it up if the
+            # DateLastModified is NULL because this date - supposed to
             # only be entered when a term definition is updated but not
-            # when it's created - should not exist.  If it does we're 
+            # when it's created - should not exist.  If it does we're
             # counting the defintion as an update.
             # ----------------------------------------------------------
             query = """\
@@ -673,7 +663,7 @@ LEFT OUTER JOIN query_term_pub s
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
            AND dlm.value IS NULL
-           AND ISNULL(s.value, 0) BETWEEN '%s' 
+           AND ISNULL(s.value, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -705,7 +695,7 @@ LEFT OUTER JOIN query_term_pub s
            AND gtc.value = 'Genetics'
            AND d.active_status = 'A'
            AND aud.value = 'Health professional'
-           AND ISNULL(dlm.value, 0) BETWEEN '%s' 
+           AND ISNULL(dlm.value, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -729,7 +719,7 @@ LEFT OUTER JOIN query_term_pub s
          WHERE dt.name = 'Person'
            AND i.value ='Include'
            AND s.value = 'Active'
-           AND ISNULL(d.first_pub, 0) BETWEEN '%s' 
+           AND ISNULL(d.first_pub, 0) BETWEEN '%s'
                          AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
@@ -763,11 +753,11 @@ LEFT OUTER JOIN query_term_pub s
          WHERE dt.name = 'PDQBoardMemberInfo'
            AND d.active_status = 'A'
            AND a.value = 'Accepted'
-           AND ISNULL(t.value, 0) BETWEEN '%s' 
+           AND ISNULL(t.value, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
            AND i.value > dateadd(Day, -1, dateadd(MONTH, -6, '%s'))
                %s
-""" % (selection, startDate, endDate, startDate, 
+""" % (selection, startDate, endDate, startDate,
        orderBy)
     elif docType == 'Organization':
         query = """\
@@ -790,14 +780,14 @@ LEFT OUTER JOIN query_term_pub s
            AND left(w.node_loc, 12) = left(m.node_loc, 12)
          WHERE dt.name = 'Organization'
            AND d.active_status = 'A'
-           AND ISNULL(m.value, 0) BETWEEN '%s' 
+           AND ISNULL(m.value, 0) BETWEEN '%s'
                           AND dateadd(DAY, 1, '%s')
                %s
 """ % (selection, startDate, endDate,
        orderBy)
     else:
         return None
-    
+
 
     if debug:
         l.write('********************************************************',
@@ -823,7 +813,7 @@ LEFT OUTER JOIN query_term_pub s
 # ---------------------------------------------------------------------
 # List the reformatted summaries
 # ---------------------------------------------------------------------
-def getSummariesReformatted(cursor, startDate=firstOfMonth, 
+def getSummariesReformatted(cursor, startDate=firstOfMonth,
                                     endDate=lastOfMonth):
 
     #if dispRows or dispSummary:
@@ -848,7 +838,7 @@ SELECT %s
    AND a.path = '/Summary/SummaryMetaData/SummaryAudience'
  WHERE dt.name = 'Summary'
    AND d.active_status = 'I'
-   AND d.val_date between '%s' 
+   AND d.val_date between '%s'
                   AND dateadd(DAY, 1, '%s')
  -- ORDER BY a.value, d.val_date
     """ % (selection, startDate, endDate)
@@ -865,7 +855,7 @@ SELECT %s
 # --------------------------------------------------------
 # Checking if any of the documents is checked out by users
 # --------------------------------------------------------
-def formatFullOutput(records, recordCount, heading, maxrows, 
+def formatFullOutput(records, recordCount, heading, maxrows,
                      displayCdrid, docType='', repType=''):
     if not records:
         html = "<p>No %s found during this time<p>\n" % heading
@@ -899,35 +889,35 @@ def formatFullOutput(records, recordCount, heading, maxrows,
         html += """\
    <th><B>Language</B></th>
    <th><B>Audience</B></th>
-""" 
+"""
     elif docType == 'GlossaryTermName':
         html += """\
    <th><B>Title (Spanish)</B></th>
-""" 
+"""
     elif docType == 'PDQBoardMemberInfo':
         html += """\
    <th><B>Board</B></th>
-""" 
+"""
     elif docType == 'Organization':
         html += """\
    <th><B>Date</B></th>
    <th><B>WebEx?</B></th>
-""" 
+"""
     elif docType == 'Media' and repType =='IMG':
         html += """\
    <th><B>First Pub</B></th>
    <th><B>Date Modified</B></th>
-""" 
+"""
     elif docType == 'DrugInformationSummary':
         html += """\
    <th><B>First Pub</B></th>
    <th><B>Date Modified</B></th>
-""" 
+"""
     html += """\
   </tr>
 """
 
-    # if we're not listing the CDR-ID we want to display the 
+    # if we're not listing the CDR-ID we want to display the
     # rows sorted in alpha order
     # ------------------------------------------------------
     if not dispCdrid:
@@ -1016,14 +1006,14 @@ def getCountsOnlyRow(label, number=''):
     <td>%s</td>
    </tr>
 """ % (label, number)
-    
+
     return html
 
 
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth, 
+def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
                            section='Header', title='', date=''):
     if section == 'Header':
         html = u"""\
@@ -1033,7 +1023,7 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <style type='text/css'>
    table   { border-spacing: 20px 5px;
-             empty-cells: show; 
+             empty-cells: show;
              border-collapse: collapse; }
 
    table, th, td {border: 1px solid black; }
@@ -1066,7 +1056,7 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def createMessageBody(title='Test Title', startDate=firstOfMonth, 
+def createMessageBody(title='Test Title', startDate=firstOfMonth,
                                           endDate=lastOfMonth, maxRows=0):
     sumBoardMember = u''
     sumBoardMeeting = u''
@@ -1081,31 +1071,31 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
-    textLabels = { 'audio':     ['Audio', 
+    textLabels = { 'audio':     ['Audio',
                                  'Dictionary w/ pronunciation (Audio)'],
-                   'gtnen':     [' - New (EN)', 
+                   'gtnen':     [' - New (EN)',
                                  'New Dictionary Files (EN and ES)']  ,
                    'gtnes':     [' - New (ES)', 'x']  ,
                    'gtcall':    ['Dictionary - Revised', 'x']  ,
                    'gtcen':     [' - Revised (EN)', 'x']  ,
                    'gtces':     [' - Revised (ES)', 'x']  ,
-                   'gennewgtn': ['Genetics Dictionary - New (GTN)', 
+                   'gennewgtn': ['Genetics Dictionary - New (GTN)',
                                  'New Genetics Dictionary Files (first_pub)']  ,
-                   'gennewgtc': ['Genetics Dictionary - New (GTC)', 
+                   'gennewgtc': ['Genetics Dictionary - New (GTC)',
                                  'New Genetics Dictionary Files (status)']  ,
-                   'genrev':    ['Genetics Dictionary - Revised', 
+                   'genrev':    ['Genetics Dictionary - Revised',
                                  'Revised Genetics Dictionary Files']  ,
-                   'genprof':   ['Genetics Professionals - New', 
+                   'genprof':   ['Genetics Professionals - New',
                                  'New Genetics Professionals']  ,
-                   'drug':      ['NCI Drug Dictionary', 
+                   'drug':      ['NCI Drug Dictionary',
                                  'NCI Drug Terms']                  ,
-                   'image':     ['PDQ Images', 
+                   'image':     ['PDQ Images',
                                  'PDQ Image Files'],
                    'imgnew':    [' - New', ''],
                    'imgrev':    [' - Revised', ''],
-                   'sumnew':    ['Total Summaries - New', 
+                   'sumnew':    ['Total Summaries - New',
                                  'Total New Summaries']  ,
-                   'sumrev':    ['Total Summaries - Revised ', 
+                   'sumrev':    ['Total Summaries - Revised ',
                                  'Total Revised Summaries'],
                    'hpennew':   [' - HP Summaries (EN)', ''],
                    'hpesnew':   [' - HP Summaries (ES)', ''],
@@ -1115,13 +1105,13 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                    'hpesrev':   [' - HP Summaries (ES)', ''],
                    'patenrev':  [' - Pat. Summaries (EN)', ''],
                    'patesrev':  [' - Pat. Summaries (ES)', ''],
-                   'dis':       ['Drug Information Summaries', 
+                   'dis':       ['Drug Information Summaries',
                                  'Drug Information Summaries']  ,
                    'disnew':    [' - New', '']  ,
                    'disrev':    [' - Revised', '']  ,
-                   'sumref':    ['Reformatted Summaries', 
+                   'sumref':    ['Reformatted Summaries',
                                  'Reformatted Summaries'],
-                   'mtg':       [' - Onsite Meetings', 
+                   'mtg':       [' - Onsite Meetings',
                                  'PDQ Board Meetings'],
                    'mtgwebx':   [' - WebEx Meetings', ''],
                    'board':     ['PDQ Board Members',
@@ -1139,7 +1129,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Glossary Terms
     # ------------------
     if dispGlossary or dispAll:
-        gtn = getDocuments(cursor, startDate, endDate, 
+        gtn = getDocuments(cursor, startDate, endDate,
                                               docType='GlossaryTermName')
 
         countGtn = {'gtnen':0, 'gtnes':0}
@@ -1147,8 +1137,8 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in gtn:
                 if type(i[1]) == type(u''):  countGtn['gtnen'] += 1
                 if type(i[2]) == type(u''):  countGtn['gtnes'] += 1
-        
-        gtc = getDocuments(cursor, startDate, endDate, 
+
+        gtc = getDocuments(cursor, startDate, endDate,
                                               docType='GlossaryTermConcept')
 
         countGtcAll = 0
@@ -1162,21 +1152,21 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                     countGtc['gtcen'] += 1
                 if (type(i[2]) == type(u'') and isInTimeFrame[1]):
                     countGtc['gtces'] += 1
-        
+
     if dispGlossary or dispAll:
-        # geneticsNewGtn = getDocuments(cursor, startDate, endDate, 
+        # geneticsNewGtn = getDocuments(cursor, startDate, endDate,
         #                          docType='Glossary', repType='GeneticsNewGTN')
         # countGeneticsNewGtn = 0
         # if geneticsNewGtn:
         #    countGeneticsNewGtn = len(geneticsNewGtn)
 
-        geneticsNewGtc = getDocuments(cursor, startDate, endDate, 
+        geneticsNewGtc = getDocuments(cursor, startDate, endDate,
                                    docType='Glossary', repType='GeneticsNewGTC')
         countGeneticsNewGtc = 0
         if geneticsNewGtc:
             countGeneticsNewGtc = len(geneticsNewGtc)
 
-        geneticsRev = getDocuments(cursor, startDate, endDate, 
+        geneticsRev = getDocuments(cursor, startDate, endDate,
                                    docType='Glossary', repType='GeneticsRev')
         countGeneticsRev = 0
         if geneticsRev:
@@ -1185,7 +1175,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Drug Terms
     # ---------------
     if dispDrug or dispAll:
-        drugTerms = getDocuments(cursor, startDate, endDate, 
+        drugTerms = getDocuments(cursor, startDate, endDate,
                                                       docType='Terminology')
         countDrugTerms = 0
         if drugTerms:
@@ -1194,7 +1184,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Images Files
     # ---------------
     if dispImages or dispAll:
-        images = getDocuments(cursor, startDate, endDate, 
+        images = getDocuments(cursor, startDate, endDate,
                               docType='Media', repType='IMG')
         countImageAll = 0
         countImage = {'imgnew':0, 'imgrev':0}
@@ -1203,14 +1193,14 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in images:
                 isInTimeFrame = checkTimeFrame(i[2:], startDate, endDate)
 
-                #if (type(i[2]) in (type(u''), type('')) 
+                #if (type(i[2]) in (type(u''), type(''))
                 #    and isInTimeFrame[0]):
                 #    countImage['imgnew'] += 1
-                #if (type(i[3]) in (type(u''), type('')) 
+                #if (type(i[3]) in (type(u''), type(''))
                 #    and isInTimeFrame[1]):
                 #    countImage['imgrev'] += 1
 
-                if (type(i[2]) in (type(u''), type('')) 
+                if (type(i[2]) in (type(u''), type(''))
                     and isInTimeFrame[0]):
                     countImage['imgnew'] += 1
                 else:
@@ -1219,7 +1209,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Audio Files
     # ---------------
     if dispAudio or dispGlossary or dispAll:
-        audio = getDocuments(cursor, startDate, endDate, 
+        audio = getDocuments(cursor, startDate, endDate,
                              docType='Media', repType='AUDIO')
         countAudio = 0
         if audio:
@@ -1228,7 +1218,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # Board Meetings Files
     # ----------------------------
     if dispBoardMeetings or dispAll:
-        boardMeeting = getDocuments(cursor, startDate, endDate, 
+        boardMeeting = getDocuments(cursor, startDate, endDate,
                                      docType='Organization')
         countBoardMeetingAll = 0
         countBoardMeeting = {'mtg':0, 'mtgwebx':0}
@@ -1241,46 +1231,46 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Summaries Files
     # -------------------------------
     if dispSummary or dispAll:
-        summariesNew = getDocuments(cursor, startDate, endDate, 
+        summariesNew = getDocuments(cursor, startDate, endDate,
                                     docType='Summary', repType='new')
         countSummariesNewAll = 0
-        countSummariesNew = {'hpennew':0, 'hpesnew':0, 
+        countSummariesNew = {'hpennew':0, 'hpesnew':0,
                              'patennew':0, 'patesnew':0}
         if summariesNew:
             countSummariesNewAll = len(summariesNew)
             for i in summariesNew:
                 if i[2] == 'English' and i[3] == 'Health professionals':
                     countSummariesNew['hpennew'] += 1
-                elif i[2] == 'English' and i[3] == 'Patients': 
+                elif i[2] == 'English' and i[3] == 'Patients':
                     countSummariesNew['patennew'] += 1
-                elif i[2] == 'Spanish' and i[3] == 'Health professionals': 
+                elif i[2] == 'Spanish' and i[3] == 'Health professionals':
                     countSummariesNew['hpesnew'] += 1
-                elif i[2] == 'Spanish' and i[3] == 'Patients': 
+                elif i[2] == 'Spanish' and i[3] == 'Patients':
                     countSummariesNew['patesnew'] += 1
 
         # Revised Summaries Files
         # -------------------------------
-        summariesRevised = getDocuments(cursor, startDate, endDate, 
+        summariesRevised = getDocuments(cursor, startDate, endDate,
                                         docType='Summary', repType='revised')
         countSummariesRevAll = 0
-        countSummariesRev = {'hpenrev':0, 'hpesrev':0, 
+        countSummariesRev = {'hpenrev':0, 'hpesrev':0,
                              'patenrev':0, 'patesrev':0}
         if summariesRevised:
             countSummariesRevAll = len(summariesRevised)
             for i in summariesRevised:
                 if i[2] == 'English' and i[3] == 'Health professionals':
                     countSummariesRev['hpenrev'] += 1
-                elif i[2] == 'English' and i[3] == 'Patients': 
+                elif i[2] == 'English' and i[3] == 'Patients':
                     countSummariesRev['patenrev'] += 1
-                elif i[2] == 'Spanish' and i[3] == 'Health professionals': 
+                elif i[2] == 'Spanish' and i[3] == 'Health professionals':
                     countSummariesRev['hpesrev'] += 1
-                elif i[2] == 'Spanish' and i[3] == 'Patients': 
+                elif i[2] == 'Spanish' and i[3] == 'Patients':
                     countSummariesRev['patesrev'] += 1
 
     # New DIS Files
     # -------------------------------
     if dispDis or dispAll:
-        dis = getDocuments(cursor, startDate, endDate, 
+        dis = getDocuments(cursor, startDate, endDate,
                                          docType='DrugInformationSummary')
         countDisAll = 0
         countDis = {'disnew':0, 'disrev':0}
@@ -1289,17 +1279,17 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in dis:
                 isInTimeFrame = checkTimeFrame(i[2:], startDate, endDate)
 
-                if (type(i[2]) in (type(u''), type('')) 
+                if (type(i[2]) in (type(u''), type(''))
                     and isInTimeFrame[0]):
                     countDis['disnew'] += 1
-                if (type(i[3]) in (type(u''), type('')) 
+                if (type(i[3]) in (type(u''), type(''))
                     and isInTimeFrame[1]):
                     countDis['disrev'] += 1
 
     # New Genetics Prof Files
     # -------------------------------
     if dispGenetics or dispAll:
-        genProf = getDocuments(cursor, startDate, endDate, 
+        genProf = getDocuments(cursor, startDate, endDate,
                                          docType='Person', repType="genetics")
         countGenProf = 0
         if genProf:
@@ -1308,7 +1298,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # New Board Members Files
     # -------------------------------
     if dispBoardMembers or dispAll:
-        boardMembers = getDocuments(cursor, startDate, endDate, 
+        boardMembers = getDocuments(cursor, startDate, endDate,
                                          docType='PDQBoardMemberInfo')
         countBoardMemberAll = 0
         countBoardMember = {'brded':0, 'brdad':0}
@@ -1335,7 +1325,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # summary report displaying the counts
     # --------------------------------------------------------------
     if dispAll or dispSummary:
-        sumSummariesNew = getCountsOnlyRow(textLabels['sumnew'][0], 
+        sumSummariesNew = getCountsOnlyRow(textLabels['sumnew'][0],
                                                 countSummariesNewAll)
         mySortSumNew = countSummariesNew.keys()
         mySortSumNew.sort()
@@ -1344,7 +1334,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             sumSummariesNew += getCountsOnlyRow(textLabels[sumRow][0],
                                                 countSummariesNew[sumRow])
 
-        sumSummariesRev = getCountsOnlyRow(textLabels['sumrev'][0], 
+        sumSummariesRev = getCountsOnlyRow(textLabels['sumrev'][0],
                                                 countSummariesRevAll)
         mySortSumRev = countSummariesRev.keys()
         mySortSumRev.sort()
@@ -1354,7 +1344,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                                                 countSummariesRev[sumRow])
 
         # The reformatted Summaries will be temporarily suppressed
-        # sumSummariesReform = getCountsOnlyRow(textLabels['sumref'][0], 
+        # sumSummariesReform = getCountsOnlyRow(textLabels['sumref'][0],
         #                                                   countSummariesReform)
     if dispAll or dispDis:
         #sumDis          = getCountsOnlyRow(textLabels['dis'][0], countDisAll)
@@ -1362,7 +1352,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         mySortDis = countDis.keys()
         mySortDis.sort()
         for disRow in mySortDis:
-            sumDis += getCountsOnlyRow(textLabels[disRow][0], 
+            sumDis += getCountsOnlyRow(textLabels[disRow][0],
                                                           countDis[disRow])
 
     if dispAll or dispGlossary:
@@ -1371,16 +1361,16 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         mySortGtnNew.sort()
         #for glossRow in countGtn.keys():
         for glossRow in mySortGtnNew:
-            sumGlossaries += getCountsOnlyRow(textLabels[glossRow][0], 
+            sumGlossaries += getCountsOnlyRow(textLabels[glossRow][0],
                                                           countGtn[glossRow])
-        #sumGlossaries += getCountsOnlyRow(textLabels['gtcall'][0], 
+        #sumGlossaries += getCountsOnlyRow(textLabels['gtcall'][0],
         #                                                  countGtcAll)
         sumGlossaries += getCountsOnlyRow('Dictionary - Revised')
         mySortGtnRev = countGtc.keys()
         mySortGtnRev.sort()
         #for glossRow in countGtc.keys():
         for glossRow in mySortGtnRev:
-            sumGlossaries += getCountsOnlyRow(textLabels[glossRow][0], 
+            sumGlossaries += getCountsOnlyRow(textLabels[glossRow][0],
                                                           countGtc[glossRow])
         sumGlossaries  += getCountsOnlyRow(textLabels['audio'][0], countAudio)
         sumGlossaries  += getCountsOnlyRow('&nbsp;','&nbsp;')
@@ -1398,7 +1388,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         sumGeneticsProf = getCountsOnlyRow(textLabels['genprof'][0],
                                                                 countGenProf)
     if dispAll or dispDrug:
-        sumDrugTerms    = getCountsOnlyRow(textLabels['drug'][0], 
+        sumDrugTerms    = getCountsOnlyRow(textLabels['drug'][0],
                                                                 countDrugTerms)
     if dispAll or dispImages:
         sumImage     = getCountsOnlyRow(textLabels['image'][0])
@@ -1406,28 +1396,28 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         mySortImage = countImage.keys()
         mySortImage.sort()
         for imageRow in countImage.keys():
-            sumImage += getCountsOnlyRow(textLabels[imageRow][0], 
+            sumImage += getCountsOnlyRow(textLabels[imageRow][0],
                                                           countImage[imageRow])
     if dispAll or dispBoardMembers:
-        #sumBoardMember = getCountsOnlyRow(textLabels['board'][0], 
+        #sumBoardMember = getCountsOnlyRow(textLabels['board'][0],
         #                                                    countBoardMemberAll)
         sumBoardMember = getCountsOnlyRow(textLabels['board'][0])
         mySortBoard = countBoardMember.keys()
         mySortBoard.sort()
         mySortBoard.reverse()
         for board in mySortBoard:
-            sumBoardMember += getCountsOnlyRow(textLabels[board][0], 
+            sumBoardMember += getCountsOnlyRow(textLabels[board][0],
                                                        countBoardMember[board])
     if dispAll or dispBoardMeetings:
         sumBoardMeeting = getCountsOnlyRow('PDQ Board Meetings')
-        sumBoardMeeting += getCountsOnlyRow(textLabels['mtg'][0], 
+        sumBoardMeeting += getCountsOnlyRow(textLabels['mtg'][0],
                                            countBoardMeeting['mtg'])
-        sumBoardMeeting += getCountsOnlyRow(textLabels['mtgwebx'][0], 
+        sumBoardMeeting += getCountsOnlyRow(textLabels['mtgwebx'][0],
                                            countBoardMeeting['mtgwebx'])
 
     # Put together the email message body
     # -----------------------------------
-    mailBody = getMessageHeaderFooter(startDate, endDate, title=title, 
+    mailBody = getMessageHeaderFooter(startDate, endDate, title=title,
                                       date=time.strftime("%m/%d/%Y", now))
     blankRow = getCountsOnlyRow('&nbsp;','&nbsp;')
 
@@ -1473,75 +1463,75 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         fullGeneticsProf = u''
 
         if dispAll or dispSummary:
-            fullSummariesNew  = formatFullOutput(summariesNew, 
-                                                 countSummariesNewAll, 
-                                                 textLabels['sumnew'][1], 
+            fullSummariesNew  = formatFullOutput(summariesNew,
+                                                 countSummariesNewAll,
+                                                 textLabels['sumnew'][1],
                                                  maxRows, dispCdrid,
                                                  docType='Summary')
-            fullSummariesRev  = formatFullOutput(summariesRevised, 
-                                                 countSummariesRevAll, 
-                                                 textLabels['sumrev'][1], 
+            fullSummariesRev  = formatFullOutput(summariesRevised,
+                                                 countSummariesRevAll,
+                                                 textLabels['sumrev'][1],
                                                  maxRows, dispCdrid,
                                                  docType='Summary')
-            #fullSummariesReform = formatFullOutput(summariesReformatted, 
-            #                                     countSummariesReform, 
-            #                                     textLabels['sumref'][1], 
+            #fullSummariesReform = formatFullOutput(summariesReformatted,
+            #                                     countSummariesReform,
+            #                                     textLabels['sumref'][1],
             #                                     maxRows)
         if dispAll or dispDis:
-            fullDis           = formatFullOutput(dis, countDisAll, 
-                                                 textLabels['dis'][1], 
+            fullDis           = formatFullOutput(dis, countDisAll,
+                                                 textLabels['dis'][1],
                                                  maxRows, dispCdrid,
                                                 docType='DrugInformationSummary')
         if dispAll or dispGlossary:
-            fullGlossary     = formatFullOutput(gtn, countGtn['gtnen'], 
-                                                 textLabels['gtnen'][1], 
+            fullGlossary     = formatFullOutput(gtn, countGtn['gtnen'],
+                                                 textLabels['gtnen'][1],
                                                  maxRows, dispCdrid,
                                                  docType='GlossaryTermName')
-            fullAudio         = formatFullOutput(audio, countAudio, 
-                                                 textLabels['audio'][1], 
+            fullAudio         = formatFullOutput(audio, countAudio,
+                                                 textLabels['audio'][1],
                                                  maxRows, dispCdrid)
-            #fullGlossaryGen  = formatFullOutput(geneticsNewGtn, 
-            #                                     countGeneticsNewGtn, 
-            #                                     textLabels['gennewgtn'][1], 
+            #fullGlossaryGen  = formatFullOutput(geneticsNewGtn,
+            #                                     countGeneticsNewGtn,
+            #                                     textLabels['gennewgtn'][1],
             #                                     maxRows)
-            fullGlossaryGen += formatFullOutput(geneticsNewGtc, 
-                                                 countGeneticsNewGtc, 
-                                                 textLabels['gennewgtc'][1], 
+            fullGlossaryGen += formatFullOutput(geneticsNewGtc,
+                                                 countGeneticsNewGtc,
+                                                 textLabels['gennewgtc'][1],
                                                  maxRows, dispCdrid)
-            fullGlossaryGen += formatFullOutput(geneticsRev, 
-                                                 countGeneticsRev, 
-                                                 textLabels['genrev'][1], 
+            fullGlossaryGen += formatFullOutput(geneticsRev,
+                                                 countGeneticsRev,
+                                                 textLabels['genrev'][1],
                                                  maxRows, dispCdrid)
         if dispAudio:
-            fullAudio         = formatFullOutput(audio, countAudio, 
-                                                 textLabels['audio'][1], 
+            fullAudio         = formatFullOutput(audio, countAudio,
+                                                 textLabels['audio'][1],
                                                  maxRows, dispCdrid)
         if dispAll or dispGenetics:
-            fullGeneticsProf    = formatFullOutput(genProf, countGenProf, 
-                                                 textLabels['genprof'][1], 
+            fullGeneticsProf    = formatFullOutput(genProf, countGenProf,
+                                                 textLabels['genprof'][1],
                                                  maxRows, dispCdrid)
         if dispAll or dispDrug:
-            fullDrugTerms     = formatFullOutput(drugTerms, countDrugTerms, 
-                                                 textLabels['drug'][1], 
+            fullDrugTerms     = formatFullOutput(drugTerms, countDrugTerms,
+                                                 textLabels['drug'][1],
                                                  maxRows, dispCdrid)
         if dispAll or dispImages:
-            fullImages        = formatFullOutput(images, countImageAll, 
-                                                 textLabels['image'][1], 
+            fullImages        = formatFullOutput(images, countImageAll,
+                                                 textLabels['image'][1],
                                                  maxRows, dispCdrid,
                                                  docType='Media', repType='IMG')
         # if dispAll or dispAudio:
-        #     fullAudio         = formatFullOutput(audio, countAudio, 
-        #                                          textLabels['audio'][1], 
+        #     fullAudio         = formatFullOutput(audio, countAudio,
+        #                                          textLabels['audio'][1],
         #                                          maxRows)
         if dispAll or dispBoardMembers:
-            fullBoardMember = formatFullOutput(boardMembers, 
-                                                 countBoardMemberAll, 
-                                                 textLabels['board'][1], 
+            fullBoardMember = formatFullOutput(boardMembers,
+                                                 countBoardMemberAll,
+                                                 textLabels['board'][1],
                                                  maxRows, dispCdrid,
                                                  docType='PDQBoardMemberInfo')
         if dispAll or dispBoardMeetings:
-            fullBoardMeeting = formatFullOutput(boardMeeting, 
-                                                 countBoardMeetingAll, 
+            fullBoardMeeting = formatFullOutput(boardMeeting,
+                                                 countBoardMeetingAll,
                                                  textLabels['mtg'][1], maxRows,
                                                  dispCdrid,
                                                  docType='Organization')
@@ -1585,7 +1575,7 @@ def sendEmailReport(messageBody, title, sendTo=None):
         strTo = [u'%s' % sendTo]
 
     subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
-    
+
     mailHeader = """\
 From: %s
 To: %s
@@ -1599,14 +1589,14 @@ Subject: %s
     # ---------------------------
     message = mailHeader + "\n" + messageBody
 
-    # Sending out the email 
+    # Sending out the email
     # ---------------------
     server = smtplib.SMTP(SMTP_RELAY)
     if emailMode:
         try:
             server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
         except Exception, info:
-            sys.exit("*** Error sending message (%s): %s" % (region, 
+            sys.exit("*** Error sending message (%s): %s" % (region,
                                                              str(info)))
     else:
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
@@ -1633,7 +1623,7 @@ dispCdrid = options.values.cdrids
 debug = options.values.debug
 sendTo = options.values.sendTo
 
-# If we're not running the report for all sections we're setting the 
+# If we're not running the report for all sections we're setting the
 # option dispPartial to True
 # ------------------------------------------------------------------
 dispAudio = options.values.audio
@@ -1662,7 +1652,7 @@ startDate = options.values.start or firstOfMonth
 endDate = options.values.end or lastOfMonth
 
 if startDate == firstOfMonth and endDate == lastOfMonth:
-    title = u'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y", 
+    title = u'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y",
                                                               lastmonth)
 else:
     title = u'PCIB Statistics Report from %s to %s' % (startDate, endDate)
@@ -1685,11 +1675,11 @@ if testMode:
 
 path = OUTPUTBASE + '/%s' % outputFile
 l.write('Writing report to: %s' % path, stdout=True)
- 
+
 try:
     conn = cdrdb.connect()
     cursor = conn.cursor()
-        
+
     # Preparing email message to be send out
     # --------------------------------------
     report = createMessageBody(title, startDate, endDate, maxRows)
@@ -1701,7 +1691,7 @@ try:
         sendEmailReport(report, title, sendTo)
 
     # We're writing the report to the reports directory but only if the
-    # full report is run.  
+    # full report is run.
     # -----------------------------------------------------------------
     if dispAll:
         l.write("Writing HTML output file.", stdout = True)
@@ -1721,7 +1711,7 @@ except NoNewDocumentsError, arg:
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+    l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)
     raise
 

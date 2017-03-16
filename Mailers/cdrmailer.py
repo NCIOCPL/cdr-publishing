@@ -1,13 +1,7 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Base class for mailer jobs
-#
 # BZIssue::5018
-#
 #----------------------------------------------------------------------
-
 import cdr, cdrdb, cdrxmllatex, os, re, sys, time, xml.dom.minidom, socket
 import UnicodeToLatex, tarfile, glob, shutil, RtfWriter, cdrdocobject
 
@@ -311,8 +305,8 @@ class MailerJob:
                           an earlier mailer that was sent out and
                           never responded to, and for which this
                           is a followup remailer.
-            protOrgId   - string or integer form of CDR ID for a 
-                          protocol's lead organization (the one to 
+            protOrgId   - string or integer form of CDR ID for a
+                          protocol's lead organization (the one to
                           which this mailer is being sent); used to
                           distinguish between Status and Participant
                           mailers for the same protocol in the
@@ -703,11 +697,11 @@ Please do not reply to this message.
         # Specify the hostname based on the environment we're in
         # ------------------------------------------------------
         if cdr.h.org == 'OCE':
-            myHost = '%s.%s' % (cdr.h.host['APP'][0], 
+            myHost = '%s.%s' % (cdr.h.host['APP'][0],
                                 cdr.h.host['APP'][1])
             url  = 'http://%s/cgi-bin/cdr/' % myHost
         else:
-            myHost = '%s.%s' % (cdr.h.host['APPC'][0], 
+            myHost = '%s.%s' % (cdr.h.host['APPC'][0],
                                 cdr.h.host['APPC'][1])
             url  = 'https://%s/cgi-bin/cdr/' % myHost
 
@@ -941,7 +935,7 @@ You can retrieve the letters at:
 
             # Nothing to print.
             return
-        
+
         if batchPrint:
             outputFile = open("PrintJob.cmd", "w")
             outputFile.write("@echo off\n")
@@ -1095,11 +1089,11 @@ You can retrieve the letters at:
                 # Specify the hostname based on the environment we're in
                 # ------------------------------------------------------
                 if cdr.h.org == 'OCE':
-                    myHost = '%s.%s' % (cdr.h.host['APP'][0], 
+                    myHost = '%s.%s' % (cdr.h.host['APP'][0],
                                         cdr.h.host['APP'][1])
                     url  = 'http://%s/cgi-bin/cdr/' % myHost
                 else:
-                    myHost = '%s.%s' % (cdr.h.host['APPC'][0], 
+                    myHost = '%s.%s' % (cdr.h.host['APPC'][0],
                                         cdr.h.host['APPC'][1])
                     url  = 'https://%s/cgi-bin/cdr/' % myHost
 
@@ -1403,7 +1397,7 @@ class Address(cdrdocobject.ContactInfo):
             "\\tab E-mail:\\tab %s\\par" % email
         ]
         return "\n".join(rtfLines)
-            
+
     #------------------------------------------------------------------
     # Format an address block from its address lines.
     #------------------------------------------------------------------

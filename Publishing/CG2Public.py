@@ -1,29 +1,14 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
-# Take the CDR publishing data (for Gatekeeper use) and convert to 
+# Take the CDR publishing data (for Gatekeeper use) and convert to
 # Licensee data.
 # Validate the new licensee data against its DTD.
 #
+# BZIssue::4123
 # BZIssue::4675 - Create UrlInfo block
 # BZIssue::4881 - Modify publishing to include Drug Info Summary
 # BZIssue::5093 - [Media] Adding Audio Files to Vendor Output
 # OCECDR-3962: Simplify Rerunning Jobmaster Job (Windows)
 # OCECDR-3960: Include current DTD in FTP Data Set
-#
-# Revision 1.3  2008/10/14 21:45:03  venglisc
-# Had to fix the glob.glob() pattern since there were folders/files on BACH
-# that matched the regexp used that shouldn't have been picked up.
-#
-# Revision 1.2  2008/09/26 22:18:05  venglisc
-# Modified to catch warning messages.
-#
-# Revision 1.1  2008/09/16 18:15:19  venglisc
-# Initial copy of program that take the CDR output (intented for Cancer.gov)
-# and re-filters and re-validates the documents to create the licensee output.
-# (Bug 4123)
-#
 #----------------------------------------------------------------------
 import cdr, cdrpub, os, os.path, shutil, sys, re, glob, optparse, time
 
@@ -54,7 +39,7 @@ class documentType:
         self.outputDir   = None
         self.inputDir    = None
 
-    
+
     # -------------------------------------------------------------------
     # Find the last publishing directory
     # -------------------------------------------------------------------
@@ -62,13 +47,13 @@ class documentType:
         os.chdir(self.sourceBase)
 
         # The glob module is not flexible enough to test for jobs with
-        # 4 or 5 digits.  This will have to be modified when we're 
+        # 4 or 5 digits.  This will have to be modified when we're
         # approaching Job99999+
         # jobDirs = glob.glob('Job?????')
         # ------------------------------------------------------------
         jobDirs = glob.glob('Job?????')
         if not jobDirs:
-            l.write("*** Error: No publishing directory found", 
+            l.write("*** Error: No publishing directory found",
                                                      stdout = True)
             sys.exit(1)
 
@@ -77,7 +62,7 @@ class documentType:
 
 
     # -------------------------------------------------------------------
-    # Copying the content of the directories and filtering those 
+    # Copying the content of the directories and filtering those
     # document types that need to be modified for the licensees.
     # -------------------------------------------------------------------
     def copy(self, directory):
@@ -97,7 +82,7 @@ class documentType:
                 if testMode:
                     pwd = os.getcwd()
 
-                    # If an output directory has been specified that 
+                    # If an output directory has been specified that
                     # doesn't exist stop the operation.
                     # --------------------------------------------------
                     try:
@@ -114,13 +99,13 @@ class documentType:
                     print "Error: Directory %s already exists." % directory
                     raise
 
-        l.write("Processing %s/%s..." % (self.inputDir, directory), 
+        l.write("Processing %s/%s..." % (self.inputDir, directory),
                                                              stdout = True)
-        l.write("   Copy to %s/%s..." % (self.outputDir, directory), 
+        l.write("   Copy to %s/%s..." % (self.outputDir, directory),
                                                              stdout = True)
 
-        # Processing all documents by reading, filtering, validating, 
-        # and writing the files, if necessary.  
+        # Processing all documents by reading, filtering, validating,
+        # and writing the files, if necessary.
         # -------------------------------------------------------
         valError = ()
         # filt_warnings = ''
@@ -132,7 +117,7 @@ class documentType:
             # Filter the CG document
             # ----------------------
             if directory in self.filters.keys():
-                result = cdr.filterDoc('guest', 
+                result = cdr.filterDoc('guest',
                                    filter = ['name:Vendor Filter: Convert' +
                                              ' CG to Public Data'],
                                    doc = xmlDoc)
@@ -161,7 +146,7 @@ class documentType:
 
             # Write the newly filtered (or unmodified) licensee file
             # ------------------------------------------------------
-            exportFile = open('%s/%s/%s' % (self.outputDir, 
+            exportFile = open('%s/%s/%s' % (self.outputDir,
                                                  directory, doc), 'wb')
             exportFile.write(newDoc)
             exportFile.close()
@@ -304,7 +289,7 @@ jobDir = inputdir or d.jobDir
 l.write("Using  publishing job: %s" % jobDir, stdout = True)
 pubDirs = getDocumentTypes(d.inputDir)
 
-# Setting the path and creating the new directory for the 
+# Setting the path and creating the new directory for the
 # licensee data to be stored.
 # ---------------------------------------------------------
 if testMode:
@@ -338,11 +323,11 @@ except OSError, info:
 for dir in pubDirs:
     if not dir in EXCLUDEDIRS:
         result = d.copy(dir)
-        if result: 
+        if result:
             warnings = True
-            l.write("Validation error processing %s" % dir, 
+            l.write("Validation error processing %s" % dir,
                                                     stdout = True)
-            l.write("  Documents with Errors: %s" % str(result), 
+            l.write("  Documents with Errors: %s" % str(result),
                                                     stdout = True)
     else:
         l.write("%s skipped" % dir, stdout = True)

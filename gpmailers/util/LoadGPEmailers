@@ -2,12 +2,11 @@
 
 #----------------------------------------------------------------------
 #
-# $Id$
-#
 # Import GeneticsProfessional emailer information and notify the GP
 # that he/she needs to review the information.
 #
 # BZIssue::4630
+# JIRA::OCECDR-4092 - replace hard-coded tester list with group address
 #
 #----------------------------------------------------------------------
 import cdrutil, bz2, sys, lxml.etree as etree
@@ -45,13 +44,10 @@ current.</p>
 NCI Cancer Genetics Services Directory<br />
 GeneticsDirectory@cancer.gov</p>
 """
-testers = ('***REMOVED***',
-           '***REMOVED***',
-           '***REMOVED***'
-           )
+testers = ("CancerGovTest@mail.nih.gov",)
 
 # -------------------------------------------------------------------
-# Pull emailers from job packages in dropbox, load them into the 
+# Pull emailers from job packages in dropbox, load them into the
 # gp_emailer table, and notify the genetics professional that they
 # need to review their directory information.
 # -------------------------------------------------------------------
@@ -114,14 +110,14 @@ def loadEmailer(conn, cursor, jobId, node):
             address = testers
         emailerId = cdrutil.base36((int(trackerId) << 32) + int(docId))
         if cdrutil.getEnvironment() == 'OCE':
-            url = "http://%s%s/cgsd.py?id=%s" % (cdrutil.WEB_HOST, 
-                                                 cdrutil.CGI_BASE, 
+            url = "http://%s%s/cgsd.py?id=%s" % (cdrutil.WEB_HOST,
+                                                 cdrutil.CGI_BASE,
                                                  emailerId)
         else:
             h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier())
             url = "https://%s.%s/cgi-bin/cgsd.py?id=%s" % (
-                                                   h.host['EMAILERSC'][0], 
-                                                   h.host['EMAILERSC'][1], 
+                                                   h.host['EMAILERSC'][0],
+                                                   h.host['EMAILERSC'][1],
                                                    emailerId)
         message = cdrutil.sendMail(SENDER, address, subject,
                                    emailBody % (url, url), html=True)

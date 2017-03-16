@@ -1,23 +1,14 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id: ICRDBStatsReport.py 13207 2015-06-18 16:43:01Z volker $
-#
-# File Name: $RCSFile:$
-#            ===============
 # This report is a modified version of the ICRDBStatsReport.py
 #
-# A report to list all summaries and drug info summaries modified in 
+# A report to list all summaries and drug info summaries modified in
 # the previous week to be delivered for GovDelivery reporting
 # The report needs to run for English and Spanish audiences.
 # ---------------------------------------------------------------------
-# $Author: volker $
 # Created:          2012-02-10        Volker Englisch
 #
-# $Source: $
-# $Revision: 13207 $
-#
 # OCECDR-3989: [GovDelivery] Report of New/Revised Summaries and DIS
-#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
 import calendar
@@ -159,7 +150,7 @@ Subject: %s: %s
 # -------------------------------------------------------------
 # List the reformatted summaries
 # -------------------------------------------------------------
-def getDocuments(cursor, startDate=startWeek, endDate=endWeek, 
+def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
                          docType='', repType='', language=''):
     # Debug message listing the document type and report type
     # -------------------------------------------------------
@@ -171,8 +162,8 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
     if docType == 'DrugInformationSummary':
         if repType == 'new':
             query = """\
-            SELECT t.value as "Title", d.id as "CDR-ID",  
-                   u.value AS "URL", d.first_pub as "Publishing Date", 
+            SELECT t.value as "Title", d.id as "CDR-ID",
+                   u.value AS "URL", d.first_pub as "Publishing Date",
                    v.dt AS "PubDate"
               FROM document d
               JOIN query_term t
@@ -186,7 +177,7 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
               JOIN doc_version v
                 ON d.id = v.id
              WHERE d.active_status = 'A'
-               AND ISNULL(first_pub, 0) >= '%s' 
+               AND ISNULL(first_pub, 0) >= '%s'
                AND ISNULL(first_pub, 0) < dateadd(DAY, 1, '%s')
                AND v.publishable = 'Y'
                AND v.num = (SELECT MAX(num)
@@ -194,12 +185,12 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
                              WHERE i.id = v.id
                                AND i.publishable = 'Y'
                             )
-             ORDER BY d.first_pub 
+             ORDER BY d.first_pub
         """ % (startDate, endDate)
         elif repType == 'revised':
             query = """\
-            SELECT t.value as "Title", d.id as "CDR-ID",  
-                   u.value AS "URL", dlm.value AS "DLM", 
+            SELECT t.value as "Title", d.id as "CDR-ID",
+                   u.value AS "URL", dlm.value AS "DLM",
                    v.dt AS "PubDate"
               FROM document d
     LEFT OUTER JOIN query_term_pub dlm
@@ -216,7 +207,7 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
               JOIN doc_version v
                 ON d.id = v.id
              WHERE d.active_status = 'A'
-               AND ISNULL(dlm.value, 0) >= '%s' 
+               AND ISNULL(dlm.value, 0) >= '%s'
                AND ISNULL(dlm.value, 0) < dateadd(DAY, 1, '%s')
                AND v.publishable = 'Y'
                AND v.num = (SELECT MAX(num)
@@ -229,8 +220,8 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
     elif docType == 'Summary':
         if repType == 'new':
             query = """\
-            SELECT t.value AS "Title", d.id AS "CDR-ID", 
-                   a.value AS "Audience", l.value AS "Language", 
+            SELECT t.value AS "Title", d.id AS "CDR-ID",
+                   a.value AS "Audience", l.value AS "Language",
                    u.value AS "URL", f.value as "Fragment",
                    d.first_pub, v.dt AS "PubDate"
               FROM document d
@@ -254,11 +245,11 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
               JOIN query_term_pub f
                 ON f.doc_id = c.doc_id
                AND f.path = '/Summary/SummarySection/@cdr:id'
-               AND SUBSTRING(f.node_loc, 1, 4) = SUBSTRING(c.node_loc, 1, 4) 
+               AND SUBSTRING(f.node_loc, 1, 4) = SUBSTRING(c.node_loc, 1, 4)
               JOIN doc_version v
                 ON d.id = v.id
              WHERE d.active_status = 'A'
-               AND ISNULL(first_pub, 0) >= '%s' 
+               AND ISNULL(first_pub, 0) >= '%s'
                AND ISNULL(first_pub, 0) < dateadd(DAY, 1, '%s')
                AND l.value = '%s'
                AND c.value = 'Changes to summary'
@@ -273,8 +264,8 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
 
         elif repType == 'revised':
             query = """\
-            SELECT t.value AS "Title", d.id AS "CDR-ID", 
-                   a.value AS "Audience", l.value AS "Language", 
+            SELECT t.value AS "Title", d.id AS "CDR-ID",
+                   a.value AS "Audience", l.value AS "Language",
                    u.value AS "URL", f.value as "Fragment",
                    dlm.value AS "Date LM", v.dt AS "PubDate"
               FROM document d
@@ -301,11 +292,11 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
               JOIN query_term_pub f
                 ON f.doc_id = c.doc_id
                AND f.path = '/Summary/SummarySection/@cdr:id'
-               AND SUBSTRING(f.node_loc, 1, 4) = SUBSTRING(c.node_loc, 1, 4) 
+               AND SUBSTRING(f.node_loc, 1, 4) = SUBSTRING(c.node_loc, 1, 4)
               JOIN doc_version v
                 ON d.id = v.id
              WHERE d.active_status = 'A'
-               AND ISNULL(dlm.value, 0) >= '%s' 
+               AND ISNULL(dlm.value, 0) >= '%s'
                AND ISNULL(dlm.value, 0) < dateadd(DAY, 1, '%s')
                AND l.value = '%s'
                AND c.value = 'Changes to summary'
@@ -319,7 +310,7 @@ def getDocuments(cursor, startDate=startWeek, endDate=endWeek,
 """ % (startDate, endDate, language)
     else:
         return None
-    
+
 
     if debug:
         l.write('********************************************************',
@@ -427,7 +418,7 @@ def formatFullOutput(records, heading, docType='', repType=''):
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek, 
+def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
                            section='Header', title='', date=''):
     if section == 'Header':
         html = u"""\
@@ -437,11 +428,11 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <style type='text/css'>
    table   { border-spacing: 20px 5px;
-             empty-cells: show; 
+             empty-cells: show;
              border-collapse: collapse; }
 
    table, th, td {border: 1px solid black; }
-   th      { background-color: #f0f0f0; 
+   th      { background-color: #f0f0f0;
              font-weight: bold; }
    td      { padding: 1px 10px; }
    *.countstable  {  }
@@ -466,11 +457,11 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def createMessageBody(title='Test Title', startDate=startWeek, 
+def createMessageBody(title='Test Title', startDate=startWeek,
                                           endDate=endWeek, language=''):
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
-    textLabels = { 
+    textLabels = {
                    'hprev':  'Revised Health Professional Summaries'  ,
                    'patrev': 'Revised Patient Summaries',
                    'hpnew':  'New Health Professional Summaries'  ,
@@ -492,28 +483,28 @@ def createMessageBody(title='Test Title', startDate=startWeek,
     if dispSummary:
         # New Summaries Files
         # -------------------------------
-        summariesNew = getDocuments(cursor, startDate, endDate, 
-                                    docType='Summary', repType='new', 
+        summariesNew = getDocuments(cursor, startDate, endDate,
+                                    docType='Summary', repType='new',
                                     language=language)
         if summariesNew:
             countSummariesNewAll = len(summariesNew)
             for i in summariesNew:
                 if i[2] == 'Health professionals':
                     countSummariesNew['hpnew'] += 1
-                elif i[2] == 'Patients': 
+                elif i[2] == 'Patients':
                     countSummariesNew['patnew'] += 1
 
         # Revised Summaries Files
         # -------------------------------
-        summariesRevised = getDocuments(cursor, startDate, endDate, 
-                                        docType='Summary', repType='revised', 
+        summariesRevised = getDocuments(cursor, startDate, endDate,
+                                        docType='Summary', repType='revised',
                                         language=language)
         if summariesRevised:
             countSummariesRevAll = len(summariesRevised)
             for i in summariesRevised:
                 if i[2] == 'Health professionals':
                     countSummariesRev['hprev'] += 1
-                elif i[2] == 'Patients': 
+                elif i[2] == 'Patients':
                     countSummariesRev['patrev'] += 1
 
     # New DIS Files
@@ -521,7 +512,7 @@ def createMessageBody(title='Test Title', startDate=startWeek,
     countDisNew = 0
     countDisRev = 0
     if language == 'English' and dispDis:
-        disNew = getDocuments(cursor, startDate, endDate, 
+        disNew = getDocuments(cursor, startDate, endDate,
                               docType='DrugInformationSummary', repType='new',
                               language=language)
         if disNew:
@@ -531,8 +522,8 @@ def createMessageBody(title='Test Title', startDate=startWeek,
 
             countDisNew = len(disNew)
 
-        disRevised = getDocuments(cursor, startDate, endDate, 
-                                  docType='DrugInformationSummary', 
+        disRevised = getDocuments(cursor, startDate, endDate,
+                                  docType='DrugInformationSummary',
                                   repType='revised', language=language)
         if disRevised:
             if debug:
@@ -543,36 +534,36 @@ def createMessageBody(title='Test Title', startDate=startWeek,
 
     # Put together the email message body
     # -----------------------------------
-    mailBody = getMessageHeaderFooter(startDate, endDate, title=title, 
+    mailBody = getMessageHeaderFooter(startDate, endDate, title=title,
                                       date=time.strftime("%m/%d/%Y", now))
 
     # Prepare the tables to be attached to the report
     # -------------------------------------------------------------------
     if dispSummary:
-        summariesHpNew = formatFullOutput(summariesNew, 
-                                             textLabels['hpnew'], 
+        summariesHpNew = formatFullOutput(summariesNew,
+                                             textLabels['hpnew'],
                                              docType='Summary',
                                              repType='Health professionals')
-        summariesHpRev = formatFullOutput(summariesRevised, 
-                                             textLabels['hprev'], 
+        summariesHpRev = formatFullOutput(summariesRevised,
+                                             textLabels['hprev'],
                                              docType='Summary',
                                              repType='Health professionals')
-        summariesPatNew = formatFullOutput(summariesNew, 
-                                             textLabels['patnew'], 
+        summariesPatNew = formatFullOutput(summariesNew,
+                                             textLabels['patnew'],
                                              docType='Summary',
                                              repType='Patients')
-        summariesPatRev = formatFullOutput(summariesRevised, 
-                                             textLabels['patrev'], 
+        summariesPatRev = formatFullOutput(summariesRevised,
+                                             textLabels['patrev'],
                                              docType='Summary',
                                              repType='Patients')
 
     if language == 'English' and dispDis:
-        disNew = formatFullOutput(disNew, 
-                                  textLabels['disnew'], 
+        disNew = formatFullOutput(disNew,
+                                  textLabels['disnew'],
                                   docType='DrugInformationSummary',
                                   repType='new')
-        disRev = formatFullOutput(disRevised, 
-                                  textLabels['disrev'], 
+        disRev = formatFullOutput(disRevised,
+                                  textLabels['disrev'],
                                   docType='DrugInformationSummary',
                                   repType='revised')
 
@@ -608,7 +599,7 @@ def sendEmailReport(messageBody, title, language):
             strTo = cdr.getEmailList('GovDelivery EN Docs Notification')
 
     subject   = "%s-%s: %s (%s)" %(cdr.h.org, cdr.h.tier, title, language)
-    
+
     mailHeader = """\
 From: %s
 To: %s
@@ -622,15 +613,15 @@ Subject: %s
     # ---------------------------
     message = mailHeader + "\n" + messageBody
 
-    # Sending out the email 
+    # Sending out the email
     # ---------------------
     server = smtplib.SMTP(SMTP_RELAY)
-    
+
     if emailMode:
         try:
             server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
         except Exception, info:
-            sys.exit("*** Error sending message (%s): %s" % (region, 
+            sys.exit("*** Error sending message (%s): %s" % (region,
                                                              str(info)))
     else:
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
@@ -664,7 +655,7 @@ elif repLang == 'EN':
 else:
     l.write("Invalid language specified. Use [EN|ES]!", stdout = True)
     sys.exit("*** Exiting with Error ***")
-    
+
 # We're running both, the summaries and DIS by default
 # ----------------------------------------------------
 dispDis = options.values.dis
@@ -688,11 +679,11 @@ if testMode:
 
 path = OUTPUTBASE + '/%s' % outputFile
 l.write('Writing report to: %s' % path, stdout=True)
- 
+
 try:
     conn = cdrdb.connect()
     cursor = conn.cursor()
-        
+
     # Preparing email message to be send out
     # --------------------------------------
     report = createMessageBody(title, startDate, endDate, language)
@@ -718,7 +709,7 @@ try:
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+    l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)
     raise
 

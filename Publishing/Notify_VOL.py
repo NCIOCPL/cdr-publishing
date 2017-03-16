@@ -1,13 +1,10 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
-# Script intended to submit an email to the Visuals OnLine (VOL) 
+# Script intended to submit an email to the Visuals OnLine (VOL)
 # team when a media document has been updated or added to Cancer.gov.
 # New addition - an image that has been made publishable should be
 # included as well regardless if it's linked to a document or not.
 #
-# OCECDR-3752: Modify Media VOL (Visual Online) Report to include all 
+# OCECDR-3752: Modify Media VOL (Visual Online) Report to include all
 #              publishable media (images) docs.
 # OCECDR-4036: Updated Media Docs Report- Correct Date Range
 # OCECDR-4016: Modifications to Weekly CDR Images Automated Report
@@ -49,10 +46,10 @@ def parseArguments(args):
     parser.add_option('-l', '--livemode',
                       action = 'store_false', dest = 'testMode',
                       help = 'running in LIVE mode')
-    parser.add_option('-s', '--startdate', dest = 'startDate', 
+    parser.add_option('-s', '--startdate', dest = 'startDate',
                       metavar = 'STARTDATE',
                       help = 'start date of time frame (default one week)')
-    parser.add_option('-e', '--enddate', dest = 'endDate', 
+    parser.add_option('-e', '--enddate', dest = 'endDate',
                       metavar = 'ENDDATE',
                       help = 'end date of time frame (default yesterday)')
 
@@ -83,7 +80,7 @@ def parseArguments(args):
 
 
 # ------------------------------------------------------------
-# Function to check the database if media documents where 
+# Function to check the database if media documents where
 # updated for the given time frame.
 # If the type='new' is passed we're only listing document
 # that have not publishable version prior to the start date.
@@ -130,8 +127,8 @@ def checkForMediaUpdates(sDate, eDate, type=''):
                       AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding'
                    )
            AND dv.num = (
-                   SELECT MAX(num) 
-                     FROM doc_version 
+                   SELECT MAX(num)
+                     FROM doc_version
                     WHERE id = dv.id
                    )
            AND dv.dt BETWEEN '%s' AND '%s'
@@ -151,9 +148,9 @@ def checkForMediaUpdates(sDate, eDate, type=''):
 
 
 # ------------------------------------------------------------
-# Function to check the database if media documents where 
+# Function to check the database if media documents where
 # blocked last week.  A document that is currently blocked
-# and has a new version created is assumed to be blocked 
+# and has a new version created is assumed to be blocked
 # during the previous week.
 # ------------------------------------------------------------
 def checkForBlockedImages(sDate, eDate):
@@ -169,7 +166,7 @@ def checkForBlockedImages(sDate, eDate):
         conn = cdrdb.connect()
         cursor = conn.cursor()
         cursor.execute("""\
-        SELECT d.id 
+        SELECT d.id
           FROM document d
           JOIN doc_version dv
             ON dv.id = d.id
@@ -186,7 +183,7 @@ def checkForBlockedImages(sDate, eDate):
                          FROM doc_version i
                         WHERE i.id = d.id
                           AND i.publishable = 'Y')
-           
+
          ORDER BY d.id
 """ % (sDate, eDate), timeout=300)
         rows = cursor.fetchall()
@@ -204,7 +201,7 @@ def checkForBlockedImages(sDate, eDate):
 # ------------------------------------------------------------
 # Function to find the information to be displayed for blocked
 # images
-# Note:  Blocked documents will only be included if a 
+# Note:  Blocked documents will only be included if a
 #        publishable version did exist in the past.  Images
 #        without publishable version won't be included.
 # ------------------------------------------------------------
@@ -228,11 +225,11 @@ def getVersions(ids, sDate, eDate, type=''):
         # t.value    -> title
         # fp.dt      -> date of first publishable version
         # dv.dt      -> date of last publishable version
-        # dv.publishable -> 
+        # dv.publishable ->
         # dv.comment -> version comment
         cursor.execute("""\
-        SELECT dv.id, dv.num, t.value, fp.dt, dv.dt, 
-               v.value, dv.comment 
+        SELECT dv.id, dv.num, t.value, fp.dt, dv.dt,
+               v.value, dv.comment
           FROM doc_version dv
 LEFT OUTER JOIN query_term v
             ON dv.id = v.doc_id
@@ -247,13 +244,13 @@ LEFT OUTER JOIN query_term v
                          WHERE i.id = dv.id
                            AND i.publishable = 'Y'
                        )
-         WHERE dv.id IN (%s) 
+         WHERE dv.id IN (%s)
            %s
            AND dv.dt between '%s' AND '%s'
          ORDER BY id, num
 """ % (', '.join("%s" % x for x in ids),
        pubType, sDate, eDate))
-            
+
         rows = cursor.fetchall()
     except cdrdb.Error, info:
         l.write("Failure finding media data: %s" % (info[1][0]))
@@ -285,11 +282,11 @@ def createRows(versions):
     <td align="center">%s</td>
     <td>%s</td>
    </tr>
-       """ % (class_, host, row[0], row[1], row[0], 
-                            row[1], 
+       """ % (class_, host, row[0], row[1], row[0],
+                            row[1],
                       host, row[0], row[2],
-                            row[3] and row[3][:16] or '', 
-                            row[4] and row[4][:16] or '', 
+                            row[3] and row[3][:16] or '',
+                            row[4] and row[4][:16] or '',
                             row[5] and 'Y' or '',
                             row[6] or '')
     return tableRows
@@ -311,7 +308,7 @@ testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
 # If only the start date is specified, the timeframe will be from
-# the start date until yesterday.  If only the end date is 
+# the start date until yesterday.  If only the end date is
 # specified, the timeframe will be the week prior (and including)
 # that date. Otherwise it's whatever dates are passed
 # or the week prior to today if no dates are specified.
@@ -381,18 +378,18 @@ html     = """
     body         { background-color: white; }
     h3            { font-weight: bold;
                     font-family: Arial;
-                    font-size: 16pt; 
+                    font-size: 16pt;
                     margin-left: 0pt; }
     TABLE.output  { margin-left: auto;
                     margin-right: auto; }
     TABLE.output  TD
                   { padding: 3px; }
-    td.header     { font-weight: bold; 
+    td.header     { font-weight: bold;
                     text-align: center; }
     tr.odd        { background-color: #E7E7E7; }
     tr.even       { background-color: #FFFFFF; }
     tr.head       { background-color: #D2D2D2; }
-    .link         { color: blue; 
+    .link         { color: blue;
                     text-decoration: underline; }
     p             { font-weight: bold;
                     font-family: Arial;
@@ -473,7 +470,7 @@ html += """
  </body>
 </html>"""
 
-# Don't send emails to everyone if we're testing 
+# Don't send emails to everyone if we're testing
 # ----------------------------------------------
 emailDL = cdr.getEmailList('VOL Notification')
 emailDL.sort()

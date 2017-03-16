@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Id$ -->
 <PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
- 
+
  <SystemName>Mailers</SystemName>
  <SystemDescription>Reports, questionnaires, etc., mailed to PDQ board
   members, physicians, protocol institutions, other organizations, etc.

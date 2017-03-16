@@ -2,23 +2,30 @@
 
 #----------------------------------------------------------------------
 #
-# $Id$
-#
 # Genetics Professional electronic mailer interface.
 # cgsd = Cancer Genetics Services Directory
 #
 # BZIssue::4630
+# JIRA::OCECDR-4185 - use new NCI logo for header
 #
 #----------------------------------------------------------------------
 import cgi, lxml.etree as etree, bz2, cdrutil, datetime
+import re
 
 SENDER = 'GeneticsDirectory@cancer.gov'
 DEBUGGING = False
 
 def yn(flag): return flag and u'Yes' or u'No'
 
+def callback(match):
+    return "<GP %s %s>" % (match.group(2), match.group(1))
+
 def normalize(me):
-    return etree.tostring(etree.XML(me)).replace("\r", "")
+    if isinstance(me, basestring):
+        me = etree.XML(me)
+    xml = etree.tostring(me, pretty_print=True)
+    xml = re.sub("<GP (tracker=[^>]+) (id=[^>]+)>", callback, xml)
+    return xml.replace("\r", "")
 
 class GP:
     @staticmethod
@@ -174,7 +181,7 @@ class GP:
         if not rows:
             return True
         original = normalize(rows[0][0])
-        return original != newSerialization.replace("\r", "")
+        return original != newSerialization
     class Name:
         def __init__(self, node=None, fields=None):
             self.first = self.last = self.middle = self.suffix = None
@@ -210,7 +217,7 @@ class GP:
             if self.suffix:
                 etree.SubElement(e, 'Suffix').text = self.suffix
             return e
-                    
+
     class Location:
         def __init__(self, node=None, fields=None, pos=None):
             self.institution = self.address = self.phone = self.fax = None
@@ -347,7 +354,7 @@ def showForm(fields):
     <input type='hidden' name='tid' value='%d' />
     <input type='hidden' name='pid' value='%d' />
     <input type='hidden' name='jid' value='%d' />
-    <p class='omb-number'>OMB No. 0925-0639 Expiry Date 08-31-2014</p>
+    <p class='omb-number'>OMB No. 0925-0639 Expiry Date 10/31/2017</p>
     <div class='omb-header-wrapper'>
      <p class='omb-header'>
       Public reporting burden for this collection of information is
@@ -386,7 +393,7 @@ def showForm(fields):
     <p class='instructions'>
      Please verify all contact information.  This address is used
      to contact you for data verification purposes.
-     It may be the same as one of the practice locations listed in the 
+     It may be the same as one of the practice locations listed in the
      <a href='http://www.cancer.gov/search/geneticsservices/'
      >online directory</a> (see <span class='name'><a href='#plocs'>Practice
      Locations</a></span> immediately below).
@@ -513,7 +520,7 @@ def showForm(fields):
     <br />
     <input type='hidden' name='spec-max' value='%d' />
     <table border='1' cellpadding='2' cellspacing='0'>
-     <tr>                                                          
+     <tr>
       <th>Specialty</th>
       <th>Board Certified</th>
       <th>Board Eligible</th>
@@ -608,7 +615,7 @@ def showForm(fields):
      provided (e.g., a person must be eligible for a clinical
      trial in order to receive services).
     </p>
-    <input type='radio' name='rstrct' value='Yes'%s' /> 
+    <input type='radio' name='rstrct' value='Yes'%s' />
     Yes (Please specify)<br />
     <textarea id='limits' name='limits'>%s</textarea><br />
     <input type='radio' name='rstrct' value='No'%s /> No<br />
@@ -662,7 +669,7 @@ def showForm(fields):
 
     <h1>9. Memberships</h1>
     <p class='instructions'>
-     Please indicate your membership in any of the following national 
+     Please indicate your membership in any of the following national
      societies or special interest groups.
     </p>
     <input type='hidden' name='memb-max' value='%d' />
@@ -715,7 +722,7 @@ def markCompletion(gp):
     cursor.execute("UPDATE gp_emailer SET completed = NOW() WHERE id = %s",
                    gp.trackerId)
     conn.commit()
-    
+
 def sayThankYou():
     sendPage(u"""\
 
@@ -739,6 +746,7 @@ def sendPage(payload):
     page = [u"""\
 Content-type: text/html; charset=utf-8
 
+<!DOCTYPE html>
 <html>
  <head>
   <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
@@ -749,20 +757,14 @@ Content-type: text/html; charset=utf-8
    form, #payload { padding-left: 17px; }
    #payload { padding-top: 20px; padding-bottom: 20px; }
 
+   .title { font-weight: bold; text-align: center; font-size: 22px;
+            color: #a90101; }
    h1 { color: #8f8c81; font-size: 12pt; margin-top: 30px; clear: left; }
    h2 { font-weight: normal; margin-left: 232px; text-decoration: underline }
    a { color: #333; text-decoration: none; }
    a:hover { color: #a80101; }
-   img { border: none; margin: 0; padding: 0 }
+   img { border: none; margin: 20px 0 10px 20px; padding: 0 }
    textarea { height: 70px; }
-
-   /* Set the top background colors across entire page width. */
-   #red-stripe, #grey-stripe {
-       position: absolute; z-index: -1; left: 0px; width: 100%;
-       font-size: 1px;
-   }
-   #red-stripe  { background: #a80101; top:  0px; height: 79px; }
-   #grey-stripe { background: #696657; top: 79px; height:  3px; }
 
    /* All the real content is centered on the page in a fixed-width block */
    #wrapper { margin-left: auto; margin-right: auto;
@@ -774,7 +776,7 @@ Content-type: text/html; charset=utf-8
    .indentedcb { margin-left: 100px; }
    .label { float: left; width: 225px; margin-right: 5px;
             text-align: right; font-weight: bold; clear: left; }
-   .button { margin-left: 50px; color: white; background: #a80101; 
+   .button { margin-left: 50px; color: white; background: #a80101;
              font-weight: bold; width: 11em; }
    .year   { border: none; }
    .error { color: red; font-weight: bold; }
@@ -825,10 +827,9 @@ Content-type: text/html; charset=utf-8
   </script>
  </head>
  <body>
-  <div id='red-stripe'>&nbsp;</div>
-  <div id='grey-stripe'>&nbsp;</div>
   <div id='wrapper'>
-   <img src='/images/nci-cgsd-banner.jpg' />
+   <img src='/images/nci-logo-full.svg'>
+   <p class="title">NCI Cancer Genetics Services Directory</p>
 """]
     page.append(payload)
     page.append(u"""\
@@ -838,7 +839,7 @@ Content-type: text/html; charset=utf-8
        width='63' height='31'
        alt='National Cancer Institute' border='0'></a>
     <a href='http://www.dhhs.gov/'><img
-       src='/images/footer_hhs.gif' 
+       src='/images/footer_hhs.gif'
        width='39' height='31'
        alt='Department of Health and Human Services' border='0'></a>
     <a href='http://www.nih.gov/'><img
@@ -846,7 +847,7 @@ Content-type: text/html; charset=utf-8
        width='46' height='31'
        alt='National Institutes of Health' border='0'></a>
     <a href='http://www.usa.gov/'><img
-       src='/images/footer_usagov.gif' 
+       src='/images/footer_usagov.gif'
        width='91' height='31'
        alt='USA.gov' border='0'></a>
     <br />&nbsp;
@@ -861,28 +862,28 @@ def saving(fields):
 
 def save(fields):
     gp = GP(fields=fields)
-    serialization = etree.tostring(gp.toElement())
-    #if fields.getvalue('buttontype') == 'changed':
+    serialization = normalize(gp.toElement())
     if gp.changed(serialization):
         saveChanges(gp, serialization)
-        if cdrutil.getEnvironment() == 'OCE':
-            url = 'http://%s%s/' % (cdrutil.WEB_HOST, cdrutil.CGI_BASE)
-        else:
-            h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier())
-            url = 'https://%s.%s/cgi-bin/' % (h.host['EMAILERSC'][0],
-                                              h.host['EMAILERSC'][1])
+        h = cdrutil.AppHost(cdrutil.getEnvironment(), cdrutil.getTier())
+        winhost = ".".join(h.host["APPC"])
+        target = "https://%s.%s/cgi-bin/ListGPEmailers" % h.host["EMAILERSC"]
+        url = "https://%s/cgi-bin/secure/admin.py?target=%s" % (winhost,
+                                                                target)
         message = u"""\
 GP mailer %d (Person CDR%d) was reviewed and submitted with changes
-which can be reviewed at:
+which can be reviewed from this page:
 
-%s/ShowGPChanges.py?id=%d
-""" % (gp.trackerId, gp.personId, url, gp.trackerId)
+%s
+""" % (gp.trackerId, gp.personId, url)
     else:
         markCompletion(gp)
         message = ("GP mailer %d (Person CDR%d) was reviewed and submitted "
                    "with no changes" % (gp.trackerId, gp.personId))
-    recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)
-    #recips = ('***REMOVED***',)
+    if cdrutil.isProductionHost():
+        recips = ('NCIGENETICSDIRECTORY@ICFI.COM',)
+    else:
+        recips = ("CancerGovTest@mail.nih.gov",)
     subject = "GP mailer %d" % gp.trackerId
     cdrutil.sendMail(SENDER, recips, subject, message)
     sayThankYou()

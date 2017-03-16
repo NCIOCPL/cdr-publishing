@@ -1,7 +1,5 @@
 <!-- PDQ DTD
 
-   $Id$
-
    This DTD defines the external structure of the NCI PDQ XML data
    This version is for Cancer.gov only!  Do not provide to licensees.
 
@@ -12,7 +10,7 @@
    BZIssue::4949 - Changes for Display of DIS information
    OCECTS-116 - Add nct_id attribute to ProtocolRef element
    OCEPROJECT-3147 - Remove Protocol document type
-   OCECDR-3903: Cancer.gov displaying Patient definitions for terms 
+   OCECDR-3903: Cancer.gov displaying Patient definitions for terms
                 in HP Summaries
 
 -->
@@ -22,7 +20,8 @@
      ============================================================= -->
 
 <!ENTITY % ParaLevelElements
-                     " Contact          | ItemizedList     | LiteralLayout
+                     " Contact          | EmbeddedVideo    | ItemizedList
+                     | LiteralLayout
                      | OrderedList      | QandASet         | Para
                      | MediaLink        | Table ">
 
@@ -39,7 +38,8 @@
 
 <!ENTITY % TextElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | Emphasis         | ExternalRef
+                     | DrugRef          | EmbeddedVideo    | Emphasis
+                     | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
                      | LiteralLayout    | LOELink          | LOERef
@@ -52,7 +52,8 @@
 
 <!ENTITY % TextSectionElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | Emphasis         | ExternalRef
+                     | DrugRef          | EmbeddedVideo    | Emphasis
+                     | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
                      | LiteralLayout    | LOELink          | LOERef
@@ -68,7 +69,12 @@
                      | GeneName         | ScientificName   | Strong
                      | Subscript        | Superscript      | TT ">
 
-<!ENTITY % Location "OrganizationName*,PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
+<!ENTITY % Location "OrganizationName*,
+                     PostalAddress?, 
+                     Phone?, 
+                     TollFreePhone?, 
+                     Email?, 
+                     WebSite?">
 
 <!ELEMENT OrganizationName (#PCDATA)>
 
@@ -324,6 +330,8 @@
 
 <!ELEMENT Note (%TextElements;)*>
 
+
+
 <!-- Making the type attribute mandatory
      The type attribute needs to exist for Gatekeeper to being able
      and properly process the MediaLink elements.  This attribute is
@@ -332,24 +340,47 @@
      =============================================================== -->
 
 <!ELEMENT MediaLink (Caption*)>
-<!ATTLIST MediaLink ref CDATA #REQUIRED
+<!ATTLIST MediaLink 
+       id CDATA #IMPLIED
+       ref CDATA #REQUIRED
        type CDATA #REQUIRED
        alt CDATA #REQUIRED
-       inline (Yes|No) "No"
-       MinWidth CDATA #IMPLIED
        language NMTOKENS #IMPLIED
-       audience (Patients | Health_professionals) #IMPLIED
-       size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
-       thumb (Yes|No) "No"
-       id CDATA #IMPLIED
+       audience              (Patients | Health_professionals) #IMPLIED
+       placement             (image-center-full   |
+                              image-center        |
+                              image-center-medium |
+                              image-left-medium   |
+                              image-left-small    |
+                              image-right-medium  |
+                              image-right-small) #IMPLIED
        ExcludedDevices CDATA #IMPLIED
        IncludedDevices CDATA #IMPLIED>
+
+<!ELEMENT EmbeddedVideo      (VideoTitle?, Caption*)>
+<!ATTLIST EmbeddedVideo
+       id        CDATA #IMPLIED
+       ref       CDATA #REQUIRED
+       hosting   CDATA #FIXED "youtube"
+       unique_id CDATA #REQUIRED
+       language  NMTOKENS #IMPLIED
+       audience              (Patients | Health_professionals) #IMPLIED
+       template              (Video100NoTitle     |
+                              Video100Title       |
+                              Video50NoTitle      |
+                              Video50NoTitleRight |
+                              Video50TitleRight   |
+                              Video75NoTitle      |
+                              Video75Title) #IMPLIED>
+
+<!ELEMENT VideoTitle (#PCDATA)>
 
 <!ELEMENT Caption (%TextElements;)*>
 <!ATTLIST Caption language NMTOKENS #IMPLIED>
 
 <!ELEMENT DrugRef  (#PCDATA)>
 <!ATTLIST DrugRef  href CDATA #REQUIRED>
+<!ATTLIST DrugRef  url  CDATA #IMPLIED>
 
 <!ELEMENT MediaRef (#PCDATA)>
 <!ATTLIST MediaRef href CDATA #REQUIRED>
@@ -629,6 +660,7 @@
                         TermDefinition+,
                         TermRef?,
                         MediaLink*,
+                        EmbeddedVideo*,
                         SpanishTermName?,
                         SpanishTermDefinition*,
                         DateFirstPublished?,

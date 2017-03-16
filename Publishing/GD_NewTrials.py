@@ -1,22 +1,13 @@
 #!d:/python/python.exe
 # *********************************************************************
-# $Id: $
-#
-# File Name: GD_NewTrials.py
-#            ===============
 # This report is a modified version of the GD_ChangedDocs.py
 #
-# A report to list all new trials since last week 
+# A report to list all new trials since last week
 # to be delivered for GovDelivery reporting
 # ---------------------------------------------------------------------
-# $Author: volker $
 # Created:          2016-06-14        Volker Englisch
 #
-# $Source: $
-# $Revision: 13207 $
-#
 # OCECDR-4120: GovDelivery Report for ClinicalTrials
-#
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
 import calendar
@@ -145,14 +136,14 @@ def getTrials(cursor, startDate=startWeek, endDate=endWeek):
     # -------------------------------------------------
     query = """\
          SELECT c.nlm_id AS "NCT-ID", c.cdr_id AS "CDR-ID", q.value AS "Title",
-                c.became_active, c.title 
+                c.became_active, c.title
            FROM ctgov_import c
            JOIN pub_proc_cg cg
              ON cg.id = c.cdr_id
            JOIN query_term_pub q
              ON q.doc_id = c.cdr_id
             AND q.path = '/CTGovProtocol/BriefTitle'
-          WHERE  ISNULL(became_active, 0) >= '%s' 
+          WHERE  ISNULL(became_active, 0) >= '%s'
             AND ISNULL(became_active, 0) < dateadd(DAY, 1, '%s')
 """ % (startDate, endDate)
 
@@ -225,7 +216,7 @@ def formatTableOutput(records, heading):
     <a href='http://%s.%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
    </td>
    <td VALIGN='top'>%s</td>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1], 
+""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
        row[1], cdrcgi.unicodeToLatin1(row[0]), row[1])
 
         html += """\
@@ -234,7 +225,7 @@ def formatTableOutput(records, heading):
    </td>
    <td VALIGN='top'>%s</td>
   </tr>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1], 
+""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
        row[1], cdrcgi.unicodeToLatin1(row[2]), row[3][:10])
 
     html += u"""\
@@ -277,7 +268,7 @@ def formatBulletOutput(records, heading):
   <li>
     <a href='http://%s.%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
   </li>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1], 
+""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
        row[1], cdrcgi.unicodeToLatin1(row[2]))
 
     html += u"""\
@@ -289,7 +280,7 @@ def formatBulletOutput(records, heading):
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek, 
+def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
                            section='Header', title='', date=''):
     if section == 'Header':
         html = u"""\
@@ -299,11 +290,11 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <style type='text/css'>
    table   { border-spacing: 20px 5px;
-             empty-cells: show; 
+             empty-cells: show;
              border-collapse: collapse; }
 
    table, th, td {border: 1px solid black; }
-   th      { background-color: #f0f0f0; 
+   th      { background-color: #f0f0f0;
              font-weight: bold; }
    td      { padding: 1px 10px; }
    *.countstable  {  }
@@ -327,7 +318,7 @@ def getMessageHeaderFooter(startDate=startWeek, endDate=endWeek,
 # --------------------------------------------------------
 # Creating email message body/report to be submitted
 # --------------------------------------------------------
-def createMessageBody(title='Test Title', startDate=startWeek, 
+def createMessageBody(title='Test Title', startDate=startWeek,
                                           endDate=endWeek):
     # Dictionary to be used for the misc. text labels by doc type
     # Note: Originally, the report was planned to have different
@@ -349,7 +340,7 @@ def createMessageBody(title='Test Title', startDate=startWeek,
 
     # Put together the email message body
     # -----------------------------------
-    mailBody = getMessageHeaderFooter(startDate, endDate, title=title, 
+    mailBody = getMessageHeaderFooter(startDate, endDate, title=title,
                                       date=time.strftime("%m/%d/%Y", now))
 
     # Prepare the tables to be attached to the report
@@ -381,7 +372,7 @@ def sendEmailReport(messageBody, title):
         strTo = cdr.getEmailList('GovDelivery Trials Notification')
 
     subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
-    
+
     mailHeader = """\
 From: %s
 To: %s
@@ -395,15 +386,15 @@ Subject: %s
     # ---------------------------
     message = mailHeader + "\n" + messageBody
 
-    # Sending out the email 
+    # Sending out the email
     # ---------------------
     server = smtplib.SMTP(SMTP_RELAY)
-    
+
     if emailMode:
         try:
             server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
         except Exception, info:
-            sys.exit("*** Error sending message (%s): %s" % (region, 
+            sys.exit("*** Error sending message (%s): %s" % (region,
                                                              str(info)))
     else:
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
@@ -447,11 +438,11 @@ if testMode:
 path = OUTPUTBASE + '/%s' % outputFile
 l.write('', stdout=True)
 l.write('Writing report to: %s' % path, stdout=True)
- 
+
 try:
     conn = cdrdb.connect()
     cursor = conn.cursor()
-        
+
     # Preparing email message to be send out
     # --------------------------------------
     report = createMessageBody(title, startDate, endDate)
@@ -478,7 +469,7 @@ except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
 except:
     sendErrorMessage('Standard Exception in GovDelivery Trials Report')
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
+    l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)
     raise
 

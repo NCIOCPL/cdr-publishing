@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Fetches print files for CDR mailer job, and saves the compressed
  * archive as PrintFilesForJob<JOB>.tar.bz2 in the current working
  * directory.

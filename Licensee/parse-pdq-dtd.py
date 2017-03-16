@@ -5,8 +5,6 @@ import sys
 
 #----------------------------------------------------------------------
 #
-# $Id$
-#
 # Script to verify that modifications to strip out all elements not
 # used by the currently active document types were done correctly,
 # and to report which elements were dropped. It does this by comparing
@@ -18,9 +16,6 @@ import sys
 # Reporting is to standard output. Errors are written to standard
 # error. The goal is to fix the edited version until there are no
 # errors.
-#
-# Requires a more recent version of lxml than is installed on the
-# CDR servers. I'm using version 3.4.2 on my Linux workstation.
 #
 # Usage:
 #   ./parse-dtd.py > dropped-from-cg-dtd.txt
@@ -42,6 +37,7 @@ DOCTYPES = set([
     "Term"
 ])
 DROP = set(["Protocol"])
+DROP = set()
 KEEP = DOCTYPES - DROP
 
 #----------------------------------------------------------------------

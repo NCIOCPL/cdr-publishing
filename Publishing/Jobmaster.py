@@ -1,23 +1,12 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: Jobmaster.py
-#            ===============
 # Control file to start the publishing scripts.
 # ---------------------------------------------------------------------
-# $Author$
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date$
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision$
-#
-# $Id$
 #
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 # BZIssue::4903 - Transfer Protocols without transfer date
 # BZIssue::5215 - Fix Publishing Job to Ignore Warnings
-#
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
 
@@ -109,17 +98,17 @@ options:
 # ------------------------------------------------------------
 # Function to find the directory names storing the CTGovExport
 # data.
-# The file names are created automatically and represent a 
-# time stamp.  Once the CTGovExport job finished we need to 
-# identify the newly created directory name plus the one 
+# The file names are created automatically and represent a
+# time stamp.  Once the CTGovExport job finished we need to
+# identify the newly created directory name plus the one
 # created before this containing the files WithdrawnFromPDQ.txt
 # ------------------------------------------------------------
 def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
     """
     Retrieve the directories created by the CTGovExport process
-    for the current month and the month before and sort them 
+    for the current month and the month before and sort them
     by date.  We want to compare the latest directory content
-    with the one created just before as long as it contains the 
+    with the one created just before as long as it contains the
     file WithdrawnFromPDQ.txt
     """
     # Setting variables
@@ -136,8 +125,8 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
     allDirs = dirs1 + dirs2
     allDirs.sort()
     allDirs.reverse()
-    
-    # Find the last two directories that contain the 
+
+    # Find the last two directories that contain the
     # WithdrawnFromPDQ.txt file (not all do)
     # ----------------------------------------------
     checkDirs = ()
@@ -145,7 +134,7 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
     for dir in allDirs:
         if os.access(dir + '/' + notPDQ , os.F_OK):
             dirCount += 1
-            dstart = dir.find('20')      # Change to 21 for year > 2100 
+            dstart = dir.find('20')      # Change to 21 for year > 2100
             checkDirs += (dir[dstart:],)
             if dirCount == 2: break
 
@@ -157,7 +146,7 @@ def getCTGovExportDirs(baseDir = "/cdr/Output/NLMExport"):
 
     return (checkDirs[:2])
 
-    
+
 # ------------------------------------------------------------
 # *** Main ***
 # Jetzt wird es ernst
@@ -206,7 +195,7 @@ try:
     myCmd = cdr.runCommand(cmd, joinErr2Out = False)
 
     if myCmd.error:
-        l.write('*** Error submitting email\n%s' % myCmd.error, 
+        l.write('*** Error submitting email\n%s' % myCmd.error,
                  stdout = True)
         raise Exception
 except:
@@ -223,12 +212,12 @@ try:
 
     # cmd = 'ls'
     myCmd = cdr.runCommand(cmd)
-    
+
     print "Code: ", myCmd.code
     print "Outp: ", myCmd.output.find('Failure')
-    
+
     if myCmd.code or myCmd.output.find('Failure') > 0:
-        l.write('*** Error submitting command:\n%s' % myCmd.output, 
+        l.write('*** Error submitting command:\n%s' % myCmd.output,
                  stdout = True)
         subject = '*** Error in SubmitPubJob.py'
         message = 'Program returned with error code.  Please see logfile.'
@@ -253,7 +242,7 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CG2Public Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s' % (runmode, pubmode)) 
+        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s' % (runmode, pubmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -280,8 +269,8 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: FtpExportData Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s' % (runmode, 
-                                                                pubmode)) 
+        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s' % (runmode,
+                                                                pubmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -312,8 +301,8 @@ try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
-    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode, 
-                                                            pubmode)) 
+    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s' % (runmode,
+                                                            pubmode))
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)
     # cmd = 'ls'
@@ -336,7 +325,7 @@ except:
 
 
 if fullUpdate:
-    # Submit the job to check for newly published media 
+    # Submit the job to check for newly published media
     # documents and send a notification email
     # Note: Step only needed for weekly publishing
     # -------------------------------------------------------
@@ -344,7 +333,7 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: Notify_VOL Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode)) 
+        cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -367,16 +356,16 @@ if fullUpdate:
 
     # Submit the job to check for documents that will need to
     # be removed manually from Cancer.gov.
-    # Only blocked documents are being removed but for 
-    # document types for which the status is being set to 
-    # remove or withdrawn, for instance, the document won't 
+    # Only blocked documents are being removed but for
+    # document types for which the status is being set to
+    # remove or withdrawn, for instance, the document won't
     # necessarily be removed as part of the publishing job.
     # -------------------------------------------------------
     try:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CheckHotfixRemove Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode)) 
+        cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -403,7 +392,7 @@ if fullUpdate:
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
-    l.write('Step %d: Jobmaster Job Complete notification' % istep, 
+    l.write('Step %d: Jobmaster Job Complete notification' % istep,
                                                            stdout = True)
     if fullUpdate:
         subject = 'Weekly Publishing Finished'

@@ -1,24 +1,13 @@
 #!d:/python/python.exe
 # *********************************************************************
-#
-# File Name: Jobmaster.py
-#            ===============
 # Control file to start the publishing scripts.
 # ---------------------------------------------------------------------
-# $Author: volker $
 # Created:          2007-04-03        Volker Englisch
-# Last Modified:    $Date: 2012-07-09 18:49:29 -0400 (Mon, 09 Jul 2012) $
-# 
-# $Source: /usr/local/cvsroot/cdr/Publishing/Jobmaster.py,v $
-# $Revision: 10467 $
-#
-# $Id: Jobmaster.py 10467 2012-07-09 22:49:29Z volker $
 #
 # BZIssue::4732 - Change in logic for pulling documents from cancer.gov
 # BZIssue::4903 - Transfer Protocols without transfer date
 # BZIssue::5215 - Fix Publishing Job to Ignore Warnings
 # OCECDR-3962: Simplify Rerunning Jobmaster Job (Windows)
-#
 # *********************************************************************
 import sys, re, string, os, shutil, cdr, getopt, time, glob
 
@@ -111,11 +100,11 @@ options:
            run in LIVE mode
 
     -j, --jobid=NNNNN
-           processing JobNNNN data 
+           processing JobNNNN data
 """ % sys.argv[0].split('\\')[-1])
     sys.exit(1)
 
-    
+
 # ------------------------------------------------------------
 # *** Main ***
 # Jetzt wird es ernst
@@ -171,9 +160,9 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CG2Public Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s %s' % (runmode, 
+        cmd = os.path.join(PUBPATH, 'CG2Public.py %s %s %s' % (runmode,
                                                                pubmode,
-                                                               cg2dir)) 
+                                                               cg2dir))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         ### cmd = 'ls' ###
@@ -199,9 +188,9 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: FtpExportData Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s %s' % (runmode, 
+        cmd = os.path.join(PUBPATH, 'FtpExportData.py %s %s %s' % (runmode,
                                                                    pubmode,
-                                                                   expid)) 
+                                                                   expid))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         ### cmd = 'ls' ###
@@ -231,9 +220,9 @@ try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
     l.write('Step %d: FtpOtherData Job' % istep, stdout = True)
-    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s %s' % (runmode, 
+    cmd = os.path.join(PUBPATH, 'FtpOtherData.py %s %s %s' % (runmode,
                                                               pubmode,
-                                                              ftpdir)) 
+                                                              ftpdir))
 
     l.write('Submitting command...\n%s' % cmd, stdout = True)
     ### cmd = 'ls' ###
@@ -255,7 +244,7 @@ except:
     pass
 
 if fullUpdate:
-    # Submit the job to check for newly published media 
+    # Submit the job to check for newly published media
     # documents and send a notification email
     # Note: Step only needed for weekly publishing
     # -------------------------------------------------------
@@ -263,7 +252,7 @@ if fullUpdate:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: Notify_VOL Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode)) 
+        cmd = os.path.join(PUBPATH, 'Notify_VOL.py %s' % (runmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -285,16 +274,16 @@ if fullUpdate:
 
     # Submit the job to check for documents that will need to
     # be removed manually from Cancer.gov.
-    # Only blocked documents are being removed but for 
-    # document types for which the status is being set to 
-    # remove or withdrawn, for instance, the document won't 
+    # Only blocked documents are being removed but for
+    # document types for which the status is being set to
+    # remove or withdrawn, for instance, the document won't
     # necessarily be removed as part of the publishing job.
     # -------------------------------------------------------
     try:
         istep += 1
         l.write('--------------------------------------------', stdout = True)
         l.write('Step %d: CheckHotfixRemove Job' % istep, stdout = True)
-        cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode)) 
+        cmd = os.path.join(PUBPATH, 'CheckHotfixRemove.py %s' % (runmode))
 
         l.write('Submitting command...\n%s' % cmd, stdout = True)
         # cmd = 'ls'
@@ -310,7 +299,7 @@ if fullUpdate:
             myCmd   = cdr.runCommand(cmd)
             raise Exception
     except:
-        l.write('*** Error: Submitting CheckHotfixRemove Job failed', 
+        l.write('*** Error: Submitting CheckHotfixRemove Job failed',
                                                             stdout = True)
         pass
 
@@ -321,7 +310,7 @@ if fullUpdate:
 try:
     istep += 1
     l.write('--------------------------------------------', stdout = True)
-    l.write('Step %d: Jobmaster Job Complete notification' % istep, 
+    l.write('Step %d: Jobmaster Job Complete notification' % istep,
                                                            stdout = True)
     if fullUpdate:
         subject = 'Weekly Publishing Finished'

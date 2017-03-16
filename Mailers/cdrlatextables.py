@@ -1,9 +1,5 @@
 #----------------------------------------------------------------------
-#
-# $Id$
-#
 # Module for generating LaTeX for tables in CDR documents.
-#
 # OCECDR-3730: Mailer Creation Fails with Table Error
 #----------------------------------------------------------------------
 import re, sys, cdr, time
@@ -79,7 +75,7 @@ class Group:
             row = block[curRow]
             if TABLE_DEBUG:
                 sys.stderr.write("TOP OF LOOP IN assembleRows(): ")
-                sys.stderr.write("curRow=%d rowsLeft=%d numCols=%d\n" % 
+                sys.stderr.write("curRow=%d rowsLeft=%d numCols=%d\n" %
                                  (curRow, rowsLeft, len(row)))
             if not row:
                 raise cdr.Exception("Internal Error: "
@@ -147,7 +143,7 @@ class Group:
             if cell.numRows == len(rows):
                 rightSep = ""
                 # XXX Try to use this to prevent unwanted horizontal bars,
-                #     instead of automatically adding the bar in the 
+                #     instead of automatically adding the bar in the
                 #     assembleRows() method.
                 #if cell.rowSep and not lastRow:
                 #   #hline = "  \\tabularnewline \\hline\n"
@@ -184,7 +180,7 @@ class Group:
                             newRow.append(cell)
                     if newRow:
                         newBlock.append(newRow)
-                
+
                 assembledRows = self.assembleRows(newBlock,
                                                   endOfParent = i >= numCells)
                 output += "@{}l@{}"
@@ -325,7 +321,7 @@ class Cell:
             except:
                 raise cdr.Exception("Invalid value for MoreRows: %s" % moreRows)
         self.numRows = col.moreRows + 1
-            
+
         # See if we are spanning multiple columns with this cell.
         col.colSpan   = 1
         self.spanWidth = col.width
@@ -347,7 +343,7 @@ class Cell:
                     spanEnd = j
                     break
             if spanEnd == -1:
-                raise cdr.Exception("No column with name %s follows %s" % 
+                raise cdr.Exception("No column with name %s follows %s" %
                                     (nameEnd, nameSt))
             col.colSpan = spanEnd + 1 - i
         else:
@@ -429,7 +425,7 @@ def openGroup(pp):
     # Parse the column specifications.
     cols = []
     while child:
-        if child.nodeName == 'ColSpec': 
+        if child.nodeName == 'ColSpec':
             name    = child.getAttribute("ColName")
             num     = child.getAttribute("ColNum")
             width   = child.getAttribute("ColWidth")
@@ -450,7 +446,7 @@ def openGroup(pp):
         sys.stderr.write("nCols=%d\n" % nCols)
 
     # Parse the width specifications for each column.
-    usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP + 
+    usableSpace = TEXT_WIDTH - (nCols * 2 * TAB_COL_SEP +
                                (nCols + 1) * RULE_WIDTH)
     if TABLE_DEBUG:
         sys.stderr.write("usableSpace = %f; nCols=%d\n" % (usableSpace, nCols))
@@ -505,7 +501,7 @@ def openGroup(pp):
         sys.stderr.write("usableSpace: %s; MIN_WIDTH: %f; propCols: %d\n" % (
                              usableSpace, MIN_WIDTH, propCols))
 
-    # Creating a new variable exactSpaceLeft since the comparison of the 
+    # Creating a new variable exactSpaceLeft since the comparison of the
     # "if" statement can trip us up if the spaceLeft is 0. and the value
     # is stored as -4.1e-16, for instance.
     # ------------------------------------------------------------------
@@ -548,7 +544,7 @@ def openGroup(pp):
         sideFrame = framing.sides and "|" or ""
         hline     = framing.top and "  \\hline\n" or ""
     pp.setOutput("""\
-  {\\small  
+  {\\small
   \\setlength{\\arraycolsep}{.05in}
   \\setlength{\\tabcolsep}{.05in}
   \\setlength{\\arrayrulewidth}{.015in}
@@ -582,7 +578,7 @@ def closeGroup(pp):
         sys.stderr.write("len(group.head)=%d\n" % len(group.head))
         sys.stderr.write("len(group.body)=%d\n" % len(group.body))
         sys.stderr.write("len(group.foot)=%d\n" % len(group.foot))
-    if group.body: 
+    if group.body:
         headEnds = False
     if group.foot:
         headEnds = False
@@ -600,7 +596,7 @@ def closeGroup(pp):
         sys.stderr.write("headEnds=%s bodyEnds=%s footEnds=%s\n" % (headEnds,
                                                                     bodyEnds,
                                                                     footEnds))
-    endHead = group.head and "  \\endhead\n" or ""       
+    endHead = group.head and "  \\endhead\n" or ""
     body = (group.assembleRows(group.head, group.outer, headEnds) + endHead +
             group.assembleRows(group.body, group.outer, bodyEnds) +
             group.assembleRows(group.foot, group.outer, footEnds))

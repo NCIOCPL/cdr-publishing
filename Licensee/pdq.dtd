@@ -1,7 +1,5 @@
 <!-- PDQ DTD
 
-   $Id$
-
    This DTD defines the external structure of the NCI PDQ XML data
 
    Original version  2001/12/17  Michael M Rubenstein
@@ -10,7 +8,7 @@
    BZIssue::4881 - Include DrugInfoSummary document type
    OCECTS-116 - Add nct_id attribute to ProtocolRef element
    OCEPROJECT-3147 - Remove Protocol document type
-   OCECDR-3903: Cancer.gov displaying Patient definitions for terms 
+   OCECDR-3903: Cancer.gov displaying Patient definitions for terms
                 in HP Summaries
 
 -->
@@ -20,7 +18,8 @@
      ============================================================= -->
 
 <!ENTITY % ParaLevelElements
-                     " Contact          | ItemizedList     | LiteralLayout
+                     " Contact          | EmbeddedVideo    | ItemizedList     
+                     | LiteralLayout
                      | OrderedList      | QandASet         | Para
                      | MediaLink        | Table ">
 
@@ -37,7 +36,8 @@
 
 <!ENTITY % TextElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | Emphasis         | ExternalRef
+                     | DrugRef          | EmbeddedVideo    | Emphasis         
+                     | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
                      | LiteralLayout    | LOELink          | LOERef
@@ -50,7 +50,8 @@
 
 <!ENTITY % TextSectionElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | Emphasis         | ExternalRef
+                     | DrugRef          | EmbeddedVideo    | Emphasis         
+                     | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
                      | LiteralLayout    | LOELink          | LOERef
@@ -313,22 +314,31 @@
 <!ELEMENT Note (%TextElements;)*>
 
 <!ELEMENT MediaLink (Caption*)>
-<!ATTLIST MediaLink ref CDATA #REQUIRED
+<!ATTLIST MediaLink 
+       id CDATA #IMPLIED 
+       ref CDATA #REQUIRED
        type CDATA #IMPLIED
        alt CDATA #REQUIRED
-       inline (Yes|No) "No"
-       MinWidth CDATA #IMPLIED
        language NMTOKENS #IMPLIED
-       audience (Patients | Health_professionals) #IMPLIED
-       size (full|three-quarters|half|third|quarter|fifth|sixth|as-is) #IMPLIED
-       thumb (Yes|No) "No"
-       id CDATA #IMPLIED>
+       audience (Patients | Health_professionals) #IMPLIED>
+
+<!ELEMENT EmbeddedVideo      (VideoTitle?, Caption*)>
+<!ATTLIST EmbeddedVideo
+       id        CDATA #IMPLIED
+       ref       CDATA #REQUIRED
+       hosting   CDATA #FIXED "youtube"
+       unique_id CDATA #REQUIRED
+       language  NMTOKENS #IMPLIED
+       audience              (Patients | Health_professionals) #IMPLIED>
+
+<!ELEMENT VideoTitle (#PCDATA)>
 
 <!ELEMENT Caption (%TextElements;)*>
 <!ATTLIST Caption language NMTOKENS #IMPLIED>
 
 <!ELEMENT DrugRef  (#PCDATA)>
 <!ATTLIST DrugRef  href CDATA #REQUIRED>
+<!ATTLIST DrugRef  url  CDATA #IMPLIED>
 
 <!ELEMENT MediaRef (#PCDATA)>
 <!ATTLIST MediaRef href CDATA #REQUIRED>
@@ -582,6 +592,7 @@
                         TermDefinition+,
                         TermRef?,
                         MediaLink*,
+                        EmbeddedVideo*,
                         SpanishTermName?,
                         SpanishTermDefinition*,
                         DateFirstPublished?,
