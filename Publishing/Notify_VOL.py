@@ -370,7 +370,7 @@ l.write('Blocked Media Documents:\n%s\n' % delMediaChanges, stdout = True)
 sender   = 'NCIPDQoperator@mail.nih.gov'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
-html     = """
+html     = u"""
 <html>
  <head>
   <title>Media List Report</title>
@@ -439,7 +439,7 @@ if newImages:
     newReport = createRows(newMediaChanges)
     html += tableHeader % newReport
 else:
-    html += """
+    html += u"""
     <p class="none">None</p>
 """
 
@@ -451,7 +451,7 @@ if updImages:
     updReport = createRows(updMediaChanges)
     html += tableHeader % updReport
 else:
-    html += """
+    html += u"""
     <p class="none">None</p>
 """
 
@@ -462,11 +462,11 @@ if delImages:
     delReport = createRows(delMediaChanges)
     html += tableHeader % delReport
 else:
-    html += """
+    html += u"""
     <p class="none">None</p>
 """
 
-html += """
+html += u"""
  </body>
 </html>"""
 
@@ -481,13 +481,19 @@ else:
 
 allChanges = newMediaChanges + updMediaChanges + delMediaChanges
 if allChanges and recips:
-    l.write("Email submitted to DL", stdout = True)
-    cdr.sendMail(sender, recips, subject, html, html = 1)
+    l.write("Sending Email to DL", stdout = True)
+    l.write("   DL: %s" % recips, stdout = True)
+    l.write("\nEmail body:", stdout = True)
+    l.write("-----------------------------------------------", stdout = True)
+    l.write("%s" % html, stdout = True)
+    l.write("-----------------------------------------------\n", stdout = True)
+    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
+    l.write("Email send successfully!", stdout = True)
 else:
     # Else statement included to monitor the program
     recips = ["***REMOVED***"]
     l.write("Email NOT submitted to DL", stdout = True)
-    cdr.sendMail(sender, recips, subject, html, html = 1)
+    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
 
 # All done, going home now
 # ------------------------
