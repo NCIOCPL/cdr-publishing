@@ -10,6 +10,7 @@
 #
 #----------------------------------------------------------------------
 import cgi, lxml.etree as etree, bz2, cdrutil, datetime
+import os
 import re
 
 SENDER = 'GeneticsDirectory@cancer.gov'
@@ -888,9 +889,19 @@ which can be reviewed from this page:
     cdrutil.sendMail(SENDER, recips, subject, message)
     sayThankYou()
 
+def maintenance():
+    sendPage("""\
+<h1>Site Undergoing Maintenance</h1>
+<p style="border: 2px solid black; border-radius: 5px; padding: 5px;">
+The NCI Cancer Genetics Services Directory Update site is currently
+being upgraded, and will be back online soon.
+We apologize for the inconvenience.</p>""")
 def main():
     global DEBUGGING
     fields = cgi.FieldStorage()
+    if fields.getvalue('down') or os.path.isfile('down'):
+        maintenance()
+        exit(0)
     if fields.getvalue('debug'):
         DEBUGGING = True
     if saving(fields):

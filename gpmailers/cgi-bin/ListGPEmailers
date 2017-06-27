@@ -46,7 +46,7 @@ if bounce:
     cursor.execute("""\
         UPDATE gp_emailer
            SET bounced = NOW()
-         WHERE id = %d""", bounce)
+         WHERE id = %d""" % bounce)
     conn.commit()
 
 if raw:
