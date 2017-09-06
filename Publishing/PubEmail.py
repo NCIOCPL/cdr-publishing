@@ -23,8 +23,8 @@ l.write('Arguments: %s' % sys.argv, stdout=True)
 
 # Retrieve the Email addresses from the specified group
 # -----------------------------------------------------
-emailDL    = cdr.getEmailList('Operator Publishing Notification')
-emailDL.sort()
+emailDL    = sorted(cdr.getEmailList('Operator Publishing Notification'))
+emailDev   = sorted(cdr.getEmailList("Developers Notification"))
 
 # Set the variables and send the message
 # --------------------------------------
@@ -41,7 +41,7 @@ Automated Publishing Email Notification:
 try:
     # Somebody needs to get the message if the group is empty
     if not len(emailDL):
-        emailDL = ['***REMOVED***']
+        emailDL = emailDev
         subject = '*** DL Missing *** %s' % subject
 
     x =  cdr.sendMail(sender, emailDL, subject, message)

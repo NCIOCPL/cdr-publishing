@@ -108,9 +108,11 @@ class GPMailerJob(cdrmailer.MailerJob):
         self.initEmailers(False)
 
         # Build the set of electronic mailers.
+        ops = ",".join(cdr.getEmailList("Developers Notification"))
         root = etree.Element('GPMailers',
                              JobId=unicode(self.getId()),
-                             JobTime=self.getJobTime())
+                             JobTime=self.getJobTime(),
+                             Ops=ops)
         self.getCursor().execute("""\
             SELECT d.doc_id, d.doc_version
               FROM pub_proc_doc d

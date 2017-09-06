@@ -8,7 +8,6 @@ import UnicodeToLatex, tarfile, glob, shutil, RtfWriter, cdrdocobject
 debugCtr = 1
 
 _LOGFILE = "d:/cdr/log/mailer.log"
-_DEVELOPER = "***REMOVED***"
 _STAPLE_NAME = "duplex-stapled"
 
 #------------------------------------------------------------------
@@ -647,7 +646,7 @@ mailer system (mailer job %s):
 
 Please do not reply to this message.
 """ % (self.__id, str(e))
-                recip = self.__email and [self.__email] or [_DEVELOPER]
+                recip = cdr.getEmailList("Developers Notification")
                 cdr.sendMail(sender, recip, subject, message)
             except:
                 pass

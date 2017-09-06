@@ -103,11 +103,12 @@ def sendErrorMessage(msg):
         subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
                     '*** Error: Program CheckHotfixRemove failed!')
 
+    recips = cdr.getEmailList("Developers Notification")
     mailHeader   = """\
 From: %s
 To: %s
 Subject: %s
-""" % (STR_FROM, '***REMOVED***', subject)
+""" % (STR_FROM, ", ".join(recips), subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
     mailBody      = "<b>Error running HotfixRemove.py</b><br>"
@@ -119,7 +120,7 @@ Subject: %s
     message = mailHeader + "\n" + mailBody
 
     server = smtplib.SMTP(SMTP_RELAY)
-    server.sendmail(STR_FROM, '***REMOVED***', message.encode('utf-8'))
+    server.sendmail(STR_FROM, recips, message.encode('utf-8'))
     server.quit()
 
 

@@ -126,11 +126,12 @@ def parseArguments(args):
 def sendErrorMessage(msg):
     # We want to send an email so that the query doesn't silently fail
     # ----------------------------------------------------------------
+    recips = cdr.getEmailList("Developers Notification")
     mailHeader   = """\
 From: %s
 To: %s
 Subject: %s: %s
-""" % (STR_FROM, '***REMOVED***', cdr.PUB_NAME.capitalize(),
+""" % (STR_FROM, ", ".join(recips), cdr.PUB_NAME.capitalize(),
        '*** Error: GovDelivery Changes Report failed!')
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
@@ -143,7 +144,7 @@ Subject: %s: %s
     message = mailHeader + "\n" + mailBody
 
     server = smtplib.SMTP(SMTP_RELAY)
-    server.sendmail(STR_FROM, '***REMOVED***', message.encode('utf-8'))
+    server.sendmail(STR_FROM, recips, message.encode('utf-8'))
     server.quit()
 
 

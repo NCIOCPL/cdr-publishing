@@ -60,10 +60,11 @@ def loadEmailers():
          WHERE imported IS NULL""")
     rows = cursor.fetchall()
     for jobId, compressedDoc in rows:
-        tree = etree.XML(bz2.decompress(compressedDoc))
-        for child in tree.findall('GP'):
+        root = etree.XML(bz2.decompress(compressedDoc))
+        ops = [o.strip() for o in root.get("Ops", "").split(",")]
+        for child in root.findall('GP'):
             try:
-                loadEmailer(conn, cursor, jobId, child)
+                loadEmailer(conn, cursor, jobId, child, ops)
             except Exception, e:
                 msg = (u"failure loading mailer for CDR%s in job %s: %s" %
                        (child.get('id'), jobId, e)).encode('utf-8')
@@ -81,7 +82,7 @@ def loadEmailers():
 # -------------------------------------------------------------------
 #
 # -------------------------------------------------------------------
-def loadEmailer(conn, cursor, jobId, node):
+def loadEmailer(conn, cursor, jobId, node, ops):
     trackerId = node.get('tracker')
     docId = node.get('id')
     name = email = u''
@@ -126,8 +127,9 @@ def loadEmailer(conn, cursor, jobId, node):
                  (address, emailerId, e))
         cdrutil.log(error, logfile=LOGFILE)
         try:
-            cdrutil.sendMail(SENDER, cdrutil.OPERATOR,
-                             subject + " *** FAILURE ***", error)
+            if ops:
+                subject += " *** FAILURE ***"
+                cdrutil.sendMail(SENDER, ops, subject, error)
         except:
             pass
 

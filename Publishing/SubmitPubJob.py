@@ -24,7 +24,6 @@ else:
 
 # Setting directory and file names
 # --------------------------------
-log        = "d:\\cdr\\log\\Jobmaster.log"
 PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
@@ -194,7 +193,7 @@ def getPushJobId(jobId):
                     WHERE id = %d""" % int(jobId), timeout = 300)
                 row = cursor.fetchone()
                 l.write("%s" % row[1], stdout=True)
-                sys.exit(1)
+                raise Exception("No push job waiting")
 
             # We can stop trying now, we got it.
             tries = 0
@@ -220,15 +219,14 @@ def getPushJobId(jobId):
 # Function to send an email when the job fails instead of silently
 # exiting.
 # ---------------------------------------------------------------------
-def sendFailureMessage(text):
+def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = '%s-%s: %s' % (cdr.h.org, cdr.h.tier, text)
-    message = """
-The publishing job failed.  It did not finish within the maximum time
-allowed.
-Please check the log files.
+    subject = '%s-%s: %s' % (cdr.h.org, cdr.h.tier, header)
+    if not body:
+        body = """
+The publishing job failed.  Please check the log files.
 """
-    notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
+    notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, body)
 
     return
 
@@ -285,7 +283,7 @@ def checkPubJob():
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
-l   = cdr.Log('Jobmaster.log')
+l   = cdr.Log('PubJob.log')
 l.write("SubmitPubJob - Started", stdout = True)
 l.write('Arguments: %s' % sys.argv, stdout=True)
 
@@ -358,6 +356,8 @@ try:
         counter += 1
         jobInfo = checkJobStatus(submit[0])
         status  = jobInfo[1]
+        messages = jobInfo[4]
+
         # Don't print every time we're checking (every 15 minutes)
         # ---------------------------------------------------------
         if counter % 15 == 0:
@@ -372,7 +372,12 @@ try:
                                                             stdout = True)
                 l.write("*** Cancelled after %s hours" % (waitTotal/(60 * 60)),
                                                             stdout = True)
-                sendFailureMessage("Publishing Failure: Max time exceeded")
+                subject = "Publishing Failure: Max time exceeded"
+                msgBody = """
+The publishing job failed.  It did not finish within the maximum time
+allowed.
+"""
+                sendFailureMessage(subject, msgBody)
                 sys.exit(1)
 
         # Once the publishing job completed with status Success
@@ -424,6 +429,15 @@ try:
            done = 1
         elif status == 'Failure':
            l.write("*** Error - Publication job failed", stdout=True)
+           l.write("... %s" % messages[-500:], stdout=True)
+           subject = "*** Publishing Failure: The current job did not succeed!"
+           msgBody = """
+The publishing job started but did not complete successfully.
+See logs below:
+---------------
+%s
+""" % messages[-500:]
+           sendFailureMessage(subject, msgBody)
            sys.exit(1)
         else:
            done = 0
@@ -462,7 +476,7 @@ try:
                                                   addSubj)
         emailDL.sort()
         if not len(emailDL):
-            emailDL = ['***REMOVED***']
+            emailDL = cdr.getEmailList("Developers Notification")
             subject = '*** DL Missing *** %s' % subject
             l.write('*** Warning: No Email DL found')
 
@@ -497,6 +511,10 @@ Push Job Output:
 
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+    subject = '*** SubmitPubJob.py - Standard Failure' % (
+                                                  cdr.h.org, cdr.h.tier)
+    msgBody = "The publishing job failed:  %s" % arg
+    sendFailureMessage(subject, msgBody)
 except:
     l.write("*** Error - Program stopped with failure ***", stdout = True,
                                                             tback = 1)

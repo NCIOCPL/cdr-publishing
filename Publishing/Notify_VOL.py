@@ -472,10 +472,10 @@ html += u"""
 
 # Don't send emails to everyone if we're testing
 # ----------------------------------------------
-emailDL = cdr.getEmailList('VOL Notification')
-emailDL.sort()
+emailDL = sorted(cdr.getEmailList('VOL Notification'))
+emailDevs = sorted(cdr.getEmailList("Developers Notification"))
 if not len(emailDL) or testMode:
-    recips = ["***REMOVED***"]
+    recips = emailDevs
 else:
     recips = emailDL
 
@@ -491,7 +491,7 @@ if allChanges and recips:
     l.write("Email send successfully!", stdout = True)
 else:
     # Else statement included to monitor the program
-    recips = ["***REMOVED***"]
+    recips = emailDevs
     l.write("Email NOT submitted to DL", stdout = True)
     cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
 
