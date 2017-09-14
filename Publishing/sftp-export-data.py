@@ -1,3 +1,4 @@
+#!d:/Python/python.exe
 """Copy published data to the public SFTP directory.
 
 Replacement for FtpExportData.py, which created a tar file of the
@@ -34,6 +35,13 @@ class Control:
     LANGUAGES = { "English": "en", "Spanish": "es" }
     MEDIA_CATALOG = "media_catalog.txt"
     LOGGER = cdr.Logging.get_logger("sftp-export")
+    SSH = ("ssh -i d:/etc/cdroperator_rsa "
+           "-o LogLevel=error "
+           "-o StrictHostKeyChecking=no")
+    HOST = "%s.%s" % cdr.h.host["SFTP"]
+    USER = "cdroperator"
+    TIER = cdr.h.tier
+    PATH = "/sftp/sftphome/cdrstaging/pdq-%s" % TIER.lower()
 
     def __init__(self):
         """Collect the command-line arguments and populate instance attrs.
@@ -92,10 +100,10 @@ class Control:
             # Copy files and move tar files to shadow location
             self.copy_files()
 
-        # Moving tar files and documents
+        # Moving tar files and documents (if not suppressed)
         if not self.opts.create_only:
-            # Suppress updating files on FTP server
             self.push_files()
+            self.fix_permissions()
 
         elapsed = (datetime.datetime.now() - start).total_seconds()
         self.logger.info("")  # Blank line to format log output
@@ -287,14 +295,7 @@ class Control:
         directory to the sFTP server.
         """
 
-        ssh = ("ssh -i d:/etc/cdroperator_rsa "
-               "-o LogLevel=error "
-               "-o StrictHostKeyChecking=no")
-        host = "%s.%s" % cdr.h.host["SFTP"]
-        user = "cdroperator"
-        tier = cdr.h.tier
-        path = "/sftp/sftphome/cdrstaging/pdq-%s" % tier.lower()
-        args = ssh, user, host, path
+        args = self.SSH, self.USER, self.HOST, self.PATH
         command = 'rsync --delete -rae "%s" full* %s@%s:%s' % args
         self.logger.info("")  # Blank line to format log output
         self.logger.info("ssh host: %s", host)
@@ -315,6 +316,22 @@ class Control:
         else:
             self.logger.info("finished syncing files on FTP server")
 
+
+    def fix_permissions(self):
+        """
+        Make it possible for the data partners to retrieve the files.
+        """
+
+        args = self.SSH, self.USER, self.HOST, self.PATH
+        command = '%s %s@%s "chmod -R 755 %s/full*"' % args
+        self.logger.info("chmod command: %s", command)
+        result = cdr.runCommand(command)
+        if result.error:
+            self.logger.info("*** Error:")
+            self.logger.info(result.error)
+            self.logger.info("finished fixing permissions with errors!!!")
+        else:
+            self.logger.info("finished fixing permissions on FTP server")
 
     def list_docs(self, base, doctype):
         """Create a set of the file names for a specified document type.
