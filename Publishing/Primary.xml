@@ -510,7 +510,6 @@
    not denormalizing first to find changes.  This is because CTGovProtocols
    contain little denormalized data.  If there is any that changed, it will
    be picked up in weekly pubs.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -545,6 +544,7 @@
     </SubsetFilters>
     <Subdirectory>CTGovProtocol</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -671,7 +671,6 @@ LEFT OUTER JOIN query_term_pub u
 
    Some overkill here since new Orgs will never be inactive according to
    users.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -711,11 +710,11 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
    All PoliticalSubUnit for which no version is currently on Cancer.gov
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -745,6 +744,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -1035,7 +1035,6 @@ LEFT OUTER JOIN query_term_pub u
    <!--
    ========================================================================
    Country documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1070,11 +1069,11 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
    CTGovProtocol documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1111,6 +1110,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>CTGovProtocol</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -1271,7 +1271,6 @@ LEFT OUTER JOIN query_term_pub u
    <!--
    ========================================================================
    Organization documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1312,11 +1311,11 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
    PoliticalSubUnit documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1351,6 +1350,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -1578,7 +1578,6 @@ LEFT OUTER JOIN query_term_pub u
    <!--
    ========================================================================
    Country documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1613,6 +1612,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>Country</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -1628,7 +1628,6 @@ LEFT OUTER JOIN query_term_pub u
       Version 4 - publishable - InScopeProtocol
    We need to ignore the latest CTGovProtocol version (#3) and process this
    document as an InScopeProtocol.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1665,6 +1664,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>CTGovProtocol</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
@@ -1825,7 +1825,6 @@ LEFT OUTER JOIN query_term_pub u
    <!--
    ========================================================================
    Organization documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1864,12 +1863,12 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>Organization</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
 
    <!--
    ========================================================================
    PoliticalSubUnit documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
@@ -1904,6 +1903,7 @@ LEFT OUTER JOIN query_term_pub u
     </SubsetFilters>
     <Subdirectory>PoliticalSubUnit</Subdirectory>
    </SubsetSpecification>
+   ======================================================================== -->
 
    <!--
    ========================================================================
