@@ -298,8 +298,8 @@ class Control:
         args = self.SSH, self.USER, self.HOST, self.PATH
         command = 'rsync --delete -rae "%s" full* %s@%s:%s' % args
         self.logger.info("")  # Blank line to format log output
-        self.logger.info("ssh host: %s", host)
-        self.logger.debug("ssh user: %s", user)
+        self.logger.info("ssh host: %s", self.HOST)
+        self.logger.debug("ssh user: %s", self.USER)
         self.logger.info("rsync command: %s", command)
 
         os.chdir(self.PUB_SHADOW)
