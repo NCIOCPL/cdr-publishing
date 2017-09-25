@@ -385,9 +385,13 @@ class Control:
 
 if __name__ == "__main__":
     """Make it possible to load this file as a module (e.g., for pylint).
+
+    Don't log the parser's exit.
     """
 
     try:
         Control().run()
+    except SystemExit:
+        pass
     except:
         Control.LOGGER.exception("*** sftp-export-data.py failed!!!")
