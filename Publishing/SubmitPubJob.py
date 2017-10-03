@@ -42,7 +42,7 @@ else:
 testMode   = None
 fullMode   = None
 
-credentials = ('CdrGuest', 'never.0n-$undaY')
+session     = "guest"
 pubSystem   = 'Primary'
 
 pubEmail    = cdr.getEmailList('Operator Publishing Notification')
@@ -331,7 +331,7 @@ try:
     l.write("Submitting publishing job...", stdout=True)
     jobDescription = "Auto %s, %s" % (pubSubset,
                                     time.strftime('%Y-%m-%d %H:%M:%S'))
-    submit = cdr.publish(credentials, pubSystem, pubSubset,
+    submit = cdr.publish(session, pubSystem, pubSubset,
                          parms = [('GKPushJobDescription', jobDescription)],
                          email = pubEmail)
 
