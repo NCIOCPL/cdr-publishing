@@ -42,7 +42,7 @@ else:
 testMode   = None
 fullMode   = None
 
-credentials = ('CdrGuest', 'never.0n-$undaY')
+credentials = "guest"
 pubSystem   = 'Primary'
 
 pubEmail    = cdr.getEmailList('Operator Publishing Notification')
