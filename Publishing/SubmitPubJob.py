@@ -42,7 +42,7 @@ else:
 testMode   = None
 fullMode   = None
 
-credentials = "cdroperator", cdrpw("cdroperator")
+credentials = "cdroperator", cdr.getpw("cdroperator")
 pubSystem   = 'Primary'
 
 pubEmail    = cdr.getEmailList('Operator Publishing Notification')
