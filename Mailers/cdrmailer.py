@@ -765,7 +765,7 @@ You can retrieve the letters at:
     # Log into the CDR server.
     #------------------------------------------------------------------
     def __getCdrSession(self):
-        rsp          = cdr.login("cdrmailers", "cdrmailers")
+        rsp          = cdr.login("cdrmailers", cdr.getpw("cdrmailers"))
         match        = self.__ERR_PATTERN.search(rsp)
         if match:
             raise cdr.Exception("CDR login failure: %s" % match.group(1))
