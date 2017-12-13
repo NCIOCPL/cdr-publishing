@@ -54,7 +54,7 @@
 #----------------------------------------------------------------------
 import cdr, cdrdb, sys, bz2, cdrmailer, cdrmailcommon
 import requests
-etree = cdr.importEtree()
+from lxml import etree
 
 class LookupValues:
     def __init__(self):
