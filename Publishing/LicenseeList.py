@@ -211,13 +211,9 @@ LEFT OUTER JOIN query_term pdi
     else:
         strTo    = cdr.getEmailList('Licensee Report Notification')
 
-    if cdr.h.org == 'OCE':
-        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
-                    'PDQ Distribution Partner List')
-    else:
-        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
-                    'PDQ Distribution Partner List')
-    
+    args = cdr.Tier().name, 'PDQ Distribution Partner List'
+    subject = "CBIIT-%s: %s" % args
+
     mailHeader   = """\
 From: %s
 To: %s

@@ -599,7 +599,7 @@ def sendEmailReport(messageBody, title, language):
         else:
             strTo = cdr.getEmailList('GovDelivery EN Docs Notification')
 
-    subject   = "%s-%s: %s (%s)" %(cdr.h.org, cdr.h.tier, title, language)
+    subject = "CBIIT-%s: %s (%s)" % (cdr.Tier().name, title, language)
 
     mailHeader = """\
 From: %s

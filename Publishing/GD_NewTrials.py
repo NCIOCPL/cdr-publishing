@@ -17,6 +17,7 @@ DOC_FILE    = "GD_NewTrials"
 LOGNAME     = "GD_NewTrials.log"
 SMTP_RELAY  = "MAILFWD.NIH.GOV"
 STR_FROM    = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
+TIER        = cdr.Tier()
 
 now        = time.localtime()
 today      = time.strftime("%Y-%m-%d", now)
@@ -214,19 +215,19 @@ def formatTableOutput(records, heading):
         html += """\
   <tr>
    <td VALIGN='top'>
-    <a href='http://%s.%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
+    <a href='http://%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
    </td>
    <td VALIGN='top'>%s</td>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
+""" % (TIER.hosts["CG"],
        row[1], cdrcgi.unicodeToLatin1(row[0]), row[1])
 
         html += """\
    <td VALIGN='top'>
-    <a href='http://%s.%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
+    <a href='http://%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
    </td>
    <td VALIGN='top'>%s</td>
   </tr>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
+""" % (TIER.hosts["CG"],
        row[1], cdrcgi.unicodeToLatin1(row[2]), row[3][:10])
 
     html += u"""\
@@ -267,9 +268,9 @@ def formatBulletOutput(records, heading):
         # ------------------------------------------------
         html += """\
   <li>
-    <a href='http://%s.%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
+    <a href='http://%s/about-cancer/treatment/clinical-trials/search/view?cdrid=%s'>%s</a>
   </li>
-""" % (cdr.h.host['CG'][0], cdr.h.host['CG'][1],
+""" % (TIER.hosts["CG"],
        row[1], cdrcgi.unicodeToLatin1(row[2]))
 
     html += u"""\
@@ -372,7 +373,7 @@ def sendEmailReport(messageBody, title):
     else:
         strTo = cdr.getEmailList('GovDelivery Trials Notification')
 
-    subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier, title)
+    subject   = "CBIIT-%s: %s" % (TIER.name, title)
 
     mailHeader = """\
 From: %s

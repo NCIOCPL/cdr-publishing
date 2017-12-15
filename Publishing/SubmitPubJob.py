@@ -8,25 +8,15 @@ import sys, re, cdr, cdrdb, os, shutil, time, getopt
 
 # Setting the host variable to submit the link for the error report
 # -----------------------------------------------------------------
-if cdr.PUB_NAME.upper() == "MAHLER":
-    host   = cdr.DEV_HOST
-elif cdr.PUB_NAME.upper() == "FRANCK":
-    host   =  'franck.nci.nih.gov'
-else:
-    host   = cdr.PROD_HOST
-
-if cdr.h.org == 'OCE':
-    host = '%s.%s' % (cdr.h.host['APP'][0], cdr.h.host['APP'][1])
-    url  = 'http://%s' % host
-else:
-    host = '%s.%s' % (cdr.h.host['APPC'][0], cdr.h.host['APPC'][1])
-    url  = 'https://%s' % host
+host = cdr.APPC
+url  = 'https://%s' % host
 
 # Setting directory and file names
 # --------------------------------
 PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
+TIER = cdr.Tier().name
 OUTPUTBASE = cdr.BASEDIR + "\\Output"
 MAX_RETRIES = 10
 RETRY_MULTIPLIER = 5.0
@@ -221,7 +211,7 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = '%s-%s: %s' % (cdr.h.org, cdr.h.tier, header)
+    subject = 'CBIIT-%s: %s' % (TIER, header)
     if not body:
         body = """
 The publishing job failed.  Please check the log files.
@@ -468,12 +458,12 @@ See logs below:
         # these email messages to the users.  Overwriting the emailDL
         # group to a developers/testers list or recipients
         # -----------------------------------------------------------
-        if not cdr.h.tier == 'PROD':
+        if not TIER == 'PROD':
             emailDL = cdr.getEmailList('Test Publishing Notification')
 
-        subject = '%s-%s: Status and Error Report for %s Publishing' % (
-                                                  cdr.h.org, cdr.h.tier,
-                                                  addSubj)
+        args = TIER, addSubj
+        subject = 'CBIIT-%s: Status and Error Report for %s Publishing' % args
+
         emailDL.sort()
         if not len(emailDL):
             emailDL = cdr.getEmailList("Developers Notification")
@@ -511,8 +501,7 @@ Push Job Output:
 
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
-    subject = '*** SubmitPubJob.py - Standard Failure' % (
-                                                  cdr.h.org, cdr.h.tier)
+    subject = '*** [CBIIT-%s] SubmitPubJob.py - Standard Failure' % TIER
     msgBody = "The publishing job failed:  %s" % arg
     sendFailureMessage(subject, msgBody)
 except:

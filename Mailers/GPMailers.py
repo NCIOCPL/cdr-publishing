@@ -60,8 +60,7 @@ class LookupValues:
     def __init__(self):
         self.__doc = None
         self.values = {}
-        host = ".".join(cdr.h.host["APPC"])
-        url = "https://%s/cgi-bin/cdr/GetGPLookupValues.py" % host
+        url = "https://%s/cgi-bin/cdr/GetGPLookupValues.py" % cdr.APPC
         try:
             response = requests.get(url)
         except:

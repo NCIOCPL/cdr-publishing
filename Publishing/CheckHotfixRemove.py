@@ -96,12 +96,8 @@ def parseArguments(args):
 def sendErrorMessage(msg):
     # We want to send an email so that the query doesn't silently fail
     # ----------------------------------------------------------------
-    if cdr.h.org == 'OCE':
-        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
-                    '*** Error: Program CheckHotfixRemove failed!')
-    else:
-        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
-                    '*** Error: Program CheckHotfixRemove failed!')
+    args = cdr.Tier().name, "*** Error: Program CheckHotfixRemove failed!"
+    subject = "CBIIT-%s: %s" % args
 
     recips = cdr.getEmailList("Developers Notification")
     mailHeader   = """\
@@ -369,12 +365,8 @@ try:
         strTo    = cdr.getEmailList('Hotfix Remove Notification')
         #strTo.append(u'register@clinicaltrials.gov')
 
-    if cdr.h.org == 'OCE':
-        subject   = "%s: %s" % (cdr.PUB_NAME.capitalize(),
-                    'Document Candidates to be removed from Cancer.gov')
-    else:
-        subject   = "%s-%s: %s" %(cdr.h.org, cdr.h.tier,
-                    'Document Candidates to be removed from Cancer.gov')
+    args = cdr.Tier().name, "Document Candidates to be removed from Cancer.gov"
+    subject = "CBIIT-%s: %s" % args
 
     mailHeader   = """\
 From: %s

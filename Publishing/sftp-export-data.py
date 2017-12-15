@@ -38,10 +38,10 @@ class Control:
     SSH = ("ssh -i d:/etc/cdroperator_rsa "
            "-o LogLevel=error "
            "-o StrictHostKeyChecking=no")
-    HOST = "%s.%s" % cdr.h.host["SFTP"]
+    TIER = cdr.Tier()
+    HOST = TIER.hosts["SFTP"]
     USER = "cdroperator"
-    TIER = cdr.h.tier
-    PATH = "/sftp/sftphome/cdrstaging/pdq-%s" % TIER.lower()
+    PATH = "/sftp/sftphome/cdrstaging/pdq-%s" % TIER.name.lower()
 
     def __init__(self):
         """Collect the command-line arguments and populate instance attrs.
