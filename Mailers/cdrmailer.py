@@ -170,6 +170,8 @@ class MailerJob:
         self.__printer          = MailerJob.__DEF_PRINTER
         self.__batchPrinting    = batchPrinting
         self.__letterLink       = ""
+        self.__cursor           = None
+        self.__email            = None
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -739,8 +741,8 @@ You can retrieve the letters at:
     #------------------------------------------------------------------
     def __loadSettings(self):
         self.__getDates()
-        self.__getCdrSession()
         self.__getDbConnection()
+        self.__getCdrSession()
         self.__loadDbInfo()
 
     #------------------------------------------------------------------
@@ -757,7 +759,7 @@ You can retrieve the letters at:
     # Log into the CDR server.
     #------------------------------------------------------------------
     def __getCdrSession(self):
-        rsp          = cdr.login("cdrmailers", "cdrmailers")
+        rsp          = str(cdr.login("cdrmailers", cdr.getpw("cdrmailers")))
         match        = self.__ERR_PATTERN.search(rsp)
         if match:
             raise cdr.Exception("CDR login failure: %s" % match.group(1))
