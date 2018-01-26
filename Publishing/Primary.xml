@@ -26,7 +26,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -51,6 +51,10 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -172,11 +176,6 @@
       <UserSelectDoctype>Media</UserSelectDoctype>
      </UserSelect>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
 
    <!--
@@ -316,21 +315,14 @@
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -382,21 +374,14 @@
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -435,7 +420,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -644,15 +629,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -938,18 +914,7 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -1013,6 +978,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -1228,11 +1197,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -1444,21 +1408,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -1492,7 +1449,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -1750,11 +1707,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -1985,18 +1937,7 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -2028,6 +1969,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2081,21 +2026,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -2129,7 +2067,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -2153,6 +2091,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2274,11 +2216,6 @@ LEFT OUTER JOIN query_term_pub u
       <UserSelectDoctype>Media</UserSelectDoctype>
      </UserSelect>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
 
    <!--
@@ -2434,6 +2371,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2523,21 +2464,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -2600,6 +2534,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2692,21 +2630,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -2766,6 +2697,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2857,21 +2792,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -2931,6 +2859,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -3022,21 +2954,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3096,6 +3021,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -3185,21 +3114,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3261,6 +3183,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -3296,11 +3222,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
   </SubsetSpecifications>
 
@@ -3354,21 +3275,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3429,6 +3343,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -3526,21 +3444,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3601,6 +3512,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -3692,21 +3607,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3765,6 +3673,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -3866,21 +3778,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -3941,6 +3846,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -4031,21 +3940,14 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
@@ -4139,7 +4041,9 @@ are common and never cause a push job to abort.
   <ParmInfo>
    <ParmInfoName>InteractiveMode</ParmInfoName>
    <ParmInfoHelp>
-This option appears to be ignored by the publishing system.
+If 'Yes' let the operator review a queued push job before
+releasing it; otherwise the job proceeds without waiting
+for approval.
    </ParmInfoHelp>
    <ParmInfoValidValues>
     <ParmInfoValidValue>Yes</ParmInfoValidValue>
