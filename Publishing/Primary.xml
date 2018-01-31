@@ -66,6 +66,7 @@
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Country</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Country</UserSelectDoctype>
@@ -84,30 +85,10 @@
 
    <!--
    ========================================================================
-   CTGovProtocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>CTGovProtocol</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
@@ -129,6 +110,7 @@
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Person</UserSelectDoctype>
@@ -150,6 +132,7 @@
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
@@ -171,6 +154,7 @@
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Media</UserSelectDoctype>
@@ -183,6 +167,7 @@
    Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Organization</UserSelectDoctype>
@@ -204,6 +189,7 @@
    PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>PoliticalSubUnit</UserSelectDoctype>
@@ -225,6 +211,7 @@
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Summary</UserSelectDoctype>
@@ -246,6 +233,7 @@
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Term</UserSelectDoctype>
@@ -319,6 +307,10 @@
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -377,6 +369,10 @@
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -459,81 +455,10 @@
 
    <!--
    ========================================================================
-   All Country for which no version is currently on Cancer.gov
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
-        JOIN active_doc d
-          ON v.id = d.id
-        JOIN doc_type t
-          ON t.id = v.doc_type
-       WHERE t.name = 'Country'
-         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
-         AND v.id NOT IN (SELECT id FROM pub_proc_cg)
-       GROUP BY v.id
-       ORDER BY v.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor Country Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-    <Subdirectory>Country</Subdirectory>
-   </SubsetSpecification>
-   ======================================================================== -->
-
-   <!--
-   ========================================================================
-   All modified or new CTGovProtocols.  We are looking for new versions only,
-   not denormalizing first to find changes.  This is because CTGovProtocols
-   contain little denormalized data.  If there is any that changed, it will
-   be picked up in weekly pubs.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
-        JOIN active_doc a
-          ON a.id = v.id
-        JOIN query_term_pub s
-          ON s.doc_id = v.id
-       WHERE s.path = '/CTGovProtocol/OverallStatus'
-         AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Not yet active', 'Temporarily closed')
-         AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
-    GROUP BY v.id
-      HAVING v.id NOT IN (SELECT DISTINCT doc_id FROM published_doc)
-          OR MAX(v.num) &gt; (SELECT MAX(doc_version)
-                             FROM published_doc
-                            WHERE doc_id = v.id)
-    ORDER BY v.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-    <Subdirectory>CTGovProtocol</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
    All DrugInformation Summary for which no version is currently on Cancer.gov
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -566,6 +491,7 @@
    All GlossaryTerm for which no version is currently on Cancer.gov
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -601,6 +527,7 @@
    which are referenced by another doc, and are not marked for Internal use
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -641,6 +568,7 @@ LEFT OUTER JOIN query_term_pub u
    users.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -683,6 +611,7 @@ LEFT OUTER JOIN query_term_pub u
    All PoliticalSubUnit for which no version is currently on Cancer.gov
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -721,6 +650,7 @@ LEFT OUTER JOIN query_term_pub u
    in the pub_proc_cg table) but excludes summaries marked as ModuleOnly.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -814,6 +744,7 @@ LEFT OUTER JOIN query_term_pub u
    Export subset.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -864,10 +795,6 @@ LEFT OUTER JOIN query_term_pub u
     <Doctype>Summary</Doctype>
     <MaxErrors>0</MaxErrors>
    </PerDoctypeErrorThreshold>
-   <PerDoctypeErrorThreshold>
-    <Doctype>CTGovProtocol</Doctype>
-    <MaxErrors>0</MaxErrors>
-   </PerDoctypeErrorThreshold>
   </PerDoctypeErrorThresholds>
 
  </SystemSubset>
@@ -911,6 +838,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -933,7 +864,7 @@ LEFT OUTER JOIN query_term_pub u
   <SubsetName>Full-Load</SubsetName>
   <SubsetDescription>
     Filter, validate and push all publishable documents to produce
-    licensee documents and push all documents to Cancer.gov. (Country, CTGovProtocol,
+    licensee documents and push all documents to Cancer.gov. (Country,
     DrugInfoSummary, GenProf, Glossary, Media, Org, PoliticalSubUnit,
     Summary, Terminology)
 
@@ -992,6 +923,7 @@ LEFT OUTER JOIN query_term_pub u
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Country</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1024,46 +956,10 @@ LEFT OUTER JOIN query_term_pub u
 
    <!--
    ========================================================================
-   CTGovProtocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
-        JOIN query_term_pub s
-          ON s.doc_id = v.id
-        JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
-                JOIN active_doc a
-                  ON a.id = v.id
-               WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
-               GROUP BY v.id) AS p
-          ON v.id = p.id
-         AND v.num = p.num
-       WHERE s.path = '/CTGovProtocol/OverallStatus'
-         AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Not yet active', 'Temporarily closed')
-    ORDER BY v.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-    <Subdirectory>CTGovProtocol</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1099,6 +995,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
@@ -1137,6 +1034,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1170,6 +1068,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1205,6 +1104,7 @@ LEFT OUTER JOIN query_term_pub u
    Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT  TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1246,6 +1146,7 @@ LEFT OUTER JOIN query_term_pub u
    PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1281,6 +1182,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1326,6 +1228,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1412,6 +1315,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -1491,6 +1398,7 @@ LEFT OUTER JOIN query_term_pub u
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Country</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1523,57 +1431,10 @@ LEFT OUTER JOIN query_term_pub u
 
    <!--
    ========================================================================
-   CTGovProtocol documents.
-   Due to the Protocol Transfer a publishable version for a document may
-   exist for both, the CTGov and the InScopeProtocol type.  We need to
-   ensure only to pick up the latest publishable version for a CTGovProtocol
-   type if no other version of a different doctype exists for the particular
-   document.  For instance if these versions exist:
-      Version 1 - publishable - InScopeProtocol
-      Version 2 - publishable - CTGovProtocol
-      Version 3 - publishable - CTGovProtocol
-      Version 4 - publishable - InScopeProtocol
-   We need to ignore the latest CTGovProtocol version (#3) and process this
-   document as an InScopeProtocol.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
-        JOIN query_term_pub s
-          ON s.doc_id = v.id
-        JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
-                JOIN active_doc a
-                  ON a.id = v.id
-               WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
-               GROUP BY v.id) AS p
-          ON v.id = p.id
-         AND v.num = p.num
-       WHERE s.path = '/CTGovProtocol/OverallStatus'
-         AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Not yet active', 'Temporarily closed')
-    ORDER BY v.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-    <Subdirectory>CTGovProtocol</Subdirectory>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1609,6 +1470,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
@@ -1647,6 +1509,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1680,6 +1543,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1715,6 +1579,7 @@ LEFT OUTER JOIN query_term_pub u
    Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT  TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1757,6 +1622,7 @@ LEFT OUTER JOIN query_term_pub u
    PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1792,6 +1658,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1837,6 +1704,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1888,10 +1756,6 @@ LEFT OUTER JOIN query_term_pub u
     <Doctype>Summary</Doctype>
     <MaxErrors>0</MaxErrors>
    </PerDoctypeErrorThreshold>
-   <PerDoctypeErrorThreshold>
-    <Doctype>CTGovProtocol</Doctype>
-    <MaxErrors>0</MaxErrors>
-   </PerDoctypeErrorThreshold>
   </PerDoctypeErrorThresholds>
 
  </SystemSubset>
@@ -1933,6 +1797,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
     <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -2030,6 +1898,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -2106,6 +1978,7 @@ LEFT OUTER JOIN query_term_pub u
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Country</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Country</UserSelectDoctype>
@@ -2124,30 +1997,10 @@ LEFT OUTER JOIN query_term_pub u
 
    <!--
    ========================================================================
-   CTGovProtocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <UserSelect>
-      <UserSelectDoctype>CTGovProtocol</UserSelectDoctype>
-     </UserSelect>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-
-   <!--
-   ========================================================================
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
@@ -2169,6 +2022,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessionals documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Person</UserSelectDoctype>
@@ -2190,6 +2044,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
@@ -2211,6 +2066,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Media</UserSelectDoctype>
@@ -2223,6 +2079,7 @@ LEFT OUTER JOIN query_term_pub u
    Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Organization</UserSelectDoctype>
@@ -2244,6 +2101,7 @@ LEFT OUTER JOIN query_term_pub u
    PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>PoliticalSubUnit</UserSelectDoctype>
@@ -2265,6 +2123,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Summary</UserSelectDoctype>
@@ -2286,6 +2145,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Term</UserSelectDoctype>
@@ -2357,7 +2217,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>200</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2383,6 +2243,7 @@ LEFT OUTER JOIN query_term_pub u
    Country documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Country</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -2468,171 +2329,9 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
-  </SubsetParameters>
-  <SubsetSpecifications>
-   <SubsetSpecification>
-    <SubsetSelection/>
-   </SubsetSpecification>
-  </SubsetSpecifications>
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Yes</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
-  <SubsetName>Export-CTGovProtocol</SubsetName>
-  <SubsetDescription>
-    Create CTGovProtocol documents for PDQ partners and push changes to Cancer.gov.
-  </SubsetDescription>
-  <SubsetParameters>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Export</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ReportOnly</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>ValidateDocs</ParmName>
-    <ParmValue>Yes</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>DTDFileName</ParmName>
-    <ParmValue>pdqCG.dtd</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>RerunFailedPush</ParmName>
     <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>AbortOnError</ParmName>
-    <ParmValue>50</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>NumDocs</ParmName>
-    <ParmValue>10000</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>MaxDocUpdatedDate</ParmName>
-    <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-  </SubsetParameters>
-  <SubsetSpecifications>
-
-   <!--
-   ========================================================================
-   CTGovProtocol documents.
-   ======================================================================== -->
-   <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-      SELECT TOP ?NumDocs? v.id, v.num
-        FROM publishable_version v
-        JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
-                JOIN active_doc a
-                  ON a.id = v.id
-               WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
-               GROUP BY v.id) AS p
-          ON v.id = p.id
-         AND v.num = p.num
-        JOIN query_term_pub s
-          ON s.doc_id = v.id
-       WHERE s.path = '/CTGovProtocol/OverallStatus'
-         AND s.value IN ('Active', 'Enrolling by invitation',
-                         'Not yet active', 'Temporarily closed')
-    ORDER BY v.id
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>set:Vendor CTGovProtocol Set</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
-   </SubsetSpecification>
-  </SubsetSpecifications>
-
-  <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>AbortOnError</OptionName>
-    <OptionValue>50</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
-    <OptionName>PublishIfWarnings</OptionName>
-    <OptionValue>Yes</OptionValue>
-   </SubsetOption>
-  </SubsetOptions>
- </SystemSubset>
-
- <SystemSubset>
-  <SubsetName>Push_Documents_To_Cancer.Gov_Export-CTGovProtocol</SubsetName>
-  <SubsetDescription>
-    Push documents prepared by the latest Export-CTGovProtocol job to Cancer.gov.
-  </SubsetDescription>
-  <SubsetParameters>
-   <SubsetParameter>
-    <ParmName>SubSetName</ParmName>
-    <ParmValue>Export-CTGovProtocol</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>PubType</ParmName>
-    <ParmValue>Export</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>PushAllDocs</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>RerunFailedPush</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -2685,7 +2384,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>2000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2711,6 +2410,7 @@ LEFT OUTER JOIN query_term_pub u
    DrugInfoSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -2796,6 +2496,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -2847,7 +2551,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2873,6 +2577,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? d.id, MAX(v.num)
@@ -2958,6 +2663,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3009,7 +2718,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>10000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3035,6 +2744,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -3118,6 +2828,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3169,7 +2883,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3195,6 +2909,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -3279,6 +2994,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3331,7 +3050,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>25000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3357,6 +3076,7 @@ LEFT OUTER JOIN query_term_pub u
    Organization documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Organization</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT  TOP ?NumDocs? v.id, MAX(v.num)
@@ -3448,6 +3168,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3500,7 +3224,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>1000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3526,6 +3250,7 @@ LEFT OUTER JOIN query_term_pub u
    PoliticalSubUnit documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>PoliticalSubUnit</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -3611,6 +3336,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3661,7 +3390,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>2000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3687,6 +3416,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -3782,6 +3512,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -3834,7 +3568,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3860,6 +3594,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -3943,6 +3678,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -4072,7 +3811,8 @@ pub_proc table. Examples:
    <ParmInfoHelp>
 Maximum number of documents to be processed for the
 entire job. Used for publishing job types dedicated
-to publishing documents of a single type.
+to publishing documents of a single type. Leave blank
+to publish the entire set.
    </ParmInfoHelp>
    <ParmInfoMethod>integer</ParmInfoMethod>
   </ParmInfo>
