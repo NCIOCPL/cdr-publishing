@@ -424,7 +424,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>100000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -885,7 +885,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>500000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -1356,7 +1356,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>100000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -3761,7 +3761,7 @@ to publish the entire set.
    <ParmInfoHelp>
 Maximum number of documents to be processed for each
 document type in a job which can publish documents of
-more than one document type.
+more than one document type. Leave blank for no limit.
    </ParmInfoHelp>
    <ParmInfoMethod>integer</ParmInfoMethod>
   </ParmInfo>
