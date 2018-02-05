@@ -319,10 +319,6 @@
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -381,10 +377,6 @@
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -849,10 +841,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1326,10 +1314,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1810,10 +1794,6 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -1909,10 +1889,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2341,10 +2317,6 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -2507,10 +2479,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2675,10 +2643,6 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -2839,10 +2803,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -3005,10 +2965,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -3180,10 +3136,6 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -3347,10 +3299,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -3524,10 +3472,6 @@ LEFT OUTER JOIN query_term_pub u
   </SubsetSpecifications>
   <SubsetOptions>
    <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
-   <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
    </SubsetOption>
@@ -3690,10 +3634,6 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
