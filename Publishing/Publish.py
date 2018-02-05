@@ -10,7 +10,7 @@ divider = "=" * 60
 open(log, "a").write("Job %d: %s\nJob %d: Started at: %s\n" % \
     (jobId, divider, jobId, time.ctime(time.time())))
 try:
-    cdrpub.Publish(jobId).publish()
+    cdrpub.Control(jobId).publish()
     open(log, "a").write("Job %d: Ended at: %s\nJob %d: %s\n" % \
         (jobId, time.ctime(time.time()), jobId, divider))
 except cdrdb.Error, info:
