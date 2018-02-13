@@ -138,7 +138,7 @@ class documentType:
             # Excluding Media files since these aren't XML files
             # --------------------------------------------------
             if not directory == 'Media':
-                resp = cdrpub.validateDoc(newDoc, dtd = DTDPUBLIC)
+                resp = cdrpub.Control.validate_doc(newDoc, DTDPUBLIC)
                 if resp:
                     valError += (doc,)
                     l.write('*** Validation Error for %s:\n%s' % (doc, resp),
