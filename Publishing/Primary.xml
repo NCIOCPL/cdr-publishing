@@ -388,7 +388,7 @@
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON v.id = d.id
         JOIN doc_type t
@@ -396,6 +396,8 @@
        WHERE t.name = 'DrugInformationSummary'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND v.id NOT IN (SELECT id FROM pub_proc_cg)
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
        GROUP BY v.id
        ORDER BY v.id
      </SubsetSQL>
@@ -421,7 +423,7 @@
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON v.id = d.id
         JOIN query_term_pub q
@@ -431,6 +433,8 @@
           OR  q.value = 'Revision pending')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
          AND v.id NOT IN (SELECT id FROM pub_proc_cg)
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
        GROUP BY v.id
        ORDER BY v.id
      </SubsetSQL>
@@ -457,7 +461,7 @@
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-           FROM publishable_version v
+           FROM doc_version v
            JOIN active_doc d
              ON v.id = d.id
            JOIN doc_type t
@@ -478,6 +482,8 @@ LEFT OUTER JOIN query_term_pub u
             AND (u.value = 'External'
                  OR
                  u.value IS NULL)  -- excluding @Usage='Internal'
+            AND v.publishable = 'Y'
+            AND v.val_status = 'V'
           GROUP BY v.id
           ORDER BY v.id
      </SubsetSQL>
@@ -594,7 +600,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -604,6 +610,8 @@ LEFT OUTER JOIN query_term_pub u
                          'Reviewed-Retain',
                          'Unreviewed')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -768,18 +776,22 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
        WHERE t.name = 'DrugInformationSummary'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -804,7 +816,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN doc_type t
@@ -818,6 +830,8 @@ LEFT OUTER JOIN query_term_pub u
        WHERE t.name = 'Person'
          AND g.value = 'Include'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY d.id
     ORDER BY d.id
      </SubsetSQL>
@@ -843,7 +857,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -852,6 +866,8 @@ LEFT OUTER JOIN query_term_pub u
          AND (q.value = 'Approved'
           OR  q.value = 'Revision pending')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -877,7 +893,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-           FROM publishable_version v
+           FROM doc_version v
            JOIN active_doc d
              ON d.id = v.id
            JOIN doc_type t
@@ -897,6 +913,8 @@ LEFT OUTER JOIN query_term_pub u
             AND (u.value = 'External'
                  OR
                  u.value IS NULL)  -- excluding @Usage='Internal'
+            AND v.publishable = 'Y'
+            AND v.val_status = 'V'
           GROUP BY v.id
           ORDER BY v.id
      </SubsetSQL>
@@ -913,14 +931,16 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
@@ -935,6 +955,8 @@ LEFT OUTER JOIN query_term_pub u
                            WHERE path = '/Summary/@ModuleOnly'
                              AND value = 'Yes'
                          )
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -959,7 +981,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -969,6 +991,8 @@ LEFT OUTER JOIN query_term_pub u
                          'Reviewed-Retain',
                          'Unreviewed')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -1125,18 +1149,22 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
        WHERE t.name = 'DrugInformationSummary'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -1161,7 +1189,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN doc_type t
@@ -1175,6 +1203,8 @@ LEFT OUTER JOIN query_term_pub u
        WHERE t.name = 'Person'
          AND g.value = 'Include'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY d.id
     ORDER BY d.id
      </SubsetSQL>
@@ -1200,7 +1230,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -1209,6 +1239,8 @@ LEFT OUTER JOIN query_term_pub u
          AND (q.value = 'Approved'
           OR  q.value = 'Revision pending')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -1234,7 +1266,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-           FROM publishable_version v
+           FROM doc_version v
            JOIN active_doc d
              ON d.id = v.id
            JOIN doc_type t
@@ -1254,6 +1286,8 @@ LEFT OUTER JOIN query_term_pub u
             AND (u.value = 'External'
                  OR
                  u.value IS NULL)  -- excluding @Usage='Internal'
+            AND v.publishable = 'Y'
+            AND v.val_status = 'V'
           GROUP BY v.id
           ORDER BY v.id
      </SubsetSQL>
@@ -1270,14 +1304,16 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
@@ -1292,6 +1328,8 @@ LEFT OUTER JOIN query_term_pub u
                            WHERE path = '/Summary/@ModuleOnly'
                              AND value = 'Yes'
                          )
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -1316,7 +1354,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -1326,6 +1364,8 @@ LEFT OUTER JOIN query_term_pub u
                          'Reviewed-Retain',
                          'Unreviewed')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -1782,18 +1822,22 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
        WHERE t.name = 'DrugInformationSummary'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -1945,7 +1989,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? d.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN doc_type t
@@ -1959,6 +2003,8 @@ LEFT OUTER JOIN query_term_pub u
        WHERE t.name = 'Person'
          AND g.value = 'Include'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY d.id
     ORDER BY d.id
      </SubsetSQL>
@@ -2108,7 +2154,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -2117,6 +2163,8 @@ LEFT OUTER JOIN query_term_pub u
          AND (q.value = 'Approved'
           OR  q.value = 'Revision pending')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
@@ -2269,7 +2317,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocs? v.id, MAX(v.num)
-           FROM publishable_version v
+           FROM doc_version v
            JOIN active_doc d
              ON d.id = v.id
            JOIN doc_type t
@@ -2289,6 +2337,8 @@ LEFT OUTER JOIN query_term_pub u
             AND (u.value = 'External'
                  OR
                  u.value IS NULL)  -- excluding @Usage='Internal'
+            AND v.publishable = 'Y'
+            AND v.val_status = 'V'
           GROUP BY v.id
           ORDER BY v.id
      </SubsetSQL>
@@ -2430,14 +2480,16 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
-        FROM publishable_version v
+        FROM doc_version v
         JOIN doc_type t
           ON t.id = v.doc_type
         JOIN (SELECT v.id, MAX(v.num) AS num
-                FROM publishable_version v
+                FROM doc_version v
                 JOIN active_doc a
                   ON a.id = v.id
                WHERE v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+                 AND v.publishable = 'Y'
+                 AND v.val_status = 'V'
                GROUP BY v.id) AS p
           ON v.id = p.id
          AND v.num = p.num
@@ -2452,6 +2504,8 @@ LEFT OUTER JOIN query_term_pub u
                            WHERE path = '/Summary/@ModuleOnly'
                              AND value = 'Yes'
                          )
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
@@ -2604,7 +2658,7 @@ LEFT OUTER JOIN query_term_pub u
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
-        FROM publishable_version v
+        FROM doc_version v
         JOIN active_doc d
           ON d.id = v.id
         JOIN query_term_pub q
@@ -2614,6 +2668,8 @@ LEFT OUTER JOIN query_term_pub u
                          'Reviewed-Retain',
                          'Unreviewed')
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
+         AND v.publishable = 'Y'
+         AND v.val_status = 'V'
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>

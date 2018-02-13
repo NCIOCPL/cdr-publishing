@@ -32,7 +32,7 @@ else:
 testMode   = None
 fullMode   = None
 
-session     = "guest"
+session     = cdr.login("cdroperator", cdr.getpw("cdroperator"))
 pubSystem   = 'Primary'
 
 pubEmail    = cdr.getEmailList('Operator Publishing Notification')
