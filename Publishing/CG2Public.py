@@ -65,12 +65,13 @@ class Control:
 
     def copy(self, directory):
         """
-        Copy, filter, and validate contents of a single directory
-
-        Filtering and/or validation are not done for some directories.
+        Filter/copy/validate contents of a single directory as appropriate
 
         Pass:
-          directory - string for name of source directory
+          directory - string for name of source subdirectory
+
+        Return:
+          sequence of names of files which failed validation
         """
 
         os.chdir("%s/%s" % (self.inputDir, directory))
@@ -79,46 +80,30 @@ class Control:
         # --------------------------------------------
         allDocs = glob.glob("*.[xjgm][mpip][lgf3]")
 
-        # Create the output directory or - in test mode - delete
-        # and recreate the directory
-        # ------------------------------------------------------
+        # Create the output directory
+        # ---------------------------
         if allDocs:
+            path = "{}/{}".format(self.outputDir, directory)
+            logger.info("Processing %s/%s...", self.inputDir, directory)
+            logger.info("   Copy to %s...", path)
             try:
-                os.mkdir("%s/%s" % (self.outputDir, directory))
+                os.mkdir(path)
             except:
-                if testMode:
-                    source_dir = os.getcwd()
-
-                    # If an output directory has been specified that
-                    # doesn't exist stop the operation.
-                    # --------------------------------------------------
-                    try:
-                        os.chdir(self.outputDir)
-                    except:
-                        message = "Directory %s doesn't exist"
-                        logger.error(message, self.outputDir)
-                        sys.exit(1)
-
-                    shutil.rmtree(directory)
-                    os.mkdir(directory)
-                    os.chdir(source_dir)
-                else:
-                    message = "Directory {} already exists".format(directory)
-                    raise Exception(message)
-
-        logger.info("Processing %s/%s...", self.inputDir, directory)
-        logger.info("   Copy to %s/%s...", self.outputDir, directory)
+                raise Exception("Failure creating {}".format(path))
+        else:
+            args = self.outputDir, directory
+            logger.warning("Nothing to copy from %s/%s", *args)
 
         # Processing all documents by reading, filtering, validating,
         # and writing the files, as appropriate.
-        # -------------------------------------------------------
-        validation_errors = []
+        # -----------------------------------------------------------
+        failed_validation = []
         for filename in allDocs:
             with open(filename, "rb") as fp:
                 xml = fp.read()
 
-            # Filter the CG document
-            # ----------------------
+            # Filter the CG document if appropriate
+            # -------------------------------------
             if directory in self.FILTERABLE:
                 doc = Doc(self.session, xml=xml)
                 result = doc.filter(self.FILTER)
@@ -135,17 +120,17 @@ class Control:
             if directory != "Media":
                 resp = cdrpub.Control.validate_doc(newDoc, self.DTDPUBLIC)
                 if resp:
-                    validation_errors.append(filename)
+                    failed_validation.append(filename)
                     args = filename, resp
                     logger.warning("Validation error(s) for %s: %s", *args)
 
             # Write the newly filtered (or unmodified) licensee file
             # ------------------------------------------------------
-            path = "%s/%s/%s" % (self.outputDir, directory, filename)
-            with open(path, "wb") as fp:
+            filepath = "{}/{}".format(path, filename)
+            with open(filepath, "wb") as fp:
                 fp.write(newDoc)
 
-        return validation_errors
+        return failed_validation
 
 
 def getDocumentTypes(directory):
@@ -156,9 +141,9 @@ def getDocumentTypes(directory):
     os.chdir(directory)
     allDirs = glob.glob("[A-Z]*")
     docTypes = []
-    for dir in allDirs:
-        if os.path.isdir(dir):
-            docTypes.append(dir)
+    for name in allDirs:
+        if os.path.isdir(name):
+            docTypes.append(name)
     if not docTypes:
         logger.error("No directories in latest publishing job")
         sys.exit(1)
@@ -228,18 +213,26 @@ elif testMode:
 else:
     control.outputDir = "%s/%s" % (Control.OUTPUTBASE, jobDir)
 
-# Creating the output directory
-# ------------------------------
+# Creating the output directory, moving previous attempt if necessary
+# -------------------------------------------------------------------
+if os.path.exists(control.outputDir):
+    stat = os.stat(control.outputDir)
+    localtime = time.localtime(stat.st_mtime)
+    stamp = time.strftime("%Y%m%d%H%M%S", localtime)
+    new = "{}-{}".format(control.outputDir, stamp)
+    logger.warning("Moving existing %s to %s", control.outputDir, new)
+    try:
+        os.rename(control.outputDir, new)
+    except:
+        logger.exception("Failure moving old output directory")
+        sys.exit(1)
 try:
-    logger.info("Copying from directory: %s", jobDir)
+    logger.info("Copying from directory: %s", control.inputDir)
     logger.info("Creating directory: %s", control.outputDir)
     os.mkdir(control.outputDir)
 except:
-    if testMode:
-        logger.warning("Directory already exists...OK in TEST mode")
-    else:
-        logger.exception("Error creating directory...bailing")
-        sys.exit(1)
+    logger.exception("Error creating directory...bailing")
+    sys.exit(1)
 
 # Process one directory at a time
 # -------------------------------
