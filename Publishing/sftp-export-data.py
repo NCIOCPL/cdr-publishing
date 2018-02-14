@@ -4,16 +4,16 @@
 Replacement for FtpExportData.py, which created a tar file of the
 latest publishing output directory and copied it to an FTP server.
 This version installs the PDQ files directly on the storage exposed
-by the sFTP server.
+by the sFTP server using rsync.
 """
-
-import sys
 
 import argparse
 import datetime
 import glob
 import os
+import re
 import shutil
+import sys
 import tarfile
 import lxml.etree as etree
 import cdr
@@ -118,27 +118,22 @@ class Control:
         """Identify the directory with the latest licensee data
 
            Since the output of the weekly export job includes a full
-           snapshot of the data it only makes sense to update the FTP
+           snapshot of the data it only makes sense to update the SFTP
            server with the content of the "last" directory.
-           The job-id needs to be sorted numerically to ensure Job999
-           is followed by Job1000.
 
            Returns the integer value of the last job-ID in the directory.
         """
 
         os.chdir(self.LICENSEE_DOCS)
-        jobDirs = glob.glob('Job*')
-        if not jobDirs:
+        job_id = 0
+        for name in glob.glob("Job*"):
+            match = re.match(r"^Job(\d+)$", name)
+            if match:
+                job_id = max(job_id, int(match.group(1)))
+        if not job_id:
             self.logger.info("*** Error: No PDQ partner data found")
             sys.exit(1)
-
-        jobIds = []
-        for jobDir in jobDirs:
-            jobIds.append(int(jobDir[3:]))
-
-        jobIds.sort()
-        return jobIds[-1]
-
+        return job_id
 
     def create_catalogs(self):
         """Compare what we published last week with what we're publishing now.
