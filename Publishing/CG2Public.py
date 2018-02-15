@@ -37,7 +37,7 @@ class Control:
     DTDPUBLIC = "%s\\%s" % (DTDDIR, PDQDTD)
     EXCLUDEDIRS = ("InvalidDocs", "media_catalog.txt")
     AUXFILES = ("media_catalog.txt",)
-    FILTER = "name:Vendor Filter: Convert CG to Public Data"
+    FILTER_TITLE = "Vendor Filter: Convert CG to Public Data"
     FILTERABLE = {"GlossaryTerm", "Summary", "Terminology"}
 
     def __init__(self):
@@ -46,6 +46,8 @@ class Control:
         self.outputDir   = None
         self.inputDir    = None
         self.session     = Session("guest")
+        self.transform   = Doc.load_single_filter(self.session,
+                                                  self.FILTER_TITLE)
 
     def last_job_directory(self):
         """
@@ -105,12 +107,10 @@ class Control:
             # Filter the CG document if appropriate
             # -------------------------------------
             if directory in self.FILTERABLE:
-                doc = Doc(self.session, xml=xml)
-                result = doc.filter(self.FILTER)
-                newDoc = unicode(result.result_tree).encode("utf-8")
-                if result.messages:
-                    for message in result.messages:
-                        logger.warning(message)
+                doc_id = Doc.extract_id(filename)
+                doc = Doc(self.session, id=doc_id, xml=xml)
+                newDoc = unicode(doc.apply_single_filter(self.transform))
+                newDoc = newDoc.encode("utf-8")
             else:
                 newDoc = xml
 
