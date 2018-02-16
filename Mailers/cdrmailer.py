@@ -141,6 +141,7 @@ class MailerJob:
     # Class-level values.
     #------------------------------------------------------------------
     ### __CDR_EMAIL     = "cdr@%s.nci.nih.gov" % socket.gethostname()
+    __TIER          = cdr.Tier()
     __CDR_EMAIL     = "PDQ Operator <NCIPDQoperator@mail.nih.gov"
     __SMTP_RELAY    = "MAILFWD.NIH.GOV"
     __LOGFILE       = _LOGFILE
@@ -169,6 +170,8 @@ class MailerJob:
         self.__printer          = MailerJob.__DEF_PRINTER
         self.__batchPrinting    = batchPrinting
         self.__letterLink       = ""
+        self.__cursor           = None
+        self.__email            = None
 
     #------------------------------------------------------------------
     # Public access methods.
@@ -636,8 +639,8 @@ class MailerJob:
             try:
                 self.log("unable to build emailer lookup tables: %s" % str(e))
                 sender  = MailerJob.__CDR_EMAIL
-                subject = "%s-%s: Emailer lookup table failure" % (
-                                                        cdr.h.org, cdr.h.tier)
+                tier    = self.__TIER.name
+                subject = "CBIIT-%s: Emailer lookup table failure" % tier
                 message = """\
 Unable to generate a fresh set of lookup values for the electronic
 mailer system (mailer job %s):
@@ -695,17 +698,8 @@ Please do not reply to this message.
 
         # Specify the hostname based on the environment we're in
         # ------------------------------------------------------
-        if cdr.h.org == 'OCE':
-            myHost = '%s.%s' % (cdr.h.host['APP'][0],
-                                cdr.h.host['APP'][1])
-            url  = 'http://%s/cgi-bin/cdr/' % myHost
-        else:
-            myHost = '%s.%s' % (cdr.h.host['APPC'][0],
-                                cdr.h.host['APPC'][1])
-            url  = 'https://%s/cgi-bin/cdr/' % myHost
-
-        # url  = 'http://%s/' % socket.gethostname()
-        url += 'GetBoardMemberLetters.py?job=%d' % self.__id
+        args = cdr.APPC, "GetBoardMemberLetters.py", self.__id
+        url = "https://{}/cgi-bin/cdr/{}?job={:d}".format(*args)
 
         self.__letterLink = """
 You can retrieve the letters at:
@@ -747,8 +741,8 @@ You can retrieve the letters at:
     #------------------------------------------------------------------
     def __loadSettings(self):
         self.__getDates()
-        self.__getCdrSession()
         self.__getDbConnection()
+        self.__getCdrSession()
         self.__loadDbInfo()
 
     #------------------------------------------------------------------
@@ -765,7 +759,7 @@ You can retrieve the letters at:
     # Log into the CDR server.
     #------------------------------------------------------------------
     def __getCdrSession(self):
-        rsp          = cdr.login("cdrmailers", cdr.getpw("cdrmailers"))
+        rsp          = str(cdr.login("cdrmailers", cdr.getpw("cdrmailers")))
         match        = self.__ERR_PATTERN.search(rsp)
         if match:
             raise cdr.Exception("CDR login failure: %s" % match.group(1))
@@ -1083,21 +1077,13 @@ You can retrieve the letters at:
             if self.__email:
                 self.log("Sending mail to %s" % self.__email)
                 sender  = MailerJob.__CDR_EMAIL
-                subject = "%s-%s: CDR Mailer Job Status" % (
-                                                        cdr.h.org, cdr.h.tier)
+                subject = "CBIIT-%s: CDR Mailer Job Status" % self.__TIER.name
+
                 # Specify the hostname based on the environment we're in
                 # ------------------------------------------------------
-                if cdr.h.org == 'OCE':
-                    myHost = '%s.%s' % (cdr.h.host['APP'][0],
-                                        cdr.h.host['APP'][1])
-                    url  = 'http://%s/cgi-bin/cdr/' % myHost
-                else:
-                    myHost = '%s.%s' % (cdr.h.host['APPC'][0],
-                                        cdr.h.host['APPC'][1])
-                    url  = 'https://%s/cgi-bin/cdr/' % myHost
+                args = cdr.APPC, "PubStatus.py", self.__id
+                url = "https://{}/cgi-bin/cdr/{}?id={:d}".format(*args)
 
-                # url  = 'http://%s/' % socket.gethostname()
-                url += 'PubStatus.py?id=%d' % self.__id
                 message = """\
 Job %d has completed.  You can view a status report for this job at:
 

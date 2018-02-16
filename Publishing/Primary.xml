@@ -3,7 +3,7 @@
 
  <SystemName>Primary</SystemName>
  <SystemDescription>
-   Used for producing documents for licensees and Cancer.gov.
+   Used for producing documents for PDQ data partners and Cancer.gov.
  </SystemDescription>
 
  <SystemSubset>
@@ -26,7 +26,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -53,6 +53,10 @@
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
 
   <SubsetSpecifications>
@@ -62,6 +66,7 @@
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
@@ -83,6 +88,7 @@
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Person</UserSelectDoctype>
@@ -104,6 +110,7 @@
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
@@ -125,16 +132,12 @@
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Media</UserSelectDoctype>
      </UserSelect>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
 
    <!--
@@ -142,6 +145,7 @@
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Summary</UserSelectDoctype>
@@ -163,6 +167,7 @@
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Term</UserSelectDoctype>
@@ -232,28 +237,21 @@
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -298,28 +296,21 @@
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -351,7 +342,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -367,7 +358,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>100000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -393,6 +384,7 @@
    All DrugInformation Summary for which no version is currently on Cancer.gov
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -427,6 +419,7 @@
    All GlossaryTerm for which no version is currently on Cancer.gov
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -464,6 +457,7 @@
    which are referenced by another doc, and are not marked for Internal use
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -494,15 +488,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-     <SubsetFilterParm>
-      <ParmName>DateFirstPub</ParmName>
-      <ParmValue/>
-     </SubsetFilterParm>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -517,6 +502,7 @@ LEFT OUTER JOIN query_term_pub u
    in the pub_proc_cg table) but excludes summaries marked as ModuleOnly.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -610,6 +596,7 @@ LEFT OUTER JOIN query_term_pub u
    Export subset.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -705,28 +692,17 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -738,8 +714,8 @@ LEFT OUTER JOIN query_term_pub u
   <SubsetName>Full-Load</SubsetName>
   <SubsetDescription>
     Filter, validate and push all publishable documents to produce
-    licensee documents and push all documents to Cancer.gov. (DrugInfoSummary, 
-    GenProf, Glossary, Media, Summary, Terminology)
+    documents for PDQ data partners and push all documents to Cancer.gov.
+    (DIS, GP, Glossary, Media, Summary, Terminology)
 
     Note:  This option is only to be used in case of a disaster.
   </SubsetDescription>
@@ -770,7 +746,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>500000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -784,6 +760,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -792,6 +772,7 @@ LEFT OUTER JOIN query_term_pub u
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -831,6 +812,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
@@ -871,6 +853,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -906,6 +889,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -935,11 +919,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -948,6 +927,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -997,6 +977,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1081,28 +1062,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1129,7 +1103,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -1145,7 +1119,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocsPerDocType</ParmName>
-    <ParmValue>100000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -1171,6 +1145,7 @@ LEFT OUTER JOIN query_term_pub u
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1210,6 +1185,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? d.id, MAX(v.num)
@@ -1250,6 +1226,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1285,6 +1262,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1314,11 +1292,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
     <Subdirectory>Media</Subdirectory>
    </SubsetSpecification>
 
@@ -1327,6 +1300,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, v.num
@@ -1376,6 +1350,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocsPerDocType? v.id, MAX(v.num)
@@ -1471,28 +1446,17 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1517,6 +1481,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -1570,28 +1538,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1618,7 +1579,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
-    <ParmValue>Yes</ParmValue>
+    <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>ValidateDocs</ParmName>
@@ -1644,16 +1605,20 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
 
   <SubsetSpecifications>
-
 
    <!--
    ========================================================================
    DrugInformationSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>DrugInformationSummary</UserSelectDoctype>
@@ -1675,6 +1640,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessionals documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Person</UserSelectDoctype>
@@ -1696,6 +1662,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>GlossaryTermName</UserSelectDoctype>
@@ -1717,16 +1684,12 @@ LEFT OUTER JOIN query_term_pub u
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Media</UserSelectDoctype>
      </UserSelect>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
 
    <!--
@@ -1734,6 +1697,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Summary</UserSelectDoctype>
@@ -1755,6 +1719,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <UserSelect>
       <UserSelectDoctype>Term</UserSelectDoctype>
@@ -1827,7 +1792,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>2000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -1841,6 +1806,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -1849,6 +1818,7 @@ LEFT OUTER JOIN query_term_pub u
    DrugInfoSummary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>DIS</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -1934,28 +1904,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -1996,7 +1959,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2010,6 +1973,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2018,6 +1985,7 @@ LEFT OUTER JOIN query_term_pub u
    GeneticsProfessional documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>GP</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? d.id, MAX(v.num)
@@ -2101,28 +2069,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2163,7 +2124,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>10000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2177,6 +2138,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2185,6 +2150,7 @@ LEFT OUTER JOIN query_term_pub u
    GlossaryTerm documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Glossary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -2266,28 +2232,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2328,7 +2287,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2342,6 +2301,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2350,6 +2313,7 @@ LEFT OUTER JOIN query_term_pub u
    Media documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Media</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
          SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -2379,11 +2343,6 @@ LEFT OUTER JOIN query_term_pub u
           ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
    </SubsetSpecification>
   </SubsetSpecifications>
 
@@ -2437,28 +2396,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2498,7 +2450,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>2000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2512,6 +2464,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2520,6 +2476,7 @@ LEFT OUTER JOIN query_term_pub u
    Summary documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Summary</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, v.num
@@ -2615,28 +2572,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2678,7 +2628,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>NumDocs</ParmName>
-    <ParmValue>20000</ParmValue>
+    <ParmValue></ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
@@ -2692,6 +2642,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2700,6 +2654,7 @@ LEFT OUTER JOIN query_term_pub u
    Term documents.
    ======================================================================== -->
    <SubsetSpecification>
+    <SpecificationName>Term</SpecificationName>
     <SubsetSelection>
      <SubsetSQL>
       SELECT TOP ?NumDocs? v.id, MAX(v.num)
@@ -2782,28 +2737,21 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>No</ParmValue>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
-    <SubsetSelection>
-     <SubsetSQL>
-         SELECT document.id
-           FROM document
-          WHERE document.id = 0
-     </SubsetSQL>
-    </SubsetSelection>
-    <SubsetFilters>
-     <SubsetFilter>
-      <SubsetFilterName>Passthrough Filter</SubsetFilterName>
-     </SubsetFilter>
-    </SubsetFilters>
+    <SubsetSelection/>
    </SubsetSpecification>
   </SubsetSpecifications>
   <SubsetOptions>
-   <SubsetOption>
-    <OptionName>Destination</OptionName>
-    <OptionValue>d:/cdr/Output</OptionValue>
-   </SubsetOption>
    <SubsetOption>
     <OptionName>PublishIfWarnings</OptionName>
     <OptionValue>Yes</OptionValue>
@@ -2890,7 +2838,9 @@ are common and never cause a push job to abort.
   <ParmInfo>
    <ParmInfoName>InteractiveMode</ParmInfoName>
    <ParmInfoHelp>
-This option appears to be ignored by the publishing system.
+If 'Yes' let the operator review a queued push job before
+releasing it; otherwise the job proceeds without waiting
+for approval.
    </ParmInfoHelp>
    <ParmInfoValidValues>
     <ParmInfoValidValue>Yes</ParmInfoValidValue>
@@ -2919,7 +2869,8 @@ pub_proc table. Examples:
    <ParmInfoHelp>
 Maximum number of documents to be processed for the
 entire job. Used for publishing job types dedicated
-to publishing documents of a single type.
+to publishing documents of a single type. Leave blank
+to publish the entire set.
    </ParmInfoHelp>
    <ParmInfoMethod>integer</ParmInfoMethod>
   </ParmInfo>
@@ -2928,7 +2879,7 @@ to publishing documents of a single type.
    <ParmInfoHelp>
 Maximum number of documents to be processed for each
 document type in a job which can publish documents of
-more than one document type.
+more than one document type. Leave blank for no limit.
    </ParmInfoHelp>
    <ParmInfoMethod>integer</ParmInfoMethod>
   </ParmInfo>

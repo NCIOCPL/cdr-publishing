@@ -263,7 +263,7 @@ LEFT OUTER JOIN query_term v
 # ------------------------------------------------------------
 def createRows(versions):
     tableRows = ""
-    host = "%s.%s" % cdr.h.host["APPC"]
+    host = cdr.APPC
     class_ = "even"
 
     for row in versions:

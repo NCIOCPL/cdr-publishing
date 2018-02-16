@@ -198,12 +198,9 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
     # Retrieve status information from Cancer.gov for the push job
     # and identify failures and warnings.
     # ------------------------------------------------------------
-    if host:
-        cdr2gk.host = host
-    # cdr2gk.host = 'gatekeeper.cancer.gov'
-    l.write("GKServer: %s" % cdr2gk.host, stdout = True)
+    l.write("GKServer: %s" % (host or cdr2gk.HOST), stdout=True)
 
-    response = cdr2gk.requestStatus('Summary', jobId)
+    response = cdr2gk.requestStatus('Summary', jobId, host=host)
 
     details = response.details
 
