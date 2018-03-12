@@ -171,7 +171,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
-    <ParmValue>MaxDocUpdatedDate</ParmValue>
+    <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>AbortOnError</ParmName>
