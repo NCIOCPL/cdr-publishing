@@ -17,10 +17,8 @@ PUBPATH    = os.path.join('d:\\cdr', 'publishing')
 # PUBPATH    = os.path.join('d:\\home', 'venglisch', 'cdr', 'publishing')
 
 TIER = cdr.Tier().name
-OUTPUTBASE = cdr.BASEDIR + "\\Output"
 MAX_RETRIES = 10
 RETRY_MULTIPLIER = 5.0
-lockFile   = os.path.join(OUTPUTBASE, 'FtpExportData.txt')
 wait       = 60    # number of seconds to wait between status checks
 if cdr.isProdHost():
     waitTotal = 28800  #  8.0 hours
@@ -383,7 +381,6 @@ allowed.
            except:
                l.write("*** Failed to submit Push job for Job%s" % submit[0],
                         stdout=True)
-               # os.remove(lockFile)
                sys.exit(1)
 
            pdone = 0
@@ -431,16 +428,6 @@ See logs below:
            sys.exit(1)
         else:
            done = 0
-
-    # The publishing AND pushing job completed.  Add the pub jobID
-    # to the FTP lock file so we know which file(s) need to be FTP'ed
-    # to the FTP server
-    # (currently only export data is provided to licensees)
-    # ---------------------------------------------------------------
-    if fullMode:
-        f = open(lockFile, 'a')
-        f.write('%s\n' % str(submit[0]))
-        f.close()
 
     try:
         # Submitting the email notification including the error report
