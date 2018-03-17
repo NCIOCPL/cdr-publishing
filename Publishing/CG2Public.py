@@ -58,8 +58,8 @@ class Control:
         """
 
         query = Query("pub_proc", "id").limit(1).order("id DESC")
-        query.where("pub_subset", "Export")
-        query.where("status", "Success")
+        query.where("pub_subset = 'Export'")
+        query.where("status = 'Success'")
         job_id = query.execute().fetchone().id
         return "Job{:d}".format(job_id)
 
