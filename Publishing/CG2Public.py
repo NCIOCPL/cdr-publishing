@@ -250,7 +250,7 @@ for directory in pubDirs:
         logger.info("%s skipped", directory)
 
 if warnings:
-    logger.warnings("CG2Public.py - Finished with Warnings")
+    logger.warning("CG2Public.py - Finished with Warnings")
     sys.exit(1)
 
 # A few auxiliary files also need to be copied
