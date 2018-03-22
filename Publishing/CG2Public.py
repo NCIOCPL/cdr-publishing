@@ -11,6 +11,7 @@ BZIssue::5093 - [Media] Adding Audio Files to Vendor Output
 OCECDR-3962: Simplify Rerunning Jobmaster Job (Windows)
 OCECDR-3960: Include current DTD in FTP Data Set
 OCECDR-4211: Use new API directly for filtering documents
+OCECDR-4347: Modify CG2Public Job to Process Latest Weekly Job
 """
 
 import argparse
@@ -24,6 +25,8 @@ import cdr
 import cdrpub
 from cdrapi.users import Session
 from cdrapi.docs import Doc
+from cdrapi.db import Query
+
 
 class Control:
     """
@@ -54,15 +57,10 @@ class Control:
         Find the most recent publishing output directory
         """
 
-        os.chdir(self.sourceBase)
-        job_id = 0
-        for name in glob.glob("Job*"):
-            match = re.match(r"^Job(\d+)$", name)
-            if match:
-                job_id = max(job_id, int(match.group(1)))
-        if not job_id:
-            logger.error("No publishing directory found")
-            sys.exit(1)
+        query = Query("pub_proc", "id").limit(1).order("id DESC")
+        query.where("pub_subset = 'Export'")
+        query.where("status = 'Success'")
+        job_id = query.execute().fetchone().id
         return "Job{:d}".format(job_id)
 
     def copy(self, directory):

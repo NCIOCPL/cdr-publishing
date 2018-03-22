@@ -355,7 +355,7 @@ def showForm(fields):
     <input type='hidden' name='tid' value='%d' />
     <input type='hidden' name='pid' value='%d' />
     <input type='hidden' name='jid' value='%d' />
-    <p class='omb-number'>OMB No. 0925-0639 Expiry Date 10/31/2017</p>
+    <p class='omb-number'>OMB No. 0925-0639 Expiry Date 2/28/2021</p>
     <div class='omb-header-wrapper'>
      <p class='omb-header'>
       Public reporting burden for this collection of information is

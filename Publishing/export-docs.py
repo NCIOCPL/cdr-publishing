@@ -51,7 +51,7 @@ class Control:
             doc_id, doc_version = d.split("/")
             opts = dict(id=doc_id, version=doc_version)
             if doc_version == "lastp":
-                opts["before"] = self.job_started
+                opts["before"] = self.job_start
             self.docs.append(Doc(self.session, **opts))
 
     def run(self):
@@ -149,7 +149,7 @@ class Control:
             if "DateFirstPub" in parms and first_pub:
                 parms["DateFirstPub"] = str(first_pub)[:10]
                 parms["pubProcDate"] = str(self.job_start)[:10]
-            opts = dict(parms=parms, doc=root)
+            opts = dict(parms=parms, doc=root, date=str(self.job_start))
             result = doc.filter(*filters, **opts)
             root = result.result_tree
         return root
@@ -257,6 +257,7 @@ class Control:
             query = cdrdb.Query("pub_proc", "started")
             query.where(query.Condition("id", self.job_id))
             self._job_start = query.execute(self.cursor).fetchone().started
+        return self._job_start
 
     @property
     def logger(self):
