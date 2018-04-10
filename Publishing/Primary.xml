@@ -2979,7 +2979,7 @@ If the number of summaries with errors exceeds this value,
 the publishing job will be aborted and marked as failed.
 Used for the nightly/weekly export jobs.
    </ParmInfoHelp>
-   <ParmInfoPattern>.+@.+[.].+</ParmInfoPattern>
+   <ParmInfoMethod>integer</ParmInfoMethod>
   </ParmInfo>
  </ParmInfoSet>
 
