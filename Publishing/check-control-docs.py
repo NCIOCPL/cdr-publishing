@@ -14,7 +14,6 @@ query = cdrdb.Query("doc_version v", "v.id", "MAX(v.num)")
 query.join("doc_type t", "t.id = v.doc_type")
 query.join("active_doc a", "a.id = v.id")
 query.where("t.name = 'PublishingSystem'")
-query.where("v.publishable = 'Y'")
 query.group("v.id")
 for doc_id, doc_ver in query.execute(cursor).fetchall():
     query = cdrdb.Query("doc_version", "title", "xml")

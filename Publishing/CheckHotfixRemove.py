@@ -14,8 +14,8 @@
 # *********************************************************************
 import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
 
-OUTPUTBASE     = cdr.BASEDIR + "/Output/HotfixRemove"
-DOC_FILE       = "HotfixRemove"
+# OUTPUTBASE     = cdr.BASEDIR + "/Output/HotfixRemove"
+# DOC_FILE       = "HotfixRemove"
 LOGNAME        = "HotfixRemove.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
 STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
@@ -33,11 +33,11 @@ class NoNewDocumentsError(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
-class NothingFoundError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
+# class NothingFoundError(Exception):
+#     def __init__(self, value):
+#         self.value = value
+#     def __str__(self):
+#         return repr(self.value)
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -133,18 +133,14 @@ testMode  = options.values.testMode
 emailMode = options.values.emailMode
 
 try:
-    # Open the latest manifest file (or the one specified) and read
-    # the content
-    # -------------------------------------------------------------
-    protocols = {}
-    oldFile = []
-    oldIds = []
+#     # Initiallize variables
+#     # -------------------------------------------------------------
+#     oldFile = []
+#     oldIds = []
+#     newWithdrawn = []
 
-    # Connect to the database and get all protocols without a
-    # TransferDate.
+    # Connect to the database and retrieve documents to be removed
     # --------------------------------------------------------------
-    newWithdrawn = []
-
     conn = cdrdb.connect()
     cursor = conn.cursor()
     allDocs = []
@@ -170,7 +166,7 @@ try:
 
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0],
+        l.write("Failure retrieving GlossaryTerms: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -198,40 +194,7 @@ try:
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0],
-                 stdout = True)
-        sendErrorMessage('SQL query timeout error')
-        raise
-
-    allDocs += rows
-
-    # Selecting Hotfix-Remove candidates for InScopeProtocol
-    # ------------------------------------------------------
-    try:
-        cursor.execute("""\
-        SELECT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
-               d.title AS "Title",    p.value AS "Status"
-          FROM pub_proc_cg cg
-          JOIN document d
-            ON d.id  = cg.id
-          JOIN doc_type dt
-            ON dt.id = d.doc_type
-          JOIN query_term_pub p
-            ON d.id  = p.doc_id
-         WHERE dt.name = 'InScopeProtocol'
-           AND p.path = '/InScopeProtocol/ProtocolAdminInfo' +
-                        '/CurrentProtocolStatus'
-           AND p.value NOT IN ('Active',
-                               'Approved-not yet active',
-                               'Enrolling by invitation',
-                               'Closed',
-                               'Completed',
-                               'Temporarily closed',
-                               'Unknown')
-""", timeout = 300)
-        rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0],
+        l.write("Failure retrieving Terms: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -259,36 +222,7 @@ try:
 """, timeout = 300)
         rows = cursor.fetchall()
     except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0],
-                 stdout = True)
-        sendErrorMessage('SQL query timeout error')
-        raise
-
-    allDocs += rows
-
-    # Selecting Hotfix-Remove candidates for Organization
-    # ---------------------------------------------------
-    try:
-        cursor.execute("""\
-        SELECT DISTINCT dt.name AS "Doc Type", cg.id   AS "CDR-ID",
-               d.title AS "Title",    p.value AS "Status"
-          FROM pub_proc_cg cg
-          JOIN document d
-            ON d.id  = cg.id
-          JOIN doc_type dt
-            ON dt.id = d.doc_type
-          JOIN query_term_pub p
-            ON d.id  = p.doc_id
-          JOIN query_term_pub po
-            ON po.int_val = p.doc_id
-         WHERE dt.name = 'Organization'
-           AND p.path = '/Organization/Status/CurrentStatus'
-           AND p.value IN ('Inactive')
-           AND po.path LIKE '%/@cdr:%ref'
-""", timeout = 300)
-        rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure retrieving protocols: \n%s" % info[1][0],
+        l.write("Failure retrieving Genetics Profs: \n%s" % info[1][0],
                  stdout = True)
         sendErrorMessage('SQL query timeout error')
         raise
@@ -340,7 +274,7 @@ try:
    </tr>
 """ % (doc[0], doc[1], doc[2], doc[3])
         except Exception, info:
-            l.write("Failure retrieving protocols: \n%s" % info[1][0],
+            l.write("Failure creating report: \n%s" % info[1][0],
                      stdout = True)
             sendErrorMessage('Unicode convertion error')
             raise
@@ -394,12 +328,12 @@ Subject: %s
         l.write("Running in NOEMAIL mode.  No message send", stdout = True)
     server.quit()
 
-except NothingFoundError, arg:
-    msg  = "No documents found with 'CTGovTransfer' element"
-    l.write("   %s" % msg, stdout = True)
-    l.write("   %s" % arg, stdout = True)
+# except NothingFoundError, arg:
+#     msg  = "No documents found with 'CTGovTransfer' element"
+#     l.write("   %s" % msg, stdout = True)
+#     l.write("   %s" % arg, stdout = True)
 except NoNewDocumentsError, arg:
-    msg  = "No new documents found with 'CTGovTransfer' element"
+    msg  = "No new documents found to be removed"
     l.write("", stdout = True)
     l.write("   %s" % msg, stdout = True)
     l.write("   %s" % arg, stdout = True)

@@ -700,6 +700,7 @@
 
 <!ELEMENT RelatedDrugSummaryRef               (#PCDATA)>
 <!ATTLIST RelatedDrugSummaryRef href   CDATA  #REQUIRED>
+<!ATTLIST RelatedDrugSummaryRef UseWith (en | es) #IMPLIED>
 <!ATTLIST RelatedDrugSummaryRef url    CDATA  #REQUIRED>
 
 <!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>

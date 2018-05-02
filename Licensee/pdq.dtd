@@ -631,6 +631,7 @@
 
 <!ELEMENT RelatedDrugSummaryRef               (#PCDATA)>
 <!ATTLIST RelatedDrugSummaryRef href   CDATA  #REQUIRED>
+<!ATTLIST RelatedDrugSummaryRef UseWith (en | es) #IMPLIED>
 
 <!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>
 <!ATTLIST RelatedGlossaryTermRef href  CDATA  #REQUIRED>
