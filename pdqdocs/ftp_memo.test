@@ -1,0 +1,44 @@
+                    *** THIS IS A TEST ***
+
+  The latest PDQ XML update is now available on our SFTP server
+  CANCERINFO.NCI.NIH.GOV in the directory pub/pdq/full.
+
+  Please log on using the username/password provided by NCI as shown 
+  in the example below.  The PDQ data specifications are listed in file 
+  PDQ_XML_Package.doc (MS Word format) or PDQ_XML_Package.pdf (Adobe 
+  Portable Document Format) located in the directory pub/pdq/docs. 
+  You can also find the latest PDQ DTD in this directory.  The PDQ data
+  is located in the dicrectory pub/pdq/full.
+
+  Example for ftp logon process:
+     $ sftp <username>@cancerinfo.nci.nih.gov
+     Connecting to cancerinfo.nci.nih.gov...
+     ...
+     <username>@cancerinfo.nci.nih.gov's 
+     password: ********
+     sftp>
+
+  Single compressed data files are provided for your convenience in order 
+  to download all documents of an entire directory.
+
+  The PDQ XML files are updated weekly and information from prior weeks 
+  should be considered obsolete.  The National Cancer Institute will not be
+  responsible for errors that result from misinterpretation or misapplication
+  of the information in PDQ, including the use of obsolete information.
+  
+  If you have any problems with the data or with the transmission of the data
+  please contact the Systems Administrator at: 
+  
+       Email:  NCIPDQoperator@mail.nih.gov
+  
+  If you have any questions regarding your access of the data, please 
+  contact our Content Dissemination Program at:
+   
+       Phone:  240-276-6640
+       Email:  NCIContentDissemination@nih.gov
+  
+  Please be sure to provide us with any changes in contact personnel for your 
+  organization (i.e. e-mail addresses) so that you will continue to receive
+  timely data updates and corrections. 
+  Contact changes may be submitted to
+     NCIContentDissemination@nih.gov  or  NCIPDQoperator@mail.nih.gov
