@@ -378,7 +378,7 @@
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
-    <ParmValue>0</ParmValue>
+    <ParmValue>3</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
 
@@ -1137,7 +1137,7 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
-    <ParmValue>0</ParmValue>
+    <ParmValue>3</ParmValue>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
