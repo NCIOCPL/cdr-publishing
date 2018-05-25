@@ -181,6 +181,8 @@
           ON d.id = v.id
         JOIN doc_type t
           ON t.id = v.doc_type
+        JOIN query_term q
+          ON d.id = q.doc_id
        WHERE t.name = 'Media'
          AND q.path LIKE '%/@cdr:%ref'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
@@ -871,6 +873,8 @@
           ON d.id = v.id
         JOIN doc_type t
           ON t.id = v.doc_type
+        JOIN query_term q
+          ON d.id = q.doc_id
        WHERE t.name = 'Media'
          AND q.path LIKE '%/@cdr:%ref'
          AND v.updated_dt &lt;= '?MaxDocUpdatedDate?'
