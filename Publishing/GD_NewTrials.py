@@ -373,7 +373,7 @@ def sendEmailReport(messageBody, title):
     else:
         strTo = cdr.getEmailList('GovDelivery Trials Notification')
 
-    subject   = "CBIIT-%s: %s" % (TIER.name, title)
+    subject   = "[%s] %s" % (TIER.name, title)
 
     mailHeader = """\
 From: %s
