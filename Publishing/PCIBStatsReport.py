@@ -1575,7 +1575,7 @@ def sendEmailReport(messageBody, title, sendTo=None):
     if sendTo:
         strTo = [u'%s' % sendTo]
 
-    subject   = "CBIIT-%s: %s" % (cdr.Tier().name, title)
+    subject   = "[%s] %s" % (cdr.Tier().name, title)
 
     mailHeader = """\
 From: %s

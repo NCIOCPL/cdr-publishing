@@ -213,7 +213,7 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = 'CBIIT-%s: %s' % (TIER, header)
+    subject = '[%s] %s' % (TIER, header)
     if not body:
         body = """
 The publishing job failed.  Please check the log files.
@@ -453,7 +453,7 @@ See logs below:
             emailDL = cdr.getEmailList('Test Publishing Notification')
 
         args = TIER, addSubj
-        subject = 'CBIIT-%s: Status and Error Report for %s Publishing' % args
+        subject = '[%s] Status and Error Report for %s Publishing' % args
 
         emailDL.sort()
         if not len(emailDL):
@@ -492,7 +492,7 @@ Push Job Output:
 
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
-    subject = '*** [CBIIT-%s] SubmitPubJob.py - Standard Failure' % TIER
+    subject = '*** [%s] SubmitPubJob.py - Standard Failure' % TIER
     msgBody = "The publishing job failed:  %s" % arg
     sendFailureMessage(subject, msgBody)
 except:

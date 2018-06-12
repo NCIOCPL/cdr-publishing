@@ -97,7 +97,7 @@ def sendErrorMessage(msg):
     # We want to send an email so that the query doesn't silently fail
     # ----------------------------------------------------------------
     args = cdr.Tier().name, "*** Error: Program CheckHotfixRemove failed!"
-    subject = "CBIIT-%s: %s" % args
+    subject = "[%s] %s" % args
 
     recips = cdr.getEmailList("Developers Notification")
     mailHeader   = """\
@@ -300,7 +300,7 @@ try:
         #strTo.append(u'register@clinicaltrials.gov')
 
     args = cdr.Tier().name, "Document Candidates to be removed from Cancer.gov"
-    subject = "CBIIT-%s: %s" % args
+    subject = "[%s] %s" % args
 
     mailHeader   = """\
 From: %s
