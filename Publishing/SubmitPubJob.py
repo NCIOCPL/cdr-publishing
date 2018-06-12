@@ -20,12 +20,16 @@ TIER = cdr.Tier().name
 MAX_RETRIES = 10
 RETRY_MULTIPLIER = 5.0
 wait       = 60    # number of seconds to wait between status checks
+
+# The performance of the publishing job has greately improved allowing
+# us to cancel a running job much sooner if it fails to finish
+# --------------------------------------------------------------------
 if cdr.isProdHost():
-    waitTotal = 28800  #  8.0 hours
+    waitTotal = 10800  #  3.0 hours
 elif cdr.isDevHost():
-    waitTotal = 50000  # 13.8 hours
+    waitTotal = 10800  #  3.0 hours
 else:
-    waitTotal = 36000  # 10.0 hours
+    waitTotal = 14400  #  4.0 hours
 
 testMode   = None
 fullMode   = None
