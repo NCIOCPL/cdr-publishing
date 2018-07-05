@@ -112,7 +112,7 @@ if options.values.status and options.values.jobid:
 # Find out if loading of documents to Cancer.gov has completed, and
 # whether any of the documents failed the load.
 #----------------------------------------------------------------------
-def updateMessage(message, jobId, docId = 0):
+def updateMessage(message, jobId, docId=0):
     # Create log message
     # ------------------
     if docId == 0:
@@ -130,7 +130,7 @@ def updateMessage(message, jobId, docId = 0):
                 SELECT messages
                   FROM pub_proc
                  WHERE id = ?""", jobId)
-            row     = cursor.fetchone()
+            row = cursor.fetchone()
             msg = (row and row[0] or '') + msg
 
             cursor.execute("""
@@ -152,9 +152,16 @@ def updateMessage(message, jobId, docId = 0):
                   FROM pub_proc_doc
                  WHERE pub_proc = ?
                    AND doc_id = ?""", (jobId, docId))
-            row     = cursor.fetchone()
-            msg = (row and row[0] or '') + msg
-
+            row = cursor.fetchone()
+            if row and row[0]:
+                try:
+                    messages = eval(row[0])
+                except:
+                    messages = [row[0]]
+            else:
+                messages = []
+            messages.append(msg)
+            msg = eval(messages)
             cursor.execute("""
                 UPDATE pub_proc_doc
                    SET messages = ?
