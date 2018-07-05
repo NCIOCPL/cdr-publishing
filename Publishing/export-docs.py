@@ -84,6 +84,7 @@ class Control:
                 if warnings:
                     values = None, repr(warnings), self.job_id, doc.id
                     self.cursor.execute(update, values)
+                    self.conn.commit()
             except Exception as e:
                 errors = e.message
                 if not isinstance(errors, list):
@@ -161,6 +162,8 @@ class Control:
             result = doc.filter(*filters, **opts)
             warnings += result.messages
             root = result.result_tree
+        if warnings:
+            self.logger.warning("CDR%d: %r", doc.id, warnings)
         return self.FilteredDoc(root, warnings)
 
     def validate_doc(self, doc):
