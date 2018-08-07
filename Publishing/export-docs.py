@@ -68,7 +68,7 @@ class Control:
                  VALUES (?, ?, ?, ?)"""
         update = """\
             UPDATE pub_proc_doc
-               SET failure = 'Y', messages = ?
+               SET failure = ?, messages = ?
              WHERE pub_proc = ?
                AND doc_id = ?"""
         for doc in self.docs:
@@ -80,10 +80,17 @@ class Control:
                 self.cursor.execute(insert, values)
                 self.conn.commit()
             try:
-                self.export_doc(doc)
+                warnings = self.export_doc(doc)
+                if warnings:
+                    values = None, repr(warnings), self.job_id, doc.id
+                    self.cursor.execute(update, values)
+                    self.conn.commit()
             except Exception as e:
+                errors = e.message
+                if not isinstance(errors, list):
+                    errors = [errors]
                 self.logger.exception("%s export failed", doc.cdr_id)
-                values = unicode(e), self.job_id, doc.id
+                values = "Y", repr(errors), self.job_id, doc.id
                 self.cursor.execute(update, values)
                 self.conn.commit()
 
@@ -116,18 +123,19 @@ class Control:
              VALUES (?, ?, ?, ?, ?)""", values)
                 self.conn.commit()
         else:
-            result_tree = self.filter_doc(doc)
+            filtered_doc = self.filter_doc(doc)
             errors = None
             if self.validating:
-                errors = self.validate_doc(result_tree)
+                errors = self.validate_doc(filtered_doc.result_tree)
                 if errors:
                     messages = [error.message for error in errors]
                     directory = self.work_dir + "/InvalidDocs"
-            xml = etree.tostring(result_tree, encoding="utf-8")
+            xml = etree.tostring(filtered_doc.result_tree, encoding="utf-8")
             xml = xml.replace(b"\r", b"").strip() + b"\n"
             self.write_doc(xml, directory, filename)
             if errors:
-                raise Exception("; ".join(messages))
+                raise Exception(messages)
+            return filtered_doc.warnings
 
     def filter_doc(self, doc):
         """
@@ -137,13 +145,14 @@ class Control:
           doc - reference to `Doc` object to be transformed
 
         Return:
-          reference to `_XSLTResultTree` object
+          reference to `FilteredDoc` object
         """
 
         root = None
         first_pub = doc.first_pub
         if not first_pub and doc.first_pub_knowable:
             first_pub = self.job_start
+        warnings = []
         for filters, parameters in self.filters:
             parms = dict(parameters)
             if "DateFirstPub" in parms and first_pub:
@@ -151,8 +160,11 @@ class Control:
                 parms["pubProcDate"] = str(self.job_start)[:10]
             opts = dict(parms=parms, doc=root, date=str(self.job_start))
             result = doc.filter(*filters, **opts)
+            warnings += result.messages
             root = result.result_tree
-        return root
+        if warnings:
+            self.logger.warning("CDR%d: %r", doc.id, warnings)
+        return self.FilteredDoc(root, warnings)
 
     def validate_doc(self, doc):
         """
@@ -334,6 +346,23 @@ class Control:
             return output_dir + ".InProcess"
         return None
 
+
+    class FilteredDoc:
+        """
+        Results of a sequence of XSL/T filtering operations
+
+        Instance attributes:
+          result_tree - reference to `_XSLTResultTree` object
+          warnings - possibly empty sequence of warning strings
+        """
+
+        def __init__(self, result_tree, warnings):
+            """
+            Wrap the object's attributes
+            """
+
+            self.result_tree = result_tree
+            self.warnings = warnings
 
 def main():
     """

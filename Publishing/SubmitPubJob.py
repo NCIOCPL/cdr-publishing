@@ -20,12 +20,16 @@ TIER = cdr.Tier().name
 MAX_RETRIES = 10
 RETRY_MULTIPLIER = 5.0
 wait       = 60    # number of seconds to wait between status checks
+
+# The performance of the publishing job has greately improved allowing
+# us to cancel a running job much sooner if it fails to finish
+# --------------------------------------------------------------------
 if cdr.isProdHost():
-    waitTotal = 28800  #  8.0 hours
+    waitTotal = 10800  #  3.0 hours
 elif cdr.isDevHost():
-    waitTotal = 50000  # 13.8 hours
+    waitTotal = 10800  #  3.0 hours
 else:
-    waitTotal = 36000  # 10.0 hours
+    waitTotal = 14400  #  4.0 hours
 
 testMode   = None
 fullMode   = None
@@ -209,7 +213,7 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = 'CBIIT-%s: %s' % (TIER, header)
+    subject = '[%s] %s' % (TIER, header)
     if not body:
         body = """
 The publishing job failed.  Please check the log files.
@@ -449,7 +453,7 @@ See logs below:
             emailDL = cdr.getEmailList('Test Publishing Notification')
 
         args = TIER, addSubj
-        subject = 'CBIIT-%s: Status and Error Report for %s Publishing' % args
+        subject = '[%s] Status and Error Report for %s Publishing' % args
 
         emailDL.sort()
         if not len(emailDL):
@@ -488,7 +492,7 @@ Push Job Output:
 
 except Exception, arg:
     l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
-    subject = '*** [CBIIT-%s] SubmitPubJob.py - Standard Failure' % TIER
+    subject = '*** [%s] SubmitPubJob.py - Standard Failure' % TIER
     msgBody = "The publishing job failed:  %s" % arg
     sendFailureMessage(subject, msgBody)
 except:

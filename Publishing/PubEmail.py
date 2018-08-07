@@ -29,7 +29,7 @@ emailDev   = sorted(cdr.getEmailList("Developers Notification"))
 # Set the variables and send the message
 # --------------------------------------
 sender    = "NCIPDQoperator@mail.nih.gov"
-subject   = "CBIIT-%s: %s" % (cdr.Tier().name, sys.argv[1])
+subject   = "[%s] %s" % (cdr.Tier().name, sys.argv[1])
 message   = """\
 Automated Publishing Email Notification:
 

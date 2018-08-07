@@ -640,7 +640,7 @@ class MailerJob:
                 self.log("unable to build emailer lookup tables: %s" % str(e))
                 sender  = MailerJob.__CDR_EMAIL
                 tier    = self.__TIER.name
-                subject = "CBIIT-%s: Emailer lookup table failure" % tier
+                subject = "[%s] Emailer lookup table failure" % tier
                 message = """\
 Unable to generate a fresh set of lookup values for the electronic
 mailer system (mailer job %s):
@@ -1077,7 +1077,7 @@ You can retrieve the letters at:
             if self.__email:
                 self.log("Sending mail to %s" % self.__email)
                 sender  = MailerJob.__CDR_EMAIL
-                subject = "CBIIT-%s: CDR Mailer Job Status" % self.__TIER.name
+                subject = "[%s] CDR Mailer Job Status" % self.__TIER.name
 
                 # Specify the hostname based on the environment we're in
                 # ------------------------------------------------------

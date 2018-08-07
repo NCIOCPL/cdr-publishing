@@ -212,7 +212,7 @@ LEFT OUTER JOIN query_term pdi
         strTo    = cdr.getEmailList('Licensee Report Notification')
 
     args = cdr.Tier().name, 'PDQ Distribution Partner List'
-    subject = "CBIIT-%s: %s" % args
+    subject = "[%s] %s" % args
 
     mailHeader   = """\
 From: %s
