@@ -131,7 +131,10 @@ class Control:
                     messages = [error.message for error in errors]
                     directory = self.work_dir + "/InvalidDocs"
             xml = etree.tostring(filtered_doc.result_tree, encoding="utf-8")
-            xml = xml.replace(b"\r", b"").strip() + b"\n"
+            if xml is None:
+                xml = bytes(filtered_doc.result_tree)
+            else:
+                xml = xml.replace(b"\r", b"").strip() + b"\n"
             self.write_doc(xml, directory, filename)
             if errors:
                 raise Exception(messages)
