@@ -10,6 +10,7 @@
    OCEPROJECT-3147 - Remove Protocol document type
    OCECDR-3903: Cancer.gov displaying Patient definitions for terms
                 in HP Summaries
+   OCECDR-4511: remove href attribute from ProtocolRef element
 
 -->
 
