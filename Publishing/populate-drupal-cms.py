@@ -32,7 +32,7 @@ parser.add_argument("--keep", **opts)
 opts = parser.parse_args()
 
 # Make sure we are allowed to publish to the CMS.
-session = Session(opts.session)
+session = Session(opts.session, tier=opts.tier)
 if not session.can_do("USE PUBLISHING SYSTEM"):
     raise Exception("Not authorized")
 
