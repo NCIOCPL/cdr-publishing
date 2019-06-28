@@ -57,6 +57,10 @@
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
 
   <SubsetSpecifications>
@@ -242,6 +246,10 @@
     <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -303,6 +311,10 @@
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -379,6 +391,10 @@
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
     <ParmValue>3</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
 
@@ -694,6 +710,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -760,6 +780,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -1068,6 +1092,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -1138,6 +1166,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
     <ParmValue>3</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -1445,6 +1477,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -1480,6 +1516,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -1540,6 +1580,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -1602,6 +1646,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -1805,6 +1853,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -1906,6 +1958,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -2463,6 +2519,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2574,6 +2634,10 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -2829,6 +2893,15 @@ are common and never cause a push job to abort.
     <ParmInfoValidValue>Yes</ParmInfoValidValue>
     <ParmInfoValidValue>No</ParmInfoValidValue>
    </ParmInfoValidValues>
+  </ParmInfo>
+  <ParmInfo>
+   <ParmInfoName>DrupalServer</ParmInfoName>
+   <ParmInfoHelp>
+Host name of Drupal CMS server to which documents should be pushed.
+If a name which is not a fully qualified domain name (FQDN) is
+entered '.cancer.gov' will be assumed.
+   </ParmInfoHelp>
+   <ParmInfoMethod>server_name</ParmInfoMethod>
   </ParmInfo>
   <ParmInfo>
    <ParmInfoName>InteractiveMode</ParmInfoName>
