@@ -26,10 +26,12 @@ parser = ArgumentParser()
 parser.add_argument("--session", required=True, help="CDR login key")
 parser.add_argument("--tier", help="publish from another tier")
 parser.add_argument("--base", help="override base URL for Drupal site")
+parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store serialized docs")
 opts = dict(action="store_true", help="don't drop existing PDQ content")
 parser.add_argument("--keep", **opts)
 opts = parser.parse_args()
+auth = "PDQ", opts.password if opts.password else None
 
 # Make sure we are allowed to publish to the CMS.
 session = Session(opts.session, tier=opts.tier)
@@ -38,7 +40,7 @@ if not session.can_do("USE PUBLISHING SYSTEM"):
 
 # Clean out existing documents unless told not to.
 if not opts.keep:
-    client = DrupalClient(session, tier=opts.tier, base=opts.base)
+    client = DrupalClient(session, tier=opts.tier, base=opts.base, auth=auth)
     catalog = client.list()
     for langcode in ("es", "en"):
         for doc in catalog:
@@ -52,4 +54,5 @@ query.join("pub_proc_cg c", "c.id = d.id")
 query.where("t.name in ('Summary', 'DrugInformationSummary')")
 query.order("d.id")
 docs = dict([list(row) for row in query.execute(session.cursor).fetchall()])
-Control.update_cms(session, send=docs, base=opts.base, dumpfile=opts.dumpfile)
+opts = dict(send=docs, base=opts.base, dumpfile=opts.dumpfile, auth=auth)
+Control.update_cms(session, **opts)
