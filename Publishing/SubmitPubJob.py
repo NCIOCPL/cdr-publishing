@@ -279,7 +279,7 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = '[%s] %s' % (TIER, header)
+    subject = header
     if not body:
         body = """
 The publishing job failed.  Please check the log files.
