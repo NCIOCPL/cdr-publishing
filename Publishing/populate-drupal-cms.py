@@ -20,6 +20,7 @@ from cdrapi.docs import Doc
 from cdrapi.publishing import DrupalClient
 from cdrpub import Control
 from cdrapi import db
+from cdr import Logging
 
 # Collect the options for this run.
 parser = ArgumentParser()
@@ -30,8 +31,9 @@ parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store serialized docs")
 opts = dict(action="store_true", help="don't drop existing PDQ content")
 parser.add_argument("--keep", **opts)
+parser.add_argument("--level", default="info", help="how much to log")
 opts = parser.parse_args()
-auth = "PDQ", opts.password if opts.password else None
+auth = ("PDQ", opts.password) if opts.password else None
 
 # Make sure we are allowed to publish to the CMS.
 session = Session(opts.session, tier=opts.tier)
@@ -54,5 +56,11 @@ query.join("pub_proc_cg c", "c.id = d.id")
 query.where("t.name in ('Summary', 'DrugInformationSummary')")
 query.order("d.id")
 docs = dict([list(row) for row in query.execute(session.cursor).fetchall()])
-opts = dict(send=docs, base=opts.base, dumpfile=opts.dumpfile, auth=auth)
+opts = dict(
+    send=docs,
+    base=opts.base,
+    dumpfile=opts.dumpfile,
+    auth=auth,
+    logger=Logging.get_logger("populate-drupal-cms", level=opts.level),
+)
 Control.update_cms(session, **opts)
