@@ -9,6 +9,7 @@ Part of https://github.com/NCIOCPL/cgov-digital-platform/issues/825 epic.
 """
 
 from argparse import ArgumentParser
+from json import dumps
 from cdrapi.users import Session
 from cdrapi.docs import Doc
 from cdrapi.publishing import DrupalClient
@@ -32,7 +33,7 @@ parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store the serialized doc")
 parser.add_argument("--id", type=int, help="CDR ID for Summary", required=True)
 opts = parser.parse_args()
-auth = "PDQ", opts.password if opts.password else None
+auth = ("PDQ", opts.password) if opts.password else None
 
 # Make sure we are allowed to publish to the CMS.
 session = Session(opts.session, tier=opts.tier)
@@ -45,9 +46,12 @@ print("Pushing {} document {}".format(doc.doctype.name, doc.cdr_id))
 root = Control.fetch_exported_doc(session, doc.id, "pub_proc_cg")
 xsl = Doc.load_single_filter(session, FILTERS[doc.doctype.name])
 values = ASSEMBLE[doc.doctype.name](session, doc.id, xsl, root)
+if opts.dumpfile:
+    with open(opts.dumpfile, "w") as fp:
+        fp.write(dumps(values))
 
 # Store the document and mark it publishable.
-client = DrupalClient(session)
+client = DrupalClient(session, auth=auth, base=opts.base, tier=opts.tier)
 nid = client.push(values)
 documents = [(doc.id, nid, values.get("language", "en"))]
 errors = client.publish(documents)
