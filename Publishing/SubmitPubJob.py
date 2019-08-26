@@ -149,6 +149,72 @@ def checkJobStatus(jobId):
     return row
 
 
+# ---------------------------------------------------------------
+# Function to set the job status to failure
+# On occasion, the publishing job fails to finish (network
+# connectivity issues?) and will get cancelled once the max time
+# allowed is reached.
+# This function sets the job status to 'Failure' so that the job
+# status isn't preventing new jobs from being processed because
+# only one single job (per job type) is allowed to run at a time.
+#
+# If testing this function for a job that *not* actually failed be
+# prepared that the status gets set to 'Failure' but will be
+# updated again - possibly to 'Success' - at the end of the
+# "not-really-failed" publishing job.
+# ---------------------------------------------------------------
+def statusPubJobFailure(jobId):
+    # Defensive programming.
+    tries = MAX_RETRIES
+
+    while tries:
+        try:
+            conn = cdrdb.connect("cdr")
+            cursor = conn.cursor()
+            cursor.execute("""\
+                SELECT id, status, started, completed, messages
+                  FROM pub_proc
+                 WHERE id = %d""" % int(jobId), timeout = 300)
+            row = cursor.fetchone()
+            l.write("Job%d status: %s" % (row[0], row[1]), stdout=True)
+
+            # We can stop trying now, we got it.
+            tries = 0
+
+        except cdrdb.Error, info:
+            l.write("*** Failure connecting to DB ***", stdout=True)
+            l.write("*** Unable to set job status to 'Failure'.", stdout=True)
+            l.write("*** PubJob%d: %s" % ( int(jobId), info[1][0]), stdout=True)
+            waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
+            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
+                                                               waitSecs))
+            time.sleep(waitSecs)
+            tries -= 1
+
+    # Setting the job status to 'Failure' rather than leaving it as
+    # 'In process'.  That way a new job won't fail until the job
+    # status has been manually updated.
+    # -------------------------------------------------------------
+    try:
+        cursor.execute("""\
+            UPDATE pub_proc
+               SET status = 'Failure'
+            WHERE id = %d
+               AND status = 'In process'""" % int(jobId), timeout=300)
+
+        conn.commit()
+    except cdrdb.Error, info:
+        l.write("*** Failure updating job status ***", stdout=True)
+        l.write("*** Manually set the job status to 'Failure'.", stdout=True)
+        l.write("*** PubJob%d: %s" % ( int(jobId), info[1][0]), stdout=True)
+
+    if not row:
+        raise Exception("*** (3) Tried to connect %d times. No Pub Job-ID." %
+                        MAX_RETRIES)
+
+    return row
+
+
 # --------------------------------------------------------------
 # Function to find the job ID of the push job.
 # --------------------------------------------------------------
@@ -213,7 +279,7 @@ def getPushJobId(jobId):
 # ---------------------------------------------------------------------
 def sendFailureMessage(header="*** Error ***", body=""):
     emailDL = cdr.getEmailList('Test Publishing Notification')
-    subject = '[%s] %s' % (TIER, header)
+    subject = header
     if not body:
         body = """
 The publishing job failed.  Please check the log files.
@@ -370,6 +436,7 @@ The publishing job failed.  It did not finish within the maximum time
 allowed.
 """
                 sendFailureMessage(subject, msgBody)
+                statusPubJobFailure(submit[0])
                 sys.exit(1)
 
         # Once the publishing job completed with status Success
