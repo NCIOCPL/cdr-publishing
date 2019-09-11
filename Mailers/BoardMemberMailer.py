@@ -512,7 +512,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                 boardMembers.append(BoardMember(row[0], row[1], row[2],
                                                 row[3], self.__board))
 
-        except Exception, e:
+        except Exception as e:
             raise cdr.Exception("database error building emailer list: %s" %
                                 str(e))
 
@@ -522,8 +522,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         names = {}
         for m in boardMembers:
             asstInfo    = m.formatAsstInfo()
-            addrBlock   = m.address.format(useRtf = True,
-                                           dropUS = True).getBlock()
+            addrBlock   = m.address.format(dropUS = True).getBlock()
             forename    = toRtf(m.name.getGivenName())
             surname     = toRtf(m.name.getSurname())
             memberName  = toRtf(m.name.format(False, False))
@@ -543,7 +542,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@CONTACTINFO@@", contactInfo)
                                    .replace("@@ASSTINFO@@",    asstInfo))
             name = createRtfFilename(forename, surname, names)
-            print "writing %s" % name
+            print("writing %s" % name)
             fp = open(name, "wb")
             fp.write(letter)
             fp.close()
@@ -615,9 +614,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         if placeholder not in letter:
             return letter
         name = "%s/conflict-of-interest-form.rtf" % self.getMailerIncludePath()
-        fp = open(name, "rb")
-        form = fp.read()
-        fp.close()
+        with open(name) as fp:
+            form = fp.read()
         return letter.replace(placeholder, form)
 
     #------------------------------------------------------------------

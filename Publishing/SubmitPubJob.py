@@ -4,8 +4,8 @@
 # ---------------------------------------------------------------------
 # Created:          2007-04-03        Volker Englisch
 # *********************************************************************
-import sys, re, cdr, cdrdb, os, shutil, time, getopt
-
+import sys, re, cdr, os, shutil, time, getopt
+from cdrapi import db
 # Setting the host variable to submit the link for the error report
 # -----------------------------------------------------------------
 host = cdr.APPC
@@ -47,37 +47,38 @@ def parseArgs(args):
 
     global testMode
     global fullMode
-    global l
+    global LOGGER
 
     try:
         shortopts = "tlie"
         longopts  = ["testmode", "livemode", "interim", "export"]
         opts, args = getopt.getopt(args[1:], shortopts, longopts)
-    except getopt.GetoptError, e:
-        l.write("*** Error: Invalid option(s) - %s" % args[1:], stdout = True)
-        l.write("    %s" % str(e), stdout = True)
+    except getopt.GetoptError as e:
+        LOGGER.error("*** Error: Invalid option(s) - %s", args[1:])
+        LOGGER.info("    %s", e)
         usage(args)
 
     for o, a in opts:
         if o in ("-o", "--logfile"):
-            global LOGFILE
-            LOGFILE = a
-            l = cdr.Log(LOGFILE)
+            logname = a
+            if logname.lower().endswith(".log"):
+                logname = logname[:-4]
+            LOGGER = cdr.Logger.get_logger(logname, console=True)
         elif o in ("-t", "--testmode"):
-            l.write("running in TEST mode")
+            LOGGER.info("running in TEST mode")
             testMode = True
         elif o in ("-l", "--livemode"):
-            l.write("running in LIVE mode")
+            LOGGER.info("running in LIVE mode")
             testMode = False
         elif o in ("-n", "--interim"):
-            l.write("running in INTERIM mode")
+            LOGGER.info("running in INTERIM mode")
             fullMode = False
         elif o in ("-e", "--export"):
-            l.write("running in EXPORT mode")
+            LOGGER.info("running in EXPORT mode")
             fullMode = True
 
     if len(args) > 0:
-        print "Additional command line options: %s" % rest
+        print("Additional command line options: %s" % rest)
         usage(args)
     if testMode is None:
         usage(args)
@@ -91,7 +92,7 @@ def parseArgs(args):
 # Function to display the default usage
 # ------------------------------------------------------------
 def usage(args):
-    print args
+    print(args)
     sys.stderr.write("""\
 usage: %s [--livemode|--testmode] [--interim|--export] [options]
 
@@ -121,24 +122,23 @@ def checkJobStatus(jobId):
 
     while tries:
         try:
-            conn = cdrdb.connect("cdr")
+            conn = db.connect(timeout=300)
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT id, status, started, completed, messages
                   FROM pub_proc
-                 WHERE id = %d""" % int(jobId), timeout = 300)
+                 WHERE id = %d""" % int(jobId))
             row = cursor.fetchone()
 
             # We can stop trying now, we got it.
             tries = 0
 
-        except cdrdb.Error, info:
-            l.write("*** Failure connecting to DB ***")
-            l.write("*** Unable to check status for PubJob%d: %s" % (
-                                             int(jobId), info[1][0]))
+        except Exception as e:
+            LOGGER.exception("*** Failure connecting to DB ***")
+            LOGGER.info("*** Unable to check status for PubJob%s", jobId)
             waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
-            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
-                                                               waitSecs))
+            LOGGER.info("    RETRY: %d retries left; waiting %f seconds",
+                        tries, waitSecs)
             time.sleep(waitSecs)
             tries -= 1
 
@@ -166,30 +166,34 @@ def checkJobStatus(jobId):
 def statusPubJobFailure(jobId):
     # Defensive programming.
     tries = MAX_RETRIES
+    row = cursor = None
 
     while tries:
         try:
-            conn = cdrdb.connect("cdr")
+            conn = db.connect(timeout=300)
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT id, status, started, completed, messages
                   FROM pub_proc
-                 WHERE id = %d""" % int(jobId), timeout = 300)
+                 WHERE id = %d""" % int(jobId))
             row = cursor.fetchone()
-            l.write("Job%d status: %s" % (row[0], row[1]), stdout=True)
+            LOGGER.info("Job%d status: %s", row[0], row[1])
 
             # We can stop trying now, we got it.
             tries = 0
 
-        except cdrdb.Error, info:
-            l.write("*** Failure connecting to DB ***", stdout=True)
-            l.write("*** Unable to set job status to 'Failure'.", stdout=True)
-            l.write("*** PubJob%d: %s" % ( int(jobId), info[1][0]), stdout=True)
+        except Exception:
+            LOGGER.exception("*** Failure connecting to DB ***")
+            LOGGER.warning("*** Unable to set job status to 'Failure'.")
+            LOGGER.info("*** PubJob%d: %s", jobId)
             waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
-            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
-                                                               waitSecs))
+            LOGGER.info("    RETRY: %d retries left; waiting %f seconds",
+                        tries, waitSecs)
             time.sleep(waitSecs)
             tries -= 1
+
+    if cursor is None:
+        raise Exception("Unable to connect to the database")
 
     # Setting the job status to 'Failure' rather than leaving it as
     # 'In process'.  That way a new job won't fail until the job
@@ -200,13 +204,13 @@ def statusPubJobFailure(jobId):
             UPDATE pub_proc
                SET status = 'Failure'
             WHERE id = %d
-               AND status = 'In process'""" % int(jobId), timeout=300)
+               AND status = 'In process'""" % int(jobId))
 
         conn.commit()
-    except cdrdb.Error, info:
-        l.write("*** Failure updating job status ***", stdout=True)
-        l.write("*** Manually set the job status to 'Failure'.", stdout=True)
-        l.write("*** PubJob%d: %s" % ( int(jobId), info[1][0]), stdout=True)
+    except Exception:
+        LOGGER.exception("*** Failure updating job status ***")
+        LOGGER.info("*** Manually set the job status to 'Failure'.")
+        LOGGER.info("*** PubJob%s", jobId)
 
     if not row:
         raise Exception("*** (3) Tried to connect %d times. No Pub Job-ID." %
@@ -225,7 +229,7 @@ def getPushJobId(jobId):
 
     while tries:
         try:
-            conn = cdrdb.connect()
+            conn = db.connect()
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT id, status, started, completed
@@ -235,7 +239,7 @@ def getPushJobId(jobId):
                    AND (pub_subset LIKE '%%_Interim-Export'
                         OR
                         pub_subset LIKE '%%_Export')
-                   """ % int(jobId), timeout = 300)
+                   """ % int(jobId))
             row = cursor.fetchone()
 
             # If the SELECT returns nothing a push job was not submitted
@@ -243,26 +247,25 @@ def getPushJobId(jobId):
             # Otherwise the push job may already have completed.
             # -----------------------------------------------------------
             if row == None:
-                l.write("*** Error - No push job waiting. Check for pending job",
-                         stdout=True)
+                LOGGER.error("*** Error - No push job waiting. "
+                             "Check for pending job")
                 cursor.execute("""\
                    SELECT id, messages
                      FROM pub_proc
-                    WHERE id = %d""" % int(jobId), timeout = 300)
+                    WHERE id = %d""" % int(jobId))
                 row = cursor.fetchone()
-                l.write("%s" % row[1], stdout=True)
+                LOGGER.info("%s", row[1])
                 raise Exception("No push job waiting")
 
             # We can stop trying now, we got it.
             tries = 0
 
-        except cdrdb.Error, info:
-            l.write("*** Failure connecting to DB ***")
-            l.write("*** Unable to find status for PushJob%d: %s" % (
-                                           int(jobId), info[1][0]))
+        except Exception:
+            LOGGER.exception("*** Failure connecting to DB ***")
+            LOGGER.info("*** Unable to find status for PushJob%s", jobId)
             waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
-            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
-                                                               waitSecs))
+            LOGGER.info("    RETRY: %d retries left; waiting %f seconds",
+                        tries, waitSecs)
             time.sleep(waitSecs)
             tries -= 1
 
@@ -302,15 +305,15 @@ def checkPubJob():
 
     while tries:
         try:
-            conn = cdrdb.connect()
+            conn = db.connect()
             cursor = conn.cursor()
             cursor.execute("""\
                 SELECT id, pub_subset, status, started, completed
                   FROM pub_proc
                  WHERE status not in ('Failure', 'Success')
                    AND pub_system = 178
-                   AND pub_subset LIKE '%%Export' """, timeout = 300)
-    #              AND pub_subset LIKE '%%_%s' """ % pubType, timeout = 300)
+                   AND pub_subset LIKE '%%Export' """)
+    #              AND pub_subset LIKE '%%_%s' """ % pubType)
             row = cursor.fetchone()
 
             if row:
@@ -319,14 +322,13 @@ def checkPubJob():
             # We can stop trying now, we got it.
             tries = 0
 
-        except cdrdb.Error, info:
-            l.write("*** Failure connecting to DB ***")
-            l.write("*** Unable to find status for PubJob%d: %s" % (int(jobId),
-                                                              info[1][0]))
+        except Exception:
+            LOGGER.exception("*** Failure connecting to DB ***")
+            LOGGER.info("*** Unable to find status for PubJob%s: %s", jobId)
             waitSecs = (MAX_RETRIES + 1 - tries) * RETRY_MULTIPLIER
-            l.write("    RETRY: %d retries left; waiting %f seconds" % (tries,
-                                                               waitSecs))
-            l.write("waitSecs: %d" % waitSecs)
+            LOGGER.info("    RETRY: %d retries left; waiting %f seconds",
+                        tries, waitSecs)
+            LOGGER.info("waitSecs: %d", waitSecs)
             time.sleep(waitSecs)
             tries -= 1
 
@@ -341,9 +343,9 @@ def checkPubJob():
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
-l   = cdr.Log('PubJob.log')
-l.write("SubmitPubJob - Started", stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
+LOGGER = cdr.Logging.get_logger("PubJob", console=True)
+LOGGER.info("SubmitPubJob - Started")
+LOGGER.info('Arguments: %s', sys.argv)
 
 parseArgs(sys.argv)
 
@@ -362,7 +364,7 @@ try:
     # Also, if a publishing job ran but the push job failed the
     # initiated push job would fail with a message 'Push job pending'.
     # ---------------------------------------------------------------
-    l.write("Checking job queue ...", stdout=True)
+    LOGGER.info("Checking job queue ...")
 
     # checkPubJob will exit if another job is already running
     # -------------------------------------------------------
@@ -370,23 +372,20 @@ try:
         # currentJobs = checkPubJob(pubSubset)
         currentJobs = checkPubJob()
         if currentJobs:
-            l.write("\n%s job is still running." % pubSubset,
-                                                  stdout = True)
-            l.write("Job%s status: %s" % (currentJobs[0], currentJobs[2]),
-                                                  stdout = True)
-            l.write("Job%s type  : %s" % (currentJobs[0], currentJobs[1]),
-                                                  stdout = True)
+            LOGGER.error("\n%s job is still running.", pubSubset)
+            LOGGER.error("Job%s status: %s", currentJobs[0], currentJobs[2])
+            LOGGER.error("Job%s type  : %s", currentJobs[0], currentJobs[1])
             raise Exception("Job%s still in process (%s: %s)" %
                             (currentJobs[0], pubSubset, currentJobs[2]))
     except:
         raise
 
-    l.write("   OK to submit", stdout=True)
+    LOGGER.info("   OK to submit")
 
     # Submitting publishing job.  If an integer job ID is returned
     # we continue.  Otherwise, submitting the job failed and we exit.
     # ---------------------------------------------------------------
-    l.write("Submitting publishing job...", stdout=True)
+    LOGGER.info("Submitting publishing job...")
     jobDescription = "Auto %s, %s" % (pubSubset,
                                     time.strftime('%Y-%m-%d %H:%M:%S'))
     submit = cdr.publish(session, pubSystem, pubSubset,
@@ -394,12 +393,12 @@ try:
                          email = pubEmail)
 
     if submit[0] == None:
-        l.write("*** Failure starting publishing job ***", stdout = True)
-        l.write("%s" % submit[1], stdout = True)
+        LOGGER.error("*** Failure starting publishing job ***")
+        LOGGER.error("%s", submit[1])
         sys.exit(1)
     else:
-        l.write("Pub job started as Job%s" % submit[0], stdout = True)
-        l.write("Waiting for publishing job to complete...", stdout = True)
+        LOGGER.info("Pub job started as Job%s", submit[0])
+        LOGGER.info("Waiting for publishing job to complete...")
 
     # We started the publishing job.  Now we need to wait until
     # publishing (and pushing) is complete before we exit the
@@ -419,17 +418,14 @@ try:
         # Don't print every time we're checking (every 15 minutes)
         # ---------------------------------------------------------
         if counter % 15 == 0:
-            l.write("    Status: %s (%d sec)" % (status, counter * wait),
-                                                 stdout=True)
+            LOGGER.info("    Status: %s (%d sec)", status, counter*wait)
 
             #if counter * wait > 23000:
             if counter * wait > waitTotal:
-                l.write("*** Publishing job failed to finish!!!",
-                                                            stdout=True)
-                l.write("*** Completion exceeded maximum time allowed",
-                                                            stdout = True)
-                l.write("*** Cancelled after %s hours" % (waitTotal/(60 * 60)),
-                                                            stdout = True)
+                hours = waitTotal / (60 * 60)
+                LOGGER.error("*** Publishing job failed to finish!!!")
+                LOGGER.error("*** Completion exceeded maximum time allowed")
+                LOGGER.error("*** Cancelled after %s hours", hours)
                 subject = "Publishing Failure: Max time exceeded"
                 msgBody = """
 The publishing job failed.  It did not finish within the maximum time
@@ -444,14 +440,14 @@ allowed.
         # We will continue after both jobs completed with Success.
         # --------------------------------------------------------
         if status in ('Verifying', 'Success'):
-           l.write("Publishing job started at %s" % jobInfo[2], stdout=True)
-           l.write("         and completed at %s" % jobInfo[3], stdout=True)
+           LOGGER.info("Publishing job started at %s", jobInfo[2])
+           LOGGER.info("         and completed at %s", jobInfo[3])
            try:
                pushId = getPushJobId(submit[0])
-               l.write("Push job started as Job%s" % pushId, stdout=True)
+               LOGGER.info("Push job started as Job%s", pushId)
            except:
-               l.write("*** Failed to submit Push job for Job%s" % submit[0],
-                        stdout=True)
+               LOGGER.exception("*** Failed to submit Push job for Job%s",
+                                submit[0])
                sys.exit(1)
 
            pdone = 0
@@ -465,29 +461,24 @@ allowed.
                jobInfo = checkJobStatus(pushId)
                pstatus = jobInfo[1]
                if pcounter % 15 == 0:
-                   l.write("    Status: %s (%d sec)" % (pstatus,
-                                                        pcounter * wait),
-                                                        stdout=True)
-
+                   args = pstatus, pcounter * wait
+                   LOGGER.info("    Status: %s (%d sec)", *args)
                if pstatus in ('Verifying', 'Success'):
                    pdone = 1
-                   l.write("   Pushing job started at %s" % jobInfo[2],
-                                                             stdout=True)
-                   l.write("         and completed at %s" % jobInfo[3],
-                                                             stdout=True)
+                   LOGGER.info("   Pushing job started at %s", jobInfo[2])
+                   LOGGER.info("         and completed at %s", jobInfo[3])
                elif pstatus == 'Failure':
-                   l.write("*** Push job failed at %s" % jobInfo[3],
-                           stdout=True)
-                   l.write("         Status:  %s" % pstatus, stdout=True)
-                   l.write("%s" % jobInfo[4], stdout=True)
+                   LOGGER.error("*** Push job failed at %s", jobInfo[3])
+                   LOGGER.info("         Status:  %s", pstatus)
+                   LOGGER.info("%s", jobInfo[4])
                    sys.exit(1)
                else:
                    pdone = 0
 
            done = 1
         elif status == 'Failure':
-           l.write("*** Error - Publication job failed", stdout=True)
-           l.write("... %s" % messages[-500:], stdout=True)
+           LOGGER.error("*** Error - Publication job failed")
+           LOGGER.error("... %s", messages[-500:])
            subject = "*** Publishing Failure: The current job did not succeed!"
            msgBody = """
 The publishing job started but did not complete successfully.
@@ -526,7 +517,7 @@ See logs below:
         if not len(emailDL):
             emailDL = cdr.getEmailList("Developers Notification")
             subject = '*** DL Missing *** %s' % subject
-            l.write('*** Warning: No Email DL found')
+            LOGGER.warning('*** Warning: No Email DL found')
 
         message   = """\
 
@@ -552,19 +543,18 @@ Push Job Output:
 
         notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
 
-        l.write("Submitting Email: %s" % (notify or 'OK'), stdout = True)
+        LOGGER.info("Submitting Email: %s", notify or 'OK')
     except:
-        l.write("*** Error sending email ***", stdout = True)
+        LOGGER.exception("*** Error sending email ***")
         raise
 
-except Exception, arg:
-    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+except Exception as arg:
+    LOGGER.exception("*** Standard Failure")
     subject = '*** [%s] SubmitPubJob.py - Standard Failure' % TIER
     msgBody = "The publishing job failed:  %s" % arg
     sendFailureMessage(subject, msgBody)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True,
-                                                            tback = 1)
+    LOGGER.exception("*** Error - Program stopped with failure ***")
     raise
 
 sys.exit(0)

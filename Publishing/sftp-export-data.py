@@ -236,7 +236,7 @@ class Control:
         try:
             os.remove(destination)
         except:
-            print("Can't remove {}".format(destination))
+            print(("Can't remove {}".format(destination)))
         shutil.move("full.tar.gz", destination)
         full = self.PUB_SHADOW_FULL
         shutil.rmtree(full, ignore_errors=True)

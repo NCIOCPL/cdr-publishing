@@ -13,9 +13,9 @@ try:
     cdrpub.Control(jobId).publish()
     open(log, "a").write("Job %d: Ended at: %s\nJob %d: %s\n" % \
         (jobId, time.ctime(time.time()), jobId, divider))
-except cdrdb.Error, info:
+except cdrdb.Error as info:
     open(log, "a").write("Job %d: Database failure: %s\n" % (jobId, info[1][0]))
-except Exception, arg:
+except Exception as arg:
     open(log, "a").write("Job %d: Failure: %s\n" % (jobId, arg[0]))
 except SystemExit:
     # The mailers invoke sys.exit(0) when they're done, raising this exception.

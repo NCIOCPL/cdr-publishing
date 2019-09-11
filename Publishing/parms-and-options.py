@@ -32,10 +32,10 @@ for name in ("Primary.xml", "QcFilterSets.xml"):
             Option.options[option.name] = set()
         Option.options[option.name].add(option.value)
 for parm in sorted(Parm.parms):
-    print parm
+    print(parm)
     for value in sorted(Parm.parms[parm]):
-        print "\t%s" % value
+        print("\t%s" % value)
 for option in sorted(Option.options):
-    print option
+    print(option)
     for value in sorted(Option.options[option]):
-        print "\t%s" % value
+        print("\t%s" % value)

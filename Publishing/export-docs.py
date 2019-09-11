@@ -104,7 +104,7 @@ class Control:
 
         filename = doc.export_filename
         if self.opts.get("level") == "DEBUG":
-            print(doc.cdr_id)
+            print((doc.cdr_id))
         directory = self.work_dir
         if self.subdir:
             directory += "/{}".format(self.subdir)

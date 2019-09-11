@@ -17,9 +17,9 @@ if len(sys.argv) < 3:
 # Open Log file and enter start message
 # -------------------------------------
 LOGFILE    = 'PubEmail.log'
-l = cdr.Log(LOGFILE)
-l.write('PubEmail Notification - Started', stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
+LOGGER  = cdr.Logging.get_logger("PubEmail")
+LOGGER.info('PubEmail Notification - Started')
+LOGGER.info('Arguments: %s', sys.argv)
 
 # Retrieve the Email addresses from the specified group
 # -----------------------------------------------------
@@ -43,10 +43,10 @@ try:
 
     x =  cdr.sendMail(sender, emailDL, subject, message)
 except:
-    l.write('*** Error:\n%s' % str(x), stdout = True)
+    LOGGER.exception('*** Failure sending email message')
     raise
 
 # All done, we can go home now
 # ----------------------------
-l.write('PubEmail Notification - Finished', stdout = True)
+LOGGER.info('PubEmail Notification - Finished')
 sys.exit(0)

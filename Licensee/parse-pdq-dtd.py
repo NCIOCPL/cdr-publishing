@@ -67,7 +67,7 @@ class Element:
         self.drop = False
     def show_dropped_elements(self, indent=0):
         if self.name in Element.drop:
-            print "%s%s" % ("  " * indent, self.name)
+            print("%s%s" % ("  " * indent, self.name))
             Element.shown.add(self.name)
             for name in self.children:
                 child = Element.elements[name]
@@ -80,7 +80,7 @@ class Element:
             self.fetch_children(node.right)
     def show_children(self):
         for child in self.children:
-            print " ", child
+            print(" ", child)
     def add_doc_type(self, doc_type):
         if doc_type not in self.doc_types:
             self.doc_types.add(doc_type)
@@ -96,7 +96,7 @@ dtd = etree.DTD(filename)
 for e in dtd.iterelements():
     element = Element(e)
     if element.name in Element.elements:
-        print >>sys.stderr, element.name, "HAS MULTIPLE DEFINITIONS"
+        print(element.name, "HAS MULTIPLE DEFINITIONS", file=sys.stderr)
     else:
         Element.elements[element.name] = element
 
@@ -107,7 +107,7 @@ for element in Element.elements.itervalues():
     for name in element.children:
         child = Element.elements.get(name)
         if not child:
-            print >>sys.stderr, name, "DEFINITION NOT FOUND"
+            print(name, "DEFINITION NOT FOUND", file=sys.stderr)
         else:
             child.used_by[element.name] = element
 
@@ -133,7 +133,7 @@ for element in Element.elements.itervalues():
 for doc_type in sorted(DROP):
     Element.elements[doc_type].show_dropped_elements()
 for name in sorted(Element.drop - Element.shown):
-    print name
+    print(name)
 
 #----------------------------------------------------------------------
 # Parse the new DTD and identify missing or unwanted elements.
@@ -142,7 +142,7 @@ dtd = etree.DTD(filename + ".new")
 new = set([e.name for e in dtd.iterelements()])
 for name in sorted(new):
     if name not in Element.keep:
-        print >>sys.stderr, "NEED TO DROP %s" % name
+        print("NEED TO DROP %s" % name, file=sys.stderr)
 for name in sorted(Element.keep):
     if name not in new:
-        print >>sys.stderr, "MISSING %s" % name
+        print("MISSING %s" % name, file=sys.stderr)

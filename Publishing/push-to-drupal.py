@@ -42,7 +42,7 @@ if not session.can_do("USE PUBLISHING SYSTEM"):
 
 # Prepare the document.
 doc = Doc(session, id=opts.id)
-print("Pushing {} document {}".format(doc.doctype.name, doc.cdr_id))
+print(("Pushing {} document {}".format(doc.doctype.name, doc.cdr_id)))
 root = Control.fetch_exported_doc(session, doc.id, "pub_proc_cg")
 xsl = Doc.load_single_filter(session, FILTERS[doc.doctype.name])
 values = ASSEMBLE[doc.doctype.name](session, doc.id, xsl, root)
@@ -55,6 +55,6 @@ client = DrupalClient(session, auth=auth, base=opts.base, tier=opts.tier)
 nid = client.push(values)
 documents = [(doc.id, nid, values.get("language", "en"))]
 errors = client.publish(documents)
-print("pushed {} as Drupal node {:d}".format(doc.cdr_id, nid))
+print(("pushed {} as Drupal node {:d}".format(doc.cdr_id, nid)))
 if errors:
     print(errors)

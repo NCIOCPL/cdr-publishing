@@ -32,4 +32,4 @@ for doc_id, doc_ver in query.execute(cursor).fetchall():
         fp = open(fs_name, "wb")
         fp.write(from_fs)
         fp.close()
-        print "diff %s %s" % (db_name, fs_name)
+        print("diff %s %s" % (db_name, fs_name))

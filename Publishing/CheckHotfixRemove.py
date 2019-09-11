@@ -12,11 +12,11 @@
 #
 # BZIssue::4732 - Change in logic for pulling documents from Cancer.gov
 # *********************************************************************
-import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
+import sys, cdr, os, time, optparse, smtplib, glob
+from cdrapi import db
 
 # OUTPUTBASE     = cdr.BASEDIR + "/Output/HotfixRemove"
 # DOC_FILE       = "HotfixRemove"
-LOGNAME        = "HotfixRemove.log"
 SMTP_RELAY     = "MAILFWD.NIH.GOV"
 STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
@@ -78,14 +78,14 @@ def parseArguments(args):
     # Read and process options, if any
     # --------------------------------
     if parser.values.testMode:
-        l.write("Running in TEST mode", stdout = True)
+        LOGGER.info("Running in TEST mode")
     else:
-        l.write("Running in LIVE mode", stdout = True)
+        LOGGER.info("Running in LIVE mode")
 
     if parser.values.emailMode:
-        l.write("Running in EMAIL mode", stdout = True)
+        LOGGER.info("Running in EMAIL mode")
     else:
-        l.write("Running in NOEMAIL mode", stdout = True)
+        LOGGER.info("Running in NOEMAIL mode")
 
     return parser
 
@@ -121,12 +121,12 @@ Subject: %s
 
 
 # ---------------------------------------------------------------------
-# Instantiate the Log class
+# Instantiate the logging class
 # ---------------------------------------------------------------------
-l   = cdr.Log(LOGNAME)
-l.write("CheckHotfixRemove - Started", stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
-print ''
+LOGGER = cdr.Logging.get_logger("HotfixRemove", console=True)
+LOGGER.info("CheckHotfixRemove - Started")
+LOGGER.info('Arguments: %s', sys.argv)
+print('')
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
@@ -141,7 +141,7 @@ try:
 
     # Connect to the database and retrieve documents to be removed
     # --------------------------------------------------------------
-    conn = cdrdb.connect()
+    conn = db.connect(timeout=300)
     cursor = conn.cursor()
     allDocs = []
 
@@ -162,12 +162,11 @@ try:
          WHERE dt.name = 'GlossaryTermName'
            AND p.path  = '/GlossaryTermName/TermNameStatus'
            AND p.value NOT IN ('Approved', 'Revision pending')
-""", timeout = 300)
+""")
 
         rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure retrieving GlossaryTerms: \n%s" % info[1][0],
-                 stdout = True)
+    except Exception:
+        LOGGER.exception("Failure retrieving GlossaryTerms")
         sendErrorMessage('SQL query timeout error')
         raise
 
@@ -191,11 +190,10 @@ try:
            AND p.value NOT IN ('Reviewed-Problematic',
                               'Reviewed-Retain',
                               'Unreviewed')
-""", timeout = 300)
+""")
         rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure retrieving Terms: \n%s" % info[1][0],
-                 stdout = True)
+    except Exception:
+        LOGGER.exception("Failure retrieving Terms")
         sendErrorMessage('SQL query timeout error')
         raise
 
@@ -219,11 +217,10 @@ try:
                         '/GeneticsProfessionalDetails'    +
                         '/AdministrativeInformation/Directory/Include'
            AND p.value NOT IN ('Include')
-""", timeout = 300)
+""")
         rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure retrieving Genetics Profs: \n%s" % info[1][0],
-                 stdout = True)
+    except Exception:
+        LOGGER.exception("Failure retrieving Genetics Profs")
         sendErrorMessage('SQL query timeout error')
         raise
 
@@ -232,9 +229,9 @@ try:
     # Create the message body and display the query results
     # -----------------------------------------------------
     if len(allDocs):
-        l.write("", stdout = True)
-        l.write('List of Hotfix-Remove Candidates', stdout = True)
-        l.write('--------------------------------', stdout = True)
+        LOGGER.info("")
+        LOGGER.info('List of Hotfix-Remove Candidates')
+        LOGGER.info('--------------------------------')
         mailBody = u"""\
 <html>
  <head>
@@ -263,7 +260,7 @@ try:
 
         try:
             for doc in allDocs:
-                l.write('%s - %s' % (doc[0], doc[1]), stdout = True)
+                LOGGER.info('%s - %s', doc[0], doc[1])
 
                 mailBody += u"""\
    <tr>
@@ -273,9 +270,8 @@ try:
     <td>%s</td>
    </tr>
 """ % (doc[0], doc[1], doc[2], doc[3])
-        except Exception, info:
-            l.write("Failure creating report: \n%s" % info[1][0],
-                     stdout = True)
+        except Exception as info:
+            LOGGER.exception("Failure creating report")
             sendErrorMessage('Unicode convertion error')
             raise
 
@@ -322,27 +318,27 @@ Subject: %s
     if emailMode:
         try:
             server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
-        except Exception, info:
-            sys.exit("*** Error sending message: %s" % str(info))
+        except Exception as info:
+            LOGGER.exception("Failure sending message")
+            sys.exit(f"*** Error sending message: {info}")
     else:
-        l.write("Running in NOEMAIL mode.  No message send", stdout = True)
+        LOGGER.info("Running in NOEMAIL mode.  No message send")
     server.quit()
 
 # except NothingFoundError, arg:
 #     msg  = "No documents found with 'CTGovTransfer' element"
-#     l.write("   %s" % msg, stdout = True)
-#     l.write("   %s" % arg, stdout = True)
-except NoNewDocumentsError, arg:
+#     LOGGER.info("   %s", msg)
+#     LOGGER.info("   %s", arg)
+except NoNewDocumentsError as arg:
     msg  = "No new documents found to be removed"
-    l.write("", stdout = True)
-    l.write("   %s" % msg, stdout = True)
-    l.write("   %s" % arg, stdout = True)
-except Exception, arg:
-    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+    LOGGER.info("")
+    LOGGER.info("   %s", msg)
+    LOGGER.info("   %s", arg)
+except Exception as arg:
+    LOGGER.exception("*** Standard Failure - %s", arg)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True,
-                                                            tback = 1)
+    LOGGER.exception("*** Error - Program stopped with failure ***")
     raise
 
-l.write("CheckHotfixRemove - Finished", stdout = True)
+LOGGER.info("CheckHotfixRemove - Finished")
 sys.exit(0)
