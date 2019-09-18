@@ -55,7 +55,7 @@ class BoardValues:
     def findBoardValues(name):
         bn = name.upper()
         if not bn in _boardValues:
-            raise cdr.Exception(u"No board values found for board %s" % name)
+            raise Exception(u"No board values found for board %s" % name)
         return _boardValues[bn]
     findBoardValues = staticmethod(findBoardValues)
 
@@ -151,7 +151,7 @@ class Board:
                AND value = 'PDQ Adult Treatment Editorial Board'""")
         rows = self.cursor.fetchall()
         if not rows:
-            raise cdr.Exception("Unable to find Adult Treatment "
+            raise Exception("Unable to find Adult Treatment "
                                 "Editor-in-Chief")
         return self.__findEditorInChief(rows[0][0])
 
@@ -164,7 +164,7 @@ class Board:
         doc = cdr.getDoc('guest', docId, version = ver, getObject = True)
         errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
         if errors:
-            raise cdr.Exception(u"loading doc for board %d: %s" %
+            raise Exception(u"loading doc for board %d: %s" %
                                 (id, u"; ".join(errors)))
         dom = xml.dom.minidom.parseString(doc.xml)
         for node in dom.documentElement.childNodes:
@@ -198,9 +198,9 @@ class Board:
                         self.edBoardId = cdr.exNormalize(edBoardId)[1]
                 self.manager = self.Manager(managerNode, phoneNode, emailNode)
         if not self.name or not self.name.strip():
-            raise cdr.Exception("no name found for board in document %d" % id)
+            raise Exception("no name found for board in document %d" % id)
         if not self.manager:
-            raise cdr.Exception("no board manager found in document %d" % id)
+            raise Exception("no board manager found in document %d" % id)
         self.boardValues = BoardValues.findBoardValues(self.name)
         self.summaryType = self.boardValues.summaryType
         self.workingGroups = self.boardValues.workingGroupBlock
@@ -217,7 +217,7 @@ class Board:
             self.advBoardId   = self.__findAdvBoardFor(self.id)
             self.advBoardName = self.__getBoardName(self.advBoardId)
         else:
-            raise cdr.Exception('Board type: %s' % self.boardType)
+            raise Exception('Board type: %s' % self.boardType)
 
     def __findAdvBoardFor(self, id):
         self.cursor.execute("""\
@@ -240,7 +240,7 @@ class Board:
                         AND doc_id = ?""", id)
         rows = self.cursor.fetchall()
         if not rows:
-            raise cdr.Exception("Unable to find name for org %s" % id)
+            raise Exception("Unable to find name for org %s" % id)
         return rows[0][0]
 
     def __findEditorInChief(self, id):
@@ -273,29 +273,29 @@ class Board:
                                  (today, today), id)
         rows = self.cursor.fetchall()
         if not rows:
-            raise cdr.Exception("No editor in chief for board %d" % id)
+            raise Exception("No editor in chief for board %d" % id)
         if len(rows) > 1:
-            raise cdr.Exception("Too many (%d) editors-in-chief for board %d" %
+            raise Exception("Too many (%d) editors-in-chief for board %d" %
                                 (len(rows), id))
         return self.EditorInChief(rows[0][0])
 
     class Manager:
         def __init__(self, nameNode, phoneNode, emailNode):
             if not nameNode:
-                raise cdr.Exception("Missing BoardManager element")
+                raise Exception("Missing BoardManager element")
             elif not phoneNode:
-                raise cdr.Exception("Missing required phone for board manager")
+                raise Exception("Missing required phone for board manager")
             elif not emailNode:
-                raise cdr.Exception("Missing required email for board manager")
+                raise Exception("Missing required email for board manager")
             self.name  = cdr.getTextContent(nameNode).strip()
             self.phone = cdr.getTextContent(phoneNode).strip()
             self.email = cdr.getTextContent(emailNode).strip()
             if not self.name:
-                raise cdr.Exception("Name required for board manager")
+                raise Exception("Name required for board manager")
             if not self.phone:
-                raise cdr.Exception("Phone required for board manager")
+                raise Exception("Phone required for board manager")
             if not self.email:
-                raise cdr.Exception("Email required for board manager")
+                raise Exception("Email required for board manager")
 
     class EditorInChief:
         def __init__(self, id):
@@ -308,14 +308,14 @@ class Board:
             errors = cdr.getErrors(doc, errorsExpected = False,
                                    asSequence = True)
             if errors:
-                raise cdr.Exception(u"loading doc %d for editor in chief: %s" %
+                raise Exception(u"loading doc %d for editor in chief: %s" %
                                     (id, u"; ".join(errors)))
             dom = xml.dom.minidom.parseString(doc.xml)
             for node in dom.documentElement.childNodes:
                 if node.nodeName == "PersonNameInformation":
                     self.name = cdrmailer.PersonalName(node)
             if not self.name:
-                raise cdr.Exception("No name found for editor-in-chief %d" % id)
+                raise Exception("No name found for editor-in-chief %d" % id)
 
     class MeetingDate:
         def __init__(self, node):
@@ -351,7 +351,7 @@ class BoardMember:
         self.__parseMemberDoc(memberId, memberVer)
         self.__parsePersonDoc(personId, personVer, board.cursor)
         if not self.name:
-            raise cdr.Exception("No personal name information for board "
+            raise Exception("No personal name information for board "
                                 "member %d" % memberId)
 
     def getSummaryList(self):
@@ -378,7 +378,7 @@ class BoardMember:
         doc = cdr.getDoc('guest', id, version = str(ver), getObject = True)
         errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
         if errors:
-            raise cdr.Exception(u"loading member doc: %s" % u"; ".join(errors))
+            raise Exception(u"loading member doc: %s" % u"; ".join(errors))
         dom = xml.dom.minidom.parseString(doc.xml)
         for node in dom.documentElement.childNodes:
             if node.nodeName == "BoardMemberContact":
@@ -401,7 +401,7 @@ class BoardMember:
                             AND doc_id = ?""", id)
             rows = cursor.fetchall()
             if not rows:
-                raise cdr.Exception("No CIPS contact found for board member %d"
+                raise Exception("No CIPS contact found for board member %d"
                                     % id)
             self.contactId = rows[0][0]
 
@@ -411,7 +411,7 @@ class BoardMember:
         result  = cdr.filterDoc('guest', filters, id, docVer = str(ver),
                                 parm = (('fragId', self.contactId),))
         if type(result) in (type(""), type(u"")):
-            raise cdr.Exception("failure extracting contact address for %s: %s"
+            raise Exception("failure extracting contact address for %s: %s"
                                 % (id, result))
         self.address = cdrmailer.Address(result[0], cdrmailer.TITLE_AFTER_NAME)
         self.name = self.address.getPersonalName()
@@ -513,7 +513,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                                 row[3], self.__board))
 
         except Exception as e:
-            raise cdr.Exception("database error building emailer list: %s" %
+            raise Exception("database error building emailer list: %s" %
                                 str(e))
 
         template = self.__prepareTemplate()
@@ -554,7 +554,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
     def __prepareTemplate(self):
         letter = self.getParm('Letter')
         if not letter:
-            raise cdr.Exception("No Letter template specified")
+            raise Exception("No Letter template specified")
         name       = '%s/%s.rtf' % (self.getMailerIncludePath(), letter[0])
         title      = lookupLetterTitle(letter[0])
         subject    = "Board Member Correspondence Mailer"
@@ -645,7 +645,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                    ORDER BY topic.value""", board.edBoardId)
         rows = self.getCursor().fetchall()
         if not rows:
-            raise cdr.Exception("Unable to find topics for %s" %
+            raise Exception("Unable to find topics for %s" %
                                 board.edBoardName)
         lines = []
         for row in rows:
@@ -658,7 +658,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
     def __loadBoardInfo(self):
         boardId = self.getParm('Board')
         if not boardId:
-            raise cdr.Exception("Missing BoardId for BoardMemberMailer")
+            raise Exception("Missing BoardId for BoardMemberMailer")
         boardId = int(boardId[0])
         #print "boardId = %d" % boardId
         self.__board = Board(boardId, self.getCursor())

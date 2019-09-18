@@ -2,7 +2,7 @@
 # Bridge PublishingService.py to cdrpub.py
 #----------------------------------------------------------------------
 
-import sys, string, cdrdb, cdrpub, time
+import sys, string, cdrpub, time
 
 log = "d:/cdr/log/publish.log"
 jobId = string.atoi(sys.argv[1])
@@ -13,8 +13,6 @@ try:
     cdrpub.Control(jobId).publish()
     open(log, "a").write("Job %d: Ended at: %s\nJob %d: %s\n" % \
         (jobId, time.ctime(time.time()), jobId, divider))
-except cdrdb.Error as info:
-    open(log, "a").write("Job %d: Database failure: %s\n" % (jobId, info[1][0]))
 except Exception as arg:
     open(log, "a").write("Job %d: Failure: %s\n" % (jobId, arg[0]))
 except SystemExit:
