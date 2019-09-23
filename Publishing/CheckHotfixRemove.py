@@ -232,7 +232,7 @@ try:
         LOGGER.info("")
         LOGGER.info('List of Hotfix-Remove Candidates')
         LOGGER.info('--------------------------------')
-        mailBody = u"""\
+        mailBody = """\
 <html>
  <head>
   <title>Document Candidates to be removed from Cancer.gov</title>
@@ -262,7 +262,7 @@ try:
             for doc in allDocs:
                 LOGGER.info('%s - %s', doc[0], doc[1])
 
-                mailBody += u"""\
+                mailBody += """\
    <tr>
     <td>%s</td>
     <td>CDR%010d</td>
@@ -275,7 +275,7 @@ try:
             sendErrorMessage('Unicode convertion error')
             raise
 
-        mailBody += u"""\
+        mailBody += """\
   </table>
 
  </body>
@@ -302,7 +302,7 @@ try:
 From: %s
 To: %s
 Subject: %s
-""" % (STR_FROM, u', '.join(strTo), subject)
+""" % (STR_FROM, ', '.join(strTo), subject)
 
     mailHeader   += "Content-type: text/html; charset=utf-8\n"
 

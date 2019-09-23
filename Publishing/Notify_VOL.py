@@ -374,7 +374,7 @@ LOGGER.info('Blocked Media Documents:\n%s\n', delMediaChanges)
 sender   = 'NCIPDQoperator@mail.nih.gov'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
-html     = u"""
+html     = """
 <html>
  <head>
   <title>Media List Report</title>
@@ -443,7 +443,7 @@ if newImages:
     newReport = createRows(newMediaChanges)
     html += tableHeader % newReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
@@ -455,7 +455,7 @@ if updImages:
     updReport = createRows(updMediaChanges)
     html += tableHeader % updReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
@@ -466,11 +466,11 @@ if delImages:
     delReport = createRows(delMediaChanges)
     html += tableHeader % delReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
-html += u"""
+html += """
  </body>
 </html>"""
 

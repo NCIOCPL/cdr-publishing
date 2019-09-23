@@ -277,7 +277,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
 
                 # Add a comment but preserve existing comments.
                 # ---------------------------------------------
-                updateMessage(u'Resetting failure=%s to re-verify.' % row[1],
+                updateMessage('Resetting failure=%s to re-verify.' % row[1],
                                                          jobId, row[0])
 
         # b) Setting all docs to failure that still failed
@@ -304,7 +304,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                          WHERE pub_proc = ?
                            AND doc_id = ?""", (jobId, doc.cdrId))
                     conn.commit()
-                    updateMessage(u'Setting failure=Y at re-verify.',
+                    updateMessage('Setting failure=Y at re-verify.',
                                                              jobId, doc.cdrId)
         else:
             LOGGER.info('Failures: None')
@@ -339,14 +339,14 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                   FROM pub_proc
                  WHERE id = ?""", jobId)
             rows = cursor.fetchall()
-            updateMessage(u'Re-verify push job. '
+            updateMessage('Re-verify push job. '
                            'Old job status = %s' % rows[0][0], jobId, docId = 0)
             cursor.execute("""\
                 UPDATE pub_proc
                    SET status = ?
                  WHERE id = ?""", (jobStatus, jobId))
             conn.commit()
-            updateMessage(u'Re-verify push job. '
+            updateMessage('Re-verify push job. '
                            'New job status = %s' % jobStatus, jobId, docId = 0)
         LOGGER.info("Status of Job %s set to '%s'", jobId, jobStatus)
         return
@@ -409,7 +409,7 @@ try:
     # Verify loading of documents pushed to Cancer.gov.
     # -------------------------------------------------
     try:
-        newQuery = u"""\
+        newQuery = """\
             SELECT id, completed
               FROM pub_proc
              WHERE status = '%s'""" % status

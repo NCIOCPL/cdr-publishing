@@ -19,12 +19,6 @@ from cdrapi.docs import Doc
 from cdrapi.settings import Tier
 from cdrapi.users import Session
 
-try:
-    basestring
-except:
-    basestring = str, bytes
-    unicode = str
-
 
 class Control:
     """
@@ -182,9 +176,7 @@ class Control:
 
         with open(self.dtd_path) as fp:
             dtd = etree.DTD(fp)
-        if isinstance(doc, basestring):
-            if isinstance(doc, unicode):
-                doc = doc.encode("utf-8")
+        if isinstance(doc, (str, bytes)):
             doc = etree.fromstring(doc)
         dtd.validate(doc)
         return dtd.error_log.filter_from_errors()

@@ -308,7 +308,7 @@ class MailerJob:
             address     = recipient.getAddress().getXml()
         recipId         = "CDR%010d" % recipient.getId()
         docId           = "CDR%010d" % doc.getId()
-        xml             = u"""\
+        xml             = """\
 <CdrDoc Type="Mailer">
  <CdrDocCtl>
   <DocTitle>Mailer for document %s sent to %s</DocTitle>
@@ -399,7 +399,7 @@ class MailerJob:
             parms   = ()
             filters = ["name:Board Member Address Fragment With Name"]
         result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
-        if type(result) in (type(""), type(u"")):
+        if isinstance(result, (str, bytes)):
             raise Exception("failure extracting contact address "
                             "for %s: %s" % (docId, result))
         return Address(result[0])
@@ -460,7 +460,7 @@ class MailerJob:
     def makeIndex(self):
         self.__index   = []
         recipients     = self.getRecipients()
-        for recipKey in recipients.keys():
+        for recipKey in recipients:
             recip      = recipients[recipKey]
             address    = recip.getAddress()
             country    = address.getCountry()
@@ -522,7 +522,7 @@ You can retrieve the letters at:
                 self.log("%d tracking document(s) marked as deleted" %
                          len(results[0]))
             for err in results[1]:
-                self.log(u"__mailerCleanup: %s" % err)
+                self.log("__mailerCleanup: %s" % err)
         except:
             self.log("mailerCleanup failure", 1)
 
@@ -648,7 +648,7 @@ You can retrieve the letters at:
             rows = self.__cursor.fetchall()
             if rows:
                 for row in rows:
-                    if not self.__parms.has_key(row[0]):
+                    if row[0] not in self.__parms:
                         self.__parms[row[0]] = []
                     self.__parms[row[0]].append(row[1])
                     if row[0] == "Printer":
@@ -1080,7 +1080,7 @@ class Address(cdrdocobject.ContactInfo):
     #------------------------------------------------------------------
     # Create a RTF-ready string representing this address.
     #------------------------------------------------------------------
-    def format(self, upperCase=False, dropUS=False, wrapAt=sys.maxint,
+    def format(self, upperCase=False, dropUS=False, wrapAt=sys.maxsize,
                contactFields=False, useRtfTable=False):
         self.__includeNameAndTitle = not contactFields
         lines = self.getAddressLines(self.__includeNameAndTitle)

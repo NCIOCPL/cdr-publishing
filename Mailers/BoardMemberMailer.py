@@ -55,7 +55,7 @@ class BoardValues:
     def findBoardValues(name):
         bn = name.upper()
         if not bn in _boardValues:
-            raise Exception(u"No board values found for board %s" % name)
+            raise Exception("No board values found for board %s" % name)
         return _boardValues[bn]
     findBoardValues = staticmethod(findBoardValues)
 
@@ -164,8 +164,8 @@ class Board:
         doc = cdr.getDoc('guest', docId, version = ver, getObject = True)
         errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
         if errors:
-            raise Exception(u"loading doc for board %d: %s" %
-                                (id, u"; ".join(errors)))
+            raise Exception("loading doc for board %d: %s" %
+                            (id, "; ".join(errors)))
         dom = xml.dom.minidom.parseString(doc.xml)
         for node in dom.documentElement.childNodes:
             if node.nodeName == "OrganizationNameInformation":
@@ -308,8 +308,8 @@ class Board:
             errors = cdr.getErrors(doc, errorsExpected = False,
                                    asSequence = True)
             if errors:
-                raise Exception(u"loading doc %d for editor in chief: %s" %
-                                    (id, u"; ".join(errors)))
+                raise Exception("loading doc %d for editor in chief: %s" %
+                                (id, "; ".join(errors)))
             dom = xml.dom.minidom.parseString(doc.xml)
             for node in dom.documentElement.childNodes:
                 if node.nodeName == "PersonNameInformation":
@@ -319,7 +319,7 @@ class Board:
 
     class MeetingDate:
         def __init__(self, node):
-            self.date = u"0000-00-00"
+            self.date = "0000-00-00"
             for child in node.childNodes:
                 if child.nodeName == 'MeetingDate':
                     self.date = cdr.getTextContent(child)
@@ -378,7 +378,7 @@ class BoardMember:
         doc = cdr.getDoc('guest', id, version = str(ver), getObject = True)
         errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
         if errors:
-            raise Exception(u"loading member doc: %s" % u"; ".join(errors))
+            raise Exception("loading member doc: %s" % "; ".join(errors))
         dom = xml.dom.minidom.parseString(doc.xml)
         for node in dom.documentElement.childNodes:
             if node.nodeName == "BoardMemberContact":
@@ -407,10 +407,10 @@ class BoardMember:
 
         # Get the address information.
         filters = ["name:Person Contact Fragment With Name"]
-        #print "id=%s docVer=%s contactId=%s" % (id, str(ver), self.contactId)
+        #print("id=%s docVer=%s contactId=%s" % (id, str(ver), self.contactId))
         result  = cdr.filterDoc('guest', filters, id, docVer = str(ver),
                                 parm = (('fragId', self.contactId),))
-        if type(result) in (type(""), type(u"")):
+        if isinstance(result, (str, bytes)):
             raise Exception("failure extracting contact address for %s: %s"
                                 % (id, result))
         self.address = cdrmailer.Address(result[0], cdrmailer.TITLE_AFTER_NAME)

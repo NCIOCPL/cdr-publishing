@@ -974,7 +974,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
         # specified
         # ----------------------------------------------------
         if rowCount + 1 > maxrows and maxrows < len(records):
-            html += u"""\
+            html += """\
   <tr>
    <td colspan="4">&nbsp;</td>
   </tr>
@@ -986,7 +986,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
 
             break
 
-    html += u"""\
+    html += """\
  </table>
 """
     return html
@@ -996,7 +996,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
 # Creating a single HTML Table row
 # --------------------------------------------------------
 def getCountsOnlyRow(label, number=''):
-    html = u"""\
+    html = """\
    <tr>
     <td>%s</td>
     <td>%s</td>
@@ -1012,7 +1012,7 @@ def getCountsOnlyRow(label, number=''):
 def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
                            section='Header', title='', date=''):
     if section == 'Header':
-        html = u"""\
+        html = """\
 <html>
  <head>
   <title>%s</title>
@@ -1040,7 +1040,7 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
    </tr>
 """ % (title, title, date, startDate, endDate)
     else:
-        html = u"""\
+        html = """\
  </body>
 </html>
 """
@@ -1054,16 +1054,16 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
 # --------------------------------------------------------
 def createMessageBody(title='Test Title', startDate=firstOfMonth,
                                           endDate=lastOfMonth, maxRows=0):
-    sumBoardMember = u''
-    sumBoardMeeting = u''
-    sumDis = u''
-    sumDrugTerms = u''
-    sumGeneticsProf = u''
-    sumGlossaries = u''
-    sumImage = u''
-    sumSummariesNew = u''
-    sumSummariesRev = u''
-    sumSummariesReform = u''
+    sumBoardMember = ''
+    sumBoardMeeting = ''
+    sumDis = ''
+    sumDrugTerms = ''
+    sumGeneticsProf = ''
+    sumGlossaries = ''
+    sumImage = ''
+    sumSummariesNew = ''
+    sumSummariesRev = ''
+    sumSummariesReform = ''
 
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
@@ -1131,8 +1131,8 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         countGtn = {'gtnen':0, 'gtnes':0}
         if gtn:
             for i in gtn:
-                if type(i[1]) == type(u''):  countGtn['gtnen'] += 1
-                if type(i[2]) == type(u''):  countGtn['gtnes'] += 1
+                if type(i[1]) == type(''):  countGtn['gtnen'] += 1
+                if type(i[2]) == type(''):  countGtn['gtnes'] += 1
 
         gtc = getDocuments(cursor, startDate, endDate,
                                               docType='GlossaryTermConcept')
@@ -1144,9 +1144,9 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in gtc:
                 isInTimeFrame = checkTimeFrame(i[1:], startDate, endDate)
 
-                if (type(i[1]) == type(u'') and isInTimeFrame[0]):
+                if (type(i[1]) == type('') and isInTimeFrame[0]):
                     countGtc['gtcen'] += 1
-                if (type(i[2]) == type(u'') and isInTimeFrame[1]):
+                if (type(i[2]) == type('') and isInTimeFrame[1]):
                     countGtc['gtces'] += 1
 
     if dispGlossary or dispAll:
@@ -1196,7 +1196,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                 #    and isInTimeFrame[1]):
                 #    countImage['imgrev'] += 1
 
-                if (type(i[2]) in (type(u''), type(''))
+                if (type(i[2]) in (type(''), type(''))
                     and isInTimeFrame[0]):
                     countImage['imgnew'] += 1
                 else:
@@ -1275,10 +1275,10 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in dis:
                 isInTimeFrame = checkTimeFrame(i[2:], startDate, endDate)
 
-                if (type(i[2]) in (type(u''), type(''))
+                if (type(i[2]) in (type(''), type(''))
                     and isInTimeFrame[0]):
                     countDis['disnew'] += 1
-                if (type(i[3]) in (type(u''), type(''))
+                if (type(i[3]) in (type(''), type(''))
                     and isInTimeFrame[1]):
                     countDis['disrev'] += 1
 
@@ -1323,7 +1323,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispSummary:
         sumSummariesNew = getCountsOnlyRow(textLabels['sumnew'][0],
                                                 countSummariesNewAll)
-        mySortSumNew = countSummariesNew.keys()
+        mySortSumNew = list(countSummariesNew.keys())
         mySortSumNew.sort()
         # for sumRow in countSummariesNew.keys():
         for sumRow in mySortSumNew:
@@ -1332,7 +1332,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 
         sumSummariesRev = getCountsOnlyRow(textLabels['sumrev'][0],
                                                 countSummariesRevAll)
-        mySortSumRev = countSummariesRev.keys()
+        mySortSumRev = list(countSummariesRev.keys())
         mySortSumRev.sort()
         # for sumRow in countSummariesRev.keys():
         for sumRow in mySortSumRev:
@@ -1345,7 +1345,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispDis:
         #sumDis          = getCountsOnlyRow(textLabels['dis'][0], countDisAll)
         sumDis += getCountsOnlyRow(textLabels['dis'][0])
-        mySortDis = countDis.keys()
+        mySortDis = list(countDis.keys())
         mySortDis.sort()
         for disRow in mySortDis:
             sumDis += getCountsOnlyRow(textLabels[disRow][0],
@@ -1353,7 +1353,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 
     if dispAll or dispGlossary:
         sumGlossaries += getCountsOnlyRow('Dictionary - New')
-        mySortGtnNew = countGtn.keys()
+        mySortGtnNew = list(countGtn.keys())
         mySortGtnNew.sort()
         #for glossRow in countGtn.keys():
         for glossRow in mySortGtnNew:
@@ -1362,7 +1362,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         #sumGlossaries += getCountsOnlyRow(textLabels['gtcall'][0],
         #                                                  countGtcAll)
         sumGlossaries += getCountsOnlyRow('Dictionary - Revised')
-        mySortGtnRev = countGtc.keys()
+        mySortGtnRev = list(countGtc.keys())
         mySortGtnRev.sort()
         #for glossRow in countGtc.keys():
         for glossRow in mySortGtnRev:
@@ -1389,16 +1389,16 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispImages:
         sumImage     = getCountsOnlyRow(textLabels['image'][0])
         #sumImage     += getCountsOnlyRow(textLabels['image'][0], countImageAll)
-        mySortImage = countImage.keys()
+        mySortImage = list(countImage.keys())
         mySortImage.sort()
-        for imageRow in countImage.keys():
+        for imageRow in list(countImage.keys()):
             sumImage += getCountsOnlyRow(textLabels[imageRow][0],
                                                           countImage[imageRow])
     if dispAll or dispBoardMembers:
         #sumBoardMember = getCountsOnlyRow(textLabels['board'][0],
         #                                                    countBoardMemberAll)
         sumBoardMember = getCountsOnlyRow(textLabels['board'][0])
-        mySortBoard = countBoardMember.keys()
+        mySortBoard = list(countBoardMember.keys())
         mySortBoard.sort()
         mySortBoard.reverse()
         for board in mySortBoard:
@@ -1437,7 +1437,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         mailBody += sumBoardMeeting + blankRow
     if sumImage:
         mailBody += sumImage + blankRow
-    mailBody += u"""\
+    mailBody += """\
   </table>
 """
 
@@ -1445,18 +1445,18 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # rows should be displayed
     # -------------------------------------------------------------------
     if dispRows:
-        fullAudio = u''
-        fullDrugTerms = u''
-        fullImages = u''
-        fullBoardMember = u''
-        fullBoardMeeting = u''
-        fullSummariesNew = u''
-        fullSummariesRev = u''
-        fullSummariesReform = u''
-        fullDis = u''
-        fullGlossary = u''
-        fullGlossaryGen = u''
-        fullGeneticsProf = u''
+        fullAudio = ''
+        fullDrugTerms = ''
+        fullImages = ''
+        fullBoardMember = ''
+        fullBoardMeeting = ''
+        fullSummariesNew = ''
+        fullSummariesRev = ''
+        fullSummariesReform = ''
+        fullDis = ''
+        fullGlossary = ''
+        fullGlossaryGen = ''
+        fullGeneticsProf = ''
 
         if dispAll or dispSummary:
             fullSummariesNew  = formatFullOutput(summariesNew,
@@ -1621,10 +1621,10 @@ startDate = options.values.start or firstOfMonth
 endDate = options.values.end or lastOfMonth
 
 if startDate == firstOfMonth and endDate == lastOfMonth:
-    title = u'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y",
+    title = 'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y",
                                                               lastmonth)
 else:
-    title = u'PCIB Statistics Report from %s to %s' % (startDate, endDate)
+    title = 'PCIB Statistics Report from %s to %s' % (startDate, endDate)
 
 # Setting the number of rows to be displayed if the document rows are
 # to be displayed (or no rows to be included)
