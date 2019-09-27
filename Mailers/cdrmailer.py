@@ -8,7 +8,9 @@ from cdrapi import db
 
 debugCtr = 1
 
-_LOGFILE = f"{cdr.WORK_DRIVE}:/cdr/log/mailer.log"
+_LOGNAME = "mailer"
+_LOGFILE = f"{cdr.DEFAULT_LOGDIR}/{_LOGNAME}.log"
+_LOGGER = cdr.Logging.get_logger(_LOGNAME)
 _STAPLE_NAME = "duplex-stapled"
 
 #------------------------------------------------------------------
@@ -220,7 +222,10 @@ class MailerJob:
         """
         try:
             msg = "Job %d: %s" % (self.__id, message)
-            cdr.logwrite (msg, MailerJob.__LOGFILE, tback)
+            if tback:
+                _LOGGER.exception(msg)
+            else:
+                _LOGGER.info(msg)
         except:
             pass
 
