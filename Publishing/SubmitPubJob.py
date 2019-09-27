@@ -287,7 +287,8 @@ def sendFailureMessage(header="*** Error ***", body=""):
         body = """
 The publishing job failed.  Please check the log files.
 """
-    notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, body)
+    opts = dict(subject=subject, body=body)
+    cdr.EmailMessage(cdr.OPERATOR, emailDL, **opts).send()
 
     return
 
@@ -541,7 +542,8 @@ Push Job Output:
 """ % (addSubj.lower(), url, pushId, url, submit[0], url, submit[0],
                      url, submit[0], url, pushId)
 
-        notify = cdr.sendMail(cdr.OPERATOR, emailDL, subject, message)
+        opts = dict(subject=subject, body=message)
+        cdr.EmailMessage(cdr.OPERATOR, emailDL, **opts).send()
 
         LOGGER.info("Submitting Email: %s", notify or 'OK')
     except:

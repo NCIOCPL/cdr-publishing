@@ -484,6 +484,7 @@ else:
     recips = emailDL
 
 allChanges = newMediaChanges + updMediaChanges + delMediaChanges
+email_opts = dict(subject=subject, body=html, subtype="html")
 if allChanges and recips:
     LOGGER.info("Sending Email to DL")
     LOGGER.info("   DL: %s", recips)
@@ -491,13 +492,12 @@ if allChanges and recips:
     LOGGER.info("-----------------------------------------------")
     LOGGER.info("%s", html)
     LOGGER.info("-----------------------------------------------\n")
-    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
+    cdr.EmailMessage(sender, recips, **email_opts).send()
     LOGGER.info("Email send successfully!")
 else:
     # Else statement included to monitor the program
-    recips = emailDevs
     LOGGER.info("Email NOT submitted to DL")
-    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
+    cdr.EmailMessage(sender, emailDevs, **email_opts).send()
 
 # All done, going home now
 # ------------------------

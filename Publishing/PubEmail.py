@@ -41,7 +41,8 @@ try:
         emailDL = emailDev
         subject = '*** DL Missing *** %s' % subject
 
-    x =  cdr.sendMail(sender, emailDL, subject, message)
+    opts = dict(subject=subject, body=message)
+    cdr.EmailMessage(sender, emailDL, **opts).send()
 except:
     LOGGER.exception('*** Failure sending email message')
     raise

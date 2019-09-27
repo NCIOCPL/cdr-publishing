@@ -876,7 +876,8 @@ Job %d has completed.  You can view a status report for this job at:
 %s
 Please do not reply to this message.
 """ % (self.__id, url, self.__letterLink)
-                cdr.sendMail(sender, [self.__email], subject, message)
+                opts = dict(subject=subject, body=message)
+                cdr.EmailMessage(sender, [self.__email], **opts).send()
         except:
             self.log("failure sending email to %s: %s" % (self.__email,
                                                           cdr.exceptionInfo()))
