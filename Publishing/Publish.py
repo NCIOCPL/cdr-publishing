@@ -1,22 +1,19 @@
-#----------------------------------------------------------------------
-# Bridge PublishingService.py to cdrpub.py
-#----------------------------------------------------------------------
+#!/usr/bin/env python
 
-import sys, string, cdrpub, time
+"""Bridge PublishingService.py to cdrpub.py.
+"""
 
-log = "d:/cdr/log/publish.log"
-jobId = string.atoi(sys.argv[1])
-divider = "=" * 60
-open(log, "a").write("Job %d: %s\nJob %d: Started at: %s\n" % \
-    (jobId, divider, jobId, time.ctime(time.time())))
+from argparse import ArgumentParser
+from cdr import Logging
+from cdrpub import Control
+
+parser = ArgumentParser()
+parser.add_argument("job", type=int)
+opts = parser.parse_args()
+logger = Logging.get_logger("publish")
+logger.info("Job %d started", opts.job)
 try:
-    cdrpub.Control(jobId).publish()
-    open(log, "a").write("Job %d: Ended at: %s\nJob %d: %s\n" % \
-        (jobId, time.ctime(time.time()), jobId, divider))
-except Exception as arg:
-    open(log, "a").write("Job %d: Failure: %s\n" % (jobId, arg[0]))
-except SystemExit:
-    # The mailers invoke sys.exit(0) when they're done, raising this exception.
-    pass
-except:
-    open(log, "a").write("Job %d: Unexpected failure\n" % jobId)
+    Control(opts.job).publish()
+    logger.info("Job %d ended", opts.job)
+except Exception:
+    logger.exception("Job %d failed", opts.job)
