@@ -551,7 +551,7 @@ Push Job Output:
 
 except Exception as arg:
     LOGGER.exception("*** Standard Failure")
-    subject = '*** [%s] SubmitPubJob.py - Standard Failure' % TIER
+    subject = '[%s] *** SubmitPubJob.py - Standard Failure' % TIER
     msgBody = "The publishing job failed:  %s" % arg
     sendFailureMessage(subject, msgBody)
 except:
