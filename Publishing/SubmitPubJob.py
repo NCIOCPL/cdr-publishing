@@ -544,8 +544,7 @@ Push Job Output:
 
         opts = dict(subject=subject, body=message)
         cdr.EmailMessage(cdr.OPERATOR, emailDL, **opts).send()
-
-        LOGGER.info("Submitting Email: %s", notify or 'OK')
+        LOGGER.info("Submitting Email: OK")
     except:
         LOGGER.exception("*** Error sending email ***")
         raise
