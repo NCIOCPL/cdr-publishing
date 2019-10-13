@@ -133,7 +133,6 @@ class MailerJob:
     __LOGFILE       = _LOGFILE
     __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
     __INCLUDE_PATH  = f"{cdr.WORK_DRIVE}:/cdr/Mailers/include"
-    __TEMPLATE_FILE = __INCLUDE_PATH + "/template.tex"
     __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
 
     #------------------------------------------------------------------
@@ -685,24 +684,6 @@ You can retrieve the letters at:
                 self.log ("Unable to change to working directory", tback=1)
                 raise Exception("failure setting working directory to %s" %
                                 self.__outputDir)
-        try:
-            src = self.__TEMPLATE_FILE
-            dst = "./template.tex"
-            shutil.copy2(src, dst)
-        except Exception as info:
-            self.log("Failure copying %s to %s" % (src, dst), tback = 1)
-            raise Exception("Failure copying %s to %s: %s" %
-                            (src, dst, str(info)))
-
-        # New method for turning on duplex printing (BZIssue::5018)
-        try:
-            fp = open("./%s" % _STAPLE_NAME, "w")
-            fp.write("<< /Duplex true >> setpagedevice\n")
-            fp.write("<< /Staple 3 >> setpagedevice\n")
-            fp.close()
-        except Exception as e:
-            self.log("Failure creating duplex file", tback=1)
-            raise Exception("Failure creating duplex file: %s" % e)
 
     #------------------------------------------------------------------
     # Print the jobs in the queue.
@@ -831,6 +812,16 @@ You can retrieve the letters at:
     #------------------------------------------------------------------
     def __cleanup(self, status, message):
         self.log("~~In cleanup")
+        if self.__rtfMailerDir:
+            os.chdir(self.__rtfMailerDir)
+            command = f"{cdr.BASEDIR}/bin/fix-permissions.cmd"
+            command = command.replace("/", "\\")
+            process = cdr.run_command(command, merge_output=True)
+            if process.returncode:
+                args = self.__rtfMailerDir, process.stdout
+                _LOGGER.error("fixing %s permissions: %s", *args)
+            else:
+                self.log(f"fixed permissions for {self.__rtfMailerDir}")
         try:
             self.__updateStatus(status, message)
             self.__sendMail()

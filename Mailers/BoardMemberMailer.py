@@ -12,10 +12,8 @@ def friendlyDate(date):
     return date.strftime(pattern)
 
 def getNextMonth():
-    now = list(time.localtime())
-    now[1] += 1
-    then = time.localtime(time.mktime(now))
-    return friendlyDate(datetime.date(then[0], then[1], then[2]))
+    date = datetime.date.today() + datetime.timedelta(30)
+    return date.strftime("%B %d, %Y")
 
 def lookupLetterTitle(letter):
     titles = {
@@ -205,7 +203,7 @@ class Board:
         self.summaryType = self.boardValues.summaryType
         self.workingGroups = self.boardValues.workingGroupBlock
         self.invitePara = self.boardValues.invitationParagraph
-        self.meetingDates.sort(lambda a,b: cmp(a.date, b.date))
+        self.meetingDates.sort(key=lambda a: a.date)
         self.name = self.name.strip()
         if self.boardType.upper() == 'PDQ ADVISORY BOARD':
             self.advBoardId   = self.id
@@ -543,9 +541,8 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                    .replace("@@ASSTINFO@@",    asstInfo))
             name = createRtfFilename(forename, surname, names)
             print("writing %s" % name)
-            fp = open(name, "wb")
-            fp.write(letter)
-            fp.close()
+            with open(name, "w") as fp:
+                fp.write(letter)
             self.bumpCount()
 
     #------------------------------------------------------------------

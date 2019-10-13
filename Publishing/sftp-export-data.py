@@ -274,14 +274,14 @@ class Control:
 
         os.chdir(self.PUB_SHADOW)
 
-        result = cdr.runCommand(command)
+        result = cdr.run_command(command)
         self.logger.info("")  # Blank line to format log output
         self.logger.info("*** runCommand output")
-        self.logger.info(result.output)
+        self.logger.info(result.stdout)
 
-        if result.error:
+        if result.stderr:
             self.logger.info("*** Error:")
-            self.logger.info(result.error)
+            self.logger.info(result.stderr)
             self.logger.info("finished syncing files with errors!!!")
         else:
             self.logger.info("finished syncing files on FTP server")
