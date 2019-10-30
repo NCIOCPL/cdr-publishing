@@ -13,6 +13,9 @@ import os, sys, cdr, time, optparse
 import datetime
 from cdrapi import db
 
+# Establish a reference point for the call at the end.
+time.process_time()
+
 FILEBASE           = "Notify_VOL"
 LOGNAME            = "%s.log" % FILEBASE
 jobTime            = time.localtime(time.time())
@@ -501,7 +504,7 @@ else:
 
 # All done, going home now
 # ------------------------
-cpu = time.clock()
+cpu = time.process_time()
 LOGGER.info('CPU time: %6.2f seconds', cpu)
 LOGGER.info('Notify_VOL - Finished')
 sys.exit(0)
