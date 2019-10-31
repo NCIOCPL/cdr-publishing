@@ -163,7 +163,7 @@ def updateMessage(message, jobId, docId=0):
             else:
                 messages = []
             messages.append(msg)
-            msg = eval(messages)
+            msg = repr(messages)
             cursor.execute("""
                 UPDATE pub_proc_doc
                    SET messages = ?
