@@ -80,9 +80,7 @@ class Control:
                     self.cursor.execute(update, values)
                     self.conn.commit()
             except Exception as e:
-                errors = e.message
-                if not isinstance(errors, list):
-                    errors = [errors]
+                errors = e.args
                 self.logger.exception("%s export failed", doc.cdr_id)
                 values = "Y", repr(errors), self.job_id, doc.id
                 self.cursor.execute(update, values)
