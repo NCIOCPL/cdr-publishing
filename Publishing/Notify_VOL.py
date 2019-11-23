@@ -292,8 +292,8 @@ def createRows(versions):
        """ % (class_, host, row[0], row[1], row[0],
                             row[1],
                       host, row[0], row[2],
-                            row[3] and row[3][:16] or '',
-                            row[4] and row[4][:16] or '',
+                            row[3] and str(row[3])[:16] or '',
+                            row[4] and str(row[4])[:16] or '',
                             row[5] and 'Y' or '',
                             row[6] or '')
     return tableRows
