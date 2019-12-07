@@ -524,23 +524,13 @@ See logs below:
 
 Status and Error reports for the latest %s publishing/push jobs:
 
-Publishing Job Summary Report:
-   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=Report&Session=Guest
-
-Error Report of the publishing job:
-   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=error
-
-Warnings Report of the publishing job
-   %s/cgi-bin/cdr/PubStatus.py?id=%s&type=FilterFailure&flavor=warning
-
-Publishing Job Output:
+Publishing Job Report:
    %s/cgi-bin/cdr/PubStatus.py?id=%s
 
-Push Job Output:
+Push Job Report:
    %s/cgi-bin/cdr/PubStatus.py?id=%s
 
-""" % (addSubj.lower(), url, pushId, url, submit[0], url, submit[0],
-                     url, submit[0], url, pushId)
+""" % (addSubj.lower(), url, submit[0], url, pushId)
 
         opts = dict(subject=subject, body=message)
         cdr.EmailMessage(cdr.OPERATOR, emailDL, **opts).send()
