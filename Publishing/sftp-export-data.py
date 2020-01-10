@@ -63,6 +63,7 @@ class Control:
         self.logger.info(47 * "*")
         self.logger.info("Processing %s", self.job_path)
         self.logger.info("week %s", self.week)
+        self.logger.info("path is %s", os.environ.get("PATH"))
 
     def run(self):
         """
@@ -236,7 +237,7 @@ class Control:
         try:
             os.remove(destination)
         except:
-            print("Can't remove {}".format(destination))
+            print(("Can't remove {}".format(destination)))
         shutil.move("full.tar.gz", destination)
         full = self.PUB_SHADOW_FULL
         shutil.rmtree(full, ignore_errors=True)
@@ -274,14 +275,14 @@ class Control:
 
         os.chdir(self.PUB_SHADOW)
 
-        result = cdr.runCommand(command)
+        result = cdr.run_command(command)
         self.logger.info("")  # Blank line to format log output
-        self.logger.info("*** runCommand output")
-        self.logger.info(result.output)
+        self.logger.info("*** run_command output")
+        self.logger.info(result.stdout)
 
-        if result.error:
+        if result.stderr:
             self.logger.info("*** Error:")
-            self.logger.info(result.error)
+            self.logger.info(result.stderr)
             self.logger.info("finished syncing files with errors!!!")
         else:
             self.logger.info("finished syncing files on FTP server")
@@ -342,10 +343,10 @@ class Control:
         args = self.SSH, self.USER, self.HOST, self.PATH
         command = '{} {}@{} "chmod -R 755 {}/full*"'.format(*args)
         self.logger.info("chmod command: %s", command)
-        result = cdr.runCommand(command)
-        if result.error:
+        result = cdr.run_command(command)
+        if result.stderr:
             self.logger.info("*** Error:")
-            self.logger.info(result.error)
+            self.logger.info(result.stderr)
             self.logger.info("finished fixing permissions with errors!!!")
         else:
             self.logger.info("finished fixing permissions on FTP server")

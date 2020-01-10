@@ -48,7 +48,7 @@ class SystemSubset:
 tree = etree.parse("Primary.xml")
 for node in tree.getroot().findall("SystemSubset"):
     subset = SystemSubset(node)
-    print "%-3s %s %s %s" % (subset.publish_if_warnings,
+    print("%-3s %s %s %s" % (subset.publish_if_warnings,
                              subset.user_select_allowed() and "Y" or "N",
                              subset.has_queries() and "Y" or "N",
-                             subset.name)
+                             subset.name))

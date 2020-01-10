@@ -19,12 +19,6 @@ from cdrapi.docs import Doc
 from cdrapi.settings import Tier
 from cdrapi.users import Session
 
-try:
-    basestring
-except:
-    basestring = str, bytes
-    unicode = str
-
 
 class Control:
     """
@@ -86,9 +80,7 @@ class Control:
                     self.cursor.execute(update, values)
                     self.conn.commit()
             except Exception as e:
-                errors = e.message
-                if not isinstance(errors, list):
-                    errors = [errors]
+                errors = e.args
                 self.logger.exception("%s export failed", doc.cdr_id)
                 values = "Y", repr(errors), self.job_id, doc.id
                 self.cursor.execute(update, values)
@@ -104,7 +96,7 @@ class Control:
 
         filename = doc.export_filename
         if self.opts.get("level") == "DEBUG":
-            print(doc.cdr_id)
+            print((doc.cdr_id))
         directory = self.work_dir
         if self.subdir:
             directory += "/{}".format(self.subdir)
@@ -182,9 +174,7 @@ class Control:
 
         with open(self.dtd_path) as fp:
             dtd = etree.DTD(fp)
-        if isinstance(doc, basestring):
-            if isinstance(doc, unicode):
-                doc = doc.encode("utf-8")
+        if isinstance(doc, (str, bytes)):
             doc = etree.fromstring(doc)
         dtd.validate(doc)
         return dtd.error_log.filter_from_errors()

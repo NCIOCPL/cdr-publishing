@@ -18,7 +18,7 @@ class System:
         self.desc = get_child_text(root, "SystemDescription")
         self.subsets = [Subset(node) for node in root.findall(Subset.PATH)]
     def show(self):
-        print("SYSTEM {}\n".format(self.name))
+        print(("SYSTEM {}\n".format(self.name)))
         for subset in self.subsets:
             subset.show()
         print()
@@ -34,11 +34,11 @@ class Subset:
         self.options = [Option(n) for n in node.findall(Option.PATH)]
         self.specs = [Spec(n) for n in node.findall(Spec.PATH)]
     def show(self):
-        print("SUBSYSTEM {}".format(self.name))
+        print(("SUBSYSTEM {}".format(self.name)))
         if self.action:
-            print("\taction={}".format(self.action))
+            print(("\taction={}".format(self.action)))
         if self.script:
-            print("\tscript={}".format(self.script))
+            print(("\tscript={}".format(self.script)))
         for parm in self.parms:
             parm.show()
         for option in self.options:
@@ -57,11 +57,11 @@ class Spec:
         self.filters = [Filters(n) for n in node.findall("SubsetFilters")]
     def show(self):
         if self.query:
-            print("\tQUERY:\n{}".format(self.query))
+            print(("\tQUERY:\n{}".format(self.query)))
         if self.directory:
-            print("\tDIRECTORY={}".format(self.directory))
+            print(("\tDIRECTORY={}".format(self.directory)))
         if self.doctypes:
-            print("\tDOCTYPES={}".format(self.doctypes))
+            print(("\tDOCTYPES={}".format(self.doctypes)))
         for filter in self.filters:
             filter.show()
 
@@ -69,8 +69,8 @@ class Filters:
     def __init__(self, node):
         self.__node = node
     def show(self):
-        print("\tFILTERS: {}".format(self.filters))
-        print("\tPARMS: {}".format(self.parameters))
+        print(("\tFILTERS: {}".format(self.filters)))
+        print(("\tPARMS: {}".format(self.parameters)))
     @property
     def filters(self):
         if not hasattr(self, "_filters"):
@@ -107,7 +107,7 @@ class Parm:
         self.name = get_child_text(node, "ParmName")
         self.value = get_child_text(node, "ParmValue")
     def show(self):
-        print("\tPARM {}={!r}".format(self.name, self.value))
+        print(("\tPARM {}={!r}".format(self.name, self.value)))
 
 class Option:
     PATH = "SubsetOptions/SubsetOption"
@@ -115,7 +115,7 @@ class Option:
         self.name = get_child_text(node, "OptionName")
         self.value = get_child_text(node, "OptionValue")
     def show(self):
-        print("\tOPTION {}={!r}".format(self.name, self.value))
+        print(("\tOPTION {}={!r}".format(self.name, self.value)))
 
 for name in ("Primary.xml", "QcFilterSets.xml"):
     System(etree.parse(name).getroot()).show()

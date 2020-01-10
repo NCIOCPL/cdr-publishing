@@ -11,7 +11,9 @@
 #
 # BZIssue::5087 - [Internal] Create Re-Verification Tool
 # ========================================================================
-import cdrdb, cdrbatch, os, time, cdr, sys, string, cdr2gk, optparse
+import cdrbatch, os, time, cdr, sys, string, cdr2gk, optparse
+from cdrapi import db
+from cdrapi.users import Session
 
 # Script and log file for publishing
 LOGNAME = "publish.log"
@@ -76,9 +78,9 @@ def parseArguments(args):
     # Read and process options, if any
     # --------------------------------
     if parser.values.testMode:
-        l.write("Running in TEST mode", stdout = True)
+        LOGGER.info("Running in TEST mode")
     else:
-        l.write("Running in LIVE mode", stdout = True)
+        LOGGER.info("Running in LIVE mode")
 
     if parser.values.status and not parser.values.jobid:
         parser.print_help()
@@ -91,9 +93,9 @@ def parseArguments(args):
 
 # Open the logfile
 # --------------------------------------------------
-l = cdr.Log(LOGNAME)
-l.write("ReverifyPubJob - Started", stdout = True)
-l.write('Arguments: %s' % sys.argv)
+LOGGER = cdr.Logging.get_logger("publish", console=True)
+LOGGER.info("ReverifyPubJob - Started")
+LOGGER.info('Arguments: %s', sys.argv)
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
@@ -138,9 +140,9 @@ def updateMessage(message, jobId, docId=0):
                    SET messages  = ?
                  WHERE id        = ?""", (msg, jobId))
             conn.commit()
-        except cdrdb.Error, info:
-            msg = 'Failure updating pub_proc messages: %s' % info[1][0]
-            l.write(msg)
+        except Exception as e:
+            msg = 'Failure updating pub_proc messages: %s' % e
+            LOGGER.exception(msg)
             raise Exception(msg)
     # Updating Document status
     else:
@@ -161,16 +163,16 @@ def updateMessage(message, jobId, docId=0):
             else:
                 messages = []
             messages.append(msg)
-            msg = eval(messages)
+            msg = repr(messages)
             cursor.execute("""
                 UPDATE pub_proc_doc
                    SET messages = ?
                  WHERE pub_proc = ?
                    AND doc_id   = ?""", (msg, jobId, docId))
             conn.commit()
-        except cdrdb.Error, info:
-            msg = 'Failure updating pub_proc_doc messages: %s' % info[1][0]
-            l.write(msg)
+        except Exception as e:
+            msg = 'Failure updating pub_proc_doc messages: %s' % e
+            LOGGER.exception(msg)
             raise Exception(msg)
     return
 
@@ -182,7 +184,7 @@ def updateMessage(message, jobId, docId=0):
 #----------------------------------------------------------------------
 def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
 
-    # l.write("Re-verifying push job %d" % jobId, stdout = True)
+    # LOGGER.info("Re-verifying push job %d", jobId)
 
     # Local values.
     # -------------
@@ -205,7 +207,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
     # Retrieve status information from Cancer.gov for the push job
     # and identify failures and warnings.
     # ------------------------------------------------------------
-    l.write("GKServer: %s" % (host or cdr2gk.HOST), stdout=True)
+    LOGGER.info("GKServer: %s", host or cdr2gk.HOST)
 
     response = cdr2gk.requestStatus('Summary', jobId, host=host)
 
@@ -227,7 +229,7 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
         # of the job yet.
         elif doc.location != target:
             verified = False
-            l.write("Still processing documents", stdout = True)
+            LOGGER.info("Still processing documents")
             break
 
     # If the load is done, update the status of the job.
@@ -243,17 +245,15 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                 SELECT count(*)
                   FROM pub_proc_doc
                  WHERE pub_proc = ?""", jobId)
-            rows = cursor.fetchall()
-            l.write('Total records for this publishing job: %d' % rows[0][0],
-                                                               stdout = True)
+            rows = cursor.fetchone()
+            LOGGER.info('Total records for this publishing job: %d', rows[0])
             cursor.execute("""\
                 SELECT count(*)
                   FROM pub_proc_doc
                  WHERE pub_proc = ?
                    AND failure = 'Y'""", jobId)
-            rows = cursor.fetchall()
-            l.write('Failed records for this publishing job: %d' % rows[0][0],
-                                                               stdout = True)
+            rows = cursor.fetchone()
+            LOGGER.info('Failed records for this publishing job: %d', rows[0])
         else:
             cursor.execute("""\
                 SELECT doc_id, failure
@@ -271,20 +271,20 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                            AND doc_id = ?""", (jobId, int(row[0])))
                     conn.commit()
                 except:
-                    l.write('Error resetting failure column in pub_proc_doc',
-                                                               stdout = True)
+                    message = "Error resetting failure column in pub_proc_doc"
+                    LOGGER.exception(message)
                     sys.exit(1)
 
                 # Add a comment but preserve existing comments.
                 # ---------------------------------------------
-                updateMessage(u'Resetting failure=%s to re-verify.' % row[1],
+                updateMessage('Resetting failure=%s to re-verify.' % row[1],
                                                          jobId, row[0])
 
         # b) Setting all docs to failure that still failed
         # ------------------------------------------------
         if failures:
             if testMode:
-                print len(failures)
+                print(len(failures))
                 cursor.execute("""\
                     SELECT *
                       FROM pub_proc_doc
@@ -292,10 +292,10 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                        AND doc_id in (%s)""" % (jobId,
                                  ','.join(["%s" % x.cdrId for x in failures])))
                 rows = cursor.fetchall()
-                l.write('Records failed:', stdout = True)
+                LOGGER.info('Records failed:')
                 for row in rows:
-                    l.write(repr(row), stdout = True)
-                l.write('', stdout = True)
+                    LOGGER.info(repr(row))
+                LOGGER.info('')
             else:
                 for doc in failures:
                     cursor.execute("""\
@@ -304,17 +304,17 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
                          WHERE pub_proc = ?
                            AND doc_id = ?""", (jobId, doc.cdrId))
                     conn.commit()
-                    updateMessage(u'Setting failure=Y at re-verify.',
+                    updateMessage('Setting failure=Y at re-verify.',
                                                              jobId, doc.cdrId)
         else:
-            l.write('Failures: None', stdout = True)
+            LOGGER.info('Failures: None')
 
         # Print out the information if we're still listing failures
         if failures or warnings:
-            l.write("Job %s" % jobId, stdout = True)
-            l.write("Failures: %s" % failures, stdout = True)
-            l.write("Warnings: %s" % warnings, stdout = True)
-            l.write("", stdout = True)
+            LOGGER.info("Job %s", jobId)
+            LOGGER.info("Failures: %s", failures)
+            LOGGER.info("Warnings: %s", warnings)
+            LOGGER.info("")
 
         # If every document failed the load, mark the status for the
         # entire job as Failure; however, if even 1 document was
@@ -332,24 +332,23 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
         else:
             jobStatus = "Success"
         if testMode:
-            l.write("Test mode: Job status not updated", stdout = True)
+            LOGGER.info("Test mode: Job status not updated")
         else:
             cursor.execute("""\
                 SELECT status
                   FROM pub_proc
                  WHERE id = ?""", jobId)
             rows = cursor.fetchall()
-            updateMessage(u'Re-verify push job. '
+            updateMessage('Re-verify push job. '
                            'Old job status = %s' % rows[0][0], jobId, docId = 0)
             cursor.execute("""\
                 UPDATE pub_proc
                    SET status = ?
                  WHERE id = ?""", (jobStatus, jobId))
             conn.commit()
-            updateMessage(u'Re-verify push job. '
+            updateMessage('Re-verify push job. '
                            'New job status = %s' % jobStatus, jobId, docId = 0)
-        l.write("Status of Job %s set to '%s'" % (jobId, jobStatus),
-                                                        stdout = True)
+        LOGGER.info("Status of Job %s set to '%s'", jobId, jobStatus)
         return
 
 
@@ -359,30 +358,24 @@ def verifyLoad(jobId, pushFinished, cursor, conn, testMode = 'True'):
 # Checking CDR user or session ID
 # (the session ID is passed when running from the Admin interface)
 # ----------------------------------------------------------------
-error = None
-sessionUsr = None
-
 if sessionID:
-     session = sessionID
-     sessionUsr = cdr.idSessionUser('', session)
+    try:
+        Session(sessionID)
+        session = sessionID
+    except:
+        LOGGER.error("*** Invalid or expired session ID: %s", session)
+        sys.exit(1)
 else:
-     session = cdr.login(uid, pw)
-     error   = cdr.checkErr(session)
-
-# Exit if the session ID is unknown or the user credentials are invalid
-# ---------------------------------------------------------------------
-if sessionID and not sessionUsr:
-    l.write("*** Invalid or expired session ID: %s" % session, stdout = True)
-    sys.exit(1)
-
-if error:
-    l.write("*** Error logging in: %s" % error, stdout = True)
-    sys.exit(1)
+    session = cdr.login(uid, pw)
+    error   = cdr.checkErr(session)
+    if error:
+        LOGGER.error("*** Error logging in: %s", error)
+        sys.exit(1)
 
 try:
     # Connection for all efforts
     # --------------------------
-    conn = cdrdb.connect("cdr")
+    conn = db.connect()
     cursor = conn.cursor()
 
     # We're re-verifying all stalled jobs but if we're re-verifying
@@ -397,26 +390,26 @@ try:
         cursor.execute(newQuery)
         rows = cursor.fetchall()
         if len(rows) > 1:
-            l.write('*** Error: Only one job at a time allowed', stdout = True)
-            l.write('Query:\n%s' % newQuery, stdout = True)
-            l.write('Result:\n%s' % rows, stdout = True)
+            LOGGER.error('*** Error: Only one job at a time allowed')
+            LOGGER.error('Query:\n%s', newQuery)
+            LOGGER.error('Result:\n%s', rows)
             sys.exit(1)
 
     if rows:
-        l.write("", stdout = True)
-        l.write("List of jobs to re-verify", stdout = True)
-        l.write("-------------------------", stdout = True)
+        LOGGER.info("")
+        LOGGER.info("List of jobs to re-verify")
+        LOGGER.info("-------------------------")
         for row in rows:
-            l.write("Job %d, Status: %s" % (row[0], status), stdout = True)
-        l.write("", stdout = True)
+            LOGGER.info("Job %d, Status: %s", row[0], status)
+        LOGGER.info("")
     else:
-        l.write("No job(s) found to re-verify!", stdout = True)
+        LOGGER.info("No job(s) found to re-verify!")
         sys.exit(0)
 
     # Verify loading of documents pushed to Cancer.gov.
     # -------------------------------------------------
     try:
-        newQuery = u"""\
+        newQuery = """\
             SELECT id, completed
               FROM pub_proc
              WHERE status = '%s'""" % status
@@ -430,23 +423,18 @@ try:
         rows = cursor.fetchall()
 
         for row in rows:
-            l.write("Job %d, Completed: %s" % (row[0], row[1]),
-                                                            stdout = True)
+            LOGGER.info("Job %d, Completed: %s", row[0], row[1])
             verifyLoad(row[0], row[1], cursor, conn, testMode)
-            l.write("Verification for Job %d done." % row[0], stdout = True)
-    except Exception, e:
-        l.write("failure re-verifying push jobs: %s" % e, stdout = True)
+            LOGGER.info("Verification for Job %d done.", row[0])
+    except Exception as e:
+        LOGGER.exception("Failure re-verifying push jobs")
 
-except cdrdb.Error, info:
-    # Log publishing job initiation errors
-    conn = None
-    l.write ('Database failure: %s' % info[1][0], stdout = True)
-except Exception, e:
-    l.write('Failure: %s' % str(e), tback = True, stdout = True)
+except Exception as e:
+    LOGGER.exception('Processing failure')
 except SystemExit:
-    l.write('Exiting...', stdout = True)
+    LOGGER.info('Exiting...')
 except:
-    l.write('Unknown failure', tback = True, stdout = True)
+    LOGGER.exception('Unknown failure')
 
-l.write("ReverifyPubJob - Finished", stdout = True)
+LOGGER.info("ReverifyPubJob - Finished")
 sys.exit(0)

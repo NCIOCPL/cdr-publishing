@@ -7,7 +7,8 @@
 #
 # OCECDR-3898: Modify PDQ Partner Documents
 # *********************************************************************
-import sys, cdr, cdrdb, os, time, optparse, smtplib, glob
+import sys, cdr, os, time, optparse, smtplib, glob
+from cdrapi import db
 
 OUTPUTBASE     = cdr.BASEDIR + "/reports"
 DOC_FILE       = "Licensees"
@@ -57,26 +58,26 @@ def parseArguments(args):
     # Read and process options, if any
     # --------------------------------
     if parser.values.testMode:
-        l.write("Running in TEST mode", stdout = True)
+        LOGGER.info("Running in TEST mode")
     else:
-        l.write("Running in LIVE mode", stdout = True)
+        LOGGER.info("Running in LIVE mode")
 
     if parser.values.emailMode:
-        l.write("Running in EMAIL mode", stdout = True)
+        LOGGER.info("Running in EMAIL mode")
     else:
-        l.write("Running in NOEMAIL mode", stdout = True)
+        LOGGER.info("Running in NOEMAIL mode")
 
     return parser
 
 
-    
+
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
-l   = cdr.Log(LOGNAME)
-l.write("LicenseeList Report - Started", stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
-print ''
+LOGGER = cdr.Logging.get_logger("Licensees", console=True)
+LOGGER.info("LicenseeList Report - Started")
+LOGGER.info('Arguments: %s', sys.argv)
+print('')
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
@@ -86,21 +87,22 @@ emailMode = options.values.emailMode
 # file created.
 # -----------------------------------------------------------------
 filename = OUTPUTBASE + '/' + outputFile
-l.write("Content Partner report is: %s" % outputFile, stdout = True)
-l.write("  at path: %s" % filename, stdout=True)
- 
+LOGGER.info("Content Partner report is: %s", outputFile)
+LOGGER.info("  at path: %s", filename)
+
 try:
     # Connect to the database to get the full list of protocols with
     # the CTGovDuplicate element.
+    # 2019-09-02 (RMK): not sure what this comment means in this context???
     # --------------------------------------------------------------
-    conn = cdrdb.connect()
+    conn = db.connect(timeout=300)
     cursor = conn.cursor()
-        
+
     cursor.execute("""\
-         SELECT n.doc_id, n.value AS "Name", 
-                t.value AS "Status", 
-                a.value AS "Test Act", r.value AS "R-Date", 
-                ti.value AS "TI-Date", p.value AS "P-Date", 
+         SELECT n.doc_id, n.value AS "Name",
+                t.value AS "Status",
+                a.value AS "Test Act", r.value AS "R-Date",
+                ti.value AS "TI-Date", p.value AS "P-Date",
                 pdi.value AS "Prod Inact"
            FROM query_term n
            JOIN query_term t
@@ -110,7 +112,7 @@ try:
            JOIN query_term a
              ON a.doc_id = n.doc_id
             AND a.path = '/Licensee/LicenseeInformation' +
-                         '/LicenseeStatusDates'          + 
+                         '/LicenseeStatusDates'          +
                          '/TestActivation'
 LEFT OUTER JOIN query_term r
              ON r.doc_id = n.doc_id
@@ -136,13 +138,13 @@ LEFT OUTER JOIN query_term pdi
                            '/LicenseeNameInformation'      +
                            '/OfficialName/Name'
             AND t.value in ('Production', 'Test')
-          ORDER BY t.value, n.value""" , timeout=300)
+          ORDER BY t.value, n.value""")
 
     rows = cursor.fetchall()
 
     lCount = {'prod':0, 'test':0}
     for row in rows:
-        if row[2] == 'Production': 
+        if row[2] == 'Production':
             lCount['prod'] += 1
         else:
             lCount['test'] += 1
@@ -151,8 +153,8 @@ LEFT OUTER JOIN query_term pdi
 
     # Create the message body and display the query results
     # -----------------------------------------------------
-    l.write("", stdout = True)
-    l.write('List of Current Content Partners (active and test)', stdout = True)
+    LOGGER.info("")
+    LOGGER.info('List of Current Content Partners (active and test)')
     mailBody = """\
 <html>
  <head>
@@ -228,7 +230,7 @@ Subject: %s
 
     #print message
 
-    # Sending out the email 
+    # Sending out the email
     # ---------------------
     f = open(filename, 'w')
     f.write(mailBody)
@@ -238,16 +240,15 @@ Subject: %s
     if emailMode:
         server.sendmail(strFrom, strTo, message)
     else:
-        l.write("Running in NOEMAIL mode.  No message send", stdout = True)
+        LOGGER.info("Running in NOEMAIL mode.  No message sent")
 
     server.quit()
 
-except Exception, arg:
-    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+except Exception as arg:
+    LOGGER.exception("*** Standard Failure - %s", arg)
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True, 
-                                                            tback = 1)
+    LOGGER.exception("*** Error - Program stopped with failure ***")
     raise
 
-l.write("LicenseeList Report - Finished", stdout = True)
+LOGGER.info("LicenseeList Report - Finished")
 sys.exit(0)

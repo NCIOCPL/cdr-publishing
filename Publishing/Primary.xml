@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" ?>
 <PublishingSystem xmlns:cdr="cips.nci.nih.gov/cdr">
 
  <SystemName>Primary</SystemName>
@@ -2028,6 +2028,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2125,6 +2129,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -2191,6 +2199,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2288,6 +2300,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -2354,6 +2370,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
@@ -2449,6 +2469,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
@@ -2705,6 +2729,10 @@ LEFT OUTER JOIN query_term_pub u
     <ParmName>GKPushJobDescription</ParmName>
     <ParmValue/>
    </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
 
@@ -2798,6 +2826,10 @@ LEFT OUTER JOIN query_term_pub u
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>GKPushJobDescription</ParmName>
+    <ParmValue/>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>

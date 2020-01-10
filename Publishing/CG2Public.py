@@ -107,7 +107,7 @@ class Control:
             if directory in self.FILTERABLE:
                 doc_id = Doc.extract_id(filename)
                 doc = Doc(self.session, id=doc_id, xml=xml)
-                newDoc = unicode(doc.apply_single_filter(self.transform))
+                newDoc = str(doc.apply_single_filter(self.transform))
                 newDoc = newDoc.encode("utf-8")
             else:
                 newDoc = xml

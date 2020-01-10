@@ -6,13 +6,14 @@
 # ---------------------------------------------------------------------
 # Created:          2012-02-10        Volker Englisch
 #
-# BZIssue::5173 - ICRDB Stats Report
+# BZIssue::5173 - ICRD Stats Report
 # OCECDR-3890: Possible discrepancies in count of Dictionary Terms in
 #              PCIB Status Report
 # OCDCDR-3867: PCIB Statistics Report
 # *********************************************************************
-import sys, cdr, cdrdb, os, time, optparse, smtplib, glob, cdrcgi
+import sys, cdr, os, time, optparse, smtplib, glob, cdrcgi
 import calendar
+from cdrapi import db
 
 OUTPUTBASE  = cdr.BASEDIR + "/reports"
 DOC_FILE    = "PCIBStats"
@@ -28,15 +29,14 @@ dateRange   = calendar.monthrange(lastmonth[0], lastmonth[1])
 lastOfMonth = time.strftime("%Y-%m-%d",
                 time.strptime("%d-%d-%d" % (lastmonth[0],
                                             lastmonth[1], dateRange[1]),
-                                                                "%Y-%m-%d"))
+                              "%Y-%m-%d"))
+stamp       = time.strftime("%Y-%m-%dT%H%M%S", now)
+outputFile  = f"{DOC_FILE}_{stamp}.html"
 
-outputFile     = '%s_%s.html' % (DOC_FILE, time.strftime("%Y-%m-%dT%H%M%S", now))
-
-testMode       = None
-emailMode      = None
-#sendTo         = None
-dispRows       = None
-listNum        = 0
+testMode    = None
+emailMode   = None
+dispRows    = None
+listNum     = 0
 
 # Create an exception allowing us to break out if there are no new
 # protocols found to report.
@@ -155,58 +155,58 @@ def parseArguments(args):
     # Read and process options, if any
     # --------------------------------
     if parser.values.testMode:
-        l.write("Running in TEST mode", stdout = True)
+        LOGGER.info("Running in TEST mode")
     else:
-        l.write("Running in LIVE mode", stdout = True)
+        LOGGER.info("Running in LIVE mode")
     if parser.values.emailMode:
-        l.write("Running in EMAIL mode", stdout = True)
+        LOGGER.info("Running in EMAIL mode")
     else:
-        l.write("Running in NOEMAIL mode", stdout = True)
+        LOGGER.info("Running in NOEMAIL mode")
     if parser.values.sendTo:
         sendTo = parser.values.sendTo
-        l.write("Sending report to: %s" % sendTo, stdout = True)
+        LOGGER.info("Sending report to: %s", sendTo)
     if not parser.values.listRows:
-        l.write("Listing counts only", stdout = True)
+        LOGGER.info("Listing counts only")
     else:
-        l.write("Listing counts and document rows", stdout = True)
+        LOGGER.info("Listing counts and document rows")
     if parser.values.cdrids:
-        l.write("Listing rows with CDR-IDs", stdout = True)
+        LOGGER.info("Listing rows with CDR-IDs")
     else:
-        l.write("Listing document rows without CDR-IDs", stdout = True)
+        LOGGER.info("Listing document rows without CDR-IDs")
     if parser.values.summary:
-        l.write("Listing Summary records", stdout = True)
+        LOGGER.info("Listing Summary records")
     if parser.values.dis:
-        l.write("Listing Drug Info records", stdout = True)
+        LOGGER.info("Listing Drug Info records")
     if parser.values.audio:
-        l.write("Listing Audio records", stdout = True)
+        LOGGER.info("Listing Audio records")
     if parser.values.images:
-        l.write("Listing Images records", stdout = True)
+        LOGGER.info("Listing Images records")
     if parser.values.glossary:
-        l.write("Listing Glossary records", stdout = True)
+        LOGGER.info("Listing Glossary records")
     if parser.values.genetics:
-        l.write("Listing Genetics Prof records", stdout = True)
+        LOGGER.info("Listing Genetics Prof records")
     if parser.values.drug:
-        l.write("Listing Drug records", stdout = True)
+        LOGGER.info("Listing Drug records")
     if parser.values.debug:
-        l.write("Listing debug information", stdout = True)
+        LOGGER.info("Listing debug information")
     if parser.values.bmembers:
-        l.write("Listing Board Member records", stdout = True)
+        LOGGER.info("Listing Board Member records")
     if parser.values.meetings:
-        l.write("Listing Board Meetings records", stdout = True)
+        LOGGER.info("Listing Board Meetings records")
     if parser.values.drug:
-        l.write("Listing Terminology/Drug records", stdout = True)
+        LOGGER.info("Listing Terminology/Drug records")
     #if parser.values.fname:
     #    fname = parser.values.fname
-    #    l.write("Comparing output to file: %s" % fname, stdout = True)
+    #    LOGGER.info("Comparing output to file: %s", fname)
     if parser.values.rowmax:
         rowmax = parser.values.rowmax
-        l.write("Limit number of records: %s" % rowmax, stdout = True)
+        LOGGER.info("Limit number of records: %s", rowmax)
     if parser.values.start:
         startDate = parser.values.start
-        l.write("Setting Start Date: %s" % startDate, stdout = True)
+        LOGGER.info("Setting Start Date: %s", startDate)
     if parser.values.end:
         endDate = parser.values.end
-        l.write("Setting End Date: %s" % endDate, stdout = True)
+        LOGGER.info("Setting End Date: %s", endDate)
 
     return parser
 
@@ -269,9 +269,8 @@ def getDocuments(cursor, startDate=firstOfMonth, endDate=lastOfMonth,
                          docType='', repType=''):
     # Debug message listing the document type and report type
     # -------------------------------------------------------
-    l.write('   docType = %s, repType = %s' % (docType, repType), stdout=True)
-    if debug:
-        l.write('   dispRows = %s' % dispRows, stdout=True)
+    LOGGER.info('   docType = %s, repType = %s', docType, repType)
+    LOGGER.debug('   dispRows = %s', dispRows)
 
     #if dispRows or dispSummary or dispDis or dispGlossary or dispImages or dispAudio or dispBoardMembers or dispBoardMeetings:
     if docType == 'DrugInformationSummary':
@@ -790,20 +789,16 @@ LEFT OUTER JOIN query_term_pub s
         return None
 
 
-    if debug:
-        l.write('********************************************************',
-                                                              stdout=True)
-        l.write('[SQL query submitted:]', stdout=True)
-        l.write(query, stdout=True)
+    LOGGER.debug('********************************************************')
+    LOGGER.debug('[SQL query submitted:]')
+    LOGGER.debug(query)
 
-    cursor.execute(query, timeout=600)
+    cursor.execute(query)
     rows = cursor.fetchall()
 
-    if debug:
-        l.write('----------------', stdout=True)
-        l.write('Rows: %s' % len(rows), stdout=True)
-        l.write('********************************************************',
-                                                              stdout=True)
+    LOGGER.debug('----------------')
+    LOGGER.debug('Rows: %s', len(rows))
+    LOGGER.debug('********************************************************')
 
     if not rows or rows[0][0] == 0:
         return None
@@ -938,7 +933,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
 
         html += """\
    <td VALIGN='top'>%s</td>
-""" % (cdrcgi.unicodeToLatin1(row[1]))
+""" % (row[1])
 
         if docType == 'Summary':
             html += """\
@@ -979,7 +974,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
         # specified
         # ----------------------------------------------------
         if rowCount + 1 > maxrows and maxrows < len(records):
-            html += u"""\
+            html += """\
   <tr>
    <td colspan="4">&nbsp;</td>
   </tr>
@@ -991,7 +986,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
 
             break
 
-    html += u"""\
+    html += """\
  </table>
 """
     return html
@@ -1001,7 +996,7 @@ def formatFullOutput(records, recordCount, heading, maxrows,
 # Creating a single HTML Table row
 # --------------------------------------------------------
 def getCountsOnlyRow(label, number=''):
-    html = u"""\
+    html = """\
    <tr>
     <td>%s</td>
     <td>%s</td>
@@ -1017,7 +1012,7 @@ def getCountsOnlyRow(label, number=''):
 def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
                            section='Header', title='', date=''):
     if section == 'Header':
-        html = u"""\
+        html = """\
 <html>
  <head>
   <title>%s</title>
@@ -1045,7 +1040,7 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
    </tr>
 """ % (title, title, date, startDate, endDate)
     else:
-        html = u"""\
+        html = """\
  </body>
 </html>
 """
@@ -1059,16 +1054,16 @@ def getMessageHeaderFooter(startDate=firstOfMonth, endDate=lastOfMonth,
 # --------------------------------------------------------
 def createMessageBody(title='Test Title', startDate=firstOfMonth,
                                           endDate=lastOfMonth, maxRows=0):
-    sumBoardMember = u''
-    sumBoardMeeting = u''
-    sumDis = u''
-    sumDrugTerms = u''
-    sumGeneticsProf = u''
-    sumGlossaries = u''
-    sumImage = u''
-    sumSummariesNew = u''
-    sumSummariesRev = u''
-    sumSummariesReform = u''
+    sumBoardMember = ''
+    sumBoardMeeting = ''
+    sumDis = ''
+    sumDrugTerms = ''
+    sumGeneticsProf = ''
+    sumGlossaries = ''
+    sumImage = ''
+    sumSummariesNew = ''
+    sumSummariesRev = ''
+    sumSummariesReform = ''
 
     # Dictionary to be used for the misc. text labels by doc type
     # -----------------------------------------------------------
@@ -1121,11 +1116,11 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                    'brdad':     [' - Advisory', '']
                }
 
-    conn = cdrdb.connect()
+    conn = db.connect(timeout=600)
     cursor = conn.cursor()
 
-    l.write("", stdout = True)
-    l.write(title, stdout = True)
+    LOGGER.info("")
+    LOGGER.info(title)
 
     # New Glossary Terms
     # ------------------
@@ -1136,8 +1131,8 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         countGtn = {'gtnen':0, 'gtnes':0}
         if gtn:
             for i in gtn:
-                if type(i[1]) == type(u''):  countGtn['gtnen'] += 1
-                if type(i[2]) == type(u''):  countGtn['gtnes'] += 1
+                if type(i[1]) == type(''):  countGtn['gtnen'] += 1
+                if type(i[2]) == type(''):  countGtn['gtnes'] += 1
 
         gtc = getDocuments(cursor, startDate, endDate,
                                               docType='GlossaryTermConcept')
@@ -1149,9 +1144,9 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in gtc:
                 isInTimeFrame = checkTimeFrame(i[1:], startDate, endDate)
 
-                if (type(i[1]) == type(u'') and isInTimeFrame[0]):
+                if (type(i[1]) == type('') and isInTimeFrame[0]):
                     countGtc['gtcen'] += 1
-                if (type(i[2]) == type(u'') and isInTimeFrame[1]):
+                if (type(i[2]) == type('') and isInTimeFrame[1]):
                     countGtc['gtces'] += 1
 
     if dispGlossary or dispAll:
@@ -1201,7 +1196,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
                 #    and isInTimeFrame[1]):
                 #    countImage['imgrev'] += 1
 
-                if (type(i[2]) in (type(u''), type(''))
+                if (type(i[2]) in (type(''), type(''))
                     and isInTimeFrame[0]):
                     countImage['imgnew'] += 1
                 else:
@@ -1280,10 +1275,10 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
             for i in dis:
                 isInTimeFrame = checkTimeFrame(i[2:], startDate, endDate)
 
-                if (type(i[2]) in (type(u''), type(''))
+                if (type(i[2]) in (type(''), type(''))
                     and isInTimeFrame[0]):
                     countDis['disnew'] += 1
-                if (type(i[3]) in (type(u''), type(''))
+                if (type(i[3]) in (type(''), type(''))
                     and isInTimeFrame[1]):
                     countDis['disrev'] += 1
 
@@ -1328,7 +1323,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispSummary:
         sumSummariesNew = getCountsOnlyRow(textLabels['sumnew'][0],
                                                 countSummariesNewAll)
-        mySortSumNew = countSummariesNew.keys()
+        mySortSumNew = list(countSummariesNew.keys())
         mySortSumNew.sort()
         # for sumRow in countSummariesNew.keys():
         for sumRow in mySortSumNew:
@@ -1337,7 +1332,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 
         sumSummariesRev = getCountsOnlyRow(textLabels['sumrev'][0],
                                                 countSummariesRevAll)
-        mySortSumRev = countSummariesRev.keys()
+        mySortSumRev = list(countSummariesRev.keys())
         mySortSumRev.sort()
         # for sumRow in countSummariesRev.keys():
         for sumRow in mySortSumRev:
@@ -1350,7 +1345,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispDis:
         #sumDis          = getCountsOnlyRow(textLabels['dis'][0], countDisAll)
         sumDis += getCountsOnlyRow(textLabels['dis'][0])
-        mySortDis = countDis.keys()
+        mySortDis = list(countDis.keys())
         mySortDis.sort()
         for disRow in mySortDis:
             sumDis += getCountsOnlyRow(textLabels[disRow][0],
@@ -1358,7 +1353,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
 
     if dispAll or dispGlossary:
         sumGlossaries += getCountsOnlyRow('Dictionary - New')
-        mySortGtnNew = countGtn.keys()
+        mySortGtnNew = list(countGtn.keys())
         mySortGtnNew.sort()
         #for glossRow in countGtn.keys():
         for glossRow in mySortGtnNew:
@@ -1367,7 +1362,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         #sumGlossaries += getCountsOnlyRow(textLabels['gtcall'][0],
         #                                                  countGtcAll)
         sumGlossaries += getCountsOnlyRow('Dictionary - Revised')
-        mySortGtnRev = countGtc.keys()
+        mySortGtnRev = list(countGtc.keys())
         mySortGtnRev.sort()
         #for glossRow in countGtc.keys():
         for glossRow in mySortGtnRev:
@@ -1394,16 +1389,16 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     if dispAll or dispImages:
         sumImage     = getCountsOnlyRow(textLabels['image'][0])
         #sumImage     += getCountsOnlyRow(textLabels['image'][0], countImageAll)
-        mySortImage = countImage.keys()
+        mySortImage = list(countImage.keys())
         mySortImage.sort()
-        for imageRow in countImage.keys():
+        for imageRow in list(countImage.keys()):
             sumImage += getCountsOnlyRow(textLabels[imageRow][0],
                                                           countImage[imageRow])
     if dispAll or dispBoardMembers:
         #sumBoardMember = getCountsOnlyRow(textLabels['board'][0],
         #                                                    countBoardMemberAll)
         sumBoardMember = getCountsOnlyRow(textLabels['board'][0])
-        mySortBoard = countBoardMember.keys()
+        mySortBoard = list(countBoardMember.keys())
         mySortBoard.sort()
         mySortBoard.reverse()
         for board in mySortBoard:
@@ -1442,7 +1437,7 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
         mailBody += sumBoardMeeting + blankRow
     if sumImage:
         mailBody += sumImage + blankRow
-    mailBody += u"""\
+    mailBody += """\
   </table>
 """
 
@@ -1450,18 +1445,18 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     # rows should be displayed
     # -------------------------------------------------------------------
     if dispRows:
-        fullAudio = u''
-        fullDrugTerms = u''
-        fullImages = u''
-        fullBoardMember = u''
-        fullBoardMeeting = u''
-        fullSummariesNew = u''
-        fullSummariesRev = u''
-        fullSummariesReform = u''
-        fullDis = u''
-        fullGlossary = u''
-        fullGlossaryGen = u''
-        fullGeneticsProf = u''
+        fullAudio = ''
+        fullDrugTerms = ''
+        fullImages = ''
+        fullBoardMember = ''
+        fullBoardMeeting = ''
+        fullSummariesNew = ''
+        fullSummariesRev = ''
+        fullSummariesReform = ''
+        fullDis = ''
+        fullGlossary = ''
+        fullGlossaryGen = ''
+        fullGeneticsProf = ''
 
         if dispAll or dispSummary:
             fullSummariesNew  = formatFullOutput(summariesNew,
@@ -1554,66 +1549,37 @@ def createMessageBody(title='Test Title', startDate=firstOfMonth,
     return mailBody
 
 
-# --------------------------------------------------------
-# Sending email report
-# Note: The name for the foreign list is called '... NoUS'
-#       because the group name is limited to 32 characters
-# --------------------------------------------------------
 def sendEmailReport(messageBody, title, sendTo=None):
-    # In Testmode we don't want to send the notification to the world
-    # ---------------------------------------------------------------
-    # Email constants
-    # ---------------
-    if testMode:
-        strTo    = cdr.getEmailList('Test Publishing Notification')
+    """
+    Prepare the report as an email message and optionally send it
+    """
+
+    if isinstance(sendTo, (list, tuple)):
+        recips = sendTo
+    elif testMode:
+        recips = cdr.getEmailList('Test Publishing Notification')
     else:
-        strTo = cdr.getEmailList('ICRDB Statistics Notification')
-        #     strTo.append(u'register@clinicaltrials.gov')
-
-    # If an email address has been specified send to that person
-    # ----------------------------------------------------------
-    if sendTo:
-        strTo = [u'%s' % sendTo]
-
-    subject   = "[%s] %s" % (cdr.Tier().name, title)
-
-    mailHeader = """\
-From: %s
-To: %s
-Subject: %s
-""" % (STR_FROM, u', '.join(strTo), subject)
-
-    cType = "Content-type: text/html; charset=utf-8\n"
-    mailHeader += cType
-
-    # Add a Separator line + body
-    # ---------------------------
-    message = mailHeader + "\n" + messageBody
-
-    # Sending out the email
-    # ---------------------
-    server = smtplib.SMTP(SMTP_RELAY)
+        recips = cdr.getEmailList('ICRDB Statistics Notification')
+    subject = f"[{cdr.Tier().name}] {title}"
+    opts = dict(subject=subject, body=messageBody, subtype="html")
+    message = cdr.EmailMessage(STR_FROM, recips, **opts)
     if emailMode:
         try:
-            server.sendmail(STR_FROM, strTo, message.encode('utf-8'))
-        except Exception, info:
-            sys.exit("*** Error sending message (%s): %s" % (region,
-                                                             str(info)))
+            message.send()
+        except Exception as info:
+            sys.exit(f"*** Error sending message ({message}%s): {info}")
     else:
-        l.write("Running in NOEMAIL mode.  No message send", stdout = True)
-        l.write(message, stdout=True)
-    server.quit()
-
-    return
+        LOGGER.info("Running in NOEMAIL mode.  No message send")
+        LOGGER.info(str(message))
 
 
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
-l   = cdr.Log(LOGNAME)
-l.write('PCIB Statistics Report - Started', stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
-l.write('', stdout=True)
+LOGGER = cdr.Logging.get_logger("PCIBStats", console=True)
+LOGGER.info('PCIB Statistics Report - Started')
+LOGGER.info('Arguments: %s', sys.argv)
+LOGGER.info('')
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
@@ -1623,6 +1589,8 @@ dispRows = options.values.listRows
 dispCdrid = options.values.cdrids
 debug = options.values.debug
 sendTo = options.values.sendTo
+if debug:
+    LOGGER.setLevel("DEBUG")
 
 # If we're not running the report for all sections we're setting the
 # option dispPartial to True
@@ -1653,10 +1621,10 @@ startDate = options.values.start or firstOfMonth
 endDate = options.values.end or lastOfMonth
 
 if startDate == firstOfMonth and endDate == lastOfMonth:
-    title = u'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y",
+    title = 'Monthly PCIB Statistics Report for %s' % time.strftime("%B %Y",
                                                               lastmonth)
 else:
-    title = u'PCIB Statistics Report from %s to %s' % (startDate, endDate)
+    title = 'PCIB Statistics Report from %s to %s' % (startDate, endDate)
 
 # Setting the number of rows to be displayed if the document rows are
 # to be displayed (or no rows to be included)
@@ -1675,10 +1643,10 @@ if testMode:
     outputFile = outputFile.replace('.html', '.test.html')
 
 path = OUTPUTBASE + '/%s' % outputFile
-l.write('Writing report to: %s' % path, stdout=True)
+LOGGER.info('Writing report to: %s', path)
 
 try:
-    conn = cdrdb.connect()
+    conn = db.connect()
     cursor = conn.cursor()
 
     # Preparing email message to be send out
@@ -1688,33 +1656,32 @@ try:
     # Send the output as an email or print to screen
     # ----------------------------------------------
     if emailMode:
-        l.write("Running in EMAIL mode.  Submitting email.", stdout = True)
+        LOGGER.info("Running in EMAIL mode.  Submitting email.")
         sendEmailReport(report, title, sendTo)
 
     # We're writing the report to the reports directory but only if the
     # full report is run.
     # -----------------------------------------------------------------
     if dispAll:
-        l.write("Writing HTML output file.", stdout = True)
-        f = open(path, 'w')
-        f.write(report.encode('utf-8'))
-        f.close()
+        LOGGER.info("Writing HTML output file.")
+        with open(path, "w", encoding="utf-8") as fp:
+            fp.write(report)
 
-except NothingFoundError, arg:
+except NothingFoundError as arg:
     msg  = "No documents found with 'CTGovTransfer' element"
-    l.write("   %s" % msg, stdout = True)
-    l.write("   %s" % arg, stdout = True)
-except NoNewDocumentsError, arg:
+    LOGGER.info("   %s", msg)
+    LOGGER.info("   %s", arg)
+except NoNewDocumentsError as arg:
     msg  = "No new documents found with 'CTGovTransfer' element"
-    l.write("", stdout = True)
-    l.write("   %s" % msg, stdout = True)
-    l.write("   %s" % arg, stdout = True)
-except Exception, arg:
-    l.write("*** Standard Failure - %s" % arg, stdout = True, tback = 1)
+    LOGGER.info("")
+    LOGGER.info("   %s", msg)
+    LOGGER.info("   %s", arg)
+except Exception as arg:
+    LOGGER.exception("*** Standard Failure - %s", arg)
+    raise
 except:
-    l.write("*** Error - Program stopped with failure ***", stdout = True,
-                                                            tback = 1)
+    LOGGER.exception("*** Error - Program stopped with failure ***")
     raise
 
-l.write("PCIB Statistics Report - Finished", stdout = True)
+LOGGER.info("PCIB Statistics Report - Finished")
 sys.exit(0)

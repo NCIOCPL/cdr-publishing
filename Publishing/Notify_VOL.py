@@ -9,8 +9,12 @@
 # OCECDR-4036: Updated Media Docs Report- Correct Date Range
 # OCECDR-4016: Modifications to Weekly CDR Images Automated Report
 #----------------------------------------------------------------------
-import os, sys, cdr, time, optparse, cdrdb
+import os, sys, cdr, time, optparse
 import datetime
+from cdrapi import db
+
+# Establish a reference point for the call at the end.
+time.process_time()
 
 FILEBASE           = "Notify_VOL"
 LOGNAME            = "%s.log" % FILEBASE
@@ -64,17 +68,17 @@ def parseArguments(args):
     # Read and process options, if any
     # --------------------------------
     if parser.values.testMode:
-        l.write("Running in TEST mode", stdout = True)
+        LOGGER.info("Running in TEST mode")
     else:
-        l.write("Running in LIVE mode", stdout = True)
+        LOGGER.info("Running in LIVE mode")
 
     if parser.values.startDate:
         startDate = parser.values.startDate
-        l.write("Start Date: %s" % startDate, stdout = True)
+        LOGGER.info("Start Date: %s", startDate)
 
     if parser.values.endDate:
         endDate = parser.values.endDate
-        l.write("End   Date: %s" % endDate, stdout = True)
+        LOGGER.info("End   Date: %s", endDate)
 
     return parser
 
@@ -108,7 +112,7 @@ def checkForMediaUpdates(sDate, eDate, type=''):
     # This includes new and updated images.
     # -----------------------------------------------------------------
     try:
-        conn = cdrdb.connect()
+        conn = db.connect(timeout=300)
         cursor = conn.cursor()
         cursor.execute("""\
         SELECT d.id
@@ -135,14 +139,15 @@ def checkForMediaUpdates(sDate, eDate, type=''):
            AND dv.publishable = 'Y'
            %s
          ORDER BY d.id
-""" % (sDate, eDate, q_new), timeout=300)
+""" % (sDate, eDate, q_new))
         rows = cursor.fetchall()
         ids = []
         for row in rows:
             ids.append(row[0])
 
-    except cdrdb.Error, info:
-        l.write("Failure finding updated media documents: %s" % (info[1][0]))
+    except:
+        LOGGER.exception("Failure finding updated media documents")
+        raise
 
     return ids
 
@@ -163,7 +168,7 @@ def checkForBlockedImages(sDate, eDate):
     # which is currently blocked and a publishable version exists.
     # -----------------------------------------------------------------
     try:
-        conn = cdrdb.connect()
+        conn = db.connect(timeout=300)
         cursor = conn.cursor()
         cursor.execute("""\
         SELECT d.id
@@ -185,14 +190,15 @@ def checkForBlockedImages(sDate, eDate):
                           AND i.publishable = 'Y')
 
          ORDER BY d.id
-""" % (sDate, eDate), timeout=300)
+""" % (sDate, eDate))
         rows = cursor.fetchall()
         ids = []
         for row in rows:
             ids.append(row[0])
 
-    except cdrdb.Error, info:
-        l.write("Failure finding blocked media documents: %s" % (info[1][0]))
+    except:
+        LOGGER.exception("Failure finding blocked media documents")
+        raise
 
     return ids
 
@@ -218,7 +224,7 @@ def getVersions(ids, sDate, eDate, type=''):
         pubType = ""
 
     try:
-        conn = cdrdb.connect()
+        conn = db.connect()
         cursor = conn.cursor()
         # dv.id      -> CDR-ID
         # dv.num     -> version number
@@ -248,12 +254,13 @@ LEFT OUTER JOIN query_term v
            %s
            AND dv.dt between '%s' AND '%s'
          ORDER BY id, num
-""" % (', '.join("%s" % x for x in ids),
+""" % (', '.join(str(x) for x in ids),
        pubType, sDate, eDate))
 
         rows = cursor.fetchall()
-    except cdrdb.Error, info:
-        l.write("Failure finding media data: %s" % (info[1][0]))
+    except Exception:
+        LOGGER.exception("Failure finding media data")
+        raise
 
     return rows
 
@@ -285,8 +292,8 @@ def createRows(versions):
        """ % (class_, host, row[0], row[1], row[0],
                             row[1],
                       host, row[0], row[2],
-                            row[3] and row[3][:16] or '',
-                            row[4] and row[4][:16] or '',
+                            row[3] and str(row[3])[:16] or '',
+                            row[4] and str(row[4])[:16] or '',
                             row[5] and 'Y' or '',
                             row[6] or '')
     return tableRows
@@ -298,10 +305,10 @@ def createRows(versions):
 # ------------------------------------------------------------
 # Open Log file and enter start message
 # -------------------------------------
-l = cdr.Log(LOGNAME)
-l.write('Notify_VOL - Started', stdout = True)
-l.write('Arguments: %s' % sys.argv, stdout=True)
-print ''
+LOGGER = cdr.Logging.get_logger(FILEBASE, console=True)
+LOGGER.info('Notify_VOL - Started')
+LOGGER.info('Arguments: %s', sys.argv)
+print('')
 
 options   = parseArguments(sys.argv)
 testMode  = options.values.testMode
@@ -359,10 +366,10 @@ else:
 
 # Print the result
 # ----------------
-l.write('Time Frame:  %s to %s' % (startDate, endDate), stdout = True)
-l.write('New Media Documents:\n%s\n' % newMediaChanges, stdout = True)
-l.write('Updated Media Documents:\n%s\n' % updMediaChanges, stdout = True)
-l.write('Blocked Media Documents:\n%s\n' % delMediaChanges, stdout = True)
+LOGGER.info('Time Frame:  %s to %s', startDate, endDate)
+LOGGER.info('New Media Documents:\n%s\n', newMediaChanges)
+LOGGER.info('Updated Media Documents:\n%s\n', updMediaChanges)
+LOGGER.info('Blocked Media Documents:\n%s\n', delMediaChanges)
 
 # Setting up email message to be send to users
 # --------------------------------------------
@@ -370,7 +377,7 @@ l.write('Blocked Media Documents:\n%s\n' % delMediaChanges, stdout = True)
 sender   = 'NCIPDQoperator@mail.nih.gov'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
-html     = u"""
+html     = """
 <html>
  <head>
   <title>Media List Report</title>
@@ -439,7 +446,7 @@ if newImages:
     newReport = createRows(newMediaChanges)
     html += tableHeader % newReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
@@ -451,7 +458,7 @@ if updImages:
     updReport = createRows(updMediaChanges)
     html += tableHeader % updReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
@@ -462,11 +469,11 @@ if delImages:
     delReport = createRows(delMediaChanges)
     html += tableHeader % delReport
 else:
-    html += u"""
+    html += """
     <p class="none">None</p>
 """
 
-html += u"""
+html += """
  </body>
 </html>"""
 
@@ -480,24 +487,24 @@ else:
     recips = emailDL
 
 allChanges = newMediaChanges + updMediaChanges + delMediaChanges
+email_opts = dict(subject=subject, body=html, subtype="html")
 if allChanges and recips:
-    l.write("Sending Email to DL", stdout = True)
-    l.write("   DL: %s" % recips, stdout = True)
-    l.write("\nEmail body:", stdout = True)
-    l.write("-----------------------------------------------", stdout = True)
-    l.write("%s" % html, stdout = True)
-    l.write("-----------------------------------------------\n", stdout = True)
-    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
-    l.write("Email send successfully!", stdout = True)
+    LOGGER.info("Sending Email to DL")
+    LOGGER.info("   DL: %s", recips)
+    LOGGER.info("\nEmail body:")
+    LOGGER.info("-----------------------------------------------")
+    LOGGER.info("%s", html)
+    LOGGER.info("-----------------------------------------------\n")
+    cdr.EmailMessage(sender, recips, **email_opts).send()
+    LOGGER.info("Email send successfully!")
 else:
     # Else statement included to monitor the program
-    recips = emailDevs
-    l.write("Email NOT submitted to DL", stdout = True)
-    cdr.sendMailMime(sender, recips, subject, html, bodyType='html')
+    LOGGER.info("Email NOT submitted to DL")
+    cdr.EmailMessage(sender, emailDevs, **email_opts).send()
 
 # All done, going home now
 # ------------------------
-cpu = time.clock()
-l.write('CPU time: %6.2f seconds' % cpu, stdout = True)
-l.write('Notify_VOL - Finished', stdout = True)
+cpu = time.process_time()
+LOGGER.info('CPU time: %6.2f seconds', cpu)
+LOGGER.info('Notify_VOL - Finished')
 sys.exit(0)
