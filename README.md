@@ -17,7 +17,3 @@ The `pdqdocs` directory contains documentation provided to the PDQ data partners
 ## Mailers
 
 The `Mailers` directory contains the Python software used to send PDQ documents to external reviewers.
-
-## Genetics Professionals Web Site
-
-The `gpmailers` directory implements a separate web site used by genetics professionals registered in the _NCI Cancer Genetics Services Directory_ to periodically review and update their professional and contact information.
