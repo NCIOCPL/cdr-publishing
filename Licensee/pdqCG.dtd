@@ -28,7 +28,8 @@
 
 <!ENTITY % ParaElements
                      " #PCDATA          | DrugName         | DrugRef
-                     | Emphasis         | ExternalRef      | ForeignWord
+                     | EmbeddedVideo    | Emphasis         | ExternalRef
+                     | ForeignWord
                      | GeneName         | GlossaryTermLink | GlossaryTermRef
                      | InterventionName | LOELink          | LOERef
                      | MediaLink        | MediaRef         | Note
@@ -71,10 +72,10 @@
                      | Subscript        | Superscript      | TT ">
 
 <!ENTITY % Location "OrganizationName*,
-                     PostalAddress?, 
-                     Phone?, 
-                     TollFreePhone?, 
-                     Email?, 
+                     PostalAddress?,
+                     Phone?,
+                     TollFreePhone?,
+                     Email?,
                      WebSite?">
 
 <!ELEMENT OrganizationName (#PCDATA)>
@@ -340,7 +341,7 @@
      =============================================================== -->
 
 <!ELEMENT MediaLink (Caption*)>
-<!ATTLIST MediaLink 
+<!ATTLIST MediaLink
        id CDATA #IMPLIED
        ref CDATA #REQUIRED
        type CDATA #REQUIRED
@@ -706,7 +707,7 @@
 <!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>
 <!ATTLIST RelatedGlossaryTermRef href  CDATA  #REQUIRED>
 <!ATTLIST RelatedGlossaryTermRef UseWith (en | es) #REQUIRED>
-<!ATTLIST RelatedGlossaryTermRef audience (Patients | 
+<!ATTLIST RelatedGlossaryTermRef audience (Patients |
                                            Health_professionals) #REQUIRED>
 
 <!-- End Glossary -->
