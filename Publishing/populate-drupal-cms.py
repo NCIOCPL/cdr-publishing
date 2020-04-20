@@ -22,6 +22,8 @@ from cdrpub import Control
 from cdrapi import db
 from cdr import Logging
 
+KEEP = "don't drop existing PDQ content (REQUIRED ON PRODUCTION)"
+
 # Collect the options for this run.
 parser = ArgumentParser()
 parser.add_argument("--session", required=True, help="CDR login key")
@@ -29,14 +31,15 @@ parser.add_argument("--tier", help="publish from another tier")
 parser.add_argument("--base", help="override base URL for Drupal site")
 parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store serialized docs")
-opts = dict(action="store_true", help="don't drop existing PDQ content")
-parser.add_argument("--keep", **opts)
+parser.add_argument("--keep", action="store_true", help=KEEP)
 parser.add_argument("--level", default="info", help="how much to log")
 opts = parser.parse_args()
 auth = ("PDQ", opts.password) if opts.password else None
 
 # Make sure we are allowed to publish to the CMS.
 session = Session(opts.session, tier=opts.tier)
+if session.tier.name == "PROD" and not opts.keep:
+    raise Exception("** CANNOT DROP EXISTING PDQ CONTENT ON PROD! **")
 if not session.can_do("USE PUBLISHING SYSTEM"):
     raise Exception("Not authorized")
 
