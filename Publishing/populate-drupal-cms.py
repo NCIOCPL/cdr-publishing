@@ -37,6 +37,11 @@ Example of loading only CIS documents in batches.
 ./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 300
 ./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 400
 ....
+
+If you're testing this on a non-production tier, be sure to do any subset
+batch processing in order from the beginning of the sequence so the English
+summaries get pushed before the Spanish summaries. In other words, don't
+start with --skip 500.
 """
 
 from argparse import ArgumentParser
@@ -47,6 +52,7 @@ from cdrpub import Control
 from cdrapi import db
 from cdr import Logging
 
+PATH = "/Summary/SummaryMetaData/SummaryLanguage"
 DROP = "drop existing PDQ content (UNAVAILABLE ON PRODUCTION)"
 MAX = "limit the number of summaries to push"
 SKIP = "start part-way through the set of summaries"
@@ -88,16 +94,18 @@ if opts.drop and not opts.cis and not opts.dis:
                 client.remove(doc.cdr_id)
 
 # Send all the PDQ content to the CMS.
-query = db.Query("document d", "d.id", "t.name")
+cols = "d.id", "t.name", "ISNULL(l.value, 'English') AS language"
+query = db.Query("document d", *cols)
 query.join("doc_type t", "t.id = d.doc_type")
 query.join("pub_proc_cg c", "c.id = d.id")
+query.outer("query_term l", "l.doc_id = d.id", f"path = '{PATH}'")
 if opts.cis:
     query.where("t.name = 'Summary'")
 elif opts.dis:
     query.where("t.name = 'DrugInformationSummary'")
 else:
     query.where("t.name in ('Summary', 'DrugInformationSummary')")
-query.order("d.id")
+query.order(3, "d.id")
 if opts.verbose:
     print(query)
 rows = query.execute(session.cursor).fetchall()
@@ -106,8 +114,8 @@ if opts.verbose:
 end = min(opts.skip + opts.max, len(rows))
 rows = rows[opts.skip:end]
 if opts.verbose:
-    print(f"sending {len(rows)} docs ({opts.skip+1} - {end}")
-docs = dict([list(row) for row in rows])
+    print(f"sending {len(rows)} docs ({opts.skip+1} - {end})")
+docs = dict([(row.id, row.name) for row in rows])
 opts = dict(
     send=docs,
     base=opts.base,
