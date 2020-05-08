@@ -32,7 +32,13 @@ parser.add_argument("--base", help="override base URL for Drupal site")
 parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store serialized docs")
 parser.add_argument("--keep", action="store_true", help=KEEP)
+parser.add_argument("--verbose", action="store_true", help="show more")
 parser.add_argument("--level", default="info", help="how much to log")
+parser.add_argument("--max", type=int, default=1000000)
+parser.add_argument("--skip", type=int, default=0)
+group = parser.add_mutually_exclusive_group()
+group.add_argument("--cis", action="store_true", help="only CIS docs")
+group.add_argument("--dis", action="store_true", help="only DIS docs")
 opts = parser.parse_args()
 auth = ("PDQ", opts.password) if opts.password else None
 
@@ -56,9 +62,23 @@ if not opts.keep:
 query = db.Query("document d", "d.id", "t.name")
 query.join("doc_type t", "t.id = d.doc_type")
 query.join("pub_proc_cg c", "c.id = d.id")
-query.where("t.name in ('Summary', 'DrugInformationSummary')")
+if opts.cis:
+    query.where("t.name = 'Summary'")
+elif opts.dis:
+    query.where("t.name = 'DrugInformationSummary'")
+else:
+    query.where("t.name in ('Summary', 'DrugInformationSummary')")
 query.order("d.id")
-docs = dict([list(row) for row in query.execute(session.cursor).fetchall()])
+if opts.verbose:
+    print(query)
+rows = query.execute(session.cursor).fetchall()
+if opts.verbose:
+    print(f"{len(rows)} found by query")
+end = min(opts.skip + opts.max, len(rows))
+rows = rows[opts.skip:end]
+if opts.verbose:
+    print(f"sending {len(rows)} docs ({opts.skip+1} - {end}")
+docs = dict([list(row) for row in rows])
 opts = dict(
     send=docs,
     base=opts.base,
