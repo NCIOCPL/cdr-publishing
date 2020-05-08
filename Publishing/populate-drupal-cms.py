@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Install a clean set of PDQ content on the Drupal CMS
+"""Install a clean set of PDQ content on the Drupal CMS
 
 Clears out existing PDQ content first, unless told not to.
 
@@ -12,6 +11,32 @@ See JIRA ticket https://tracker.nci.nih.gov/browse/OCECDR-4584.
 Logs to session-yyyy-mm-dd.log in CDR log directory (usually d:/cdr/log).
 
 Part of https://github.com/NCIOCPL/cgov-digital-platform/issues/825 epic.
+
+This script has been enhanced to add options for processing only a
+portion of the summaries. This is because on the production tier the
+server gets overwhelmed when all of the summaries are loaded at once,
+and the job fails part of the way through. For example, on April 13,
+2020, Volker run the script to load all the summaries to
+www-cms.cancer.gov and the script got through the first pass for
+almost 500 of the documents and then crashed. So he started it again
+and it made it through only 208 documents before failing (again, first
+pass only). So I hacked this script to load the documents in smaller
+batches and to skip over the drug information summaries, and was able
+to get all of the cancer information summaries successfully
+loaded. The first 600 succeeded in batches of 100. Then the next batch
+(601-700) failed partway through, so I tried just 601-625 and that
+failed, too. So I waited a few minutes and tried a batch of 50, and
+that succeeded.  So I ran two more batches of 50, and they completed
+successfully. The remaining 92 summaries were loaded successfully in a
+single batch.
+
+Example of loading only CIS documents in batches.
+./populate-drupal-cms.py [other options] --keep --cis --max 100
+./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 100
+./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 200
+./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 300
+./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 400
+....
 """
 
 from argparse import ArgumentParser
@@ -22,7 +47,11 @@ from cdrpub import Control
 from cdrapi import db
 from cdr import Logging
 
-KEEP = "don't drop existing PDQ content (REQUIRED ON PRODUCTION)"
+DROP = "drop existing PDQ content (UNAVAILABLE ON PRODUCTION)"
+MAX = "limit the number of summaries to push"
+SKIP = "start part-way through the set of summaries"
+VERBOSE = "show what's happening"
+LEVEL = "logging level (info, debug, warning, error)"
 
 # Collect the options for this run.
 parser = ArgumentParser()
@@ -31,11 +60,11 @@ parser.add_argument("--tier", help="publish from another tier")
 parser.add_argument("--base", help="override base URL for Drupal site")
 parser.add_argument("--password", help="override password for PDQ account")
 parser.add_argument("--dumpfile", help="where to store serialized docs")
-parser.add_argument("--keep", action="store_true", help=KEEP)
-parser.add_argument("--verbose", action="store_true", help="show more")
-parser.add_argument("--level", default="info", help="how much to log")
-parser.add_argument("--max", type=int, default=1000000)
-parser.add_argument("--skip", type=int, default=0)
+parser.add_argument("--drop", action="store_true", help=DROP)
+parser.add_argument("--verbose", action="store_true", help=VERBOSE)
+parser.add_argument("--level", default="info", help=LEVEL)
+parser.add_argument("--max", type=int, default=1000000, help=MAX)
+parser.add_argument("--skip", type=int, default=0, help=SKIP)
 group = parser.add_mutually_exclusive_group()
 group.add_argument("--cis", action="store_true", help="only CIS docs")
 group.add_argument("--dis", action="store_true", help="only DIS docs")
@@ -44,13 +73,13 @@ auth = ("PDQ", opts.password) if opts.password else None
 
 # Make sure we are allowed to publish to the CMS.
 session = Session(opts.session, tier=opts.tier)
-if session.tier.name == "PROD" and not opts.keep:
-    raise Exception("** CANNOT DROP EXISTING PDQ CONTENT ON PROD! **")
 if not session.can_do("USE PUBLISHING SYSTEM"):
     raise Exception("Not authorized")
 
-# Clean out existing documents unless told not to.
-if not opts.keep:
+# Clean out existing documents if so instructed.
+if opts.drop and not opts.cis and not opts.dis:
+    if session.tier.name == "PROD":
+        raise Exception("** CANNOT DROP EXISTING PDQ CONTENT ON PROD! **")
     client = DrupalClient(session, tier=opts.tier, base=opts.base, auth=auth)
     catalog = client.list()
     for langcode in ("es", "en"):
