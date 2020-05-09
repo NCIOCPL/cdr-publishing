@@ -93,7 +93,7 @@ if opts.drop and not opts.cis and not opts.dis:
             if doc.langcode == langcode:
                 client.remove(doc.cdr_id)
 
-# Send all the PDQ content to the CMS.
+# Send PDQ content to the CMS.
 cols = "d.id", "t.name", "ISNULL(l.value, 'English') AS language"
 query = db.Query("document d", *cols)
 query.join("doc_type t", "t.id = d.doc_type")
