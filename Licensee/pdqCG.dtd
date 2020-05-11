@@ -71,6 +71,9 @@
                      | GeneName         | ScientificName   | Strong
                      | Subscript        | Superscript      | TT ">
 
+<!ENTITY % SummaryRefData
+                     " #PCDATA          | GeneName ">
+
 <!ENTITY % Location "OrganizationName*,
                      PostalAddress?,
                      Phone?,
@@ -390,7 +393,7 @@
 
 <!ELEMENT QuoteAuthor (#PCDATA)>
 
-<!ELEMENT SummaryRef (#PCDATA)>
+<!ELEMENT SummaryRef (%SummaryRefData;)*>
 <!ATTLIST SummaryRef href CDATA #IMPLIED>
 <!ATTLIST SummaryRef url  CDATA #IMPLIED>
 
