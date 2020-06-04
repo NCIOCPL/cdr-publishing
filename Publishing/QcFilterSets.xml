@@ -326,6 +326,10 @@
                            FROM query_term_pub i
                           WHERE i.doc_id = v.id
                             AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding')
+         AND not exists (SELECT 'x'
+                           FROM query_term_pub i
+                          WHERE i.doc_id = v.id
+                            AND path = '/Media/PhysicalMedia/VideoData/VideoEncoding')
        GROUP BY v.id
        ORDER BY v.id
      </SubsetSQL>
@@ -1018,6 +1022,10 @@
                            FROM query_term_pub i
                           WHERE i.doc_id = v.id
                             AND path = '/Media/PhysicalMedia/SoundData/SoundEncoding')
+         AND not exists (SELECT 'x'
+                           FROM query_term_pub i
+                          WHERE i.doc_id = v.id
+                            AND path = '/Media/PhysicalMedia/VideoData/VideoEncoding')
     GROUP BY v.id
     ORDER BY v.id
      </SubsetSQL>
