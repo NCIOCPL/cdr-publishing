@@ -731,7 +731,8 @@
                 RelatedWebsites*,
                 MenuInformation?,
                 DateFirstPublished?,
-                DateLastModified?
+                DateLastModified?,
+                CGovInfo?
                )>
 <!ATTLIST Term id CDATA #REQUIRED>
 <!ATTLIST Term LegacyPDQID CDATA #IMPLIED>
@@ -760,6 +761,14 @@
 
 <!-- [@@INTERNAL] For Internal Use Only -->
 <!ELEMENT CTGovInterventionType (#PCDATA)>
+
+<!ELEMENT CGovInfo (DISUrl?, DISTitle?, NCITName?)>
+
+<!ELEMENT DISUrl (#PCDATA)>
+
+<!ELEMENT DISTitle (#PCDATA)>
+
+<!ELEMENT NCITName (#PCDATA)>
 <!-- End: For Internal Use Only [INTERNAL@@] -->
 
 <!ELEMENT TermRelationship (ParentTerm | RelatedTerm)+>
