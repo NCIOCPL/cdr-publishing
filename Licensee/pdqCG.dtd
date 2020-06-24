@@ -28,7 +28,8 @@
 
 <!ENTITY % ParaElements
                      " #PCDATA          | DrugName         | DrugRef
-                     | Emphasis         | ExternalRef      | ForeignWord
+                     | EmbeddedVideo    | Emphasis         | ExternalRef
+                     | ForeignWord
                      | GeneName         | GlossaryTermLink | GlossaryTermRef
                      | InterventionName | LOELink          | LOERef
                      | MediaLink        | MediaRef         | Note
@@ -70,11 +71,14 @@
                      | GeneName         | ScientificName   | Strong
                      | Subscript        | Superscript      | TT ">
 
+<!ENTITY % SummaryRefData
+                     " #PCDATA          | GeneName ">
+
 <!ENTITY % Location "OrganizationName*,
-                     PostalAddress?, 
-                     Phone?, 
-                     TollFreePhone?, 
-                     Email?, 
+                     PostalAddress?,
+                     Phone?,
+                     TollFreePhone?,
+                     Email?,
                      WebSite?">
 
 <!ELEMENT OrganizationName (#PCDATA)>
@@ -340,7 +344,7 @@
      =============================================================== -->
 
 <!ELEMENT MediaLink (Caption*)>
-<!ATTLIST MediaLink 
+<!ATTLIST MediaLink
        id CDATA #IMPLIED
        ref CDATA #REQUIRED
        type CDATA #REQUIRED
@@ -389,7 +393,7 @@
 
 <!ELEMENT QuoteAuthor (#PCDATA)>
 
-<!ELEMENT SummaryRef (#PCDATA)>
+<!ELEMENT SummaryRef (%SummaryRefData;)*>
 <!ATTLIST SummaryRef href CDATA #IMPLIED>
 <!ATTLIST SummaryRef url  CDATA #IMPLIED>
 
@@ -706,7 +710,7 @@
 <!ELEMENT RelatedGlossaryTermRef              (#PCDATA)>
 <!ATTLIST RelatedGlossaryTermRef href  CDATA  #REQUIRED>
 <!ATTLIST RelatedGlossaryTermRef UseWith (en | es) #REQUIRED>
-<!ATTLIST RelatedGlossaryTermRef audience (Patients | 
+<!ATTLIST RelatedGlossaryTermRef audience (Patients |
                                            Health_professionals) #REQUIRED>
 
 <!-- End Glossary -->
@@ -727,7 +731,8 @@
                 RelatedWebsites*,
                 MenuInformation?,
                 DateFirstPublished?,
-                DateLastModified?
+                DateLastModified?,
+                CGovInfo?
                )>
 <!ATTLIST Term id CDATA #REQUIRED>
 <!ATTLIST Term LegacyPDQID CDATA #IMPLIED>
@@ -756,6 +761,14 @@
 
 <!-- [@@INTERNAL] For Internal Use Only -->
 <!ELEMENT CTGovInterventionType (#PCDATA)>
+
+<!ELEMENT CGovInfo (DISUrl?, DISTitle?, NCITName?)>
+
+<!ELEMENT DISUrl (#PCDATA)>
+
+<!ELEMENT DISTitle (#PCDATA)>
+
+<!ELEMENT NCITName (#PCDATA)>
 <!-- End: For Internal Use Only [INTERNAL@@] -->
 
 <!ELEMENT TermRelationship (ParentTerm | RelatedTerm)+>

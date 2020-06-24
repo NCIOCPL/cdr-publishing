@@ -19,14 +19,15 @@
      ============================================================= -->
 
 <!ENTITY % ParaLevelElements
-                     " Contact          | EmbeddedVideo    | ItemizedList     
+                     " Contact          | EmbeddedVideo    | ItemizedList
                      | LiteralLayout
                      | OrderedList      | QandASet         | Para
                      | MediaLink        | Table ">
 
 <!ENTITY % ParaElements
                      " #PCDATA          | DrugName         | DrugRef
-                     | Emphasis         | ExternalRef      | ForeignWord
+                     | EmbeddedVideo    | Emphasis         | ExternalRef
+                     | ForeignWord
                      | GeneName         | GlossaryTermLink | GlossaryTermRef
                      | InterventionName | LOELink          | LOERef
                      | MediaLink        | MediaRef         | Note
@@ -37,7 +38,7 @@
 
 <!ENTITY % TextElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | EmbeddedVideo    | Emphasis         
+                     | DrugRef          | EmbeddedVideo    | Emphasis
                      | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
@@ -51,7 +52,7 @@
 
 <!ENTITY % TextSectionElements
                      " #PCDATA          | Contact          | DrugName
-                     | DrugRef          | EmbeddedVideo    | Emphasis         
+                     | DrugRef          | EmbeddedVideo    | Emphasis
                      | ExternalRef
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
@@ -67,6 +68,9 @@
 <!ENTITY % TitleData " #PCDATA          | Emphasis         | ForeignWord
                      | GeneName         | ScientificName   | Strong
                      | Subscript        | Superscript      | TT ">
+
+<!ENTITY % SummaryRefData
+                     " #PCDATA          | GeneName ">
 
 <!ENTITY % Location "OrganizationName*,PostalAddress?, Phone?, TollFreePhone?, Email?, WebSite?">
 
@@ -314,8 +318,8 @@
 <!ELEMENT Note (%TextElements;)*>
 
 <!ELEMENT MediaLink (Caption*)>
-<!ATTLIST MediaLink 
-       id CDATA #IMPLIED 
+<!ATTLIST MediaLink
+       id CDATA #IMPLIED
        ref CDATA #REQUIRED
        type CDATA #IMPLIED
        alt CDATA #REQUIRED
@@ -347,7 +351,7 @@
 
 <!ELEMENT QuoteAuthor (#PCDATA)>
 
-<!ELEMENT SummaryRef (#PCDATA)>
+<!ELEMENT SummaryRef (%SummaryRefData;)*>
 <!ATTLIST SummaryRef href CDATA #IMPLIED>
 <!ATTLIST SummaryRef url  CDATA #IMPLIED>
 
