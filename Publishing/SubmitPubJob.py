@@ -21,7 +21,7 @@ MAX_RETRIES = 10
 RETRY_MULTIPLIER = 5.0
 wait       = 60    # number of seconds to wait between status checks
 
-# The performance of the publishing job has greately improved allowing
+# The performance of the publishing job has greatly improved allowing
 # us to cancel a running job much sooner if it fails to finish
 # --------------------------------------------------------------------
 if cdr.isProdHost():
@@ -387,11 +387,7 @@ try:
     # we continue.  Otherwise, submitting the job failed and we exit.
     # ---------------------------------------------------------------
     LOGGER.info("Submitting publishing job...")
-    jobDescription = "Auto %s, %s" % (pubSubset,
-                                    time.strftime('%Y-%m-%d %H:%M:%S'))
-    submit = cdr.publish(session, pubSystem, pubSubset,
-                         parms = [('GKPushJobDescription', jobDescription)],
-                         email = pubEmail)
+    submit = cdr.publish(session, pubSystem, pubSubset, email=pubEmail)
 
     if submit[0] == None:
         LOGGER.error("*** Failure starting publishing job ***")

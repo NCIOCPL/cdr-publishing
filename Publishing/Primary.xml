@@ -46,18 +46,6 @@
     <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -208,22 +196,6 @@
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -269,22 +241,6 @@
    <SubsetParameter>
     <ParmName>RerunFailedPush</ParmName>
     <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
@@ -353,18 +309,6 @@
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue>Interim-Export submitted manually</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
@@ -494,7 +438,7 @@ LEFT OUTER JOIN query_term_pub u
    ========================================================================
    All Summaries for which there is currently no version on Cancer.gov.
    This version of the SQL query selects first all summaries that were new
-   and pushed to Gatekeeper but failed to load on Gatekeeper (their version
+   and pushed to Drupal but failed to load on the Drupal CMS (their version
    is marked as 'Failed' but the document is already stored in the
    pub_proc_cg table).
    The second part of the union selects all new documents (not yet stored
@@ -669,22 +613,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue>Push Interim-Export submitted manually</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -747,18 +675,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -1010,22 +926,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -1087,18 +987,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue>Export submitted manually</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>MaxSummaryErrors</ParmName>
@@ -1354,22 +1242,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue>Push Export submitted manually</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -1401,18 +1273,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>PubType</ParmName>
     <ParmValue>Hotfix (Remove)</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -1456,22 +1316,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>PubType</ParmName>
     <ParmValue>Hotfix (Remove)</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
@@ -1531,18 +1375,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Preview</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -1716,18 +1548,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -1814,22 +1634,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -1889,18 +1693,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -1985,22 +1777,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -2060,18 +1836,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -2157,22 +1921,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -2231,18 +1979,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -2341,22 +2077,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>InteractiveMode</ParmName>
     <ParmValue>No</ParmValue>
    </SubsetParameter>
@@ -2417,18 +2137,6 @@ LEFT OUTER JOIN query_term_pub u
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
    </SubsetParameter>
    <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
@@ -2514,22 +2222,6 @@ LEFT OUTER JOIN query_term_pub u
     <ParmValue>No</ParmValue>
    </SubsetParameter>
    <SubsetParameter>
-    <ParmName>IgnoreGKJobIDMismatch</ParmName>
-    <ParmValue>No</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>Live</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPushJobDescription</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
-   <SubsetParameter>
     <ParmName>DrupalServer</ParmName>
     <ParmValue/>
    </SubsetParameter>
@@ -2584,48 +2276,6 @@ DTD to be used to validate each document.
 Assumed to be in /cdr/Licensee on the CDR drive.
    </ParmInfoHelp>
    <ParmInfoMethod>dtd</ParmInfoMethod>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKPubTarget</ParmInfoName>
-   <ParmInfoHelp>
-How far should the documents be pushed? (GateKeeper, Preview, or Live)
-   </ParmInfoHelp>
-   <ParmInfoValidValues>
-    <ParmInfoValidValue>GateKeeper</ParmInfoValidValue>
-    <ParmInfoValidValue>Preview</ParmInfoValidValue>
-    <ParmInfoValidValue>Live</ParmInfoValidValue>
-   </ParmInfoValidValues>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKPushJobDescription</ParmInfoName>
-   <ParmInfoHelp>
-Brief message indicating the purpose of the publishing job.
-Sent as part of the push job to GateKeeper.
-   </ParmInfoHelp>
-   <ParmInfoPattern>^.{0,1024}$</ParmInfoPattern>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKServer</ParmInfoName>
-   <ParmInfoHelp>
-Host name of GateKeeper server to which documents should be pushed.
-If a name which is not a fully qualified domain name (FQDN) is
-entered '.cancer.gov' will be assumed.
-   </ParmInfoHelp>
-   <ParmInfoMethod>server_name</ParmInfoMethod>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>IgnoreGKJobIDMismatch</ParmInfoName>
-   <ParmInfoHelp>
-If 'Yes' the job proceeds even if the CDR and GateKeeper
-have different IDs for that last successful job.
-Usually defaults to 'No'.
-Ignored on non-production tiers, where mismatches
-are common and never cause a push job to abort.
-   </ParmInfoHelp>
-   <ParmInfoValidValues>
-    <ParmInfoValidValue>Yes</ParmInfoValidValue>
-    <ParmInfoValidValue>No</ParmInfoValidValue>
-   </ParmInfoValidValues>
   </ParmInfo>
   <ParmInfo>
    <ParmInfoName>DrupalServer</ParmInfoName>
