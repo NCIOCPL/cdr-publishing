@@ -2,7 +2,7 @@
 
 """Install a clean set of PDQ content on the Drupal CMS
 
-Clears out existing PDQ content first, unless told not to.
+Clears out existing PDQ content first, if instructed to do so (not on PROD).
 
 Ignores problems caused by broken links from non-PDQ content to PDQ summaries.
 
@@ -31,11 +31,11 @@ successfully. The remaining 92 summaries were loaded successfully in a
 single batch.
 
 Example of loading only CIS documents in batches.
-./populate-drupal-cms.py [other options] --keep --cis --max 100
-./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 100
-./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 200
-./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 300
-./populate-drupal-cms.py [other options] --keep --cis --max 100 --skip 400
+./populate-drupal-cms.py [other options] --cis --max 100
+./populate-drupal-cms.py [other options] --cis --max 100 --skip 100
+./populate-drupal-cms.py [other options] --cis --max 100 --skip 200
+./populate-drupal-cms.py [other options] --cis --max 100 --skip 300
+./populate-drupal-cms.py [other options] --cis --max 100 --skip 400
 ....
 
 If you're testing this on a non-production tier, be sure to do any subset
