@@ -116,6 +116,7 @@
             | ItemizedList
             | OrderedList
             | QandASet
+            | EmbeddedVideo
             | Contact )*,
             Section* )>
 <!ATTLIST Section id CDATA #IMPLIED>
