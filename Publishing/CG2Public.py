@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Convert the CDR publishing data (for Gatekeeper use) for PDQ data partner use
+Convert the CDR publishing data (for cancer.gov use) for PDQ data partner use
 
 Validate the new licensee data against its DTD.
 

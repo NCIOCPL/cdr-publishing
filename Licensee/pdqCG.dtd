@@ -338,10 +338,10 @@
 
 
 <!-- Making the type attribute mandatory
-     The type attribute needs to exist for Gatekeeper to being able
-     and properly process the MediaLink elements.  This attribute is
+     The type attribute needs to exist for cancer.gov, so it can
+     properly process the MediaLink elements.  This attribute is
      optional in the vendor DTD but we want to ensure that it exists
-     when the documents are being pushed to Gatekeeper
+     when the documents are being pushed to cancer.gov.
      =============================================================== -->
 
 <!ELEMENT MediaLink (Caption*)>

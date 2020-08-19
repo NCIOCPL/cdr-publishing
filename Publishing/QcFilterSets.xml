@@ -812,14 +812,6 @@
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <SubsetSpecification>
@@ -897,14 +889,6 @@
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -988,14 +972,6 @@
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -1090,14 +1066,6 @@
    <SubsetParameter>
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
    </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
@@ -1197,14 +1165,6 @@
     <ParmName>MaxDocUpdatedDate</ParmName>
     <ParmValue>JobStartDateTime</ParmValue>
    </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKPubTarget</ParmName>
-    <ParmValue>GateKeeper</ParmValue>
-   </SubsetParameter>
-   <SubsetParameter>
-    <ParmName>GKServer</ParmName>
-    <ParmValue/>
-   </SubsetParameter>
   </SubsetParameters>
   <SubsetSpecifications>
    <!--
@@ -1279,48 +1239,6 @@ DTD to be used to validate each document.
 Assumed to be in /cdr/Licensee on the CDR drive.
    </ParmInfoHelp>
    <ParmInfoMethod>dtd</ParmInfoMethod>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKPubTarget</ParmInfoName>
-   <ParmInfoHelp>
-How far should the documents be pushed? (GateKeeper, Preview, or Live)
-   </ParmInfoHelp>
-   <ParmInfoValidValues>
-    <ParmInfoValidValue>GateKeeper</ParmInfoValidValue>
-    <ParmInfoValidValue>Preview</ParmInfoValidValue>
-    <ParmInfoValidValue>Live</ParmInfoValidValue>
-   </ParmInfoValidValues>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKPushJobDescription</ParmInfoName>
-   <ParmInfoHelp>
-Brief message indicating the purpose of the publishing job.
-Sent as part of the push job to GateKeeper.
-   </ParmInfoHelp>
-   <ParmInfoPattern>^.{0,1024}$</ParmInfoPattern>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>GKServer</ParmInfoName>
-   <ParmInfoHelp>
-Host name of GateKeeper server to which documents should be pushed.
-If a name which is not a fully qualified domain name (FQDN) is
-entered '.cancer.gov' will be assumed.
-   </ParmInfoHelp>
-   <ParmInfoMethod>server_name</ParmInfoMethod>
-  </ParmInfo>
-  <ParmInfo>
-   <ParmInfoName>IgnoreGKJobIDMismatch</ParmInfoName>
-   <ParmInfoHelp>
-If 'Yes' the job proceeds even if the CDR and GateKeeper
-have different IDs for that last successful job.
-Usually defaults to 'No'.
-Ignored on non-production tiers, where mismatches
-are common and never cause a push job to abort.
-   </ParmInfoHelp>
-   <ParmInfoValidValues>
-    <ParmInfoValidValue>Yes</ParmInfoValidValue>
-    <ParmInfoValidValue>No</ParmInfoValidValue>
-   </ParmInfoValidValues>
   </ParmInfo>
   <ParmInfo>
    <ParmInfoName>InteractiveMode</ParmInfoName>
