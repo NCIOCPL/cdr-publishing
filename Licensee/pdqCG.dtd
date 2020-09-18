@@ -55,7 +55,7 @@
 <!ENTITY % TextSectionElements
                      " #PCDATA          | Contact          | DrugName
                      | DrugRef          | EmbeddedVideo    | Emphasis
-                     | ExternalRef
+                     | ExternalRef      | ExtraDefinitionLinks
                      | ForeignWord      | GeneName         | GlossaryTermLink
                      | GlossaryTermRef  | InterventionName | ItemizedList
                      | LiteralLayout    | LOELink          | LOERef
@@ -686,6 +686,7 @@
                                  Dictionary*,
                                  Audience+)>
 <!ELEMENT DefinitionText (%TextSectionElements;)*>
+<!ELEMENT ExtraDefinitionLinks (#PCDATA | ExternalRef)*>
 <!ELEMENT Dictionary (#PCDATA)>
 <!ELEMENT Audience (#PCDATA)>
 
