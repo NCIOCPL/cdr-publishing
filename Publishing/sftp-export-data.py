@@ -48,7 +48,7 @@ class Control:
     LANGUAGES = dict(English="en", Spanish="es")
     MEDIA_CATALOG = "media_catalog.txt"
     LOGGER = cdr.Logging.get_logger("sftp-export")
-    SSH = ("ssh -i d:/etc/cdroperator_rsa "
+    SSH = ("d:/cygwin/bin/ssh.exe -i d:/etc/cdroperator_rsa "
            "-o LogLevel=error "
            "-o StrictHostKeyChecking=no")
     TIER = cdr.Tier()
