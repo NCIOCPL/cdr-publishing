@@ -4,6 +4,8 @@ Process a portion of a queued publishing job
 
 import argparse
 import os
+import sys
+import threading
 import time
 from lxml import etree
 try:
@@ -66,7 +68,8 @@ class Control:
              WHERE pub_proc = ?
                AND doc_id = ?"""
         for doc in self.docs:
-            self.logger.info("Exporting %s", doc.cdr_id)
+            args = self.thread, doc.cdr_id
+            self.logger.info("Thread %05d exporting %s", *args)
             self.cursor.execute(select, (self.job_id, doc.id))
             row = self.cursor.fetchone()
             if not row:
@@ -305,6 +308,14 @@ class Control:
         return self._output_dir
 
     @property
+    def thread(self):
+        """ID of publishing script thread which launched this process."""
+
+        if not hasattr(self, "_thread"):
+            self._thread = self.opts.get("thread")
+        return self._thread
+
+    @property
     def tier(self):
         """
         Identification of which CDR server is running the publishing job
@@ -367,19 +378,36 @@ def main():
     parser.add_argument("session")
     parser.add_argument("job")
     parser.add_argument("spec")
+    parser.add_argument("thread", type=int)
     parser.add_argument("docs", nargs="*")
     parser.add_argument("--debug", "-d", action="store_true")
     parser.add_argument("--output", "-o")
     args = parser.parse_args()
+    opts["thread"] = args.thread
     if args.debug:
         opts["level"] = "DEBUG"
     if args.output:
         opts["output-dir"] = args.output
-    Control(args.session, args.job, args.spec, *args.docs, **opts).run()
+    control = Control(args.session, args.job, args.spec, *args.docs, **opts)
+    try:
+        control.run()
+        control.logger.info("Thread %05d complete", args.thread)
+        for thread in threading.enumerate():
+            control.logger.info("%s is active", thread)
+        sys.exit(0)
+    except Exception:
+        control.logger.exception("Thread %05d failure", args.thread)
+        sys.exit(1)
 
 if __name__ == "__main__":
     """
-    Let this be loaded as a module without doing anything
+    Don't invoke `main()` if loaded as a module.
     """
 
-    main()
+    try:
+        main()
+    except Exception:
+        tier = Tier()
+        logger = tier.get_logger("export-docs")
+        logger.exception("Unable to construct CDR document export controller")
+        sys.exit(1)
