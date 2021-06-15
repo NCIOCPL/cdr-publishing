@@ -22,7 +22,8 @@ RETRY_MULTIPLIER = 5.0
 wait       = 60    # number of seconds to wait between status checks
 
 # The performance of the publishing job has greatly improved allowing
-# us to cancel a running job much sooner if it fails to finish
+# us to cancel a running job much sooner if it fails to finish.
+# Optionally overriden below once we know the publishing subset.
 # --------------------------------------------------------------------
 if cdr.isProdHost():
     waitTotal = 10800  #  3.0 hours
@@ -357,6 +358,12 @@ if fullMode:
     pubSubset = 'Export'
 else:
     pubSubset = 'Interim-Export'
+override = cdr.getControlValue("Publishing", f"{pubSubset}-wait-seconds")
+try:
+    override = int(override)
+    waitTotal = override
+except Exception:
+    pass
 
 try:
     # Before we start we need to check if a publishing job is already
