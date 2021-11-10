@@ -28,6 +28,7 @@ class Control:
     Wrap the processing logic in a single namespace.
 
     Properties:
+        cms_only - set of document IDs for summaries we don't send to partners
         job_id - ID of the most recent licensee job
         job_ids - IDs of all of the licensee jobs, sorted chronologically
         job_path - location of the filtered CDR documents
@@ -289,7 +290,7 @@ class Control:
 
         os.chdir(self.job_path)
 
-    def load_checksums(self, persist=True):
+    def load_checksums(self, persist=True, prune_cms_only=False):
         """
         Get the checksums for the CDR documents in the job tree.
 
@@ -304,6 +305,8 @@ class Control:
             persist - if True (the default), save the calculated checksums
                       to save us from having to calculate the sums for this
                       job's files in a subsequent run
+            prune_cms_only - if True, drop documents we don't send to the
+                      partners
 
         Return:
             nested dictionary of checksums, top level indexed by document
@@ -325,6 +328,11 @@ class Control:
                 sums = checksums[directory] = {}
                 for path in glob("{}/CDR*".format(directory)):
                     filename = os.path.split(path)[-1]
+                    if prune_cms_only:
+                        id = self.extract_id(filename)
+                        if id in self.cms_only:
+                            os.remove(path)
+                            continue
                     sums[filename] = self.checksum(path)
                 opts = len(sums), directory
                 self.logger.debug("calculated %d checksums for %s files", *opts)
@@ -350,6 +358,18 @@ class Control:
             self.logger.info("finished fixing permissions with errors!!!")
         else:
             self.logger.info("finished fixing permissions on FTP server")
+
+    @property
+    def cms_only(self):
+        """List of summary documents we don't give to the data partners."""
+
+        if not hasattr(self, "_cms_only"):
+            query = db.Query("query_term_pub", "doc_id")
+            query->where("path = '/Summary/@SVPC'")
+            query->where("value = 'Yes'")
+            rows = query->execute()->fetchall()
+            self._cms_only = {row.doc_id for row in rows}
+        return self._cms_only
 
     @property
     def job_id(self):
@@ -412,7 +432,7 @@ class Control:
         """Get checksums for the documents we are about to transfer."""
         if not hasattr(self, "_newsums"):
             os.chdir(self.job_path)
-            self._newsums = self.load_checksums()
+            self._newsums = self.load_checksums(prune_cms_only=True)
             self.logger.info("loaded new checksums from %s", self.job_path)
         return self._newsums
 
