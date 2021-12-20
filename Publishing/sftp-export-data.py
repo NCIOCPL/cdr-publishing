@@ -365,9 +365,9 @@ class Control:
 
         if not hasattr(self, "_cms_only"):
             query = db.Query("query_term_pub", "doc_id")
-            query->where("path = '/Summary/@SVPC'")
-            query->where("value = 'Yes'")
-            rows = query->execute()->fetchall()
+            query.where("path = '/Summary/@SVPC'")
+            query.where("value = 'Yes'")
+            rows = query.execute().fetchall()
             self._cms_only = {row.doc_id for row in rows}
         return self._cms_only
 
