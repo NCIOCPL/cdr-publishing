@@ -10,11 +10,11 @@ import time
 from lxml import etree
 try:
     from cdrapi import db as cdrdb
-except:
+except Exception:
     time.sleep(5)
     try:
         from cdrapi import db as cdrdb
-    except:
+    except Exception:
         time.sleep(10)
         from cdrapi import db as cdrdb
 from cdrapi.docs import Doc
@@ -26,7 +26,6 @@ class Control:
     """
     Top-level object for CDR publishing job processing
     """
-
 
     def __init__(self, session, job_id, spec_id, *docs, **opts):
         """
@@ -197,7 +196,7 @@ class Control:
         if not os.path.isdir(directory):
             try:
                 os.makedirs(directory)
-            except:
+            except Exception:
                 self.logger.exception("Failure creating %s", directory)
                 pass
         with open("{}/{}".format(directory, filename), "wb") as fp:
@@ -350,7 +349,6 @@ class Control:
             return output_dir + ".InProcess"
         return None
 
-
     class FilteredDoc:
         """
         Results of a sequence of XSL/T filtering operations
@@ -367,6 +365,7 @@ class Control:
 
             self.result_tree = result_tree
             self.warnings = warnings
+
 
 def main():
     """
@@ -398,6 +397,7 @@ def main():
     except Exception:
         control.logger.exception("Thread %05d failure", args.thread)
         sys.exit(1)
+
 
 if __name__ == "__main__":
     """

@@ -23,6 +23,7 @@ from lxml import etree
 import cdr
 from cdrapi import db
 
+
 class Control:
     """
     Wrap the processing logic in a single namespace.
@@ -236,8 +237,9 @@ class Control:
         destination = "{}/full.tar.gz".format(self.PUB_SHADOW)
         try:
             os.remove(destination)
-        except:
-            print(("Can't remove {}".format(destination)))
+        except Exception:
+            self.logger.warning("Can't remove %s", destination)
+            print(f"Can't remove {destination}")
         shutil.move("full.tar.gz", destination)
         full = self.PUB_SHADOW_FULL
         shutil.rmtree(full, ignore_errors=True)
@@ -326,8 +328,8 @@ class Control:
                 for path in glob("{}/CDR*".format(directory)):
                     filename = os.path.split(path)[-1]
                     sums[filename] = self.checksum(path)
-                opts = len(sums), directory
-                self.logger.debug("calculated %d checksums for %s files", *opts)
+                message = "calculated %d checksums for %s files"
+                self.logger.debug(message, len(sums), directory)
             if persist:
                 with open(self.CHECKSUMS, "w") as fp:
                     for directory in sorted(checksums):
@@ -549,6 +551,7 @@ class Control:
         root, ext = os.path.splitext(name)
         return int(root[3:])
 
+
 if __name__ == "__main__":
     """
     Make it possible to load this file as a module (e.g., for pylint).
@@ -560,5 +563,5 @@ if __name__ == "__main__":
         Control().run()
     except SystemExit:
         pass
-    except:
+    except Exception:
         Control.LOGGER.exception("*** sftp-export-data.py failed!!!")

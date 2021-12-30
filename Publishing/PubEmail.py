@@ -5,7 +5,10 @@
 # ---------------------------------------------------------------------
 # Created:          2007-04-03        Volker Englisch
 # *********************************************************************
-import cdr, sys, os, os.path
+import cdr
+import sys
+import os
+import os.path
 
 # Check for the two mandatory command line arguments
 # --------------------------------------------------
@@ -16,21 +19,21 @@ if len(sys.argv) < 3:
 
 # Open Log file and enter start message
 # -------------------------------------
-LOGFILE    = 'PubEmail.log'
-LOGGER  = cdr.Logging.get_logger("PubEmail")
+LOGFILE = 'PubEmail.log'
+LOGGER = cdr.Logging.get_logger("PubEmail")
 LOGGER.info('PubEmail Notification - Started')
 LOGGER.info('Arguments: %s', sys.argv)
 
 # Retrieve the Email addresses from the specified group
 # -----------------------------------------------------
-emailDL    = sorted(cdr.getEmailList('Operator Publishing Notification'))
-emailDev   = sorted(cdr.getEmailList("Developers Notification"))
+emailDL = sorted(cdr.getEmailList('Operator Publishing Notification'))
+emailDev = sorted(cdr.getEmailList("Developers Notification"))
 
 # Set the variables and send the message
 # --------------------------------------
-sender    = "NCIPDQoperator@mail.nih.gov"
-subject   = "[%s] %s" % (cdr.Tier().name, sys.argv[1])
-message   = """\
+sender = "NCIPDQoperator@mail.nih.gov"
+subject = "[%s] %s" % (cdr.Tier().name, sys.argv[1])
+message = """\
 Automated Publishing Email Notification:
 
 %s""" % sys.argv[2]
@@ -43,7 +46,7 @@ try:
 
     opts = dict(subject=subject, body=message)
     cdr.EmailMessage(sender, emailDL, **opts).send()
-except:
+except Exception:
     LOGGER.exception('*** Failure sending email message')
     raise
 

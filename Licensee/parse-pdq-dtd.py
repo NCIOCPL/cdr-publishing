@@ -61,6 +61,7 @@ class Element:
     keep = set()
     drop = set()
     shown = set()
+
     def __init__(self, e):
         self.name = e.name
         self.children = []
@@ -69,6 +70,7 @@ class Element:
         self.doc_types = set()
         self.parents_checked = set()
         self.drop = False
+
     def show_dropped_elements(self, indent=0):
         if self.name in Element.drop:
             print(f"{'  ' * indent}{self.name}")
@@ -76,15 +78,18 @@ class Element:
             for name in self.children:
                 child = Element.elements[name]
                 child.show_dropped_elements(indent + 1)
+
     def fetch_children(self, node):
         if node:
             self.fetch_children(node.left)
             if node.name:
                 self.children.append(node.name)
             self.fetch_children(node.right)
+
     def show_children(self):
         for child in self.children:
             print(" ", child)
+
     def add_doc_type(self, doc_type):
         if doc_type not in self.doc_types:
             self.doc_types.add(doc_type)
@@ -92,10 +97,10 @@ class Element:
                 Element.elements[name].add_doc_type(doc_type)
 
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Parse the original DTD and load the elements defined in it into
 # the Element.elements dictionary of Element objects.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 parser = ArgumentParser()
 parser.add_argument("filename", default="pdqCG.dtd")
 opts = parser.parse_args()
@@ -107,9 +112,9 @@ for e in dtd.iterelements():
     else:
         Element.elements[element.name] = element
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Walk through the elements, linking child elements with their parents.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 for element in Element.elements.values():
     for name in element.children:
         child = Element.elements.get(name)
@@ -118,34 +123,34 @@ for element in Element.elements.values():
         else:
             child.used_by[element.name] = element
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Determine the document types in which each element is used.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 for element in Element.elements.values():
     if not element.used_by:
         element.add_doc_type(element.name)
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Find out which elements we should keep, which we need to drop.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 for element in Element.elements.values():
     if not element.doc_types & KEEP:
         Element.drop.add(element.name)
     else:
         Element.keep.add(element.name)
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Show the elements we're dropping in a hierarchically indented report.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 for doc_type in sorted(DROP):
     Element.elements[doc_type].show_dropped_elements()
 for name in sorted(Element.drop - Element.shown):
     print(name)
 
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Parse the new DTD and identify missing or unwanted elements.
-#----------------------------------------------------------------------
-dtd = etree.DTD(filename + ".new")
+# ---------------------------------------------------------------------
+dtd = etree.DTD(opts.filename + ".new")
 new = set([e.name for e in dtd.iterelements()])
 for name in sorted(new):
     if name not in Element.keep:

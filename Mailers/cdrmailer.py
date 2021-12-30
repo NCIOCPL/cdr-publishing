@@ -1,10 +1,17 @@
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Base class for mailer jobs
 # BZIssue::5018
-#----------------------------------------------------------------------
-import cdr, os, re, sys, time
-import tarfile, glob, shutil, RtfWriter, cdrdocobject
+# ---------------------------------------------------------------------
+import cdr
+import glob
+import os
+import re
+import RtfWriter
+import sys
+import tarfile
+import time
 from cdrapi import db
+from cdrdocobject import ContactInfo, TITLE_OMITTED
 
 debugCtr = 1
 
@@ -13,19 +20,10 @@ _LOGFILE = f"{cdr.DEFAULT_LOGDIR}/{_LOGNAME}.log"
 _LOGGER = cdr.Logging.get_logger(_LOGNAME)
 _STAPLE_NAME = "duplex-stapled"
 
-#------------------------------------------------------------------
-# Constants for adding a person's title to his address
-#------------------------------------------------------------------
-from cdrdocobject import TITLE_OMITTED, TITLE_AFTER_NAME, TITLE_AFTER_ORG
 
-#----------------------------------------------------------------------
-# Object for a personal name.
-#----------------------------------------------------------------------
-from cdrdocobject import PersonalName
-
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Object for managing mailer processing.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class MailerJob:
     """
     Base class for mailer job processing.  Cannot be used directly.
@@ -124,64 +122,80 @@ class MailerJob:
             Commits the current open database transaction.
     """
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Class-level values.
-    #------------------------------------------------------------------
-    __TIER          = cdr.Tier()
-    __CDR_EMAIL     = "PDQ Operator <NCIPDQoperator@mail.nih.gov"
-    __SMTP_RELAY    = "MAILFWD.NIH.GOV"
-    __LOGFILE       = _LOGFILE
-    __DEF_PRINTER   = "\\\\CIPSFS1\\HP8100"
-    __INCLUDE_PATH  = f"{cdr.WORK_DRIVE}:/cdr/Mailers/include"
-    __ERR_PATTERN   = re.compile("<Err>(.*)</Err>")
+    # -----------------------------------------------------------------
+    __TIER = cdr.Tier()
+    __CDR_EMAIL = "PDQ Operator <NCIPDQoperator@mail.nih.gov"
+    __SMTP_RELAY = "MAILFWD.NIH.GOV"
+    __LOGFILE = _LOGFILE
+    __DEF_PRINTER = "\\\\CIPSFS1\\HP8100"
+    __INCLUDE_PATH = f"{cdr.WORK_DRIVE}:/cdr/Mailers/include"
+    __ERR_PATTERN = re.compile("<Err>(.*)</Err>")
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Constructor for base class.
-    #------------------------------------------------------------------
-    def __init__(self, jobId, batchPrinting = 1):
+    # -----------------------------------------------------------------
+    def __init__(self, jobId, batchPrinting=1):
         """
         Parameters:
             jobId               - Integer for publication job number.
         """
-        self.__id               = jobId
-        self.__nMailers         = 0
-        self.__docIds           = []
-        self.__recipients       = {}
-        self.__index            = []
-        self.__documents        = {}
-        self.__parms            = {}
-        self.__printer          = MailerJob.__DEF_PRINTER
-        self.__batchPrinting    = batchPrinting
-        self.__letterLink       = ""
-        self.__cursor           = None
-        self.__email            = None
+        self.__id = jobId
+        self.__nMailers = 0
+        self.__docIds = []
+        self.__recipients = {}
+        self.__index = []
+        self.__documents = {}
+        self.__parms = {}
+        self.__printer = MailerJob.__DEF_PRINTER
+        self.__batchPrinting = batchPrinting
+        self.__letterLink = ""
+        self.__cursor = None
+        self.__email = None
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Public access methods.
-    #------------------------------------------------------------------
-    def getId        (self): return self.__id
-    def getCursor    (self): return self.__cursor
-    def getSubset    (self): return self.__subset
-    def getSession   (self): return self.__session
-    def getDeadline  (self): return self.__deadline
-    def getDocIds    (self): return self.__docIds
+    # -----------------------------------------------------------------
+    def getId(self): return self.__id
+
+    def getCursor(self): return self.__cursor
+
+    def getSubset(self): return self.__subset
+
+    def getSession(self): return self.__session
+
+    def getDeadline(self): return self.__deadline
+
+    def getDocIds(self): return self.__docIds
+
     def getRecipients(self): return self.__recipients
-    def getIndex     (self): return self.__index
-    def getDocuments (self): return self.__documents
-    def getJobTime   (self): return self.__now
-    def getCount     (self): return self.__nMailers
+
+    def getIndex(self): return self.__index
+
+    def getDocuments(self): return self.__documents
+
+    def getJobTime(self): return self.__now
+
+    def getCount(self): return self.__nMailers
+
     def getMailerIncludePath(self): return self.__INCLUDE_PATH
-    def bumpCount    (self): self.__nMailers += 1
-    def printDirect  (self): self.__batchPrinting = 0
-    def addToQueue   (self, job):   self.__queue.append(job)
-    def commit       (self):        self.__conn.commit()
-    def getParm      (self, name):
+
+    def bumpCount(self): self.__nMailers += 1
+
+    def printDirect(self): self.__batchPrinting = 0
+
+    def addToQueue(self, job): self.__queue.append(job)
+
+    def commit(self): self.__conn.commit()
+
+    def getParm(self, name):
         v = self.__parms.get(name)
         return v and tuple(v) or ()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Driver for mailer job processing.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def run(self):
         """
         Invokes the processing for a CDR mailer job.  Catches and
@@ -201,7 +215,7 @@ class MailerJob:
             self.__cleanup("Success", "Processed %d mailers" % self.__nMailers)
             self.log("******** finished mailer job ********")
             return 0
-        except:
+        except Exception:
             (eType, eValue) = sys.exc_info()[:2]
             errMessage = eValue or eType
             self.log("ERROR: %s" % errMessage, tback=1)
@@ -209,9 +223,9 @@ class MailerJob:
             self.__cleanup("Failure", errMessage)
             return 1
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Append message to logfile.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def log(self, message, tback=None):
         """
         Appends progress or error information to a log file.  Each
@@ -225,12 +239,12 @@ class MailerJob:
                 _LOGGER.exception(msg)
             else:
                 _LOGGER.info(msg)
-        except:
+        except Exception:
             pass
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Placeholder for method to populate the print queue for the job.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def fillQueue(self):
         """
         The primary responsibility of the classes derived from MailerJob
@@ -254,21 +268,21 @@ class MailerJob:
         """
         raise Exception("fillQueue() must be defined by derived class")
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Placeholder for method to create rtf mailers (if any).
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def createRtfMailers(self):
         """
         Do nothing if the derived class does not override this method.
         """
         pass
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Generate a document for tracking a mailer.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def addMailerTrackingDoc(self, doc, recipient, mailerType,
-                             remailerFor = None, protOrgId = None,
-                             email = None):
+                             remailerFor=None, protOrgId=None,
+                             email=None):
         """
         Parameters:
             doc         - Object of type Document, defined below
@@ -297,61 +311,59 @@ class MailerJob:
         else:
             remailerFor = ""
         if protOrgId:
-            protOrg     = "\n   <ProtocolOrg cdr:ref='%s'/>" % \
+            protOrg = "\n   <ProtocolOrg cdr:ref='%s'/>" % \
                           cdr.normalize(protOrgId)
         else:
-            protOrg     = ""
+            protOrg = ""
         if email:
-            mode        = "Web-based"
-            address     = """\
+            mode = "Web-based"
+            address = """\
    <MailerAddress>
     <Email>%s</Email>
    </MailerAddress>""" % email
         else:
-            mode        = "Mail"
-            address     = recipient.getAddress().getXml()
-        recipId         = "CDR%010d" % recipient.getId()
-        docId           = "CDR%010d" % doc.getId()
-        xml             = """\
+            mode = "Mail"
+            address = recipient.getAddress().getXml()
+        recipId = "CDR%010d" % recipient.getId()
+        docId = "CDR%010d" % doc.getId()
+        xml = f"""\
 <CdrDoc Type="Mailer">
  <CdrDocCtl>
-  <DocTitle>Mailer for document %s sent to %s</DocTitle>
+  <DocTitle>Mailer for document {docId} sent to {recipId}</DocTitle>
  </CdrDocCtl>
  <CdrDocXml><![CDATA[
   <Mailer xmlns:cdr="cips.nci.nih.gov/cdr">
-   <Type Mode='%s'>%s</Type>%s
-   <JobId>%d</JobId>
-   <Recipient cdr:ref="%s">%s</Recipient>%s
-%s
-   <Document cdr:ref="%s">%s</Document>
-   <Sent>%s</Sent>
-   <Deadline>%s</Deadline>
+   <Type Mode='{mode}'>{mailerType}</Type>{remailerFor}
+   <JobId>{self.__id:d}</JobId>
+   <Recipient cdr:ref="{recipId}">{recipient.getName()}</Recipient>{protOrg}
+{address}
+   <Document cdr:ref="{docId}">{doc.getTitle()}</Document>
+   <Sent>{self.__now}</Sent>
+   <Deadline>{self.getDeadline()}</Deadline>
   </Mailer>]]>
  </CdrDocXml>
 </CdrDoc>
-""" % (docId, recipId, mode, mailerType, remailerFor, self.__id, recipId,
-       recipient.getName(), protOrg, address, docId, doc.getTitle(),
-       self.__now, self.getDeadline())
-        rsp   = cdr.addDoc(self.__session, doc = xml.encode('utf-8'),
-                           checkIn = "Y", ver = "Y", val = 'Y')
+"""
+        rsp = cdr.addDoc(self.__session, doc=xml.encode('utf-8'),
+                         checkIn="Y", ver="Y", val='Y')
         match = self.__ERR_PATTERN.search(rsp)
         if match:
             err = match.group(1)
             raise Exception("failure adding tracking document for %s: %s" %
                             (docId, err))
         self.__nMailers += 1
-        digits = re.sub("[^\d]", "", rsp)
+        digits = re.sub(r"[^\d]", "", rsp)
         return int(digits)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Convert Unicode string to Latin-1 character set.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def encodeLatin1(self, unicodeString):
         return unicodeString.encode('latin-1')
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Retrieve the CIPS contact Address for a mailer recipient.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def getCipsContactAddress(self, id, withPersonTitle=TITLE_OMITTED):
         """
         Constructs and returns a new Address object for the document.
@@ -364,54 +376,54 @@ class MailerJob:
             Returns an Address object for the CIPS contact.
         """
         # Make string version of id
-        docId  = cdr.normalize(id)
+        docId = cdr.normalize(id)
 
         # Find fragment ID for CIPS contact location in Person doc
-        rows = cdr.getQueryTermValueForId (
-                '/Person/PersonLocations/CIPSContact', id, self.__conn)
+        rows = cdr.getQueryTermValueForId(
+            '/Person/PersonLocations/CIPSContact', id, self.__conn)
         if not rows:
             raise Exception("no CIPSContact for %s" % docId)
         fragId = rows[0]
 
         # Filter to create AddressElement XML
         filters = ["name:Person Address Fragment With Name"]
-        result  = cdr.filterDoc(self.__session, filters, docId,
-                                parm = (('fragId', fragId),))
+        result = cdr.filterDoc(self.__session, filters, docId,
+                               parm=(('fragId', fragId),))
 
-        # Expecting tuple of xml fragment, messages.  Single string is error.
-        if type(result) == type(""):
+        # Expecting tuple of xml fragment, messages. Single string is error.
+        if isinstance(result, str):
             raise Exception("failure extracting contact address "
                             "for %s: %s" % (docId, result))
         return Address(result[0], withPersonTitle)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Retrieve the contact address for a board member.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def getBoardMemberAddress(self, personId, memberId):
 
         # Find fragment ID for CIPS contact location in BoardMemberInfo doc
-        path  = '/PDQBoardMemberInfo/BoardMemberContact/PersonContactID'
-        rows  = cdr.getQueryTermValueForId(path, memberId, self.__conn)
+        path = '/PDQBoardMemberInfo/BoardMemberContact/PersonContactID'
+        rows = cdr.getQueryTermValueForId(path, memberId, self.__conn)
 
         # Filter to create AddressElement XML
         if rows:
-            docId   = cdr.normalize(personId)
-            parms   = (('fragId', rows[0]),)
+            docId = cdr.normalize(personId)
+            parms = (('fragId', rows[0]),)
             filters = ["name:Person Address Fragment With Name"]
         else:
-            docId   = cdr.normalize(memberId)
-            parms   = ()
+            docId = cdr.normalize(memberId)
+            parms = ()
             filters = ["name:Board Member Address Fragment With Name"]
-        result = cdr.filterDoc(self.__session, filters, docId, parm = parms)
+        result = cdr.filterDoc(self.__session, filters, docId, parm=parms)
         if isinstance(result, (str, bytes)):
             raise Exception("failure extracting contact address "
                             "for %s: %s" % (docId, result))
         return Address(result[0])
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Retrieve the CIPS contact Address object for an Organization
-    #------------------------------------------------------------------
-    def getOrganizationAddress (self, id):
+    # -----------------------------------------------------------------
+    def getOrganizationAddress(self, id):
         """
         Parameters:
             id - Integer ID of the organization document.
@@ -422,19 +434,19 @@ class MailerJob:
         nameStr = 'Administrator'
 
         # See if we have a CIPS contact person whose real name we can use
-        rows = cdr.getQueryTermValueForId (
+        rows = cdr.getQueryTermValueForId(
              '/Organization/OrganizationDetails/CIPSContactPerson/@cdr:ref',
              id, self.__conn)
         if rows:
             # Construct and Address object for person, to get real name
             # Fatal error if we can't find one
-            personAddr = self.getCipsContactAddress (rows[0])
+            personAddr = self.getCipsContactAddress(rows[0])
             nameStr = personAddr.getAddressee()
 
         # Find the fragment id in the Organization doc for
         #   the address we need to send to
         # Filter the organization to construct an address
-        rows = cdr.getQueryTermValueForId (
+        rows = cdr.getQueryTermValueForId(
              '/Organization/OrganizationLocations/CIPSContact',
              id, self.__conn)
         if not rows:
@@ -442,11 +454,11 @@ class MailerJob:
                             "Organization %d" % id)
 
         filters = ["name:Organization Address Fragment"]
-        parms   = (("fragId", rows[0]),)
-        result  = cdr.filterDoc(self.__session, filters, id, parm=parms)
+        parms = (("fragId", rows[0]),)
+        result = cdr.filterDoc(self.__session, filters, id, parm=parms)
 
-        # Expecting tuple of xml fragment, messages.  Single string is error.
-        if type(result) == type(""):
+        # Expecting tuple of xml fragment, messages. Single string is error.
+        if isinstance(result, str):
             raise Exception("failure extracting contact address "
                             "for %d: %s" % (id, result))
 
@@ -454,52 +466,52 @@ class MailerJob:
         orgAddr = Address(result[0])
 
         # Add or replace the name string with the one we constructed above
-        orgAddr.setAddressee (nameStr)
+        orgAddr.setAddressee(nameStr)
 
         return orgAddr
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Generate an index of the mailers in order of country + postal code.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def makeIndex(self):
-        self.__index   = []
-        recipients     = self.getRecipients()
+        self.__index = []
+        recipients = self.getRecipients()
         for recipKey in recipients:
-            recip      = recipients[recipKey]
-            address    = recip.getAddress()
-            country    = address.getCountry()
+            recip = recipients[recipKey]
+            address = recip.getAddress()
+            country = address.getCountry()
             postalCode = address.getPostalCode()
             for doc in recip.getDocs():
                 self.__index.append((country, postalCode, recip, doc))
         self.__index.sort()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create a formatted address block from an Address object.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def formatAddress(self, addr):
         return addr.format().getBlock()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create the directory for RTF mailers.  Callback used by the
     # derived class where appropriate.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def initRtfMailers(self):
 
         # Does the output directory already exist
         try:
             os.chdir(self.__rtfMailerDir)
-        except:
+        except Exception:
             # Doesn't exist, try to create it
             try:
                 os.makedirs(self.__rtfMailerDir)
-            except:
-                self.log ("Unable to create rtf mailer directory", tback=1)
+            except Exception:
+                self.log("Unable to create rtf mailer directory", tback=1)
                 raise Exception("failure creating rtf mailer directory %s"
                                 % self.__rtfMailerDir)
             try:
                 os.chdir(self.__rtfMailerDir)
-            except:
-                self.log ("Unable to change to rtf mailer directory", tback=1)
+            except Exception:
+                self.log("Unable to change to rtf mailer directory", tback=1)
                 raise Exception("failure setting working directory to %s"
                                 % self.__rtfMailerDir)
 
@@ -514,12 +526,12 @@ You can retrieve the letters at:
     %s
 """ % url
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Clear out orphaned mailer tracking documents (from failed jobs).
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __mailerCleanup(self):
         if os.getenv('SKIP_MAILER_CLEANUP'):
-            return # for faster testing
+            return  # for faster testing
         try:
             results = cdr.mailerCleanup(self.__session)
             if results[0]:
@@ -527,59 +539,59 @@ You can retrieve the letters at:
                          len(results[0]))
             for err in results[1]:
                 self.log("__mailerCleanup: %s" % err)
-        except:
+        except Exception:
             self.log("mailerCleanup failure", 1)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Prepare initial settings for job.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __loadSettings(self):
         self.__getDates()
         self.__getDbConnection()
         self.__getCdrSession()
         self.__loadDbInfo()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Calculate needed dates (now and two months from now).
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getDates(self):
-        now             = time.localtime(time.time())
-        deadline        = (now[0], now[1], now[2] + 60, 0, 0, 0, 0, 0, -1)
-        deadline        = time.localtime(time.mktime(deadline))
-        self.__now      = time.strftime("%Y-%m-%dT%H:%M:%S", now)
+        now = time.localtime(time.time())
+        deadline = (now[0], now[1], now[2] + 60, 0, 0, 0, 0, 0, -1)
+        deadline = time.localtime(time.mktime(deadline))
+        self.__now = time.strftime("%Y-%m-%dT%H:%M:%S", now)
         self.__deadline = time.strftime("%Y-%m-%d", deadline)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Log into the CDR server.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getCdrSession(self):
-        rsp          = str(cdr.login("cdrmailers", cdr.getpw("cdrmailers")))
-        match        = self.__ERR_PATTERN.search(rsp)
+        rsp = str(cdr.login("cdrmailers", cdr.getpw("cdrmailers")))
+        match = self.__ERR_PATTERN.search(rsp)
         if match:
             raise Exception("CDR login failure: %s" % match.group(1))
         self.__session = rsp
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Log into the CDR database.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getDbConnection(self):
         try:
-            self.__conn   = db.connect(user="CdrPublishing")
+            self.__conn = db.connect(user="CdrPublishing")
             self.__cursor = self.__conn.cursor()
         except Exception as e:
             raise Exception(f"database connection failure: {e}%s")
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Load the settings for this job from the database.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __loadDbInfo(self):
         self.__getPubProcRow()
         self.__getPubProcDocRows()
         self.__getPubProcParmRows()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Load the row which matches this job from the pub_proc table.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getPubProcRow(self):
         try:
             self.__cursor.execute("""\
@@ -592,12 +604,12 @@ You can retrieve the letters at:
             (self.__outputDir, self.__email, self.__subset) = row
             self.__rtfMailerDir = self.__outputDir + "-r"
         except Exception as e:
-            raise Exception("database error retrieving pub_proc row: {e}")
+            raise Exception(f"database error retrieving pub_proc row: {e}")
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Load the list of document IDs and other descriptive information
     # for each document to be mailed by this job.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getPubProcDocRows(self):
 
         try:
@@ -626,8 +638,8 @@ You can retrieve the letters at:
                 self.__docIds.append(row[0])
 
                 # Create a document object and add it to list of objects
-                self.__documents[row[0]] = \
-                    Document (row[0], row[2], row[3], row[1])
+                args = row[0], row[2], row[3], row[1]
+                self.__documents[row[0]] = Document(*args)
 
             if not docDescriptorList:
                 raise Exception("no documents found for job %d" % self.__id)
@@ -637,11 +649,12 @@ You can retrieve the letters at:
             self.__docIds = tuple(self.__docIds)
 
         except Exception as e:
-            raise Exception("database error retrieving pub_proc_doc rows: {e}")
+            message = f"database error retrieving pub_proc_doc rows: {e}"
+            raise Exception(message)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Load the parameters stored in the pub_proc_parm table for this job.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __getPubProcParmRows(self):
         try:
             self.__cursor.execute("""\
@@ -658,37 +671,37 @@ You can retrieve the letters at:
                     if row[0] == "Printer":
                         self.__printer = row[1]
         except Exception as e:
-            raise Exception("database error retrieving job parms: {e}")
+            raise Exception(f"database error retrieving job parms: {e}")
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create and populate the print queue.
     # Also creates and changes to the output directory.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __createQueue(self):
         self.__queue = []
 
         # Does the output directory already exist
         try:
             os.chdir(self.__outputDir)
-        except:
+        except Exception:
             # Doesn't exist, try to create it
             try:
                 os.makedirs(self.__outputDir)
-            except:
-                self.log ("Unable to create working directory", tback=1)
+            except Exception:
+                self.log("Unable to create working directory", tback=1)
                 raise Exception("failure creating working directory %s" %
                                 self.__outputDir)
             try:
                 os.chdir(self.__outputDir)
-            except:
-                self.log ("Unable to change to working directory", tback=1)
+            except Exception:
+                self.log("Unable to change to working directory", tback=1)
                 raise Exception("failure setting working directory to %s" %
                                 self.__outputDir)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Print the jobs in the queue.
-    #------------------------------------------------------------------
-    def __printQueue(self, batchPrint = 1):
+    # -----------------------------------------------------------------
+    def __printQueue(self, batchPrint=1):
 
         # If no mailers at this point, we're just doing electronic mailers.
         if not self.__nMailers:
@@ -734,7 +747,7 @@ You can retrieve the letters at:
             outputFile.close()
             self.__packageFiles()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create archive packages for the job's files.
     # Assumption: the current working directory is the job's output
     # output directory.  We switch to the parent of that directory.
@@ -746,17 +759,17 @@ You can retrieve the letters at:
     # second tar archive, used to print the actual mailer documents.
     # Make sure nothing needed by this second archive gets a filename
     # extension used for the intermediate file archive.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __packageFiles(self):
         self.log("~~In packageFiles")
-        workExt   = ('xml', 'tex', 'log', 'aux', 'dvi', 'toc')
-        dir       = "Job%d" % self.getId()
-        workName  = "SupportFilesForJob%d.tar.bz2" % self.getId()
+        workExt = 'xml', 'tex', 'log', 'aux', 'dvi', 'toc'
+        dir = "Job%d" % self.getId()
+        workName = "SupportFilesForJob%d.tar.bz2" % self.getId()
         printName = "PrintFilesForJob%d.tar.bz2" % self.getId()
         os.chdir("..")
         if not os.path.isdir(dir):
             raise Exception("INTERNAL ERROR: cannot find "
-                                "directory %s" % dir)
+                            "directory %s" % dir)
         try:
             workFile = tarfile.open(workName, 'w:bz2')
             for ext in workExt:
@@ -766,7 +779,7 @@ You can retrieve the letters at:
             for ext in workExt:
                 for file in glob.glob('%s/*.%s' % (dir, ext)):
                     os.unlink(file)
-        except:
+        except Exception:
             raise Exception("failure packing working files for job")
 
         try:
@@ -776,21 +789,21 @@ You can retrieve the letters at:
             printFile.close()
             for file in os.listdir(dir):
                 os.unlink("%s/%s" % (dir, file))
-        except:
+        except Exception:
             raise Exception("failure creating print job package")
         os.rmdir(dir)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create single archive package for a failed job's files.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __packageFailureFiles(self):
         self.log("~~In packageFailureFiles")
-        dir  = "Job%d" % self.getId()
+        dir = "Job%d" % self.getId()
         name = "FailedJob%d.tar.bz2" % self.getId()
         try:
             os.chdir(self.__outputDir)
             os.chdir("..")
-        except:
+        except Exception:
             return
         if not os.path.isdir(dir):
             self.log("Cannot find directory %s" % dir)
@@ -807,9 +820,9 @@ You can retrieve the letters at:
             return
         os.rmdir(dir)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Clean up.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __cleanup(self, status, message):
         self.log("~~In cleanup")
         if self.__rtfMailerDir:
@@ -825,20 +838,20 @@ You can retrieve the letters at:
         try:
             self.__updateStatus(status, message)
             self.__sendMail()
-            if self.__session: cdr.logout(self.__session)
-        except:
-            self.log ("__cleanup failed, status was '%s'" % status,
-                      tback=1)
+            if self.__session:
+                cdr.logout(self.__session)
+        except Exception:
+            self.log("__cleanup failed, status was '%s'" % status, tback=1)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Update the pub_proc table's status.
-    #------------------------------------------------------------------
-    def __updateStatus(self, status, message = None):
+    # -----------------------------------------------------------------
+    def __updateStatus(self, status, message=None):
         self.log("~~In update status, status=%s" % status)
         message = message and str(message)
         try:
             if message:
-                self.log ("  (message: %s)" % message)
+                self.log("  (message: %s)" % message)
             self.__cursor.execute("""\
                 UPDATE pub_proc
                    SET status = ?,
@@ -846,18 +859,18 @@ You can retrieve the letters at:
                        completed = GETDATE()
                  WHERE id = ?""", (status, message, self.__id))
             self.__conn.commit()
-        except:
-            self.log ("__updateStatus failed, status was '%s'" % status,
-                      tback=1)
+        except Exception:
+            self.log("__updateStatus failed, status was '%s'" % status,
+                     tback=1)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Inform the user that the job has completed.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __sendMail(self):
         try:
             if self.__email:
                 self.log("Sending mail to %s" % self.__email)
-                sender  = MailerJob.__CDR_EMAIL
+                sender = MailerJob.__CDR_EMAIL
                 subject = "[%s] CDR Mailer Job Status" % self.__TIER.name
 
                 # Specify the hostname based on the environment we're in
@@ -874,13 +887,14 @@ Please do not reply to this message.
 """ % (self.__id, url, self.__letterLink)
                 opts = dict(subject=subject, body=message)
                 cdr.EmailMessage(sender, [self.__email], **opts).send()
-        except:
+        except Exception:
             self.log("failure sending email to %s: %s" % (self.__email,
                                                           cdr.exceptionInfo()))
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object to hold a document to be sent to the printer.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class PrintJob:
     """
     Public members:
@@ -900,15 +914,16 @@ class PrintJob:
         Print()
             Writes the current print job to the specified printer.
     """
-    MAINDOC          = 1
-    COVERPAGE        = 2
-    PLAIN            = 3
-    __PAGES_PATTERN  = re.compile("%%Pages: (\\d+)")
-    __MAX_STAPLED    = 100
+    MAINDOC = 1
+    COVERPAGE = 2
+    PLAIN = 3
+    __PAGES_PATTERN = re.compile("%%Pages: (\\d+)")
+    __MAX_STAPLED = 100
+
     def __init__(self, filename, filetype):
         self.__filename = filename
         self.__filetype = filetype
-        self.__staple   = 0
+        self.__staple = 0
         if self.__filetype == PrintJob.MAINDOC:
             pages = None
             ps = open(self.__filename)
@@ -925,12 +940,12 @@ class PrintJob:
                 self.__staple = True
             ps.close()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Send the current print job to the specified printer.
     # Have to use Print instead of print to avoid conflict with the
     # keyword.
-    #------------------------------------------------------------------
-    def Print(self, outFile, logFunc, batch = 1, n = 0):
+    # -----------------------------------------------------------------
+    def Print(self, outFile, logFunc, batch=1, n=0):
         logFunc("printing %s %s" % (
             self.__filename,
             self.__staple and "(stapled)" or ""))
@@ -945,9 +960,10 @@ class PrintJob:
             prn.write(doc)
             prn.close()
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object to hold information about a mailer organization.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class Org:
     """
     Public members:
@@ -961,14 +977,17 @@ class Org:
             in the CDR database for a recipient of this mailer.
     """
     def __init__(self, id, name):
-        self.__id      = id
-        self.__name    = name
-    def getId     (self): return self.__id
-    def getName   (self): return self.__name
+        self.__id = id
+        self.__name = name
 
-#----------------------------------------------------------------------
+    def getId(self): return self.__id
+
+    def getName(self): return self.__name
+
+
+# ---------------------------------------------------------------------
 # Object to hold information about a mailer recipient.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class Recipient:
     """
     Public members:
@@ -989,19 +1008,24 @@ class Recipient:
             Returns the list of Document objects representing documents
             sent to this recipient.
     """
-    def __init__(self, id, name, address = None):
-        self.__id       = id
-        self.__name     = name
-        self.__address  = address
-        self.__docs     = []
-    def getId      (self): return self.__id
-    def getName    (self): return self.__name
-    def getAddress (self): return self.__address
-    def getDocs    (self): return self.__docs
+    def __init__(self, id, name, address=None):
+        self.__id = id
+        self.__name = name
+        self.__address = address
+        self.__docs = []
 
-#----------------------------------------------------------------------
+    def getId(self): return self.__id
+
+    def getName(self): return self.__name
+
+    def getAddress(self): return self.__address
+
+    def getDocs(self): return self.__docs
+
+
+# ---------------------------------------------------------------------
 # Object to hold information about a mailer document.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class Document:
     """
     Public members:
@@ -1024,19 +1048,24 @@ class Document:
 
     """
     def __init__(self, id, title, docType, version=None):
-        self.__id         = id
-        self.__title      = title
-        self.__docType    = docType
-        self.__version    = version
-    def getId     (self): return self.__id
-    def getTitle  (self): return self.__title
+        self.__id = id
+        self.__title = title
+        self.__docType = docType
+        self.__version = version
+
+    def getId(self): return self.__id
+
+    def getTitle(self): return self.__title
+
     def getDocType(self): return self.__docType
+
     def getVersion(self): return self.__version
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object to hold information about a mailer address.
-#----------------------------------------------------------------------
-class Address(cdrdocobject.ContactInfo):
+# ---------------------------------------------------------------------
+class Address(ContactInfo):
     """
     Public methods (in addition to those inherited from ContactInfo):
 
@@ -1058,9 +1087,9 @@ class Address(cdrdocobject.ContactInfo):
 
     """
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Constructor for CDR mailer Address object.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __init__(self, xmlFragment, withPersonTitle=TITLE_OMITTED):
         """
         Parameters:
@@ -1069,14 +1098,14 @@ class Address(cdrdocobject.ContactInfo):
                              address.
                              The top node should be <AddressElements>
         """
-        cdrdocobject.ContactInfo.__init__(self, xmlFragment, withPersonTitle)
+        ContactInfo.__init__(self, xmlFragment, withPersonTitle)
 
         # Turned off if format() is called with contactFields == True.
         self.__includeNameAndTitle = True
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create a RTF-ready string representing this address.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def format(self, upperCase=False, dropUS=False, wrapAt=sys.maxsize,
                contactFields=False, useRtfTable=False):
         self.__includeNameAndTitle = not contactFields
@@ -1093,12 +1122,12 @@ class Address(cdrdocobject.ContactInfo):
             return self.__formatContactFields(lines, useRtfTable)
         return self.__formatAddressFromLines(lines)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create XML string from address information.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def getXml(self):
-        xml        = ["<MailerAddress>"]
-        country    = self.getCountry()
+        xml = ["<MailerAddress>"]
+        country = self.getCountry()
         postalCode = self.getPostalCode()
         if country:
             xml.append("<Country>%s</Country>" % country)
@@ -1109,24 +1138,26 @@ class Address(cdrdocobject.ContactInfo):
         xml.append("</MailerAddress>")
         return "".join(xml)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Assemble an RTF table row for two-column contact information.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     @staticmethod
     def formatRtfContactTableRow(label, value):
-        value = value or ""
+        args = (
+            RtfWriter.fix(value or ""),
+            RtfWriter.fix(value.strip()).replace("@@LINE@@", "\\line"),
+        )
         return """\
 {
 \\trowd\\trleft1050\\cellx2500\\cellx10000
 \\pard\\intbl %s:\\cell
 \\pard\\intbl %s\\cell
 \\row
-}""" % (RtfWriter.fix(label),
-        RtfWriter.fix(value.strip()).replace("@@LINE@@", "\\line"))
+}""" % args
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Create RTF for contact fields on fax-back form.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __formatContactFields(self, lines, useRtfTable):
         if useRtfTable:
             makeRow = Address.formatRtfContactTableRow
@@ -1141,7 +1172,7 @@ class Address(cdrdocobject.ContactInfo):
             return "\n".join(rows)
         title = RtfWriter.fix(self.getPersonTitle() or "")
         phone = RtfWriter.fix(self.getPhone() or "")
-        fax   = RtfWriter.fix(self.getFax() or "")
+        fax = RtfWriter.fix(self.getFax() or "")
         email = RtfWriter.fix(self.getEmail() or "")
         rtfLines = [
             "\\tab Name:\\tab %s\\line" % RtfWriter.fix(self.getAddressee()),
@@ -1158,21 +1189,23 @@ class Address(cdrdocobject.ContactInfo):
         ]
         return "\n".join(rtfLines)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Format an address block from its address lines.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __formatAddressFromLines(self, lines):
         block = ""
         for line in lines:
             block += "%s\\line\n" % RtfWriter.fix(line)
         return self.FormattedAddress(block, len(lines))
 
-    #----------------------------------------------------------------------
+    # ---------------------------------------------------------------------
     # Object to hold a formatted address.
-    #----------------------------------------------------------------------
+    # ---------------------------------------------------------------------
     class FormattedAddress:
         def __init__(self, block, numLines):
             self.__block = block
             self.__numLines = numLines
-        def getBlock(self):     return self.__block
-        def getNumLines(self):  return self.__numLines
+
+        def getBlock(self): return self.__block
+
+        def getNumLines(self): return self.__numLines
