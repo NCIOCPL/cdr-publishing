@@ -357,6 +357,214 @@
   </SubsetOptions>
  </SystemSubset>
 
+ <!--
+ ========================================================================
+ QC Organization Report
+ ======================================================================== -->
+ <SystemSubset>
+  <SubsetName>QC Organization Set (***not publishable***)</SubsetName>
+  <SubsetDescription>
+    Filter set for Organization QC report
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Organization'
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:QC Organization Set</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output/QC</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+
+
+ <!--
+ ========================================================================
+ QC PDQBoardMemberInfo Report
+ ======================================================================== -->
+ <SystemSubset>
+  <SubsetName>QC PDQBoardMemberInf Set (***not publishable***)</SubsetName>
+  <SubsetDescription>
+    Filter set for PDQ Board MemberInfo QC report
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'PDQBoardMemberInfo'
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:QC PDQBoardMemberInfo Set</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output/QC</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+
+
+ <!--
+ ========================================================================
+ QC Person Report
+ ======================================================================== -->
+ <SystemSubset>
+  <SubsetName>QC Person Set (***not publishable***)</SubsetName>
+  <SubsetDescription>
+    Filter set for Person QC report
+  </SubsetDescription>
+  <SubsetParameters>
+   <SubsetParameter>
+    <ParmName>ReportOnly</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>InteractiveMode</ParmName>
+    <ParmValue>Yes</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>NumDocs</ParmName>
+    <ParmValue>50000</ParmValue>
+   </SubsetParameter>
+   <SubsetParameter>
+    <ParmName>AbortOnError</ParmName>
+    <ParmValue>50</ParmValue>
+   </SubsetParameter>
+  </SubsetParameters>
+
+  <SubsetSpecifications>
+   <SubsetSpecification>
+    <SubsetSelection>
+     <SubsetSQL>
+      SELECT TOP ?NumDocs? v.id, MAX(v.num)
+        FROM doc_version v
+        JOIN active_doc d
+          ON d.id = v.id
+        JOIN doc_type t
+          ON t.id = d.doc_type
+       WHERE t.name = 'Person'
+       GROUP BY v.id
+       ORDER BY v.id
+     </SubsetSQL>
+    </SubsetSelection>
+    <SubsetFilters>
+     <SubsetFilter>
+      <SubsetFilterName>set:QC Person Set</SubsetFilterName>
+     </SubsetFilter>
+    </SubsetFilters>
+   </SubsetSpecification>
+  </SubsetSpecifications>
+  <SubsetOptions>
+   <SubsetOption>
+    <OptionName>Destination</OptionName>
+    <OptionValue>d:/cdr/Output/QC</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>AbortOnError</OptionName>
+    <OptionValue>50</OptionValue>
+   </SubsetOption>
+   <SubsetOption>
+    <OptionName>PublishIfWarnings</OptionName>
+    <OptionValue>Yes</OptionValue>
+   </SubsetOption>
+  </SubsetOptions>
+ </SystemSubset>
+
+
+
+ <!--
+ ========================================================================
+ Summary documents.
+ ======================================================================== -->
  <SystemSubset>
   <SubsetName>QC Summary Patient Set</SubsetName>
   <SubsetDescription>
@@ -382,10 +590,6 @@
   </SubsetParameters>
   <SubsetSpecifications>
 
-    <!--
-   ========================================================================
-   Summary documents.
-   ======================================================================== -->
    <SubsetSpecification>
     <SubsetSelection>
      <SubsetSQL>
