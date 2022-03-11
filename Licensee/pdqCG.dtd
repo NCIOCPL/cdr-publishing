@@ -465,7 +465,7 @@
 <!ATTLIST Summary LegacyPDQID CDATA #IMPLIED>
 <!ATTLIST Summary ReplacementFor CDATA #IMPLIED>
 <!ATTLIST Summary SVPC CDATA #IMPLIED>
-<!ATTLIST Summary PartnerMergSet CDATA #IMPLIED>
+<!ATTLIST Summary PartnerMergeSet CDATA #IMPLIED>
 <!ATTLIST Summary SuppressOnThisPageSection CDATA #IMPLIED>
 
 <!ELEMENT SummaryMetaData (SummaryType,
