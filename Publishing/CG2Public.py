@@ -25,6 +25,7 @@ import cdrpub
 from cdrapi.users import Session
 from cdrapi.docs import Doc
 from cdrapi.db import Query
+from functools import cached_property
 
 
 class Control:
@@ -50,6 +51,16 @@ class Control:
         self.session = Session("guest")
         self.transform = Doc.load_single_filter(self.session,
                                                 self.FILTER_TITLE)
+
+    @cached_property
+    def cms_only(self):
+        """List of summary documents we don't give to the data partners."""
+
+        query = Query("query_term_pub", "doc_id")
+        query.where("path = '/Summary/@SVPC'")
+        query.where("value = 'Yes'")
+        rows = query.execute().fetchall()
+        return {row.doc_id for row in rows}
 
     def last_job_directory(self):
         """
@@ -105,6 +116,9 @@ class Control:
             # -------------------------------------
             if directory in self.FILTERABLE:
                 doc_id = Doc.extract_id(filename)
+                if doc_id in self.cms_only:
+                    logger.info("Skipping CDR%d (CMS only)", doc_id)
+                    continue
                 doc = Doc(self.session, id=doc_id, xml=xml)
                 newDoc = str(doc.apply_single_filter(self.transform))
                 newDoc = newDoc.encode("utf-8")
