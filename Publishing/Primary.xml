@@ -517,6 +517,11 @@ LEFT OUTER JOIN query_term_pub u
                            WHERE path = '/Summary/@ModuleOnly'
                              AND value = 'Yes'
                          )
+         AND v.id NOT IN (SELECT doc_id
+                            FROM query_term_pub
+                           WHERE path = '/Summary/@PartnerMergeSet'
+                             AND value = 'Yes'
+                         )
    ORDER BY v.id
      </SubsetSQL>
     </SubsetSelection>
