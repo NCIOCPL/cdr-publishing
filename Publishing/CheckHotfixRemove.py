@@ -12,18 +12,23 @@
 #
 # BZIssue::4732 - Change in logic for pulling documents from Cancer.gov
 # *********************************************************************
-import sys, cdr, os, time, optparse, smtplib, glob
+import sys
+import cdr
+import time
+import optparse
+import smtplib
 from cdrapi import db
 
-# OUTPUTBASE     = cdr.BASEDIR + "/Output/HotfixRemove"
-# DOC_FILE       = "HotfixRemove"
-SMTP_RELAY     = "MAILFWD.NIH.GOV"
-STR_FROM       = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
+# OUTPUTBASE = cdr.BASEDIR + "/Output/HotfixRemove"
+# DOC_FILE = "HotfixRemove"
+SMTP_RELAY = "MAILFWD.NIH.GOV"
+STR_FROM = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
 
-now            = time.localtime()
+now = time.localtime()
 
-testMode       = None
-emailMode      = None
+testMode = None
+emailMode = None
+
 
 # Create an exception allowing us to break out if there are no new
 # protocols found to report.
@@ -31,6 +36,7 @@ emailMode      = None
 class NoNewDocumentsError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
 # class NothingFoundError(Exception):
@@ -38,6 +44,7 @@ class NoNewDocumentsError(Exception):
 #         self.value = value
 #     def __str__(self):
 #         return repr(self.value)
+
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -49,23 +56,23 @@ def parseArguments(args):
     """
 
     usage = "usage: %prog [--livemode | --testmode] [options]"
-    parser = optparse.OptionParser(usage = usage)
+    parser = optparse.OptionParser(usage=usage)
     global transferDate
 
-    parser.set_defaults(testMode = True)
-    parser.set_defaults(emailMode = True)
+    parser.set_defaults(testMode=True)
+    parser.set_defaults(emailMode=True)
     parser.add_option('-t', '--testmode',
-                      action = 'store_true', dest = 'testMode',
-                      help = 'running in TEST mode')
+                      action='store_true', dest='testMode',
+                      help='running in TEST mode')
     parser.add_option('-l', '--livemode',
-                      action = 'store_false', dest = 'testMode',
-                      help = 'running in LIVE mode')
+                      action='store_false', dest='testMode',
+                      help='running in LIVE mode')
     parser.add_option('-e', '--email',
-                      action = 'store_true', dest = 'emailMode',
-                      help = 'running in EMAIL mode')
+                      action='store_true', dest='emailMode',
+                      help='running in EMAIL mode')
     parser.add_option('-n', '--noemail',
-                      action = 'store_false', dest = 'emailMode',
-                      help = 'running in NOEMAIL mode')
+                      action='store_false', dest='emailMode',
+                      help='running in NOEMAIL mode')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
@@ -100,16 +107,16 @@ def sendErrorMessage(msg):
     subject = "[%s] %s" % args
 
     recips = cdr.getEmailList("Developers Notification")
-    mailHeader   = """\
+    mailHeader = """\
 From: %s
 To: %s
 Subject: %s
 """ % (STR_FROM, ", ".join(recips), subject)
 
-    mailHeader   += "Content-type: text/html; charset=utf-8\n"
-    mailBody      = "<b>Error running HotfixRemove.py</b><br>"
-    mailBody     += "Most likely %s<br>" % msg
-    mailBody     += "See log file for details."
+    mailHeader += "Content-type: text/html; charset=utf-8\n"
+    mailBody = "<b>Error running HotfixRemove.py</b><br>"
+    mailBody += "Most likely %s<br>" % msg
+    mailBody += "See log file for details."
 
     # Add a Separator line + body
     # ---------------------------
@@ -128,23 +135,22 @@ LOGGER.info("CheckHotfixRemove - Started")
 LOGGER.info('Arguments: %s', sys.argv)
 print('')
 
-options   = parseArguments(sys.argv)
-testMode  = options.values.testMode
+options = parseArguments(sys.argv)
+testMode = options.values.testMode
 emailMode = options.values.emailMode
 
 try:
-#     # Initiallize variables
-#     # -------------------------------------------------------------
-#     oldFile = []
-#     oldIds = []
-#     newWithdrawn = []
+    #     # Initiallize variables
+    #     # -------------------------------------------------------------
+    #     oldFile = []
+    #     oldIds = []
+    #     newWithdrawn = []
 
     # Connect to the database and retrieve documents to be removed
     # --------------------------------------------------------------
     conn = db.connect(timeout=300)
     cursor = conn.cursor()
     allDocs = []
-
 
     # Selecting Hotfix-Remove candidates for Glossary Term
     # ----------------------------------------------------
@@ -270,9 +276,9 @@ try:
     <td>%s</td>
    </tr>
 """ % (doc[0], doc[1], doc[2], doc[3])
-        except Exception as info:
+        except Exception:
             LOGGER.exception("Failure creating report")
-            sendErrorMessage('Unicode convertion error')
+            sendErrorMessage('Unicode conversion error')
             raise
 
         mailBody += """\
@@ -284,33 +290,32 @@ try:
     else:
         raise NoNewDocumentsError('NoNewDocumentsError')
 
-
     # In Testmode we don't want to send the notification to the world
     # ---------------------------------------------------------------
     # Email constants
     # ---------------
     if testMode:
-        strTo    = cdr.getEmailList('Test Publishing Notification')
+        strTo = cdr.getEmailList('Test Publishing Notification')
     else:
-        strTo    = cdr.getEmailList('Hotfix Remove Notification')
-        #strTo.append(u'register@clinicaltrials.gov')
+        strTo = cdr.getEmailList('Hotfix Remove Notification')
+        # strTo.append(u'register@clinicaltrials.gov')
 
     args = cdr.Tier().name, "Document Candidates to be removed from Cancer.gov"
     subject = "[%s] %s" % args
 
-    mailHeader   = """\
+    mailHeader = """\
 From: %s
 To: %s
 Subject: %s
 """ % (STR_FROM, ', '.join(strTo), subject)
 
-    mailHeader   += "Content-type: text/html; charset=utf-8\n"
+    mailHeader += "Content-type: text/html; charset=utf-8\n"
 
     # Add a Separator line + body
     # ---------------------------
     message = mailHeader + "\n" + mailBody
 
-    #print message
+    # print message
 
     # Sending out the email
     # ---------------------
@@ -330,15 +335,12 @@ Subject: %s
 #     LOGGER.info("   %s", msg)
 #     LOGGER.info("   %s", arg)
 except NoNewDocumentsError as arg:
-    msg  = "No new documents found to be removed"
+    msg = "No new documents found to be removed"
     LOGGER.info("")
     LOGGER.info("   %s", msg)
     LOGGER.info("   %s", arg)
 except Exception as arg:
     LOGGER.exception("*** Standard Failure - %s", arg)
-except:
-    LOGGER.exception("*** Error - Program stopped with failure ***")
-    raise
 
 LOGGER.info("CheckHotfixRemove - Finished")
 sys.exit(0)

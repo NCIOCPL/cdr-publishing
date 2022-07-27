@@ -1,38 +1,49 @@
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Script for generating mailers for board members (or prospective board
 # members) as RTF documents to be edited by Microsoft Word.
-#----------------------------------------------------------------------
-import cdr, cdrmailer, RtfWriter, xml.dom.minidom, datetime, re, sys, time
+# ---------------------------------------------------------------------
+import cdr
+import cdrmailer
+import RtfWriter
+import xml.dom.minidom
+import datetime
+import sys
+from cdrdocobject import PersonalName, TITLE_AFTER_NAME
+
 
 def toRtf(t):
     return RtfWriter.fix(t)
+
 
 def friendlyDate(date):
     pattern = "%%B %d, %%Y" % date.day
     return date.strftime(pattern)
 
+
 def getNextMonth():
     date = datetime.date.today() + datetime.timedelta(30)
     return date.strftime("%B %d, %Y")
 
+
 def lookupLetterTitle(letter):
     titles = {
-        "adv-invitation"  : "Advisory Board Invitation",
-        "adv-thankyou"    : "Advisory Board Thank-You",
-        "ed-invitation"   : "Editorial Board Invitation",
-        "ed-welcome"      : "Editorial Board Welcome",
-        "ed-renewal"      : "Editorial Board Renewal",
-        "ed-goodbye"      : "Editorial Board Goodbye",
-        "ed-comp-review"  : "Editorial Board Comprehensive Review",
-        "ed-thankyou"     : "Editorial Board Thank-You",
-        "adv-summ-email"  : "Advisory Board Summaries (Email)",
-        "adv-summ-fedex"  : "Advisory Board Summaries (FedEx)",
-        "adv-interested"  : "Advisory Board Still Interested",
+        "adv-invitation": "Advisory Board Invitation",
+        "adv-thankyou": "Advisory Board Thank-You",
+        "ed-invitation": "Editorial Board Invitation",
+        "ed-welcome": "Editorial Board Welcome",
+        "ed-renewal": "Editorial Board Renewal",
+        "ed-goodbye": "Editorial Board Goodbye",
+        "ed-comp-review": "Editorial Board Comprehensive Review",
+        "ed-thankyou": "Editorial Board Thank-You",
+        "adv-summ-email": "Advisory Board Summaries (Email)",
+        "adv-summ-fedex": "Advisory Board Summaries (FedEx)",
+        "adv-interested": "Advisory Board Still Interested",
         "adv-big-thankyou": "Advisory Board BIG Thank You",
-        "ed-ref-summ-rev" : "Editorial Board Reformatted Summary Review",
+        "ed-ref-summ-rev": "Editorial Board Reformatted Summary Review",
     }
     title = titles.get(letter.lower(), "PDQ Board")
     return "%s Letter" % title
+
 
 def createRtfFilename(forename, surname, names):
     name = (("%s %s" % (forename, surname)).strip().replace(" ", "_")
@@ -45,17 +56,20 @@ def createRtfFilename(forename, surname, names):
     names[name] = True
     return "%s.rtf" % name
 
+
 class BoardValues:
-    def __init__(self, summaryType, invitePara = '', workingGroupBlock = ""):
-        self.summaryType         = summaryType
+    def __init__(self, summaryType, invitePara='', workingGroupBlock=""):
+        self.summaryType = summaryType
         self.invitationParagraph = invitePara
-        self.workingGroupBlock   = workingGroupBlock
+        self.workingGroupBlock = workingGroupBlock
+
     def findBoardValues(name):
         bn = name.upper()
-        if not bn in _boardValues:
+        if bn not in _boardValues:
             raise Exception("No board values found for board %s" % name)
         return _boardValues[bn]
     findBoardValues = staticmethod(findBoardValues)
+
 
 _boardValues = {
     'PDQ ADULT TREATMENT EDITORIAL ADVISORY BOARD':
@@ -99,29 +113,31 @@ I would like to join the following genetics working group(s):\\line
     BoardValues('supportive care', 'Ed Bd Invite Letter - Supportive Care')
 }
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object representing a CDR document.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class Doc:
     def __init__(self, id, title):
-        self.id    = id
+        self.id = id
         self.title = title
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object for board information.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class Board:
     def __init__(self, id, cursor):
-        self.today          = datetime.date.today()
-        self.id             = id
-        self.cursor         = cursor
-        self.name           = None
-        self.manager        = None
-        self.meetingDates   = []
-        self.summaryType    = None
-        self.boardType      = None
+        self.today = datetime.date.today()
+        self.id = id
+        self.cursor = cursor
+        self.name = None
+        self.manager = None
+        self.meetingDates = []
+        self.summaryType = None
+        self.boardType = None
         self.__parseBoardDoc(id)
-        self.editorInChief  = self.__findEditorInChief(self.edBoardId)
+        self.editorInChief = self.__findEditorInChief(self.edBoardId)
 
     def formatMeetingDate(self):
         if not self.meetingDates:
@@ -150,7 +166,7 @@ class Board:
         rows = self.cursor.fetchall()
         if not rows:
             raise Exception("Unable to find Adult Treatment "
-                                "Editor-in-Chief")
+                            "Editor-in-Chief")
         return self.__findEditorInChief(rows[0][0])
 
     def __parseBoardDoc(self, id):
@@ -159,8 +175,8 @@ class Board:
         docId = "CDR%d" % id
         versions = cdr.lastVersions('guest', docId)
         ver = str(versions[0])
-        doc = cdr.getDoc('guest', docId, version = ver, getObject = True)
-        errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
+        doc = cdr.getDoc('guest', docId, version=ver, getObject=True)
+        errors = cdr.getErrors(doc, errorsExpected=False, asSequence=True)
         if errors:
             raise Exception("loading doc for board %d: %s" %
                             (id, "; ".join(errors)))
@@ -176,8 +192,8 @@ class Board:
                 self.boardType = cdr.getTextContent(node)
             elif node.nodeName == "PDQBoardInformation":
                 managerNode = None
-                phoneNode   = None
-                emailNode   = None
+                phoneNode = None
+                emailNode = None
                 for child in node.childNodes:
                     if child.nodeName == "BoardManager":
                         managerNode = child
@@ -206,13 +222,13 @@ class Board:
         self.meetingDates.sort(key=lambda a: a.date)
         self.name = self.name.strip()
         if self.boardType.upper() == 'PDQ ADVISORY BOARD':
-            self.advBoardId   = self.id
+            self.advBoardId = self.id
             self.advBoardName = self.name
-            self.edBoardName  = self.__getBoardName(self.edBoardId)
+            self.edBoardName = self.__getBoardName(self.edBoardId)
         elif self.boardType.upper() == 'PDQ EDITORIAL BOARD':
-            self.edBoardId    = self.id
-            self.edBoardName  = self.name
-            self.advBoardId   = self.__findAdvBoardFor(self.id)
+            self.edBoardId = self.id
+            self.edBoardName = self.name
+            self.advBoardId = self.__findAdvBoardFor(self.id)
             self.advBoardName = self.__getBoardName(self.advBoardId)
         else:
             raise Exception('Board type: %s' % self.boardType)
@@ -268,13 +284,13 @@ class Board:
                         AND b.int_val = ?
                         AND s.value <= '%s'
                         AND (e.value IS NULL OR e.value > '%s')""" %
-                                 (today, today), id)
+                            (today, today), id)
         rows = self.cursor.fetchall()
         if not rows:
             raise Exception("No editor in chief for board %d" % id)
         if len(rows) > 1:
             raise Exception("Too many (%d) editors-in-chief for board %d" %
-                                (len(rows), id))
+                            (len(rows), id))
         return self.EditorInChief(rows[0][0])
 
     class Manager:
@@ -285,7 +301,7 @@ class Board:
                 raise Exception("Missing required phone for board manager")
             elif not emailNode:
                 raise Exception("Missing required email for board manager")
-            self.name  = cdr.getTextContent(nameNode).strip()
+            self.name = cdr.getTextContent(nameNode).strip()
             self.phone = cdr.getTextContent(phoneNode).strip()
             self.email = cdr.getTextContent(emailNode).strip()
             if not self.name:
@@ -297,21 +313,20 @@ class Board:
 
     class EditorInChief:
         def __init__(self, id):
-            self.id   = id
+            self.id = id
             self.name = None
             docId = 'CDR%d' % id
             versions = cdr.lastVersions('guest', docId)
             ver = str(versions[0])
-            doc = cdr.getDoc('guest', docId, version = ver, getObject = True)
-            errors = cdr.getErrors(doc, errorsExpected = False,
-                                   asSequence = True)
+            doc = cdr.getDoc('guest', docId, version=ver, getObject=True)
+            errors = cdr.getErrors(doc, errorsExpected=False, asSequence=True)
             if errors:
                 raise Exception("loading doc %d for editor in chief: %s" %
                                 (id, "; ".join(errors)))
             dom = xml.dom.minidom.parseString(doc.xml)
             for node in dom.documentElement.childNodes:
                 if node.nodeName == "PersonNameInformation":
-                    self.name = cdrmailer.PersonalName(node)
+                    self.name = PersonalName(node)
             if not self.name:
                 raise Exception("No name found for editor-in-chief %d" % id)
 
@@ -321,36 +336,38 @@ class Board:
             for child in node.childNodes:
                 if child.nodeName == 'MeetingDate':
                     self.date = cdr.getTextContent(child)
+
         def format(self):
             parts = self.date.split('-', 2)
             date = datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
             return friendlyDate(date)
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Object for one board member.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class BoardMember:
     def __init__(self, memberId, memberVer, personId, personVer, board):
-        self.memberId         = memberId
-        self.memberVersion    = memberVer
-        self.personId         = personId
-        self.personVersion    = personVer
-        self.board            = board
-        self.address          = None
-        self.contactId        = None
-        self.name             = None
-        self.summaries        = self.__findSummaries(memberId, board.cursor)
+        self.memberId = memberId
+        self.memberVersion = memberVer
+        self.personId = personId
+        self.personVersion = personVer
+        self.board = board
+        self.address = None
+        self.contactId = None
+        self.name = None
+        self.summaries = self.__findSummaries(memberId, board.cursor)
         self.renewalFrequency = "**** NO TERM RENEWAL FREQUENCY FOUND!!! ****"
-        self.asstName         = None
-        self.asstPhone        = None
-        self.asstFax          = None
-        self.asstEmail        = None
+        self.asstName = None
+        self.asstPhone = None
+        self.asstFax = None
+        self.asstEmail = None
 
         self.__parseMemberDoc(memberId, memberVer)
         self.__parsePersonDoc(personId, personVer, board.cursor)
         if not self.name:
             raise Exception("No personal name information for board "
-                                "member %d" % memberId)
+                            "member %d" % memberId)
 
     def getSummaryList(self):
         if not self.summaries:
@@ -373,8 +390,8 @@ class BoardMember:
             return self.renewalFrequency
 
     def __parseMemberDoc(self, id, ver):
-        doc = cdr.getDoc('guest', id, version = str(ver), getObject = True)
-        errors = cdr.getErrors(doc, errorsExpected = False, asSequence = True)
+        doc = cdr.getDoc('guest', id, version=str(ver), getObject=True)
+        errors = cdr.getErrors(doc, errorsExpected=False, asSequence=True)
         if errors:
             raise Exception("loading member doc: %s" % "; ".join(errors))
         dom = xml.dom.minidom.parseString(doc.xml)
@@ -399,19 +416,17 @@ class BoardMember:
                             AND doc_id = ?""", id)
             rows = cursor.fetchall()
             if not rows:
-                raise Exception("No CIPS contact found for board member %d"
-                                    % id)
+                raise Exception(f"No CIPS contact found for board member {id}")
             self.contactId = rows[0][0]
 
         # Get the address information.
         filters = ["name:Person Contact Fragment With Name"]
-        #print("id=%s docVer=%s contactId=%s" % (id, str(ver), self.contactId))
-        result  = cdr.filterDoc('guest', filters, id, docVer = str(ver),
-                                parm = (('fragId', self.contactId),))
+        result = cdr.filterDoc('guest', filters, id, docVer=str(ver),
+                               parm=(('fragId', self.contactId),))
         if isinstance(result, (str, bytes)):
             raise Exception("failure extracting contact address for %s: %s"
-                                % (id, result))
-        self.address = cdrmailer.Address(result[0], cdrmailer.TITLE_AFTER_NAME)
+                            % (id, result))
+        self.address = cdrmailer.Address(result[0], TITLE_AFTER_NAME)
         self.name = self.address.getPersonalName()
 
     def __parseBoardMembershipDetails(self, node):
@@ -470,20 +485,21 @@ class BoardMember:
             row = cursor.fetchone()
         return summaries
 
-#----------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
 # Derived class for board member mailers.
-#----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 class BoardMemberMailer(cdrmailer.MailerJob):
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Nothing to do here (but we must override the method).
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def fillQueue(self):
         pass
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # This is what we're here to do.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def createRtfMailers(self):
 
         # Create the separate directory used for RTF documents.
@@ -511,81 +527,79 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                                                 row[3], self.__board))
 
         except Exception as e:
-            raise Exception("database error building emailer list: %s" %
-                                str(e))
+            raise Exception(f"database error building emailer list: {e}")
 
         template = self.__prepareTemplate()
 
         # Pump out one RTF letter for each board member.
         names = {}
         for m in boardMembers:
-            asstInfo    = m.formatAsstInfo()
-            addrBlock   = m.address.format(dropUS = True).getBlock()
-            forename    = toRtf(m.name.getGivenName())
-            surname     = toRtf(m.name.getSurname())
-            memberName  = toRtf(m.name.format(False, False))
-            fancyName   = toRtf(m.name.format(True, False))
-            termYears   = m.getTermYears()
+            asstInfo = m.formatAsstInfo()
+            addrBlock = m.address.format(dropUS=True).getBlock()
+            forename = toRtf(m.name.getGivenName())
+            surname = toRtf(m.name.getSurname())
+            memberName = toRtf(m.name.format(False, False))
+            fancyName = toRtf(m.name.format(True, False))
+            termYears = m.getTermYears()
             summaryList = m.getSummaryList()
             contactInfo = m.address.format(contactFields=True,
                                            dropUS=True,
                                            useRtfTable=True)
-            letter      = (template.replace("@@ADDRBLOCK@@",   addrBlock)
-                                   .replace("@@FORENAME@@",    forename)
-                                   .replace("@@SURNAME@@",     surname)
-                                   .replace("@@MEMBERNAME@@",  memberName)
-                                   .replace("@@FANCYNAME@@",   fancyName)
-                                   .replace("@@TERMYEARS@@",   termYears)
-                                   .replace("@@SUMMARYLIST@@", summaryList)
-                                   .replace("@@CONTACTINFO@@", contactInfo)
-                                   .replace("@@ASSTINFO@@",    asstInfo))
+            letter = (template.replace("@@ADDRBLOCK@@", addrBlock)
+                      .replace("@@FORENAME@@", forename)
+                      .replace("@@SURNAME@@", surname)
+                      .replace("@@MEMBERNAME@@", memberName)
+                      .replace("@@FANCYNAME@@", fancyName)
+                      .replace("@@TERMYEARS@@", termYears)
+                      .replace("@@SUMMARYLIST@@", summaryList)
+                      .replace("@@CONTACTINFO@@", contactInfo)
+                      .replace("@@ASSTINFO@@", asstInfo))
             name = createRtfFilename(forename, surname, names)
             print("writing %s" % name)
             with open(name, "w") as fp:
                 fp.write(letter)
             self.bumpCount()
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Prepare a template to be used by all letters in this batch.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __prepareTemplate(self):
         letter = self.getParm('Letter')
         if not letter:
             raise Exception("No Letter template specified")
-        name       = '%s/%s.rtf' % (self.getMailerIncludePath(), letter[0])
-        title      = lookupLetterTitle(letter[0])
-        subject    = "Board Member Correspondence Mailer"
-        imageName  = "%s/dhhslogo.png" % self.getMailerIncludePath()
-        formLetter = RtfWriter.FormLetter(title      = title,
-                                          subject    = subject,
-                                          template   = name,
-                                          pngName    = imageName,
-                                          binImage   = False,
-                                          invitePara = self.__board.invitePara)
+        name = '%s/%s.rtf' % (self.getMailerIncludePath(), letter[0])
+        title = lookupLetterTitle(letter[0])
+        subject = "Board Member Correspondence Mailer"
+        imageName = "%s/dhhslogo.png" % self.getMailerIncludePath()
+        formLetter = RtfWriter.FormLetter(title=title,
+                                          subject=subject,
+                                          template=name,
+                                          pngName=imageName,
+                                          binImage=False,
+                                          invitePara=self.__board.invitePara)
         formLetter.defaultFont = formLetter.SANSSERIF
         formLetter.fSize = 24
-        listId       = formLetter.addList(RtfWriter.List.ARABIC)
-        template     = formLetter.getRtf()
-        date         = friendlyDate(self.__board.today)
-        boardName    = toRtf(self.__board.name)
-        meetingDate  = self.__board.formatMeetingDate()
+        listId = formLetter.addList(RtfWriter.List.ARABIC)
+        template = formLetter.getRtf()
+        date = friendlyDate(self.__board.today)
+        boardName = toRtf(self.__board.name)
+        meetingDate = self.__board.formatMeetingDate()
         meetingDates = self.__board.formatMeetingDates()
-        bmName       = toRtf(self.__board.manager.name)
-        bmPhone      = toRtf(self.__board.manager.phone)
-        bmEmail      = toRtf(self.__board.manager.email)
-        adultTrEic   = self.__board.getAdultTreatmentEditorInChief()
-        atEcName     = toRtf(adultTrEic.name.format(True, False))
-        ecName       = toRtf(self.__board.editorInChief.name.format(True,
-                                                                    False))
-        summaryType  = toRtf(self.__board.summaryType)
-        edBoardName  = toRtf(self.__board.edBoardName)
+        bmName = toRtf(self.__board.manager.name)
+        bmPhone = toRtf(self.__board.manager.phone)
+        bmEmail = toRtf(self.__board.manager.email)
+        adultTrEic = self.__board.getAdultTreatmentEditorInChief()
+        atEcName = toRtf(adultTrEic.name.format(True, False))
+        ecName = toRtf(self.__board.editorInChief.name.format(True, False))
+        summaryType = toRtf(self.__board.summaryType)
+        edBoardName = toRtf(self.__board.edBoardName)
         advBoardName = toRtf(self.__board.advBoardName)
-        workGroups   = self.__board.workingGroups
+        workGroups = self.__board.workingGroups
         oneMonthAway = getNextMonth()
         twoWeeksAway = friendlyDate(datetime.date.fromordinal(
                                     self.__board.today.toordinal() + 14))
-        letter       = self.__plugInSummaryTopics(template, self.__board)
-        letter       = self.__addConflictOfInterestForm(letter)
+        letter = self.__plugInSummaryTopics(template, self.__board)
+        letter = self.__addConflictOfInterestForm(letter)
         return (letter.replace("@@DATE@@",           date)
                       .replace("@@BOARDNAME@@",      boardName)
                       .replace("@@MEETINGDATE@@",    meetingDate)
@@ -603,9 +617,9 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                       .replace("@@DATEPLUS2WEEKS@@", twoWeeksAway)
                       .replace("@@LISTID@@",         str(listId)))
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Insert a conflict of interest form if appropriate.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __addConflictOfInterestForm(self, letter):
         placeholder = "@@CONFLICTOFINTERESTFORM@@"
         if placeholder not in letter:
@@ -615,9 +629,9 @@ class BoardMemberMailer(cdrmailer.MailerJob):
             form = fp.read()
         return letter.replace(placeholder, form)
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Insert a list of summary topics if appropriate.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __plugInSummaryTopics(self, template, board):
         if "@@SUMMARYTOPICS@@" not in template:
             return template
@@ -643,22 +657,22 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         rows = self.getCursor().fetchall()
         if not rows:
             raise Exception("Unable to find topics for %s" %
-                                board.edBoardName)
+                            board.edBoardName)
         lines = []
         for row in rows:
-            lines.append("____ %s\line" % RtfWriter.fix(row[0].strip()))
+            lines.append(r"____ %s\line" % RtfWriter.fix(row[0].strip()))
         return template.replace("@@SUMMARYTOPICS@@", "\n".join(lines))
 
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     # Gather information about the board for this mailer.
-    #------------------------------------------------------------------
+    # -----------------------------------------------------------------
     def __loadBoardInfo(self):
         boardId = self.getParm('Board')
         if not boardId:
             raise Exception("Missing BoardId for BoardMemberMailer")
         boardId = int(boardId[0])
-        #print "boardId = %d" % boardId
         self.__board = Board(boardId, self.getCursor())
+
 
 if __name__ == "__main__":
     sys.exit(BoardMemberMailer(int(sys.argv[1])).run())

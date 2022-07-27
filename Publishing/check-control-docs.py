@@ -10,11 +10,13 @@ from cdrapi import db
 
 OPTS = dict(pretty_print=True, encoding="unicode")
 
+
 def normalize(xml):
     """Take encoded XML and convert it to normalized Unicode."""
     root = etree.XML(xml)
     xml = sub(r"\r+", "", etree.tostring(root, **OPTS))
     return xml.strip() + "\n"
+
 
 cursor = db.connect(user="CdrGuest").cursor()
 now = datetime.now()

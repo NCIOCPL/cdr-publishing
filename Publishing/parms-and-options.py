@@ -1,24 +1,27 @@
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Show publishing control parameters and options.
-#----------------------------------------------------------------------
-import glob
-import lxml.etree as etree
+# ----------------------------------------------------------------------
+from lxml import etree
+
 
 class Parm:
     parms = {}
     path = "SystemSubset/SubsetParameters/SubsetParameter"
+
     def __init__(self, node):
         self.name = node.find("ParmName").text
         self.value = node.find("ParmValue").text
 
+
 class Option:
     options = {}
     path = "SystemSubset/SubsetOptions/SubsetOption"
+
     def __init__(self, node):
         self.name = node.find("OptionName").text
         self.value = node.find("OptionValue").text
 
-#for name in glob.glob("*.xml"):
+
 for name in ("Primary.xml", "QcFilterSets.xml"):
     tree = etree.parse(name)
     for node in tree.getroot().findall(Parm.path):

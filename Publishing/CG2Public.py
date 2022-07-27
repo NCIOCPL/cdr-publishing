@@ -17,7 +17,6 @@ OCECDR-4347: Modify CG2Public Job to Process Latest Weekly Job
 import argparse
 import glob
 import os
-import re
 import shutil
 import sys
 import time
@@ -26,6 +25,7 @@ import cdrpub
 from cdrapi.users import Session
 from cdrapi.docs import Doc
 from cdrapi.db import Query
+from functools import cached_property
 
 
 class Control:
@@ -44,13 +44,23 @@ class Control:
     FILTERABLE = {"GlossaryTerm", "Summary", "Terminology"}
 
     def __init__(self):
-        self.sourceBase  = cdr.BASEDIR + "/Output"
-        self.jobDir      = self.last_job_directory()
-        self.outputDir   = None
-        self.inputDir    = None
-        self.session     = Session("guest")
-        self.transform   = Doc.load_single_filter(self.session,
-                                                  self.FILTER_TITLE)
+        self.sourceBase = cdr.BASEDIR + "/Output"
+        self.jobDir = self.last_job_directory()
+        self.outputDir = None
+        self.inputDir = None
+        self.session = Session("guest")
+        self.transform = Doc.load_single_filter(self.session,
+                                                self.FILTER_TITLE)
+
+    @cached_property
+    def cms_only(self):
+        """List of summary documents we don't give to the data partners."""
+
+        query = Query("query_term_pub", "doc_id")
+        query.where("path = '/Summary/@SVPC'")
+        query.where("value = 'Yes'")
+        rows = query.execute().fetchall()
+        return {row.doc_id for row in rows}
 
     def last_job_directory(self):
         """
@@ -88,7 +98,7 @@ class Control:
             logger.info("   Copy to %s...", path)
             try:
                 os.mkdir(path)
-            except:
+            except Exception:
                 raise Exception("Failure creating {}".format(path))
         else:
             args = self.outputDir, directory
@@ -106,6 +116,9 @@ class Control:
             # -------------------------------------
             if directory in self.FILTERABLE:
                 doc_id = Doc.extract_id(filename)
+                if doc_id in self.cms_only:
+                    logger.info("Skipping CDR%d (CMS only)", doc_id)
+                    continue
                 doc = Doc(self.session, id=doc_id, xml=xml)
                 newDoc = str(doc.apply_single_filter(self.transform))
                 newDoc = newDoc.encode("utf-8")
@@ -162,12 +175,12 @@ parser.add_argument("--inputdir", "-s")
 parser.add_argument("--outputdir", "-o")
 parser.add_argument("--console", "-c", action="store_true")
 opts = parser.parse_args()
-testMode  = opts.testmode
-fullMode  = not opts.interim
-inputdir  = opts.inputdir
+testMode = opts.testmode
+fullMode = not opts.interim
+inputdir = opts.inputdir
 outputdir = opts.outputdir
-logger    = cdr.Logging.get_logger("CG2Public", console=opts.console)
-modes     = (
+logger = cdr.Logging.get_logger("CG2Public", console=opts.console)
+modes = (
     "TEST" if testMode else "LIVE",
     "EXPORT" if fullMode else "INTERIM",
 )
@@ -221,14 +234,14 @@ if os.path.exists(control.outputDir):
     logger.warning("Moving existing %s to %s", control.outputDir, new)
     try:
         os.rename(control.outputDir, new)
-    except:
+    except Exception:
         logger.exception("Failure moving old output directory")
         sys.exit(1)
 try:
     logger.info("Copying from directory: %s", control.inputDir)
     logger.info("Creating directory: %s", control.outputDir)
     os.mkdir(control.outputDir)
-except:
+except Exception:
     logger.exception("Error creating directory...bailing")
     sys.exit(1)
 
@@ -239,7 +252,7 @@ for directory in pubDirs:
     if directory not in Control.EXCLUDEDIRS:
         try:
             failed_validation = control.copy(directory)
-        except Exception as e:
+        except Exception:
             logger.exception("Copying %s failed", directory)
             sys.exit(1)
         if failed_validation:

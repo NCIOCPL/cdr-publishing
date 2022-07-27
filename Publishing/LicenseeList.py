@@ -7,18 +7,23 @@
 #
 # OCECDR-3898: Modify PDQ Partner Documents
 # *********************************************************************
-import sys, cdr, os, time, optparse, smtplib, glob
+import sys
+import cdr
+import time
+import optparse
+import smtplib
 from cdrapi import db
 
-OUTPUTBASE     = cdr.BASEDIR + "/reports"
-DOC_FILE       = "Licensees"
-LOGNAME        = "Licensees.log"
+OUTPUTBASE = cdr.BASEDIR + "/reports"
+DOC_FILE = "Licensees"
+LOGNAME = "Licensees.log"
 
-now            = time.localtime()
-outputFile     = '%s_%s.html' % (DOC_FILE, time.strftime("%Y%m%d%H%M%S", now))
+now = time.localtime()
+outputFile = '%s_%s.html' % (DOC_FILE, time.strftime("%Y%m%d%H%M%S", now))
 
-testMode       = None
-emailMode      = None
+testMode = None
+emailMode = None
+
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -30,22 +35,22 @@ def parseArguments(args):
     """
 
     usage = "usage: %prog [--email | --noemail] [--testmode | --livemode]"
-    parser = optparse.OptionParser(usage = usage)
+    parser = optparse.OptionParser(usage=usage)
 
-    parser.set_defaults(testMode = True)
-    parser.set_defaults(emailMode = True)
+    parser.set_defaults(testMode=True)
+    parser.set_defaults(emailMode=True)
     parser.add_option('-t', '--testmode',
-                      action = 'store_true', dest = 'testMode',
-                      help = 'running in TEST mode')
+                      action='store_true', dest='testMode',
+                      help='running in TEST mode')
     parser.add_option('-l', '--livemode',
-                      action = 'store_false', dest = 'testMode',
-                      help = 'running in LIVE mode')
+                      action='store_false', dest='testMode',
+                      help='running in LIVE mode')
     parser.add_option('-e', '--email',
-                      action = 'store_true', dest = 'emailMode',
-                      help = 'running in EMAIL mode')
+                      action='store_true', dest='emailMode',
+                      help='running in EMAIL mode')
     parser.add_option('-n', '--noemail',
-                      action = 'store_false', dest = 'emailMode',
-                      help = 'running in NOEMAIL mode')
+                      action='store_false', dest='emailMode',
+                      help='running in NOEMAIL mode')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
@@ -70,7 +75,6 @@ def parseArguments(args):
     return parser
 
 
-
 # ---------------------------------------------------------------------
 # Instantiate the Log class
 # ---------------------------------------------------------------------
@@ -79,8 +83,8 @@ LOGGER.info("LicenseeList Report - Started")
 LOGGER.info('Arguments: %s', sys.argv)
 print('')
 
-options   = parseArguments(sys.argv)
-testMode  = options.values.testMode
+options = parseArguments(sys.argv)
+testMode = options.values.testMode
 emailMode = options.values.emailMode
 
 # If no file name is specified (the default) we're picking the last
@@ -142,7 +146,7 @@ LEFT OUTER JOIN query_term pdi
 
     rows = cursor.fetchall()
 
-    lCount = {'prod':0, 'test':0}
+    lCount = {'prod': 0, 'test': 0}
     for row in rows:
         if row[2] == 'Production':
             lCount['prod'] += 1
@@ -181,23 +185,22 @@ LEFT OUTER JOIN query_term pdi
    </tr>
 """ % (time.strftime("%m/%d/%Y", now), lCount['prod'], lCount['test'])
 
-    for (cdrId, orgName, status, testStart, testRenew, testRemove, prodStart, prodRemove) in rows:
-        mailBody += """\
+    for (cdrId, orgName, status, testStart, testRenew, testRemove,
+         prodStart, prodRemove) in rows:
+        mailBody += f"""\
    <tr>
-    <td>CDR%d</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
-    <td>%s</td>
+    <td>CDR{cdrId:d}</td>
+    <td>{orgName}</td>
+    <td>{status}</td>
+    <td>{testStart}</td>
+    <td>{testRenew or ""}</td>
+    <td>{testRemove or ""}</td>
+    <td>{prodStart or ""}</td>
+    <td>{prodRemove or ""}</td>
    </tr>
-""" % (cdrId, orgName, status, testStart, testRenew or '', testRemove or '', prodStart or '', prodRemove or '')
-
+"""
     mailBody += """\
   </table>
-
  </body>
 </html>
 """
@@ -206,29 +209,29 @@ LEFT OUTER JOIN query_term pdi
     # ---------------------------------------------------------------
     # Email constants
     # ---------------
-    SMTP_RELAY   = "MAILFWD.NIH.GOV"
-    strFrom      = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
+    SMTP_RELAY = "MAILFWD.NIH.GOV"
+    strFrom = "PDQ Operator <NCIPDQoperator@mail.nih.gov>"
     if testMode:
-        strTo    = cdr.getEmailList('Test Publishing Notification')
+        strTo = cdr.getEmailList('Test Publishing Notification')
     else:
-        strTo    = cdr.getEmailList('Licensee Report Notification')
+        strTo = cdr.getEmailList('Licensee Report Notification')
 
     args = cdr.Tier().name, 'PDQ Distribution Partner List'
     subject = "[%s] %s" % args
 
-    mailHeader   = """\
+    mailHeader = """\
 From: %s
 To: %s
 Subject: %s
 """ % (strFrom, ", ".join(strTo), subject)
 
-    mailHeader   += "Content-type: text/html; charset=iso-8859-1\n"
+    mailHeader += "Content-type: text/html; charset=iso-8859-1\n"
 
     # Add a Separator line + body
     # ---------------------------
     message = mailHeader + "\n" + mailBody
 
-    #print message
+    # print message
 
     # Sending out the email
     # ---------------------
@@ -246,9 +249,6 @@ Subject: %s
 
 except Exception as arg:
     LOGGER.exception("*** Standard Failure - %s", arg)
-except:
-    LOGGER.exception("*** Error - Program stopped with failure ***")
-    raise
 
 LOGGER.info("LicenseeList Report - Finished")
 sys.exit(0)

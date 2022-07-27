@@ -1,4 +1,4 @@
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Script intended to submit an email to the Visuals OnLine (VOL)
 # team when a media document has been updated or added to Cancer.gov.
 # New addition - an image that has been made publishable should be
@@ -8,27 +8,34 @@
 #              publishable media (images) docs.
 # OCECDR-4036: Updated Media Docs Report- Correct Date Range
 # OCECDR-4016: Modifications to Weekly CDR Images Automated Report
-#----------------------------------------------------------------------
-import os, sys, cdr, time, optparse
+# ----------------------------------------------------------------------
+import sys
+import cdr
+import time
+import optparse
 import datetime
 from cdrapi import db
+from html import escape
 
 # Establish a reference point for the call at the end.
 time.process_time()
 
-FILEBASE           = "Notify_VOL"
-LOGNAME            = "%s.log" % FILEBASE
-jobTime            = time.localtime(time.time())
-today              = datetime.date.today()
-yesterday          = today - datetime.timedelta(1)
+FILEBASE = "Notify_VOL"
+LOGNAME = "%s.log" % FILEBASE
+jobTime = time.localtime(time.time())
+today = datetime.date.today()
+yesterday = today - datetime.timedelta(1)
 
 
-reportTitles = { 'new':'New Images',
-                 'upd':'Revised Images',
-                 'del':'Blocked (Removed) Images' }
+reportTitles = {
+    'new': 'New Images',
+    'upd': 'Revised Images',
+    'del': 'Blocked (Removed) Images'
+}
 
 
-testMode   = None
+testMode = None
+
 
 # ------------------------------------------------------------
 # Function to parse the command line arguments
@@ -40,22 +47,22 @@ def parseArguments(args):
     """
 
     usage = "usage: %prog [--livemode | --testmode] [options]"
-    parser = optparse.OptionParser(usage = usage)
+    parser = optparse.OptionParser(usage=usage)
 
-    parser.set_defaults(testMode = True)
-    parser.set_defaults(emailMode = True)
+    parser.set_defaults(testMode=True)
+    parser.set_defaults(emailMode=True)
     parser.add_option('-t', '--testmode',
-                      action = 'store_true', dest = 'testMode',
-                      help = 'running in TEST mode')
+                      action='store_true', dest='testMode',
+                      help='running in TEST mode')
     parser.add_option('-l', '--livemode',
-                      action = 'store_false', dest = 'testMode',
-                      help = 'running in LIVE mode')
-    parser.add_option('-s', '--startdate', dest = 'startDate',
-                      metavar = 'STARTDATE',
-                      help = 'start date of time frame (default one week)')
-    parser.add_option('-e', '--enddate', dest = 'endDate',
-                      metavar = 'ENDDATE',
-                      help = 'end date of time frame (default yesterday)')
+                      action='store_false', dest='testMode',
+                      help='running in LIVE mode')
+    parser.add_option('-s', '--startdate', dest='startDate',
+                      metavar='STARTDATE',
+                      help='start date of time frame (default one week)')
+    parser.add_option('-e', '--enddate', dest='endDate',
+                      metavar='ENDDATE',
+                      help='end date of time frame (default yesterday)')
 
     # Exit if no command line argument has been specified
     # ---------------------------------------------------
@@ -95,8 +102,11 @@ def checkForMediaUpdates(sDate, eDate, type=''):
     checking.
     """
     if type == 'new':
+        # If any publishable version exists this is not a new document.
+        # TODO: This isa perfect example of a script which would benefit
+        #       from using the `db.Query` query builder.
         q_new = """
-                    AND  not exists (  -- if any publishable version exists this is not a new doc
+                    AND  not exists (
                    SELECT 'x' -- i.id
                      FROM doc_version i
                     WHERE i.id = dv.id
@@ -145,7 +155,7 @@ def checkForMediaUpdates(sDate, eDate, type=''):
         for row in rows:
             ids.append(row[0])
 
-    except:
+    except Exception:
         LOGGER.exception("Failure finding updated media documents")
         raise
 
@@ -196,12 +206,11 @@ def checkForBlockedImages(sDate, eDate):
         for row in rows:
             ids.append(row[0])
 
-    except:
+    except Exception:
         LOGGER.exception("Failure finding blocked media documents")
         raise
 
     return ids
-
 
 
 # ------------------------------------------------------------
@@ -254,8 +263,7 @@ LEFT OUTER JOIN query_term v
            %s
            AND dv.dt between '%s' AND '%s'
          ORDER BY id, num
-""" % (', '.join(str(x) for x in ids),
-       pubType, sDate, eDate))
+""" % (', '.join(str(x) for x in ids), pubType, sDate, eDate))
 
         rows = cursor.fetchall()
     except Exception:
@@ -270,32 +278,34 @@ LEFT OUTER JOIN query_term v
 # ------------------------------------------------------------
 def createRows(versions):
     tableRows = ""
-    host = cdr.APPC
+    base = f"https://{cdr.APPC}/cgi-bin/cdr"
     class_ = "even"
 
     for row in versions:
         class_ = class_ == "even" and "odd" or "even"
+        title = escape(row[2]) if row[2] else ""
+        comment = escape(row[6]) if row[6] else ""
         tableRows += """
    <tr class="%s">
     <td class="link">
-     <a href="https://%s/cgi-bin/cdr/QcReport.py?Session=guest&DocId=CDR%s&DocVersion=%s">%s</a>
+     <a href="%s/QcReport.py?Session=guest&DocId=CDR%s&DocVersion=%s">%s</a>
     </td>
     <td>%s</td>
     <td class="link">
-     <a href="https://%s/cgi-bin/cdr/GetCdrImage.py?id=CDR%s.jpg">%s</a>
+     <a href="%s/GetCdrImage.py?id=CDR%s.jpg">%s</a>
     </td>
     <td>%s</td>
     <td>%s</td>
     <td align="center">%s</td>
     <td>%s</td>
    </tr>
-       """ % (class_, host, row[0], row[1], row[0],
-                            row[1],
-                      host, row[0], row[2],
-                            row[3] and str(row[3])[:16] or '',
-                            row[4] and str(row[4])[:16] or '',
-                            row[5] and 'Y' or '',
-                            row[6] or '')
+       """ % (class_, base, row[0], row[1], row[0],
+              row[1],
+              base, row[0], title,
+              row[3] and str(row[3])[:16] or '',
+              row[4] and str(row[4])[:16] or '',
+              row[5] and 'Y' or '',
+              comment)
     return tableRows
 
 
@@ -310,8 +320,8 @@ LOGGER.info('Notify_VOL - Started')
 LOGGER.info('Arguments: %s', sys.argv)
 print('')
 
-options   = parseArguments(sys.argv)
-testMode  = options.values.testMode
+options = parseArguments(sys.argv)
+testMode = options.values.testMode
 emailMode = options.values.emailMode
 
 # If only the start date is specified, the timeframe will be from
@@ -320,12 +330,12 @@ emailMode = options.values.emailMode
 # that date. Otherwise it's whatever dates are passed
 # or the week prior to today if no dates are specified.
 # ---------------------------------------------------------------
-endDate    = options.values.endDate   or str(yesterday)
+endDate = options.values.endDate or str(yesterday)
 endDateSql = datetime.datetime.strptime(endDate, "%Y-%m-%d").date() \
              + datetime.timedelta(1)
 startDate = options.values.startDate \
             or datetime.datetime.strptime(endDate, "%Y-%m-%d").date() \
-             - datetime.timedelta(6)
+            - datetime.timedelta(6)
 
 # Checking if Media documents were updated for the given
 # time frame.
@@ -373,11 +383,11 @@ LOGGER.info('Blocked Media Documents:\n%s\n', delMediaChanges)
 
 # Setting up email message to be send to users
 # --------------------------------------------
-# machine  = socket.gethostname().split('.')[0]
-sender   = 'NCIPDQoperator@mail.nih.gov'
+# machine = socket.gethostname().split('.')[0]
+sender = 'NCIPDQoperator@mail.nih.gov'
 subject = cdr.emailSubject('List of Updated Media Documents')
 
-html     = """
+html = """
 <html>
  <head>
   <title>Media List Report</title>

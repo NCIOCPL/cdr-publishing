@@ -46,7 +46,6 @@ start with --skip 500.
 
 from argparse import ArgumentParser
 from cdrapi.users import Session
-from cdrapi.docs import Doc
 from cdrapi.publishing import DrupalClient
 from cdrpub import Control
 from cdrapi import db
