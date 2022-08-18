@@ -1143,8 +1143,9 @@ class Address(ContactInfo):
     # -----------------------------------------------------------------
     @staticmethod
     def formatRtfContactTableRow(label, value):
+        value = value or ""
         args = (
-            RtfWriter.fix(value or ""),
+            RtfWriter.fix(label),
             RtfWriter.fix(value.strip()).replace("@@LINE@@", "\\line"),
         )
         return """\
