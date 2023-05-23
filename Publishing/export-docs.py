@@ -195,7 +195,7 @@ class Control:
             return
         if not os.path.isdir(directory):
             try:
-                os.makedirs(directory)
+                os.makedirs(directory, exist_ok=True)
             except Exception:
                 self.logger.exception("Failure creating %s", directory)
                 pass
