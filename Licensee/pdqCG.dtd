@@ -96,7 +96,8 @@
 <!ELEMENT TitleAbbrev (%TitleData;)*>
 
 <!ELEMENT AltTitle (%TitleData;)*>
-<!ATTLIST AltTitle TitleType (Short | Display | Navlabel) #IMPLIED>
+<!ATTLIST AltTitle TitleType (Short | Display | Navlabel |
+                              Browser | CancerTypeHomePage) #IMPLIED>
 
 <!ELEMENT Para (%ParaElements;)*>
 <!ATTLIST Para id CDATA #IMPLIED
