@@ -476,7 +476,7 @@
                            SummaryURL,
                            SummaryToggleURL?,
                            MobileURL?,
-                           SummaryEditorialBoard?,
+                           SummaryEditorialBoard*,
                            MainTopics+,
                            SecondaryTopics*,
                            SummaryAbstract?,

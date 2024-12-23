@@ -45,16 +45,18 @@ def lookupLetterTitle(letter):
     return "%s Letter" % title
 
 
-def createRtfFilename(forename, surname, names):
-    name = (("%s %s" % (forename, surname)).strip().replace(" ", "_")
-                                                   .replace(".", ""))
+def createRtfFilename(member, names):
+
+    forename = member.name.getGivenName()
+    surname = member.name.getSurname()
+    base = f"{forename.strip()} {surname.strip()}".replace(".", "")
+    name = base_name = base.replace(" ", "_")
     counter = 0
-    baseName = name
     while name in names:
         counter += 1
-        name = "%s_%d" % (baseName, counter)
-    names[name] = True
-    return "%s.rtf" % name
+        name = f"{base_name}_{counter:d}"
+    names.add(name)
+    return f"{name}.rtf"
 
 
 class BoardValues:
@@ -532,7 +534,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
         template = self.__prepareTemplate()
 
         # Pump out one RTF letter for each board member.
-        names = {}
+        names = set()
         for m in boardMembers:
             asstInfo = m.formatAsstInfo()
             addrBlock = m.address.format(dropUS=True).getBlock()
@@ -554,7 +556,7 @@ class BoardMemberMailer(cdrmailer.MailerJob):
                       .replace("@@SUMMARYLIST@@", summaryList)
                       .replace("@@CONTACTINFO@@", contactInfo)
                       .replace("@@ASSTINFO@@", asstInfo))
-            name = createRtfFilename(forename, surname, names)
+            name = createRtfFilename(m, names)
             print("writing %s" % name)
             with open(name, "w") as fp:
                 fp.write(letter)

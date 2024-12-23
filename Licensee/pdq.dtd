@@ -422,7 +422,7 @@
                            SummaryDescription,
                            SummaryURL,
                            SummaryToggleURL?,
-                           SummaryEditorialBoard?,
+                           SummaryEditorialBoard*,
                            MainTopics+,
                            SecondaryTopics*,
                            SummaryAbstract?,

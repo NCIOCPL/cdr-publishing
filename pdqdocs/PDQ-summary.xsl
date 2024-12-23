@@ -1,32 +1,26 @@
-<?xml version = "1.0" ?>
-<!-- 
+<?xml version = "1.0" encoding="utf-8"?>
+<!--
 ================================================================
 XSLT PDQ Summaries Transformation Example
 Date: 2016-03-22
 ================================================================ -->
-<xsl:stylesheet                version = "1.0" 
+<xsl:stylesheet                version = "1.0"
                              xmlns:xsl = "http://www.w3.org/1999/XSL/Transform">
   <xsl:output                   method = "html"
                               encoding = "utf-8"/>
   <xsl:param                      name = "section"
-  								select = "'*'"/>
-  <xsl:param                      name = "targetedDevice"
-                                select = "'screen'"/>
-  <xsl:param                      name = "pp"
-                                select = "'Y'"/>
-  <xsl:param                      name = "default.table.width" 
+                                select = "'*'"/>
+  <xsl:param                      name = "default.table.width"
                                 select = "''"/>
 
   <xsl:variable                   name = "cdrId"
-                                select = "number(
-                                           substring-after(/Summary/@id, 
-                                                           'CDR'))"/>
+                                select = "'CDR-ID'"/>
   <!-- Define a variable for the summary type -->
   <xsl:variable                   name = "sType">
    <xsl:choose>
     <xsl:when                     test = "/Summary/
                                            SummaryMetaData/
-                                           SummaryType = 
+                                           SummaryType =
                                       'Complementary and alternative medicine'">
      <xsl:text>cam</xsl:text>
     </xsl:when>
@@ -75,6 +69,7 @@ Date: 2016-03-22
   </xsl:variable>
 
   <!-- Create the string values for different languages -->
+  <!--
   <xsl:variable                   name = "strEnlarge">
    <xsl:choose>
     <xsl:when                     test = "$language = 'en'">
@@ -88,6 +83,7 @@ Date: 2016-03-22
     </xsl:otherwise>
    </xsl:choose>
   </xsl:variable>
+  -->
 
  <!--
  ================================================================
@@ -111,17 +107,13 @@ Date: 2016-03-22
    <xsl:value-of             select = "SummaryTitle"/>
   </title>
 
-<link href="http://www.cancer.gov/PublishedContent/Styles/nvcg.css" 
+<link href="http://www.cancer.gov/profiles/custom/cgov_site/themes/custom/ncids_trans/dist/css/pdq.css"
+      type="text/css" rel="StyleSheet"/>
+<link href="http://www.cancer.gov/PublishedContent/Styles/nvcg.css"
       type="text/css" rel="StyleSheet"/>
 
-  <script type="text/javascript" 
+  <script type="text/javascript"
            src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
-  <script type="text/javascript">
-// wrap a div with overflow: auto around all tables in the body 
-$(document).ready(function() { 
-$('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>'); 
-});
-</script>
 
  <style type="text/css">
   body { background: none; }
@@ -129,13 +121,17 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   .contentzone {
            float: none;
            margin: 10px auto 0; }
-           
+
   .enlarged, normal { }
 
   ol.lower-alpha  { list-style-type: lower-alpha; }
   ol.lower-roman  { list-style-type: lower-roman; }
   ol.upper-alpha  { list-style-type: upper-alpha; }
   ol.upper-roman  { list-style-type: upper-roman; }
+
+  h6              { font-size: 1em; }
+  table, th, td   { border: 1px solid; }
+  table           { border-collapse: collapse; }
  </style>
 
  </head>
@@ -146,10 +142,8 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    <xsl:apply-templates         select = "SummaryTitle"/>
 
    <!--
-   There are no TOC or KeyPoint boxes on mobile
+   Create container to insert full document TOC
    =================================================================== -->
-   <xsl:if                        test = "$targetedDevice = 'screen'">
-    <!-- create container to insert full document TOC -->
     <xsl:element                  name = "div">
      <xsl:attribute               name = "id">
       <xsl:text>_toc_article</xsl:text>
@@ -159,7 +153,6 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
       <xsl:text>pdq-on-this-page</xsl:text>
      </xsl:attribute>
     </xsl:element>
-   </xsl:if>
 
    <!--
    We have to loop over each top section in order to set the numbering
@@ -171,21 +164,6 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
      <xsl:text>section_</xsl:text><xsl:number/>
     </xsl:variable>
 
-    <xsl:if                       test = "(contains(
-                                            concat(' ', @IncludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            ) 
-                                           or 
-                                           not(@IncludedDevices)
-                                          ) 
-                                          and 
-                                          (not(contains(
-                                            concat(' ', @ExcludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            )) 
-                                           or 
-                                           not(@ExcludedDevices)
-                                          )">
      <xsl:element                 name = "section">
       <xsl:attribute              name = "id">
        <xsl:text>_section</xsl:text>
@@ -197,45 +175,13 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
        <xsl:text>pdq-sections</xsl:text>
       </xsl:attribute>
 
-
-      <!--
-      Mobile needs an extra div
-      ========================= -->
-      <xsl:choose>
-       <xsl:when                  test = "$targetedDevice = 'mobile'">
-        <xsl:element              name = "div">
-         <xsl:attribute           name = "data-role">
-          <xsl:text>collapsible</xsl:text>
-         </xsl:attribute>
-         <xsl:attribute           name = "data-collapsed">
-          <xsl:text>true</xsl:text>
-         </xsl:attribute>
-         <xsl:attribute           name = "data-iconpos">
-          <xsl:text>right</xsl:text>
-         </xsl:attribute>
-         <xsl:attribute           name = "name">
-          <xsl:text>Section{@id}</xsl:text>
-         </xsl:attribute>
-         <xsl:attribute           name = "id">
-          <xsl:text>Section{@id}</xsl:text>
-         </xsl:attribute>
-         <xsl:call-template       name = "Title_TOC_KP">
-          <xsl:with-param         name = "topSection"
+      <xsl:call-template          name = "Title_TOC_KP">
+       <xsl:with-param            name = "topSection"
                                 select = "$topSection"/>
-         </xsl:call-template>
-        </xsl:element>
-       </xsl:when>
-       <xsl:otherwise>
-        <xsl:call-template        name = "Title_TOC_KP">
-         <xsl:with-param          name = "topSection"
-                                select = "$topSection"/>
-        </xsl:call-template>
-       </xsl:otherwise>
-      </xsl:choose>
+      </xsl:call-template>
      </xsl:element>
-
-    </xsl:if>
    </xsl:for-each>
+
   </article>
   </div>
 
@@ -257,11 +203,11 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
         printed above the keypoints box or the TOC -->
    <xsl:apply-templates         select = "Title"/>
 
-   <!-- Create a container for the TOC for this section 
+   <!-- Create a container for the TOC for this section
         Note: We only want to add this diff if there exist subsections
               and this should not be added if there are key points.
    ===================================================================== -->
-   <xsl:if                        test = "(descendant::SummarySection 
+   <xsl:if                        test = "(descendant::SummarySection
                                            and
                                            $audience = 'healthprofessional')
                                            or
@@ -283,16 +229,12 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    </xsl:if>
 
    <!--
-   There are no TOC or KeyPoint boxes on mobile
-   These only get created for the desktop.
+   Create a TOC or KeyPoint boxe
    =================================================================== -->
-   <xsl:if                        test = "../descendant::KeyPoint
-                                          and
-                                          not($targetedDevice = 'mobile')">
-    <!-- xsl:call-template         name = "keypointsboxJS"/ -->
+   <xsl:if                        test = "../descendant::KeyPoint">
     <xsl:call-template            name = "keypointsbox"/>
    </xsl:if>
- 
+
    <xsl:apply-templates         select = "*[not(self::Title)]">
     <xsl:with-param               name = "topSection"
                                 select = "$topSection"/>
@@ -303,7 +245,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
 
   <!--
   ================================================================
-  Template to use jQuery to create Enlarge buttons for Tables and 
+  Template to use jQuery to create Enlarge buttons for Tables and
   Images
   =================================================================== -->
   <xsl:template                  name = "SuperSizeMe">
@@ -337,7 +279,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
           tocTitleEn: "Table of content for this document",
           tocTitleEs: "Tabla de contenidos para esta (document???)"});
       </xsl:text>
-      
+
     <xsl:choose>
      <xsl:when                    test = "$audience = 'patient'">
       <xsl:for-each             select = "/Summary/SummarySection">
@@ -383,7 +325,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
       </xsl:for-each>
      </xsl:when>
      <xsl:otherwise>
-      <!-- 
+      <!--
       Create TOC for HP sections
       (but suppress TOC header if no subsections exist)
       ================================================================= -->
@@ -426,7 +368,14 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   <xsl:template                  match = "SummaryMetaData">
     <div style="background-color: yellow;">
     <p>
-     <xsl:apply-templates       select = "../@id"/>
+     <xsl:choose>
+      <xsl:when                   test = "../@id">
+       <xsl:apply-templates       select = "../@id"/>
+      </xsl:when>
+      <xsl:otherwise>
+       <xsl:value-of              select = "$cdrId"/>
+      </xsl:otherwise>
+     </xsl:choose>
      <xsl:text>;</xsl:text>
      <xsl:apply-templates       select = "SummaryType"/>
      <xsl:text>;</xsl:text>
@@ -450,12 +399,23 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================ -->
   <xsl:template                  match = "SummaryTitle">
     <xsl:element                  name = "h1">
-     <xsl:value-of              select = "substring-before(., '(PDQ')"/>
-     <xsl:text>(PDQ</xsl:text>
-     <xsl:element                 name = "sup">
-      <xsl:text>&#174;</xsl:text>
-     </xsl:element>
-     <xsl:text>)</xsl:text>
+     <xsl:choose>
+      <xsl:when                   test = "contains(., '(PDQ')">
+         <xsl:value-of              select = "substring-before(., '(PDQ')"/>
+         <xsl:text>(PDQ</xsl:text>
+         <xsl:element                 name = "sup">
+          <xsl:text>&#174;</xsl:text>
+         </xsl:element>
+         <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+       <xsl:value-of               select = "concat(., ' (PDQ')"/>
+         <xsl:element                 name = "sup">
+          <xsl:text>&#174;</xsl:text>
+         </xsl:element>
+         <xsl:text>)</xsl:text>
+      </xsl:otherwise>
+     </xsl:choose>
     </xsl:element>
   </xsl:template>
 
@@ -465,24 +425,8 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   Note: SummarySections may be excluded from mobile
   ================================================================ -->
   <xsl:template                  match = "SummarySection">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'sub'"/>
-   <xsl:choose>
-    <xsl:when                     test = "(contains(
-                                            concat(' ', @IncludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            ) 
-                                           or 
-                                           not(@IncludedDevices)
-                                          ) 
-                                          and 
-                                          (not(contains(
-                                            concat(' ', @ExcludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            )) 
-                                           or 
-                                           not(@ExcludedDevices)
-                                          )">
      <xsl:element                 name = "section">
       <xsl:attribute              name = "id">
        <xsl:value-of            select = "@id"/>
@@ -492,8 +436,6 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
                                 select = "$topSection"/>
      </xsl:apply-templates>
      </xsl:element>
-    </xsl:when>
-    </xsl:choose>
    </xsl:template>
 
   <!--
@@ -530,35 +472,16 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   Create the section titles
   ================================================================ -->
   <xsl:template                  match = "Title">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'title'"/>
    <xsl:choose>
-    <xsl:when                     test = "$topSection = 'title'
-                                          and
-                                          not($targetedDevice = 'mobile')">
+    <xsl:when                     test = "$topSection = 'title'">
      <xsl:element                 name = "h2">
       <xsl:attribute              name = "id">
        <xsl:value-of            select = "parent::SummarySection/@id"/>
        <xsl:text>_toc</xsl:text>
       </xsl:attribute>
       <xsl:apply-templates/>
-     </xsl:element>
-    </xsl:when>
-    <xsl:when                     test = "$topSection = 'title'
-                                          and
-                                          $targetedDevice = 'mobile'">
-     <xsl:element                 name = "h2">
-      <xsl:attribute              name = "id">
-       <xsl:value-of            select = "parent::SummarySection/@id"/>
-       <xsl:text>_toc</xsl:text>
-      </xsl:attribute>
-      <xsl:attribute              name = "class">
-       <xsl:text>section_heading</xsl:text>
-      </xsl:attribute>
-      
-      <xsl:element                name = "span">
-       <xsl:apply-templates/>
-      </xsl:element>
      </xsl:element>
     </xsl:when>
     <xsl:otherwise>
@@ -593,7 +516,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "Para">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'para'"/>
    <xsl:element                   name = "p">
     <xsl:attribute                name = "id">
@@ -616,7 +539,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   simple
   ================================================================ -->
   <xsl:template                  match = "ItemizedList">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'il'"/>
    <xsl:element                   name = "div">
     <xsl:attribute                name = "class">
@@ -639,37 +562,16 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
 
   <!--
   ================================================================
-  An itemized list will be converted into a DD/DL if the style is
-  simple
-  This has changed:  We're now keeping the list item and creating 
-  a new style 'no-bullets'.
-  ================================================================ -->
-  <xsl:template                  match = "XX_ItemizedList[@Style='simple']">
-   <xsl:param                     name = "topSection" 
-                                select = "'il'"/>
-   <xsl:element                   name = "dl">
-    <xsl:attribute                name = "id">
-     <xsl:value-of              select = "@id"/>
-    </xsl:attribute>
-    <xsl:apply-templates          mode = "simple">
-     <xsl:with-param              name = "topSection"
-                                select = "$topSection"/>
-    </xsl:apply-templates>
-   </xsl:element>
-  </xsl:template>
-
-  <!--
-  ================================================================
   Ordered lists will be displayed as is
-  Unordered lists will be displayed without style and without 
-  compact mode.  No 'dash', no 'bullet'.  
+  Unordered lists will be displayed without style and without
+  compact mode.  No 'dash', no 'bullet'.
   Style="simple" will be converted into class="no-bullets" (indentation?)
   and eventually converted to some sort of address block when available
   ================================================================ -->
   <xsl:template                  match = "@Style">
    <xsl:choose>
     <xsl:when                      test = ". = 'bullet'"/>
-    <!-- Arabic (i.e. class="decimal") is the default.  
+    <!-- Arabic (i.e. class="decimal") is the default.
          Don't need to include this in the HTML output -->
     <xsl:when                      test = ". = 'Arabic'"/>
     <xsl:otherwise>
@@ -712,7 +614,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "OrderedList">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'ol'"/>
    <xsl:element                   name = "div">
     <xsl:attribute                name = "class">
@@ -737,7 +639,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "ListItem">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'li'"/>
    <xsl:element                   name = "li">
     <xsl:apply-templates>
@@ -802,11 +704,11 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   Template to display the citations in the Reference Section
   Note: There used to be two types of references: PubMed citations
         and protocol citations.  The protocol citations (i.e.
-        @ProtocolID attributes) are not used anymore and therefore 
+        @ProtocolID attributes) are not used anymore and therefore
         not implemented here.
   ================================================================ -->
   <xsl:template                  match = "ReferenceSection">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'ref'"/>
    <xsl:choose>
     <xsl:when                     test = "$language = 'en'">
@@ -842,7 +744,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
         <xsl:text>.</xsl:text>
         <xsl:value-of           select = "@idx"/>
        </xsl:attribute>
-       
+
        <xsl:apply-templates/>
        <xsl:if                    test = "@PMID">
         <xsl:text> </xsl:text>
@@ -871,11 +773,9 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   For PublishPreview we're creating the brackets.
   ================================================================ -->
   <xsl:template                  match = "Reference">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'citation'"/>
-    <xsl:if                       test = "$pp = 'Y'">
-     <xsl:text>[</xsl:text>
-    </xsl:if>
+    <xsl:text>[</xsl:text>
 
     <xsl:element                  name = "a">
      <xsl:attribute               name = "href">
@@ -887,9 +787,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
      <xsl:value-of              select = "@refidx"/>
     </xsl:element>
 
-    <xsl:if                       test = "$pp = 'Y'">
-     <xsl:text>]</xsl:text>
-    </xsl:if>
+    <xsl:text>]</xsl:text>
   </xsl:template>
 
 
@@ -944,11 +842,11 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   Elements that will by default be marked up for display in italics
   ================================================================ -->
-  <xsl:template                  match = "Emphasis | 
+  <xsl:template                  match = "Emphasis |
                                           ForeignWord |
-                                          GeneName | 
+                                          GeneName |
                                           ScientificName">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'em'"/>
    <xsl:element                   name = "em">
     <xsl:apply-templates>
@@ -962,7 +860,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "Strong">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'strong'"/>
    <xsl:element                   name = "strong">
     <xsl:apply-templates>
@@ -1010,7 +908,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
     </xsl:attribute>
     <xsl:attribute                name = "href">
      <!--
-     Next Line For Testing on DEV only !!! 
+     Next Line For Testing on DEV only !!!
      ===================================== -->
      <xsl:text>http://www.cancer.gov</xsl:text>
      <xsl:text>/Common/PopUps/popDefinition.aspx?id=</xsl:text>
@@ -1060,7 +958,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    <xsl:element                   name = "a">
     <xsl:attribute                name = "href">
      <!--
-     Next Line For Testing on DEV only !!! 
+     Next Line For Testing on DEV only !!!
      ===================================== -->
      <xsl:text>http://www.cancer.gov</xsl:text>
      <xsl:text>/Common/PopUps/popDefinition.aspx?id=</xsl:text>
@@ -1084,14 +982,14 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
 
   <!--
   ================================================================
-  Template to link to the Cancer.gov trials information of the 
+  Template to link to the Cancer.gov trials information of the
   protocol
   ================================================================ -->
   <xsl:template                  match = "ProtocolRef">
    <xsl:element                   name = "a">
     <xsl:attribute                name = "href">
      <!--
-     Next Line For Testing on DEV only !!! 
+     Next Line For Testing on DEV only !!!
      ===================================== -->
      <xsl:text>http://www.cancer.gov</xsl:text>
      <xsl:text>/clinicaltrials/search/view?version=</xsl:text>
@@ -1112,7 +1010,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    <xsl:element                   name = "a">
     <xsl:attribute                name = "href">
      <!--
-     Next Line For Testing on DEV only !!! 
+     Next Line For Testing on DEV only !!!
      ===================================== -->
      <xsl:text>http://www.cancer.gov</xsl:text>
      <xsl:value-of              select = "@url"/>
@@ -1128,7 +1026,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    <xsl:element                   name = "a">
     <xsl:attribute                name = "href">
      <!--
-     Next Line For Testing on DEV only !!! 
+     Next Line For Testing on DEV only !!!
      ===================================== -->
      <xsl:value-of              select = "@xref"/>
     </xsl:attribute>
@@ -1143,21 +1041,6 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "MediaLink">
-   <xsl:if                        test = "(contains(
-                                            concat(' ', @IncludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            ) 
-                                           or 
-                                           not(@IncludedDevices)
-                                          ) 
-                                          and 
-                                          (not(contains(
-                                            concat(' ', @ExcludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            )) 
-                                           or 
-                                           not(@ExcludedDevices)
-                                          )">
     <xsl:element                  name = "figure">
      <xsl:attribute               name = "id">
       <xsl:text>figure</xsl:text>
@@ -1184,38 +1067,20 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
       <xsl:attribute              name = "title">
        <xsl:value-of            select = "@alt"/>
       </xsl:attribute>
-      <!--
-      <xsl:attribute              name = "border">
-       <xsl:value-of            select = "'1'"/>
-      </xsl:attribute>
-      -->
       <xsl:attribute              name = "src">
+
        <!--
-       Next Line For Testing on DEV only !!! 
+       Next Line For Testing on DEV only !!!
        ===================================== -->
-       <xsl:text>http://www.cancer.gov</xsl:text>
-       <xsl:text>/images/cdr/live/CDR</xsl:text>
+       <xsl:text>https://nci-media.cancer.gov</xsl:text>
+       <xsl:text>/pdq/media/images/</xsl:text>
        <xsl:value-of            select = "number(
                                             substring-after(@ref, 'CDR'))"/>
-       <xsl:choose>
-        <xsl:when                 test = "$targetedDevice = 'mobile'">
-         <xsl:text>-571.jpg</xsl:text>
-        </xsl:when>
-        <xsl:otherwise>
-         <xsl:text>-750.jpg</xsl:text>
-        </xsl:otherwise>
-       </xsl:choose>
+       <xsl:text>-750.jpg</xsl:text>
       </xsl:attribute>
-      <!--
-      <xsl:attribute               name = "class">
-       <xsl:text>cdrMediaImage </xsl:text>
-       <xsl:value-of             select = "@size"/>
-      </xsl:attribute>
-      -->
      </xsl:element>
      <xsl:apply-templates/>
     </xsl:element>
-   </xsl:if>
   </xsl:template>
 
 
@@ -1228,7 +1093,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
       <xsl:attribute              name = "class">
        <xsl:text>caption-container</xsl:text>
       </xsl:attribute>
- 
+
       <xsl:apply-templates/>
      </xsl:element>
     </xsl:element>
@@ -1241,30 +1106,13 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   Template for Tables
   ================================================================ -->
   <xsl:template                  match = "Table">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'table'"/>
-   <xsl:if                        test = "(contains(
-                                            concat(' ', @IncludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            ) 
-                                           or 
-                                           not(@IncludedDevices)
-                                          ) 
-                                          and 
-                                          (not(contains(
-                                            concat(' ', @ExcludedDevices, ' '), 
-                                            concat(' ', $targetedDevice, ' ')
-                                            )) 
-                                           or 
-                                           not(@ExcludedDevices)
-                                          )">
-
    <!-- Display the Table -->
    <xsl:apply-templates        select = "TGroup">
     <xsl:with-param              name = "topSection"
                                select = "$topSection"/>
    </xsl:apply-templates>
-   </xsl:if>
   </xsl:template>
 
   <!--
@@ -1279,34 +1127,6 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
   </xsl:template>
 
   <!--
-  ================================================================
-  Template for colgroup
-  ================================================================ -->
-  <!--
-  <xsl:template                  match = "TGroupXXX">
-   <xsl:param                     name = "topSection" 
-                                select = "'tgroup'"/>
-   <xsl:param  name = "numCols" select="count(child::ColSpec)"/>
-   <xsl:element                   name = "colgroup">
-    <xsl:for-each               select = "ColSpec">
-     <xsl:element                 name = "col">
-      <xsl:attribute              name = "width">
-       <xsl:value-of            select = "@ColWidth"/>
-      </xsl:attribute>
-     </xsl:element>
-    </xsl:for-each>
-   </xsl:element>
-
-   <xsl:apply-templates         select = "THead"/>
-   <xsl:apply-templates         select = "TFoot"/>
-   <xsl:apply-templates         select = "TBody">
-    <xsl:with-param               name = "topSection"
-                                select = "$topSection"/>
-   </xsl:apply-templates>
-  </xsl:template>
-  -->
-
-  <!--
   Template for Table Caption/Title
   ================================================================ -->
   <xsl:template                  match = "THead">
@@ -1319,120 +1139,7 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
    </xsl:element>
   </xsl:template>
 
-  <!--
-  Template for Table Caption/Title
-  Unused due to duplicate template
-  ================================================================ -->
-  <!--
-  <xsl:template                  match = "TFootXXX">
 
-   <xsl:element                   name = "tfoot">
-    <xsl:apply-templates        select = "Row">
-     <xsl:with-param              name = "type"
-                                select = "'footer'"/>
-    </xsl:apply-templates>
-   </xsl:element>
-  </xsl:template>
-  -->
-
-  <!--
-  Template for Table Caption/Title
-  Unused due to duplicate template
-  ================================================================ -->
-  <!--
-  <xsl:template                  match = "TBodyXXX">
-   <xsl:param                     name = "topSection" 
-                                select = "'tbody'"/>
-   <xsl:element                   name = "tbody">
-    <xsl:apply-templates        select = "Row">
-    <xsl:with-param               name = "topSection"
-                                select = "$topSection"/>
-    </xsl:apply-templates>
-   </xsl:element>
-  </xsl:template>
-  -->
-
-  <!--
-  Template for Table Caption/Title
-  ================================================================ -->
-  <!--
-  <xsl:template                  match = "RowXXX">
-   <xsl:param                     name = "topSection"
-                                select = "'row'"/>
-   <xsl:param                     name = "type"/>
-   <xsl:param                     name = "numCols" 
-                                select = "count(child::entry)"/>
-                                
-   <xsl:element                   name = "tr">
-    <xsl:apply-templates        select = "entry">
-     <xsl:with-param              name = "topSection"
-                                select = "$topSection"/>
-     <xsl:with-param              name = "type"
-                                select = "$type"/>
-     <xsl:with-param              name = "numCols"
-                                select = "$numCols"/>
-    </xsl:apply-templates>
-   </xsl:element>
-  </xsl:template>
-  -->
-
-  <!--
-  Template for Table Caption/Title
-  Unused due to more specific templates .../Row/entry
-  ================================================================ -->
-  <!--
-  <xsl:template                  match = "entryXXX">
-   <xsl:param                     name = "topSection"
-                                select = "'entry'"/>
-   <xsl:param                     name = "type"
-                                select = "''"/>
-   <xsl:param                     name = "numCols"/>
-
-   <xsl:choose>
-    <xsl:when                     test = "$type = 'header'">
-     <xsl:element                 name = "th">
-      <xsl:attribute              name = "scope">
-       <xsl:text>col</xsl:text>
-      </xsl:attribute>
-      <xsl:apply-templates/>
-     </xsl:element>
-    </xsl:when>
-    <xsl:when                     test = "$type = 'footer'">
-     <xsl:element                 name = "td">
-      <xsl:if                     test = "$numCols = '1'
-                                          and
-                                          ../../../@Cols > $numCols">
-       <xsl:attribute             name = "colspan">
-        <xsl:value-of           select = "../../../@Cols"/>
-       </xsl:attribute>
-      </xsl:if>
-      <xsl:apply-templates/>
-     </xsl:element>
-    </xsl:when>
-    <xsl:otherwise>
-     <xsl:element                 name = "td">
-      <xsl:apply-templates>
-       <xsl:with-param            name = "topSection"
-                                select = "$topSection"/>
-      </xsl:apply-templates>
-     </xsl:element>
-    </xsl:otherwise>
-   </xsl:choose>
-  </xsl:template>
-  -->
-
-
-  <!--
-  Template for super script
-  (The superscript causes problems in Chrome. It displays all 
-  following anchor tags as subscripts)
-  ================================================================
-  <xsl:template                  match = "Superscript">
-   <xsl:element                   name = "sup">
-    <xsl:apply-templates/>
-   </xsl:element>
-  </xsl:template>
-  -->
 
   <!--
   Template as a workaround for the Chrome superscript issue
@@ -1504,11 +1211,11 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
        <xsl:value-of            select = "./@id"/>
        <xsl:text>_</xsl:text>
        <xsl:value-of            select = "count(
-                                            preceding-sibling::SummarySection) 
+                                            preceding-sibling::SummarySection)
                                                                          + 1"/>
       </xsl:attribute>
 
-      <!-- 
+      <!--
       Creating the nested list containing the key point links
       ======================================================= -->
       <xsl:element                name = "ul">
@@ -1601,15 +1308,15 @@ $('.contentzoneXXX table').wrap('<div style="overflow: auto;"></div>');
 
 <!--
 ========================================================================
-    Template for CALS to HTML Conversion 
-    (code adapted from 
+    Template for CALS to HTML Conversion
+    (code adapted from
     http://www.biglist.com/lists/xsl-list/archives/200202/msg00666.html)
 ======================================================================== -->
 <!--
 Template for Creating a table (from CALS)
 ============================================================== -->
 <xsl:template                    match = "TGroup">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'tgroup'"/>
    <xsl:element                   name = "table">
     <xsl:attribute                name = "id">
@@ -1628,23 +1335,6 @@ Template for Creating a table (from CALS)
         <xsl:value-of select="TGroup/@Align"/>
       </xsl:attribute>
     </xsl:if>
-      <!-- Should be coming from CSS 
-    <xsl:choose>
-      <xsl:when test="@Frame='TOPBOT'">
-        <xsl:attribute name="style">border-top:thin solid black; border-bottom:thin solid black;</xsl:attribute>
-      </xsl:when>
-      -->
-      <!-- Should be coming from CSS 
-      <xsl:when test="@Frame='None'">
-        <xsl:attribute name="border">0</xsl:attribute>
-      </xsl:when>
-      -->
-      <!-- Should be coming from CSS 
-      <xsl:otherwise>
-        <xsl:attribute name="border">0</xsl:attribute>
-      </xsl:otherwise>
-    </xsl:choose>
-      -->
 
     <xsl:variable name="colgroup">
       <colgroup>
@@ -1665,18 +1355,11 @@ Template for Creating a table (from CALS)
       </xsl:choose>
     </xsl:variable>
 
-    <!-- Remove attribute for Table width; coming from class
-    <xsl:attribute name="width">
-       <xsl:value-of select="$table.width"/>
-    </xsl:attribute>
-    -->
-
-
     <xsl:apply-templates        select = "../Title"
                                   mode = "table"/>
 
 
-    <xsl:copy-of select="$colgroup"/>
+    <xsl:copy-of                select="$colgroup"/>
 
       <xsl:apply-templates>
        <xsl:with-param            name = "topSection"
@@ -1690,11 +1373,11 @@ Template for Creating a table (from CALS)
 
 <xsl:template                    match = "SpanSpec"></xsl:template>
 
-<!-- 
+<!--
 =====================================================================
 ===================================================================== -->
 <xsl:template                    match = "THead | TFoot">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'tbody'"/>
   <xsl:element                    name = "{name(.)}">
     <!-- Only display Align attribute if it's not center. Coming from CSS -->
@@ -1736,11 +1419,11 @@ Template for Creating a table (from CALS)
 </xsl:template>
 
 
-<!-- 
+<!--
 =====================================================================
 ===================================================================== -->
 <xsl:template                    match = "TBody">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'tbody'"/>
   <tbody>
     <xsl:if test="@Align">
@@ -1776,7 +1459,7 @@ Template for Creating a table (from CALS)
   Creating Table Rows
   ======================================================================= -->
 <xsl:template                    match = "Row">
-  <xsl:param                      name = "topSection" 
+  <xsl:param                      name = "topSection"
                                 select = "'trow'"/>
   <tr>
     <xsl:if                       test = "@Align">
@@ -1801,7 +1484,7 @@ Template for Creating a table (from CALS)
     </xsl:if>
 
     <xsl:apply-templates>
-      <xsl:with-param             name = "topSection" 
+      <xsl:with-param             name = "topSection"
                                 select = "$topSection"/>
     </xsl:apply-templates>
   </tr>
@@ -1811,11 +1494,11 @@ Template for Creating a table (from CALS)
 =========================================================================
 ========================================================================= -->
 <xsl:template                    match = "THead/Row/entry">
-   <xsl:param                     name = "topSection" 
+   <xsl:param                     name = "topSection"
                                 select = "'thcell'"/>
 
   <xsl:call-template              name = "process.cell">
-    <xsl:with-param               name = "topSection" 
+    <xsl:with-param               name = "topSection"
                                 select = "$topSection"/>
     <xsl:with-param               name = "cellgi">
       <xsl:text>th</xsl:text>
@@ -1828,11 +1511,11 @@ Template for Creating a table (from CALS)
   =======================================================================
   ======================================================================= -->
 <xsl:template                    match = "TBody/Row/entry">
-  <xsl:param                     name  = "topSection" 
+  <xsl:param                     name  = "topSection"
                                 select = "'tbcell'"/>
 
   <xsl:call-template              name = "process.cell">
-     <xsl:with-param              name = "topSection" 
+     <xsl:with-param              name = "topSection"
                                 select = "$topSection"/>
     <xsl:with-param               name = "cellgi">
       <xsl:text>td</xsl:text>
@@ -1845,10 +1528,10 @@ Template for Creating a table (from CALS)
 =========================================================================
 ========================================================================= -->
 <xsl:template                    match = "TFoot/Row/entry">
-  <xsl:param                      name = "topSection" 
+  <xsl:param                      name = "topSection"
                                 select = "'tfcell'"/>
   <xsl:call-template              name = "process.cell">
-    <xsl:with-param               name = "topSection" 
+    <xsl:with-param               name = "topSection"
                                 select = "$topSection"/>
     <xsl:with-param               name = "cellgi">
       <xsl:text>td</xsl:text>
@@ -1863,22 +1546,17 @@ Template for Creating a table (from CALS)
   entries
   ======================================================================= -->
 <xsl:template                     name = "process.cell">
- <xsl:param                       name = "topSection" 
+ <xsl:param                       name = "topSection"
                                 select = "'cell'"/>
  <xsl:param                       name = "cellgi">td</xsl:param>
 
 
-  <xsl:variable                   name = "empty.cell" 
+  <xsl:variable                   name = "empty.cell"
                                 select = "count(node()) = 0"/>
 
   <xsl:variable                   name="entry.colnum">
     <xsl:call-template            name="entry.colnum"/>
   </xsl:variable>
-
-  <!--
-  X<xsl:value-of select = "$empty.cell"/>_
-   <xsl:value-of select = "$entry.colnum"/>X
-  -->
 
   <!--
   If there aren't enough cells for a row CALS assumes the missing
@@ -1889,13 +1567,13 @@ Template for Creating a table (from CALS)
   <!--
   <xsl:if                         test = "$entry.colnum != ''">
   XXX
-    <xsl:variable                 name = "prev.entry" 
+    <xsl:variable                 name = "prev.entry"
                                 select = "preceding-sibling::*[1]"/>
     <xsl:variable                 name = "prev.ending.colnum">
       <xsl:choose>
         <xsl:when                 test = "$prev.entry">
           <xsl:call-template      name = "entry.ending.colnum">
-            <xsl:with-param       name = "entry" 
+            <xsl:with-param       name = "entry"
                                 select = "$prev.entry"/>
           </xsl:call-template>
         </xsl:when>
@@ -1979,12 +1657,6 @@ select="ancestor::*[ColSpec/@ColName=$nameend]/ColSpec[@ColName=$nameend]/@ColNu
       </xsl:attribute>
     </xsl:if>
 
-    <!--
-	<xsl:if test="@RowSep='1'">
-		<xsl:attribute name="style">border-bottom:thin solid black</xsl:attribute>
-	</xsl:if>
-    -->
-
     <xsl:if test="not(preceding-sibling::*)
                   and ancestor::Row/@id">
       <a name="{ancestor::Row/@id}"/>
@@ -2012,7 +1684,7 @@ select="ancestor::*[ColSpec/@ColName=$nameend]/ColSpec[@ColName=$nameend]/@ColNu
 =========================================================================
 ========================================================================= -->
 <xsl:template                     name = "add-empty-entries">
-  <xsl:param                      name = "number" 
+  <xsl:param                      name = "number"
                                 select = "'0'"/>
   <xsl:value-of select = "$number"/>
   <xsl:choose>
@@ -2021,7 +1693,7 @@ select="ancestor::*[ColSpec/@ColName=$nameend]/ColSpec[@ColName=$nameend]/@ColNu
     <xsl:otherwise>
       <td>&#160;X</td>
       <xsl:call-template          name = "add-empty-entries">
-        <xsl:with-param           name = "number" 
+        <xsl:with-param           name = "number"
                                 select = "$number - 1"/>
       </xsl:call-template>
     </xsl:otherwise>
@@ -2033,29 +1705,29 @@ select="ancestor::*[ColSpec/@ColName=$nameend]/ColSpec[@ColName=$nameend]/@ColNu
 =========================================================================
 ========================================================================= -->
 <xsl:template                     name = "entry.colnum">
-  <xsl:param                      name = "entry" 
+  <xsl:param                      name = "entry"
                                 select = "."/>
 
   <xsl:choose>
     <xsl:when                     test = "$entry/@ColName">
-      <xsl:variable               name = "colname" 
+      <xsl:variable               name = "colname"
                                 select = "$entry/@ColName"/>
       <xsl:variable               name = "colspec"
                                 select = "$entry/ancestor::TGroup
                                               /ColSpec[@ColName=$colname]"/>
       <xsl:call-template          name = "colspec.colnum">
-        <xsl:with-param           name = "colspec" 
+        <xsl:with-param           name = "colspec"
                                 select = "$colspec"/>
       </xsl:call-template>
     </xsl:when>
     <xsl:when                     test = "$entry/@NameSt">
-      <xsl:variable               name = "namest" 
+      <xsl:variable               name = "namest"
                                 select = "$entry/@NameSt"/>
       <xsl:variable               name = "colspec"
                                 select = "$entry/ancestor::TGroup
                                               /ColSpec[@ColName=$namest]"/>
       <xsl:call-template          name = "colspec.colnum">
-        <xsl:with-param           name = "colspec" 
+        <xsl:with-param           name = "colspec"
                                 select = "$colspec"/>
       </xsl:call-template>
     </xsl:when>
