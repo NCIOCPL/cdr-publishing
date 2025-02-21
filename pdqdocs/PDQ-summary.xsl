@@ -1,4 +1,4 @@
-<?xml version = "1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 ================================================================
 XSLT PDQ Summaries Transformation Example
@@ -8,8 +8,6 @@ Date: 2016-03-22
                              xmlns:xsl = "http://www.w3.org/1999/XSL/Transform">
   <xsl:output                   method = "html"
                               encoding = "utf-8"/>
-  <xsl:param                      name = "section"
-                                select = "'*'"/>
   <xsl:param                      name = "default.table.width"
                                 select = "''"/>
 
@@ -68,32 +66,15 @@ Date: 2016-03-22
    </xsl:choose>
   </xsl:variable>
 
-  <!-- Create the string values for different languages -->
-  <!--
-  <xsl:variable                   name = "strEnlarge">
-   <xsl:choose>
-    <xsl:when                     test = "$language = 'en'">
-     <xsl:text>Enlarge</xsl:text>
-    </xsl:when>
-    <xsl:when                     test = "$language = 'es'">
-     <xsl:text>Ampliar</xsl:text>
-    </xsl:when>
-    <xsl:otherwise>
-     <xsl:text>undefined</xsl:text>
-    </xsl:otherwise>
-   </xsl:choose>
-  </xsl:variable>
-  -->
 
  <!--
  ================================================================
+ Main Summary Template
  ================================================================ -->
-  <xsl:template                  match = "/Summary">
-   <xsl:variable                  name = "page"
-                                select = "SummarySection[$section]"/>
+<xsl:template                    match = "/Summary">
 
-<html>
- <head>
+<xsl:element                      name = "html">
+ <xsl:element                     name = "head">
   <xsl:element                    name = "meta">
    <xsl:attribute                 name = "name">
     <xsl:text>content-language</xsl:text>
@@ -102,25 +83,14 @@ Date: 2016-03-22
     <xsl:value-of               select = "$language"/>
    </xsl:attribute>
   </xsl:element>
-  <title>
+  <xsl:element                    name = "title">
    <xsl:text>WCMS Summary: </xsl:text>
    <xsl:value-of             select = "SummaryTitle"/>
-  </title>
-
-<link href="http://www.cancer.gov/profiles/custom/cgov_site/themes/custom/ncids_trans/dist/css/pdq.css"
-      type="text/css" rel="StyleSheet"/>
-<link href="http://www.cancer.gov/PublishedContent/Styles/nvcg.css"
-      type="text/css" rel="StyleSheet"/>
-
-  <script type="text/javascript"
-           src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+  </xsl:element>
 
  <style type="text/css">
   body { background: none; }
 
-  .contentzone {
-           float: none;
-           margin: 10px auto 0; }
 
   .enlarged, normal { }
 
@@ -134,32 +104,16 @@ Date: 2016-03-22
   table           { border-collapse: collapse; }
  </style>
 
- </head>
- <body>
-  <div class="contentzone">
-  <article id="_article">
+ </xsl:element>
+ <xsl:element                     name = "body">
    <xsl:apply-templates         select = "SummaryMetaData"/>
    <xsl:apply-templates         select = "SummaryTitle"/>
 
    <!--
-   Create container to insert full document TOC
-   =================================================================== -->
-    <xsl:element                  name = "div">
-     <xsl:attribute               name = "id">
-      <xsl:text>_toc_article</xsl:text>
-     </xsl:attribute>
-     <!-- Style it -->
-     <xsl:attribute               name = "class">
-      <xsl:text>pdq-on-this-page</xsl:text>
-     </xsl:attribute>
-    </xsl:element>
-
-   <!--
    We have to loop over each top section in order to set the numbering
    for the References section
-   This is also where we're creating the KeyPoints box and the TOC
    =================================================================== -->
-   <xsl:for-each                select = "$page">
+   <xsl:for-each                select = "SummarySection">
     <xsl:variable                 name = "topSection">
      <xsl:text>section_</xsl:text><xsl:number/>
     </xsl:variable>
@@ -171,9 +125,6 @@ Date: 2016-03-22
        <xsl:text>_</xsl:text>
        <xsl:value-of            select = "count(preceding-sibling::SummarySection) + 1"/>
       </xsl:attribute>
-      <xsl:attribute              name = "class">
-       <xsl:text>pdq-sections</xsl:text>
-      </xsl:attribute>
 
       <xsl:call-template          name = "Title_TOC_KP">
        <xsl:with-param            name = "topSection"
@@ -182,14 +133,8 @@ Date: 2016-03-22
      </xsl:element>
    </xsl:for-each>
 
-  </article>
-  </div>
-
-  <xsl:call-template              name = "addTOC"/>
-  <xsl:call-template              name = "SuperSizeMe"/>
-
- </body>
-</html>
+ </xsl:element>
+</xsl:element>
   </xsl:template>
 
 
@@ -221,9 +166,6 @@ Date: 2016-03-22
      <xsl:text>_</xsl:text>
       <xsl:value-of             select = "count(preceding-sibling::SummarySection) + 1"/>
      </xsl:attribute>
-     <xsl:attribute               name = "class">
-      <xsl:text>pdq-on-this-page</xsl:text>
-     </xsl:attribute>
      <xsl:text> </xsl:text>
     </xsl:element>
    </xsl:if>
@@ -240,123 +182,6 @@ Date: 2016-03-22
                                 select = "$topSection"/>
    </xsl:apply-templates>
 
-  </xsl:template>
-
-
-  <!--
-  ================================================================
-  Template to use jQuery to create Enlarge buttons for Tables and
-  Images
-  =================================================================== -->
-  <xsl:template                  name = "SuperSizeMe">
-   <script type="text/javascript"
-           src="FTP_summary_files/Enlarge.js"></script>
-
-   <script type="text/javascript">
-      <xsl:text>
-       $(function() {
-          $( ".expandable-container" ).supersizeme( { } );
-        });
-      </xsl:text>
-   </script>
-  </xsl:template>
-
-
-  <!--
-  ================================================================
-  This JavaScript calls the TOC function to attach the TOC to the DIV
-  element with ID="_toc_section_N" N=1,2,3,...
-  =================================================================== -->
-  <xsl:template                  name = "addTOC">
-   <script type="text/javascript"
-           src="FTP_summary_files/STOC.js"></script>
-
-   <script id="sectionToc" type="text/javascript">
-      <xsl:text>
-       $(function(){
-      <!-- Full document TOC -->
-          $("#_toc_article").stoc({ search: "article", start: 2, depth: 3,
-          tocTitleEn: "Table of content for this document",
-          tocTitleEs: "Tabla de contenidos para esta (document???)"});
-      </xsl:text>
-
-    <xsl:choose>
-     <xsl:when                    test = "$audience = 'patient'">
-      <xsl:for-each             select = "/Summary/SummarySection">
-       <xsl:variable              name = "thisSection"
-                                select = "count(
-                                          preceding-sibling::SummarySection) + 1"/>
-       <xsl:choose>
-       <xsl:when                  test = "descendant::KeyPointXXX">
-        <xsl:text>
-          $("#_toc_section</xsl:text>
-         <xsl:value-of          select = "./@id"/>
-         <xsl:text>_</xsl:text>
-         <xsl:value-of          select = "$thisSection"/>
-         <xsl:text>").stoc({search: "#_section</xsl:text>
-         <xsl:value-of          select = "./@id"/>
-         <xsl:text>_</xsl:text>
-         <xsl:value-of          select = "$thisSection"/>
-         <xsl:text>", start: 3</xsl:text>
-         <xsl:text>, depth: 2</xsl:text>
-         <!-- xsl:text>, kp: 1</xsl:text -->
-         <xsl:text>});</xsl:text>
-       </xsl:when>
-       <xsl:otherwise>
-       <xsl:if                     test = "descendant::SummarySection">
-        <xsl:text>
-         $("#_toc_section</xsl:text>
-        <xsl:value-of       select = "./@id"/>
-        <xsl:text>_</xsl:text>
-        <xsl:value-of select = "$thisSection"/>
-        <xsl:text>").stoc({search: "#_section</xsl:text>
-        <xsl:value-of       select = "./@id"/>
-        <xsl:text>_</xsl:text>
-        <xsl:value-of select = "$thisSection"/>
-        <xsl:text>",</xsl:text>
-        <xsl:text> start: 3,</xsl:text>
-        <xsl:text> depth: 2,</xsl:text>
-        <xsl:text> tocTitleEn:"Table of content for this section", </xsl:text>
-        <xsl:text> tocTitleEs:"Tabla de contenidos para esta secci&#243;n"</xsl:text>
-        <xsl:text>});</xsl:text>
-       </xsl:if>
-       </xsl:otherwise>
-       </xsl:choose>
-      </xsl:for-each>
-     </xsl:when>
-     <xsl:otherwise>
-      <!--
-      Create TOC for HP sections
-      (but suppress TOC header if no subsections exist)
-      ================================================================= -->
-      <xsl:for-each              select = "/Summary/SummarySection">
-      <xsl:variable               name = "thisSection"
-                                select = "count(
-                                          preceding-sibling::SummarySection) + 1"/>
-       <xsl:if                     test = "descendant::SummarySection">
-        <xsl:text>
-         $("#_toc_section</xsl:text>
-        <xsl:value-of       select = "./@id"/>
-        <xsl:text>_</xsl:text>
-        <xsl:value-of select = "$thisSection"/>
-        <xsl:text>").stoc({search: "#_section</xsl:text>
-        <xsl:value-of       select = "./@id"/>
-        <xsl:text>_</xsl:text>
-        <xsl:value-of select = "$thisSection"/>
-        <xsl:text>",</xsl:text>
-        <xsl:text> start: 3,</xsl:text>
-        <xsl:text> depth: 2,</xsl:text>
-        <xsl:text> tocTitleEn:"Table of content for this section", </xsl:text>
-        <xsl:text> tocTitleEs:"Tabla de contenidos para esta secci&#243;n"</xsl:text>
-        <xsl:text>});</xsl:text>
-       </xsl:if>
-      </xsl:for-each>
-
-     </xsl:otherwise>
-    </xsl:choose>
-      <xsl:text>
-         });</xsl:text>
-   </script>
   </xsl:template>
 
 
@@ -542,9 +367,6 @@ Date: 2016-03-22
    <xsl:param                     name = "topSection"
                                 select = "'il'"/>
    <xsl:element                   name = "div">
-    <xsl:attribute                name = "class">
-     <xsl:text>pdq-content-list</xsl:text>
-    </xsl:attribute>
 
     <xsl:apply-templates        select = "ListTitle"/>
     <xsl:element                  name = "ul">
@@ -617,9 +439,6 @@ Date: 2016-03-22
    <xsl:param                     name = "topSection"
                                 select = "'ol'"/>
    <xsl:element                   name = "div">
-    <xsl:attribute                name = "class">
-     <xsl:text>pdq-content-list</xsl:text>
-    </xsl:attribute>
 
     <xsl:apply-templates        select = "ListTitle"/>
     <xsl:element                  name = "ol">
@@ -649,25 +468,12 @@ Date: 2016-03-22
    </xsl:element>
   </xsl:template>
 
-  <!--
-  ================================================================
-  ================================================================ -->
-  <xsl:template                  match = "ListItemXXX"
-                                  mode = "simple">
-   <xsl:element                   name = "dd">
-    <xsl:apply-templates/>
-   </xsl:element>
-  </xsl:template>
 
   <!--
   ================================================================
   ================================================================ -->
   <xsl:template                  match = "ListTitle">
    <xsl:element                   name = "p">
-    <xsl:attribute                name = "class">
-     <xsl:text>pdq-list-title</xsl:text>
-    </xsl:attribute>
-
     <xsl:apply-templates/>
    </xsl:element>
   </xsl:template>
@@ -1046,13 +852,6 @@ Date: 2016-03-22
       <xsl:text>figure</xsl:text>
       <xsl:value-of             select = "@id"/>
      </xsl:attribute>
-     <!-- Add expandable-container as a hook for the JavaScript enlarge/collapse
-          generation -->
-     <xsl:attribute               name = "class">
-      <xsl:text>image-center</xsl:text>
-      <xsl:text> expandable-container</xsl:text>
-     </xsl:attribute>
-
 
      <!--
      Display the Image
@@ -1268,44 +1067,6 @@ Date: 2016-03-22
   </xsl:template>
 
 
-  <!--
-  ================================================================
-  Template to create the Keypoint box (created with JavaScript)
-  ================================================================ -->
-  <xsl:template                   name = "keypointsboxJS">
-   <xsl:if                        test = "descendant::KeyPoint">
-   <xsl:element                   name = "div">
-    <xsl:attribute                name = "class">
-     <xsl:text>keyPoints</xsl:text>
-    </xsl:attribute>
-
-    <xsl:element                  name = "h3">
-     <xsl:choose>
-      <xsl:when                   test = "$language = 'en'">
-       <xsl:text>Key Points for This Section (JS)</xsl:text>
-      </xsl:when>
-      <xsl:when                   test = "$language = 'es'">
-       <xsl:text>Puntos importantes de esta secci&#243;n</xsl:text>
-      </xsl:when>
-      <xsl:otherwise>
-       <xsl:text>*** language not defined ***</xsl:text>
-      </xsl:otherwise>
-     </xsl:choose>
-    </xsl:element>
-     <xsl:element                 name = "div">
-      <xsl:attribute              name = "id">
-       <xsl:text>_toc_section</xsl:text>
-      <xsl:value-of             select = "./@id"/>
-      <xsl:text>_</xsl:text>
-       <xsl:value-of             select = "count(
-                                          preceding-sibling::SummarySection) + 1"/>
-      </xsl:attribute>
-     </xsl:element>
-   </xsl:element>
-   </xsl:if>
-  </xsl:template>
-
-
 <!--
 ========================================================================
     Template for CALS to HTML Conversion
@@ -1324,7 +1085,6 @@ Template for Creating a table (from CALS)
     </xsl:attribute>
     <xsl:attribute                name = "class">
      <xsl:text>table-default</xsl:text>
-     <xsl:text> expandable-container</xsl:text>
     </xsl:attribute>
 
     <xsl:if test="@PgWide=1">
